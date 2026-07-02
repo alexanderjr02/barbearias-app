@@ -17,30 +17,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-3xl font-black text-white mb-2">Entrar na conta</h1>
-      <p className="text-zinc-400 mb-8">
+    <div className="w-full max-w-md">
+      <h1 className="text-3xl font-black text-white mb-1">Entrar na conta</h1>
+      <p className="text-zinc-500 text-sm mb-8">
         Não tem conta?{" "}
-        <Link href="/register" className="text-amber-400 hover:underline">
+        <Link href="/register" className="text-amber-400 hover:text-amber-300 font-medium transition-colors">
           Cadastre-se grátis
         </Link>
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
             E-mail
           </label>
           <input
             type="email"
             required
             placeholder="seu@email.com"
-            className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+            className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
             Senha
           </label>
           <div className="relative">
@@ -48,12 +48,12 @@ export default function LoginPage() {
               type={showPassword ? "text" : "password"}
               required
               placeholder="••••••••"
-              className="w-full h-11 px-4 pr-11 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+              className="w-full h-12 px-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />
@@ -63,7 +63,7 @@ export default function LoginPage() {
             </button>
           </div>
           <div className="flex justify-end mt-2">
-            <a href="#" className="text-sm text-amber-400 hover:underline">
+            <a href="#" className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
               Esqueceu a senha?
             </a>
           </div>
@@ -72,19 +72,19 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full h-12 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-70 flex items-center justify-center gap-2 text-base"
+          className="w-full h-12 bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-900 font-bold rounded-2xl hover:from-amber-400 hover:to-amber-300 transition-all disabled:opacity-60 flex items-center justify-center gap-2 text-sm shadow-lg shadow-amber-500/20 mt-2"
         >
           {isLoading ? (
-            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
           ) : (
-            "Entrar"
+            "Entrar na conta →"
           )}
         </button>
       </form>
 
-      <div className="mt-6 p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
-        <p className="text-xs text-amber-400/80 text-center">
-          <strong>Demo:</strong> Use qualquer e-mail e senha para entrar
+      <div className="mt-6 p-4 bg-amber-500/5 border border-amber-500/15 rounded-2xl">
+        <p className="text-xs text-zinc-500 text-center">
+          <span className="text-amber-400 font-semibold">Demo:</span> Use qualquer e-mail e senha para entrar
         </p>
       </div>
     </div>
