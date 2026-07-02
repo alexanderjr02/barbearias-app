@@ -10,6 +10,11 @@ import {
   MessageCircle,
   Phone,
   MapPin,
+  User,
+  Calendar,
+  Zap,
+  ArrowRight,
+  Instagram,
 } from "lucide-react";
 import { ChatbotWidget } from "@/components/chatbot/ChatbotWidget";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -27,17 +32,17 @@ const barbershop = {
 };
 
 const services = [
-  { id: "1", name: "Corte Simples", duration: 30, price: 35, description: "Corte básico com acabamento" },
-  { id: "2", name: "Corte Degradê", duration: 45, price: 45, description: "Degradê com acabamento perfeito" },
-  { id: "3", name: "Corte + Barba", duration: 60, price: 55, description: "Combo completo com acabamento" },
-  { id: "4", name: "Barba Completa", duration: 30, price: 25, description: "Modelagem e hidratação de barba" },
-  { id: "5", name: "Tratamento Capilar", duration: 60, price: 45, description: "Hidratação e recuperação capilar" },
+  { id: "1", name: "Corte Simples", duration: 30, price: 35, description: "Corte básico com acabamento perfeito", popular: false },
+  { id: "2", name: "Corte Degradê", duration: 45, price: 45, description: "Degradê moderno com acabamento", popular: true },
+  { id: "3", name: "Corte + Barba", duration: 60, price: 55, description: "Combo completo — o mais pedido!", popular: true },
+  { id: "4", name: "Barba Completa", duration: 30, price: 25, description: "Modelagem e hidratação de barba", popular: false },
+  { id: "5", name: "Tratamento Capilar", duration: 60, price: 45, description: "Hidratação e recuperação capilar", popular: false },
 ];
 
 const barbers = [
-  { id: "1", name: "João Silva", role: "Sênior", rating: 4.9, avatar: "JS", specialties: "Degradê, Navalhado" },
-  { id: "2", name: "Carlos Souza", role: "Barbeiro", rating: 4.8, avatar: "CS", specialties: "Clássico, Barba" },
-  { id: "3", name: "André Santos", role: "Barbeiro", rating: 4.7, avatar: "AS", specialties: "Tratamentos" },
+  { id: "1", name: "João Silva", role: "Sênior", rating: 4.9, reviews: 128, avatar: "JS" },
+  { id: "2", name: "Carlos Souza", role: "Barbeiro", rating: 4.8, reviews: 96, avatar: "CS" },
+  { id: "3", name: "André Santos", role: "Barbeiro", rating: 4.7, reviews: 74, avatar: "AS" },
 ];
 
 const timeSlots = [
