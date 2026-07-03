@@ -109,11 +109,13 @@ const PlanContext = createContext<PlanContextType>({
 });
 
 export function PlanProvider({ children }: { children: ReactNode }) {
-  const [plan, setPlanState] = useState<Plan>("PRO"); // Default PRO for demo
+  const [plan, setPlanState] = useState<Plan>("ENTERPRISE");
 
   useEffect(() => {
     const stored = localStorage.getItem("cortix_plan") as Plan | null;
-    if (stored && stored in FEATURES_BY_PLAN) setPlanState(stored);
+    const initialPlan = stored && stored in FEATURES_BY_PLAN ? stored : "ENTERPRISE";
+    setPlanState(initialPlan);
+    localStorage.setItem("cortix_plan", initialPlan);
   }, []);
 
   const setPlan = useCallback((newPlan: Plan) => {

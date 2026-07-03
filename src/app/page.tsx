@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { MarketingNav } from "@/components/layout/MarketingNav";
 import { LandingChatbot } from "@/components/chatbot/LandingChatbot";
@@ -17,6 +20,7 @@ import {
   TrendingUp,
   Clock,
   Smartphone,
+  CreditCard,
 } from "lucide-react";
 
 const features = [
@@ -161,6 +165,16 @@ const stats = [
 ];
 
 export default function HomePage() {
+  const [activePlanIndex, setActivePlanIndex] = useState(2);
+  const selectedPlan = plans[activePlanIndex];
+
+  const cyclePlan = (direction: "next" | "prev") => {
+    setActivePlanIndex((prev) => {
+      if (direction === "next") return (prev + 1) % plans.length;
+      return (prev - 1 + plans.length) % plans.length;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-black">
       <MarketingNav />
@@ -222,10 +236,87 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Dashboard preview */}
+      {/* Demo preview */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-black text-white mb-3">
+              Veja as partes que você pediu em ação
+            </h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto">
+              Planos, chat de ajuda e personalização do chatbot em uma experiência que fica clara para o barbeiro e para o cliente.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
+              <div className="flex items-center gap-2 text-amber-400 mb-4">
+                <CreditCard className="w-5 h-5" />
+                <h3 className="text-lg font-bold text-white">Planos e upgrade</h3>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { label: "Starter", value: "Grátis" },
+                  { label: "Pro", value: "R$ 97/mês" },
+                  { label: "Enterprise", value: "R$ 197/mês" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5">
+                    <span className="text-sm text-zinc-300">{item.label}</span>
+                    <span className="text-sm font-semibold text-amber-400">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+              <Link href="/register?plan=pro" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300">
+                Ver opções <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
+              <div className="flex items-center gap-2 text-amber-400 mb-4">
+                <MessageSquareText className="w-5 h-5" />
+                <h3 className="text-lg font-bold text-white">Chat para o cliente</h3>
+              </div>
+              <div className="rounded-2xl bg-zinc-950 border border-zinc-800 p-4 space-y-3">
+                <div className="rounded-2xl bg-zinc-800 px-3 py-2 text-sm text-zinc-200">
+                  Olá! Como posso te ajudar hoje?
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {['Horário', 'Agendar', 'Preços'].map((item) => (
+                    <span key={item} className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+                  Atendimento rápido, automático e com aparência personalizada.
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
+              <div className="flex items-center gap-2 text-amber-400 mb-4">
+                <Palette className="w-5 h-5" />
+                <h3 className="text-lg font-bold text-white">Painel do barbeiro</h3>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { title: "Chatbot", desc: "Nome, mensagem e FAQ" },
+                  { title: "Plano", desc: "Personalização e WhatsApp" },
+                  { title: "Visual", desc: "Cores e prévia da página" },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-3">
+                    <p className="text-sm font-semibold text-white">{item.title}</p>
+                    <p className="text-xs text-zinc-500 mt-1">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <Link href="/dashboard/settings" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300">
+                Abrir configurações <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-10 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
             {/* Fake browser bar */}
             <div className="bg-zinc-950 px-4 py-3 flex items-center gap-3 border-b border-zinc-800">
               <div className="flex gap-2">
@@ -382,7 +473,7 @@ export default function HomePage() {
       {/* Pricing */}
       <section id="pricing" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-black text-white mb-4">
               Planos transparentes
             </h2>
@@ -391,11 +482,52 @@ export default function HomePage() {
             </p>
           </div>
 
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 md:p-8 mb-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-400">
+                  <Zap className="w-4 h-4" /> Demonstração do plano {selectedPlan.name}
+                </div>
+                <h3 className="mt-4 text-2xl font-black text-white">{selectedPlan.name}</h3>
+                <p className="mt-2 text-zinc-400">{selectedPlan.description}</p>
+              </div>
+              <div className="text-left md:text-right">
+                <p className="text-3xl font-black text-white">{selectedPlan.price}</p>
+                <p className="text-sm text-zinc-500">{selectedPlan.period}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
+              {selectedPlan.features.slice(0, 6).map((feature) => (
+                <div key={feature} className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-3 text-sm text-zinc-300">
+                  <CheckCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  {feature}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href={selectedPlan.href}
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 px-5 py-3 font-bold text-black transition-all hover:opacity-90"
+              >
+                {selectedPlan.cta}
+              </Link>
+              <button
+                onClick={() => cyclePlan("next")}
+                className="inline-flex items-center justify-center rounded-xl border border-zinc-700 px-5 py-3 font-semibold text-zinc-300 transition-all hover:border-amber-500 hover:text-amber-400"
+              >
+                Ver próximo plano
+              </button>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-6 items-stretch">
-            {plans.map((plan) => (
-              <div
+            {plans.map((plan, index) => (
+              <button
                 key={plan.name}
-                className={`relative bg-zinc-900 border-2 ${plan.color} rounded-2xl p-8 flex flex-col ${plan.highlight ? "scale-105 shadow-xl shadow-amber-500/10" : ""}`}
+                onClick={() => setActivePlanIndex(index)}
+                className={`relative text-left bg-zinc-900 border-2 ${plan.color} rounded-2xl p-8 flex flex-col transition-all ${activePlanIndex === index ? "scale-[1.02] shadow-xl shadow-amber-500/10" : "hover:border-zinc-600"}`}
               >
                 {plan.badge && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-xs font-bold px-4 py-1.5 rounded-full">
@@ -426,17 +558,16 @@ export default function HomePage() {
                   ))}
                 </ul>
 
-                <Link
-                  href={plan.href}
+                <span
                   className={`block text-center py-3 px-6 rounded-xl font-bold transition-all ${
-                    plan.highlight
-                      ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-black hover:opacity-90"
-                      : "border border-zinc-700 text-zinc-300 hover:bg-white/5"
+                    activePlanIndex === index
+                      ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-black"
+                      : "border border-zinc-700 text-zinc-300"
                   }`}
                 >
-                  {plan.cta}
-                </Link>
-              </div>
+                  {activePlanIndex === index ? "Plano ativo" : plan.cta}
+                </span>
+              </button>
             ))}
           </div>
         </div>
