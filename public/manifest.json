@@ -1,0 +1,49 @@
+{
+  "name": "CORTIX — Gestão de Barbearias",
+  "short_name": "CORTIX",
+  "description": "Agende seu horário e gerencie sua barbearia com o CORTIX",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#09090b",
+  "theme_color": "#D4AF37",
+  "orientation": "natural",
+  "prefer_related_applications": false,
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["business", "lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Novo Agendamento",
+      "short_name": "Agendar",
+      "description": "Criar um novo agendamento rapidamente",
+      "url": "/booking/demo",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Painel",
+      "description": "Acessar o painel de gestão",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "any" }]
+    }
+  ],
+  "related_applications": [],
+  "screenshots": []
+}

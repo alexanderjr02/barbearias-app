@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable icon — safe zone is inner circle, pad with brand background -->
+  <rect width="512" height="512" fill="#D4AF37"/>
+  <rect x="60" y="60" width="392" height="392" rx="60" fill="#09090b"/>
+  <g transform="translate(256,256)">
+    <path d="M-20,-110 L70,50" stroke="#D4AF37" stroke-width="26" stroke-linecap="round" fill="none"/>
+    <path d="M20,-110 L-70,50" stroke="#D4AF37" stroke-width="26" stroke-linecap="round" fill="none"/>
+    <circle cx="-88" cy="88" r="38" fill="none" stroke="#D4AF37" stroke-width="22"/>
+    <circle cx="88" cy="88" r="38" fill="none" stroke="#D4AF37" stroke-width="22"/>
+    <circle cx="0" cy="-10" r="12" fill="#D4AF37"/>
+  </g>
+</svg>

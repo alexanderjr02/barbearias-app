@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#09090b"/>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <!-- Scissors body -->
+  <g transform="translate(256,256)">
+    <!-- Top blade -->
+    <path d="M-20,-140 L80,60" stroke="url(#g)" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <!-- Bottom blade -->
+    <path d="M20,-140 L-80,60" stroke="url(#g)" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <!-- Left handle ring -->
+    <circle cx="-108" cy="100" r="46" fill="none" stroke="url(#g)" stroke-width="26"/>
+    <!-- Right handle ring -->
+    <circle cx="108" cy="100" r="46" fill="none" stroke="url(#g)" stroke-width="26"/>
+    <!-- Pivot dot -->
+    <circle cx="0" cy="-20" r="14" fill="#D4AF37"/>
+  </g>
+</svg>

@@ -14,7 +14,6 @@ import {
   Calendar,
   Zap,
   ArrowRight,
-  Instagram,
 } from "lucide-react";
 import { ChatbotWidget } from "@/components/chatbot/ChatbotWidget";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -40,9 +39,9 @@ const services = [
 ];
 
 const barbers = [
-  { id: "1", name: "João Silva", role: "Sênior", rating: 4.9, reviews: 128, avatar: "JS" },
-  { id: "2", name: "Carlos Souza", role: "Barbeiro", rating: 4.8, reviews: 96, avatar: "CS" },
-  { id: "3", name: "André Santos", role: "Barbeiro", rating: 4.7, reviews: 74, avatar: "AS" },
+  { id: "1", name: "João Silva", role: "Sênior", specialties: "Degradê, Navalhado", rating: 4.9, reviews: 128, avatar: "JS" },
+  { id: "2", name: "Carlos Souza", role: "Barbeiro", specialties: "Corte Clássico, Barba", rating: 4.8, reviews: 96, avatar: "CS" },
+  { id: "3", name: "André Santos", role: "Barbeiro", specialties: "Tratamentos, Coloração", rating: 4.7, reviews: 74, avatar: "AS" },
 ];
 
 const timeSlots = [
@@ -236,7 +235,7 @@ export default function BookingPage() {
             <div className="space-y-3">
               <button
                 onClick={() => {
-                  setSelectedBarber({ id: "any", name: "Sem preferência", role: "", rating: 0, avatar: "?", specialties: "" });
+                  setSelectedBarber({ id: "any", name: "Sem preferência", role: "", specialties: "", rating: 0, reviews: 0, avatar: "?" });
                   setStep("datetime");
                 }}
                 className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-left transition-all"

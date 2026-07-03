@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MarketingNav } from "@/components/layout/MarketingNav";
-import { ChatbotWidget } from "@/components/chatbot/ChatbotWidget";
+import { LandingChatbot } from "@/components/chatbot/LandingChatbot";
 import {
   Calendar,
   BarChart3,
@@ -612,7 +612,7 @@ export default function HomePage() {
         </div>
       </footer>
 
-      <ChatbotWidget />
+      <LandingChatbot />
     </div>
   );
 }
