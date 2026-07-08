@@ -4,6 +4,7 @@ import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
 import 'barber_repository.dart';
+import 'barbeiro_schedule_screen.dart';
 
 const _statusLabels = {
   'SCHEDULED': 'Agendado',
@@ -228,6 +229,11 @@ class _BarbeiroAgendaScreenState extends State<BarbeiroAgendaScreen> {
               _searchOpen = !_searchOpen;
               if (!_searchOpen) _search = '';
             }),
+          ),
+          IconButton(
+            icon: const Icon(Icons.schedule_outlined),
+            tooltip: 'Meus horários',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BarbeiroScheduleScreen())),
           ),
           IconButton(
             icon: const Icon(Icons.today_outlined),

@@ -181,6 +181,53 @@ class BarberClientEntry {
       );
 }
 
+/// One weekday's effective schedule for a staff member: either following
+/// the barbershop's own default hours (no override on file), a custom
+/// open/close the barber set for themself, or a recurring day off.
+class ScheduleDay {
+  final int dayOfWeek;
+  final String mode; // default | custom | closed
+  final String startTime;
+  final String endTime;
+
+  ScheduleDay({required this.dayOfWeek, required this.mode, required this.startTime, required this.endTime});
+}
+
+class ShopHours {
+  final int dayOfWeek;
+  final bool isOpen;
+  final String openTime;
+  final String closeTime;
+
+  ShopHours({required this.dayOfWeek, required this.isOpen, required this.openTime, required this.closeTime});
+
+  factory ShopHours.fromJson(Map<String, dynamic> json) =>
+      ShopHours(dayOfWeek: json['dayOfWeek'], isOpen: json['isOpen'], openTime: json['openTime'], closeTime: json['closeTime']);
+}
+
+class StaffSchedule {
+  final List<ScheduleDay> days;
+  final List<ShopHours> shopHours;
+
+  StaffSchedule({required this.days, required this.shopHours});
+
+  String describeDefault(int dayOfWeek) {
+    final h = shopHours.where((s) => s.dayOfWeek == dayOfWeek).toList();
+    if (h.isEmpty || !h.first.isOpen) return 'Barbearia fechada';
+    return 'Padrão: ${h.first.openTime} às ${h.first.closeTime}';
+  }
+}
+
+class TimeOffEntry {
+  final String id;
+  final String date;
+  final String? reason;
+
+  TimeOffEntry({required this.id, required this.date, this.reason});
+
+  factory TimeOffEntry.fromJson(Map<String, dynamic> json) => TimeOffEntry(id: json['id'], date: json['date'], reason: json['reason']);
+}
+
 class BarberRepository {
   Future<List<BarberAppointment>> myAppointments({String? from, String? to}) async {
     final query = <String, dynamic>{};
@@ -230,5 +277,53 @@ class BarberRepository {
   Future<List<BarberClientEntry>> allClients() async {
     final data = await ApiClient.instance.get('/clients') as List;
     return data.map((e) => BarberClientEntry.fromJson(e)).toList();
+  }
+
+  Future<StaffSchedule> mySchedule(String staffId) async {
+    final data = await ApiClient.instance.get('/staff/$staffId/availability') as Map<String, dynamic>;
+    final overrides = (data['availability'] as List).cast<Map<String, dynamic>>();
+    final days = List.generate(7, (dayOfWeek) {
+      final override = overrides.where((o) => o['dayOfWeek'] == dayOfWeek).toList();
+      if (override.isEmpty) return ScheduleDay(dayOfWeek: dayOfWeek, mode: 'default', startTime: '09:00', endTime: '18:00');
+      final o = override.first;
+      final isAvailable = o['isAvailable'] as bool;
+      return ScheduleDay(
+        dayOfWeek: dayOfWeek,
+        mode: isAvailable ? 'custom' : 'closed',
+        startTime: isAvailable ? o['startTime'] as String : '09:00',
+        endTime: isAvailable ? o['endTime'] as String : '18:00',
+      );
+    });
+    final shopHours = (data['shopHours'] as List).map((e) => ShopHours.fromJson(e)).toList();
+    return StaffSchedule(days: days, shopHours: shopHours);
+  }
+
+  Future<void> saveSchedule(String staffId, List<ScheduleDay> days) async {
+    await ApiClient.instance.put('/staff/$staffId/availability', data: {
+      'days': days
+          .map((d) => {
+                'dayOfWeek': d.dayOfWeek,
+                'mode': d.mode,
+                if (d.mode == 'custom') 'startTime': d.startTime,
+                if (d.mode == 'custom') 'endTime': d.endTime,
+              })
+          .toList(),
+    });
+  }
+
+  Future<List<TimeOffEntry>> myTimeOff(String staffId) async {
+    final data = await ApiClient.instance.get('/staff/$staffId/time-off') as List;
+    return data.map((e) => TimeOffEntry.fromJson(e)).toList();
+  }
+
+  Future<void> addTimeOff(String staffId, {required String date, String? reason}) async {
+    await ApiClient.instance.post('/staff/$staffId/time-off', data: {
+      'date': date,
+      if (reason != null && reason.isNotEmpty) 'reason': reason,
+    });
+  }
+
+  Future<void> removeTimeOff(String staffId, String timeOffId) async {
+    await ApiClient.instance.delete('/staff/$staffId/time-off/$timeOffId');
   }
 }

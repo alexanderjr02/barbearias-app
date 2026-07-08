@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Scissors, TrendingUp, CalendarDays, X, Pencil, Star, UserCheck, Crown } from "lucide-react";
+import { Plus, Search, Scissors, TrendingUp, CalendarDays, X, Pencil, Star, UserCheck, Crown, Clock } from "lucide-react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PhotoUpload } from "@/components/dashboard/PhotoUpload";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { StaffScheduleModal } from "@/components/dashboard/StaffScheduleModal";
 
 interface ApiStaff {
   id: string;
@@ -64,6 +65,7 @@ export default function StaffPage() {
   const [editing, setEditing] = useState<ApiStaff | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [agendaStaff, setAgendaStaff] = useState<ApiStaff | null>(null);
+  const [scheduleStaff, setScheduleStaff] = useState<ApiStaff | null>(null);
   const queryClient = useQueryClient();
 
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: () => apiGet<ApiStaff[]>("/api/staff") });
@@ -240,6 +242,14 @@ export default function StaffPage() {
         </div>
       )}
 
+      {scheduleStaff && (
+        <StaffScheduleModal
+          staffId={scheduleStaff.id}
+          staffName={scheduleStaff.name}
+          onClose={() => setScheduleStaff(null)}
+        />
+      )}
+
       <PageHeader
         icon={UserCheck}
         title="Equipe"
@@ -285,7 +295,7 @@ export default function StaffPage() {
           Nenhum barbeiro cadastrado ainda
         </div>
       )}
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+      <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
         {[...filtered].sort((a, b) => b.revenue - a.revenue).map((member, index) => {
           const isTop = index === 0 && member.revenue > 0 && member.isActive;
           return (
@@ -333,36 +343,41 @@ export default function StaffPage() {
               </div>
 
               <div className="grid grid-cols-3 divide-x divide-zinc-800 mt-auto pt-4 border-t border-zinc-800/80">
-                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1">
-                  <div className="flex items-center gap-1 min-w-0">
-                    <Scissors className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                    <span className="text-sm font-bold text-white truncate">{member.appointmentsCount}</span>
-                  </div>
+                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1 overflow-hidden">
+                  <Scissors className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="text-sm font-bold text-white truncate w-full text-center">{member.appointmentsCount}</span>
                   <span className="text-[11px] text-zinc-500">cortes</span>
                 </div>
-                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1">
-                  <div className="flex items-center gap-1 min-w-0">
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                    <span className="text-sm font-bold text-amber-400 truncate">{formatCurrency(member.revenue)}</span>
-                  </div>
+                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1 overflow-hidden">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-sm font-bold text-amber-400 truncate w-full text-center">{formatCurrency(member.revenue)}</span>
                   <span className="text-[11px] text-zinc-500">receita</span>
                 </div>
-                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1">
-                  <span className="text-sm font-bold text-white truncate">{Math.round(member.commissionRate * 100)}%</span>
+                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1 overflow-hidden">
+                  <span className="text-sm font-bold text-white truncate w-full text-center">{Math.round(member.commissionRate * 100)}%</span>
                   <span className="text-[11px] text-zinc-500">comissão</span>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between gap-2">
-                <span className="text-xs text-zinc-500">
+              <div className="mt-4 flex items-center justify-between gap-2 min-w-0">
+                <span className="text-xs text-zinc-500 truncate min-w-0 flex-1">
                   Comissão: <span className="text-white font-semibold">{formatCurrency(member.revenue * member.commissionRate)}</span>
                 </span>
-                <button
-                  onClick={() => setAgendaStaff(member)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
-                >
-                  <CalendarDays className="w-3.5 h-3.5" /> Agenda
-                </button>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => setScheduleStaff(member)}
+                    title="Horário e folgas"
+                    className="flex items-center justify-center w-8 h-8 text-zinc-400 hover:text-amber-400 bg-zinc-800/60 hover:bg-amber-500/10 rounded-lg transition-colors"
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setAgendaStaff(member)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                  >
+                    <CalendarDays className="w-3.5 h-3.5" /> Agenda
+                  </button>
+                </div>
               </div>
             </div>
           );

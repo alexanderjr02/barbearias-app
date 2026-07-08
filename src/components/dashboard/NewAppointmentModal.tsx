@@ -30,11 +30,18 @@ interface MeResponse {
   barbershopId: string;
 }
 
-const timeSlots = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-  "16:00", "16:30", "17:00", "17:30",
-];
+interface ApiSlot {
+  time: string;
+  status: "available" | "past" | "booked";
+}
+
+interface ApiSlotsResponse {
+  isOpen: boolean;
+  openTime: string | null;
+  closeTime: string | null;
+  source: "blocked" | "staff" | "shop";
+  slots: ApiSlot[];
+}
 
 const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -65,6 +72,28 @@ export function NewAppointmentModal({ open, onClose }: Props) {
   const { data: staff = [] } = useQuery({ queryKey: ["staff-lite"], queryFn: () => apiGet<ApiStaffLite[]>("/api/staff"), enabled: open });
   const activeServices = services.filter((s) => s.isActive);
   const activeStaff = staff.filter((s) => s.isActive);
+
+  const { data: slotsData, isFetching: slotsLoading } = useQuery({
+    queryKey: ["appointment-slots", me?.barbershopId, barber?.id, date ? toDateKey(date) : null, service?.duration],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        barbershopId: me!.barbershopId,
+        staffId: barber!.id,
+        date: toDateKey(date!),
+        duration: String(service!.duration),
+      });
+      return apiGet<ApiSlotsResponse>(`/api/appointments/slots?${params.toString()}`);
+    },
+    enabled: open && !!me?.barbershopId && !!barber && !!date && !!service,
+  });
+
+  // A previously picked time can become invalid after changing the barber
+  // or date (different hours, or the slot just got taken) — don't let a
+  // stale selection silently carry through to submission.
+  useEffect(() => {
+    setTime("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [barber?.id, date && toDateKey(date)]);
 
   const createAppointment = useMutation({
     mutationFn: () =>
@@ -262,21 +291,52 @@ export function NewAppointmentModal({ open, onClose }: Props) {
                       </button>
                     ))}
                   </div>
-                  <p className="text-sm font-semibold text-zinc-400 mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Escolha o horário
-                  </p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {timeSlots.map((slot) => (
-                      <button key={slot} onClick={() => setTime(slot)}
-                        className={cn("py-2 rounded-lg border text-sm font-medium transition-all",
-                          time === slot
-                            ? "border-amber-500/60 bg-amber-500/10 text-amber-400"
-                            : "border-zinc-800 bg-zinc-800/50 text-zinc-300 hover:border-zinc-700"
-                        )}>
-                        {slot}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
+                      <Clock className="w-4 h-4" /> Escolha o horário
+                    </p>
+                    {slotsData?.isOpen && slotsData.openTime && slotsData.closeTime && (
+                      <p className="text-xs text-zinc-600">{slotsData.openTime} às {slotsData.closeTime}</p>
+                    )}
                   </div>
+
+                  {!date && <p className="text-sm text-zinc-500 py-2">Selecione uma data para ver os horários.</p>}
+
+                  {date && slotsLoading && (
+                    <div className="flex items-center gap-2 text-sm text-zinc-500 py-4">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Carregando horários...
+                    </div>
+                  )}
+
+                  {date && !slotsLoading && slotsData && !slotsData.isOpen && (
+                    <p className="text-sm text-zinc-500 py-2">
+                      {slotsData.source === "blocked" ? "Esse barbeiro está de folga nesse dia." : "Fechado nesse dia."}
+                    </p>
+                  )}
+
+                  {date && !slotsLoading && slotsData?.isOpen && slotsData.slots.length === 0 && (
+                    <p className="text-sm text-zinc-500 py-2">Nenhum horário disponível nesse dia.</p>
+                  )}
+
+                  {date && !slotsLoading && slotsData?.isOpen && slotsData.slots.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {slotsData.slots.map((slot) => {
+                        const disabled = slot.status !== "available";
+                        return (
+                          <button key={slot.time} disabled={disabled} onClick={() => setTime(slot.time)}
+                            className={cn("py-2 rounded-lg border text-sm font-medium transition-all",
+                              disabled
+                                ? "bg-zinc-900/50 border-zinc-800 text-zinc-700 cursor-not-allowed line-through"
+                                : time === slot.time
+                                ? "border-amber-500/60 bg-amber-500/10 text-amber-400"
+                                : "border-zinc-800 bg-zinc-800/50 text-zinc-300 hover:border-zinc-700"
+                            )}>
+                            {slot.time}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 

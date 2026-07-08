@@ -80,6 +80,7 @@ model Staff {
 
   appointments  Appointment[]
   availability  Availability[]
+  timeOff       StaffTimeOff[]
   reviews       Review[]
 }
 
@@ -190,6 +191,9 @@ model WorkingHour {
   @@unique([barbershopId, dayOfWeek])
 }
 
+// A staff member's own weekly schedule, overriding the barbershop's default
+// WorkingHour for that day of week. A missing row for a given dayOfWeek means
+// "follow the barbershop's default hours" (see src/lib/scheduling.ts).
 model Availability {
   id            String   @id @default(cuid())
   dayOfWeek     Int
@@ -198,6 +202,21 @@ model Availability {
   isAvailable   Boolean  @default(true)
   staffId       String
   staff         Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, dayOfWeek])
+}
+
+// A one-off blocked day for a staff member (day off, vacation, sick day),
+// regardless of what their weekly Availability/the shop's WorkingHour says.
+model StaffTimeOff {
+  id            String   @id @default(cuid())
+  date          DateTime
+  reason        String?
+  staffId       String
+  staff         Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([staffId, date])
 }
 
 model ChatMessage {

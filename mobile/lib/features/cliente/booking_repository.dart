@@ -104,6 +104,50 @@ class BarbershopDetail {
       );
 }
 
+/// One candidate appointment time, tagged with why it either is or isn't
+/// bookable — mirrors GET /appointments/slots on the backend, which is the
+/// single source of truth for working hours, staff days off, and
+/// already-booked times (no more computing this client-side).
+class AppointmentSlot {
+  final String time;
+  final String status; // available | past | booked
+
+  AppointmentSlot({required this.time, required this.status});
+
+  factory AppointmentSlot.fromJson(Map<String, dynamic> json) => AppointmentSlot(time: json['time'], status: json['status']);
+
+  bool get isAvailable => status == 'available';
+}
+
+class DaySlots {
+  final bool isOpen;
+  final String? openTime;
+  final String? closeTime;
+  final String source; // blocked | staff | shop
+  final List<AppointmentSlot> slots;
+
+  DaySlots({required this.isOpen, this.openTime, this.closeTime, required this.source, required this.slots});
+
+  factory DaySlots.fromJson(Map<String, dynamic> json) => DaySlots(
+        isOpen: json['isOpen'] as bool,
+        openTime: json['openTime'] as String?,
+        closeTime: json['closeTime'] as String?,
+        source: json['source'] as String,
+        slots: (json['slots'] as List).map((e) => AppointmentSlot.fromJson(e)).toList(),
+      );
+}
+
+String _dateKey(DateTime date) =>
+    '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+String _addMinutes(String time, int minutes) {
+  final parts = time.split(':').map(int.parse).toList();
+  final total = parts[0] * 60 + parts[1] + minutes;
+  final h = (total ~/ 60) % 24;
+  final m = total % 60;
+  return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+}
+
 class BookingRepository {
   Future<List<ClientBarbershop>> myBarbershops() async {
     final data = await ApiClient.instance.get('/client/barbershops') as List;
@@ -115,23 +159,39 @@ class BookingRepository {
     return BarbershopDetail.fromJson(data);
   }
 
+  Future<DaySlots> fetchSlots({
+    required String barbershopId,
+    required String staffId,
+    required DateTime date,
+    required int duration,
+  }) async {
+    final data = await ApiClient.instance.get('/appointments/slots', query: {
+      'barbershopId': barbershopId,
+      'staffId': staffId,
+      'date': _dateKey(date),
+      'duration': duration.toString(),
+    });
+    return DaySlots.fromJson(data);
+  }
+
   Future<void> createAppointment({
     required String barbershopId,
     required String staffId,
     required String serviceId,
     required DateTime date,
     required String startTime,
+    required int durationMinutes,
     required String clientName,
     required String clientPhone,
     required double totalPrice,
   }) {
-    final dateStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     return ApiClient.instance.post('/appointments', data: {
       'barbershopId': barbershopId,
       'staffId': staffId,
       'serviceId': serviceId,
-      'date': dateStr,
+      'date': _dateKey(date),
       'startTime': startTime,
+      'endTime': _addMinutes(startTime, durationMinutes),
       'clientName': clientName,
       'clientPhone': clientPhone,
       'totalPrice': totalPrice,

@@ -27,9 +27,11 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   StaffOption? _selectedStaff;
   DateTime? _selectedDate;
   String? _selectedTime;
+  DaySlots? _daySlots;
 
   bool _loadingShops = true;
   bool _loadingDetail = false;
+  bool _loadingSlots = false;
   bool _submitting = false;
   String? _error;
 
@@ -75,6 +77,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
       _selectedStaff = null;
       _selectedDate = null;
       _selectedTime = null;
+      _daySlots = null;
       _loadingDetail = true;
       _error = null;
     });
@@ -99,28 +102,51 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
     setState(() {
       _selectedStaff = staff;
       _selectedService = null;
+      _selectedTime = null;
+      _daySlots = null;
     });
   }
 
-  List<String> _timeSlotsFor(DateTime date) {
-    final detail = _detail;
-    if (detail == null) return [];
-    final hours = detail.workingHours.where((h) => h.dayOfWeek == date.weekday % 7).toList();
-    if (hours.isEmpty || !hours.first.isOpen) return [];
+  void _selectService(ServiceOption service) {
+    setState(() => _selectedService = service);
+    _loadSlots();
+  }
 
-    final open = hours.first.openTime.split(':').map(int.parse).toList();
-    final close = hours.first.closeTime.split(':').map(int.parse).toList();
-    var minutes = open[0] * 60 + open[1];
-    final closeMinutes = close[0] * 60 + close[1];
+  // Real, server-computed times for the chosen staff/date/service — respects
+  // working hours, the staff's own days off, already-booked appointments,
+  // and (for today) the current time. Replaces the old client-side
+  // computation that only looked at the shop's generic weekly hours.
+  Future<void> _loadSlots() async {
+    final staff = _selectedStaff;
+    final service = _selectedService;
+    final date = _selectedDate;
+    final shop = _selectedShop;
+    if (staff == null || service == null || date == null || shop == null) return;
 
-    final slots = <String>[];
-    while (minutes + 30 <= closeMinutes) {
-      final h = (minutes ~/ 60).toString().padLeft(2, '0');
-      final m = (minutes % 60).toString().padLeft(2, '0');
-      slots.add('$h:$m');
-      minutes += 30;
+    setState(() {
+      _loadingSlots = true;
+      _daySlots = null;
+      _selectedTime = null;
+    });
+    try {
+      final result = await _repository.fetchSlots(
+        barbershopId: shop.id,
+        staffId: staff.id,
+        date: date,
+        duration: service.duration,
+      );
+      if (!mounted) return;
+      setState(() {
+        _daySlots = result;
+        _loadingSlots = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadingSlots = false;
+        _error = e is ApiException ? e.message : 'Erro ao carregar horários';
+      });
     }
-    return slots;
   }
 
   Future<void> _pickDate() async {
@@ -136,6 +162,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
         _selectedDate = picked;
         _selectedTime = null;
       });
+      _loadSlots();
     }
   }
 
@@ -161,6 +188,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
         serviceId: _selectedService!.id,
         date: _selectedDate!,
         startTime: _selectedTime!,
+        durationMinutes: _selectedService!.duration,
         clientName: session.name,
         clientPhone: _phoneController.text.trim(),
         totalPrice: _selectedService!.price,
@@ -310,7 +338,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                               selected: selected,
                               accent: accent,
                               palette: palette,
-                              onTap: () => setState(() => _selectedService = s),
+                              onTap: () => _selectService(s),
                             ),
                           );
                         }),
@@ -340,27 +368,59 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                       ),
                       if (_selectedDate != null) ...[
                         const SizedBox(height: 20),
-                        Text('Horário', style: labelStyle),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Horário', style: labelStyle),
+                            if (_daySlots?.isOpen == true && _daySlots?.openTime != null)
+                              Text('${_daySlots!.openTime} às ${_daySlots!.closeTime}', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                          ],
+                        ),
                         const SizedBox(height: 10),
                         Builder(builder: (context) {
-                          final slots = _timeSlotsFor(_selectedDate!);
-                          if (slots.isEmpty) {
-                            return Text('Fechado neste dia.', style: TextStyle(color: palette.textFaint));
+                          if (_selectedStaff == null || _selectedService == null) {
+                            return Text('Escolha um profissional e um serviço para ver os horários.', style: TextStyle(color: palette.textFaint));
+                          }
+                          if (_loadingSlots) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                            );
+                          }
+                          final daySlots = _daySlots;
+                          if (daySlots == null) return const SizedBox.shrink();
+                          if (!daySlots.isOpen) {
+                            return Text(
+                              daySlots.source == 'blocked' ? 'Esse profissional está de folga nesse dia.' : 'Fechado neste dia.',
+                              style: TextStyle(color: palette.textFaint),
+                            );
+                          }
+                          if (daySlots.slots.isEmpty) {
+                            return Text('Nenhum horário disponível nesse dia.', style: TextStyle(color: palette.textFaint));
                           }
                           return Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: slots.map((t) {
-                              final selected = _selectedTime == t;
+                            children: daySlots.slots.map((slot) {
+                              final selected = _selectedTime == slot.time;
+                              final disabled = !slot.isAvailable;
                               return GestureDetector(
-                                onTap: () => setState(() => _selectedTime = t),
+                                onTap: disabled ? null : () => setState(() => _selectedTime = slot.time),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                                   decoration: BoxDecoration(
-                                    color: selected ? accent : palette.surfaceAlt,
+                                    color: disabled ? palette.surfaceAlt.withValues(alpha: 0.5) : (selected ? accent : palette.surfaceAlt),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: Text(t, style: TextStyle(color: selected ? onAccent : palette.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                                  child: Text(
+                                    slot.time,
+                                    style: TextStyle(
+                                      color: disabled ? palette.textFaint : (selected ? onAccent : palette.textSecondary),
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: disabled ? TextDecoration.lineThrough : null,
+                                    ),
+                                  ),
                                 ),
                               );
                             }).toList(),

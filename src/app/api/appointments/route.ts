@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { validateRequestedSlot } from "@/lib/scheduling";
 
 // GET /api/appointments?barbershopId=xxx&staffId=yyy&from=YYYY-MM-DD&to=YYYY-MM-DD
 // staffId optional (a gestor viewing a single barber's agenda). from/to are
@@ -62,6 +63,17 @@ export async function POST(request: NextRequest) {
 
     if (!barbershopId || !staffId || !serviceId || !date || !startTime || !clientName || !clientPhone) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const slotError = await validateRequestedSlot({
+      barbershopId,
+      staffId,
+      dateKey: date,
+      startTime,
+      endTime: endTime || startTime,
+    });
+    if (slotError) {
+      return NextResponse.json({ error: slotError }, { status: 409 });
     }
 
     const session = await getSession();
