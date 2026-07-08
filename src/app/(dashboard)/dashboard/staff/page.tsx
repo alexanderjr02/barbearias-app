@@ -333,17 +333,23 @@ export default function StaffPage() {
               </div>
 
               <div className="grid grid-cols-3 divide-x divide-zinc-800 mt-auto pt-4 border-t border-zinc-800/80">
-                <div className="flex items-center justify-center gap-1.5">
-                  <Scissors className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                  <span className="text-sm font-bold text-white">{member.appointmentsCount}</span>
-                  <span className="text-xs text-zinc-500">cortes</span>
+                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <Scissors className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                    <span className="text-sm font-bold text-white truncate">{member.appointmentsCount}</span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500">cortes</span>
                 </div>
-                <div className="flex items-center justify-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                  <span className="text-sm font-bold text-amber-400">{formatCurrency(member.revenue)}</span>
+                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    <span className="text-sm font-bold text-amber-400 truncate">{formatCurrency(member.revenue)}</span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500">receita</span>
                 </div>
-                <div className="flex items-center justify-center text-sm font-bold text-white">
-                  {Math.round(member.commissionRate * 100)}%
+                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1">
+                  <span className="text-sm font-bold text-white truncate">{Math.round(member.commissionRate * 100)}%</span>
+                  <span className="text-[11px] text-zinc-500">comissão</span>
                 </div>
               </div>
 
