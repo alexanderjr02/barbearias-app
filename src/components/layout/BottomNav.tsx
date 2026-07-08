@@ -82,11 +82,17 @@ export function BottomNav() {
               })}
             </div>
             <div className="mt-4 pt-4 border-t border-zinc-800">
-              <Link href="/login" onClick={() => setMoreOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-red-400 active:bg-red-500/10 rounded-xl transition-colors">
+              <button
+                onClick={async () => {
+                  setMoreOpen(false);
+                  await fetch("/api/auth/logout", { method: "POST" });
+                  window.location.href = "/login";
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-red-400 active:bg-red-500/10 rounded-xl transition-colors"
+              >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium">Sair da conta</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>

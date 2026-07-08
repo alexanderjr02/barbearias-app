@@ -32,7 +32,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["barbeiro", "equipe", "funcionário", "comissão", "adicionar"],
-    answer: "Para gerenciar sua equipe:\n\n1. Acesse **Equipe** no menu lateral\n2. Clique em **Adicionar barbeiro**\n3. Configure nome, especialidades e % de comissão\n\nNo plano **Pro** você pode ter até 10 barbeiros. No **Enterprise**, ilimitados!\n\n📊 Dica: Acompanhe a performance de cada barbeiro na aba de **Relatórios**.",
+    answer: "Para gerenciar sua equipe:\n\n1. Acesse **Equipe** no menu lateral\n2. Clique em **Adicionar barbeiro**\n3. Configure nome, especialidades e % de comissão\n\nNo plano **Starter** você pode ter até 3 barbeiros. No **Pro**, até 10. No **White Label**, ilimitados!\n\n📊 Dica: Acompanhe a performance de cada barbeiro na aba de **Relatórios**.",
   },
   {
     keywords: ["chatbot", "bot", "automatizar", "mensagem", "whatsapp"],
@@ -48,7 +48,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["plano", "upgrade", "pro", "premium", "assinar"],
-    answer: "Você está no **plano Starter** (gratuito).\n\nUpgrade para o **Pro (R$ 97/mês)** e desbloqueie:\n✅ Relatórios avançados\n✅ Chatbot personalizável + WhatsApp\n✅ Marketing e campanhas\n✅ Até 10 barbeiros\n✅ Exportar dados\n✅ Suporte prioritário\n\nClique em **Fazer upgrade** no menu lateral para assinar com 14 dias grátis!",
+    answer: "Você está no **plano Starter**.\n\nUpgrade para o **Pro (R$ 79/mês)** e desbloqueie:\n✅ Customização de cores e logo\n✅ Chatbot com IA básica\n✅ Análises detalhadas\n✅ Fidelização avançada\n✅ Até 10 barbeiros\n✅ Suporte prioritário\n\nClique em **Fazer upgrade** no menu lateral para assinar com 14 dias grátis!",
   },
   {
     keywords: ["estoque", "produto", "compras"],

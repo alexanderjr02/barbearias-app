@@ -34,26 +34,21 @@ export default function AuthLayout({
             Bem-vindo ao CORTIX
           </h2>
           <p className="text-zinc-500 leading-relaxed text-sm">
-            O sistema mais completo para gestão de barbearias. Agendamento online, chatbot inteligente e muito mais.
+            Gestão completa para barbearias. Agendamento online, chatbot e controle financeiro em um só lugar.
           </p>
 
           <div className="mt-10 grid grid-cols-2 gap-3 text-left">
             {[
-              { v: "5.000+", l: "Barbearias ativas" },
-              { v: "2M+", l: "Agendamentos" },
-              { v: "98%", l: "Satisfação" },
-              { v: "R$ 50M+", l: "Em receitas" },
-            ].map((stat) => (
-              <div key={stat.l} className="bg-zinc-900/80 border border-zinc-800/80 rounded-2xl p-4 backdrop-blur-sm">
-                <p className="text-xl font-black text-amber-400">{stat.v}</p>
-                <p className="text-xs text-zinc-600 mt-0.5">{stat.l}</p>
+              { l: "Sem fidelidade", d: "Cancele quando quiser" },
+              { l: "No ar em minutos", d: "Sem suporte técnico" },
+              { l: "Dados protegidos", d: "SSL + LGPD" },
+              { l: "Suporte", d: "Em português" },
+            ].map((item) => (
+              <div key={item.l} className="bg-zinc-900/80 border border-zinc-800/80 rounded-2xl p-4 backdrop-blur-sm">
+                <p className="text-sm font-black text-amber-400">{item.l}</p>
+                <p className="text-xs text-zinc-600 mt-0.5">{item.d}</p>
               </div>
             ))}
-          </div>
-
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="text-xs text-zinc-600">+127 barbearias cadastradas este mês</span>
           </div>
         </div>
       </div>

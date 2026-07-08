@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import { MarketingNav } from "@/components/layout/MarketingNav";
 import { LandingChatbot } from "@/components/chatbot/LandingChatbot";
@@ -13,14 +10,12 @@ import {
   Palette,
   Shield,
   Zap,
-  Star,
   CheckCircle,
   ArrowRight,
   Scissors,
   TrendingUp,
   Clock,
   Smartphone,
-  CreditCard,
 } from "lucide-react";
 
 const features = [
@@ -71,110 +66,72 @@ const features = [
 const plans = [
   {
     name: "Starter",
-    price: "Grátis",
-    period: "para sempre",
-    description: "Ideal para começar",
+    price: "R$ 29",
+    period: "/mês",
+    description: "Ideal para começar com gestão simples",
     color: "border-zinc-700",
     features: [
-      "Até 50 agendamentos/mês",
-      "1 barbeiro",
-      "Agenda online básica",
-      "Chatbot básico",
-      "App para clientes",
+      "Dashboard gestor básico",
+      "Agendamentos simples",
+      "Gestão financeira básica",
+      "Chatbot genérico",
+      "Até 3 barbeiros",
     ],
-    cta: "Começar grátis",
-    href: "/register",
+    cta: "Começar com Starter",
+    href: "/register?plan=starter",
     highlight: false,
   },
   {
     name: "Pro",
-    price: "R$ 97",
+    price: "R$ 79",
     period: "/mês",
     description: "Para barbearias em crescimento",
     color: "border-amber-500",
     badge: "Mais popular",
     features: [
-      "Agendamentos ilimitados",
-      "Até 10 barbeiros",
-      "Chatbot avançado com IA",
-      "Gestão financeira completa",
-      "Controle de estoque",
-      "Relatórios avançados",
-      "Marketing e lembretes SMS",
-      "Página personalizada",
+      "Tudo do Starter",
+      "Customização de cores e logo",
+      "Editor de chatbot com IA básica",
+      "Análises detalhadas",
+      "Fidelização avançada (pontos/cashback)",
       "Suporte prioritário",
+      "Até 10 barbeiros",
     ],
     cta: "Testar 14 dias grátis",
     href: "/register?plan=pro",
     highlight: true,
   },
   {
-    name: "Enterprise",
-    price: "R$ 197",
-    period: "/mês",
-    description: "Para redes e franquias",
-    color: "border-zinc-600",
+    name: "White Label",
+    price: "R$ 299",
+    period: "/mês + 3%",
+    description: "Para expansão e branding completo",
+    color: "border-fuchsia-500",
     features: [
-      "Tudo do plano Pro",
+      "Tudo do Pro",
+      "App própria com domínio customizado",
+      "Publicável na App Store/Google Play",
+      "Branding 100% personalizado",
+      "Sem marca da plataforma",
+      "Dashboard barbeiro completo",
+      "Marketplace de produtos",
+      "WhatsApp Business integrado",
       "Barbeiros ilimitados",
-      "Múltiplas unidades",
-      "API personalizada",
-      "Integração WhatsApp Business",
-      "Domínio próprio",
-      "Split de pagamentos",
-      "Gerente de conta dedicado",
     ],
-    cta: "Falar com vendas",
-    href: "/register?plan=enterprise",
+    cta: "Quero o White Label",
+    href: "/register?plan=white-label",
     highlight: false,
   },
 ];
 
-const testimonials = [
-  {
-    name: "Carlos Oliveira",
-    role: "Dono — Barbearia King's",
-    content:
-      "O CORTIX transformou minha barbearia. Reduzi 80% do tempo no telefone e aumentei 40% na receita no primeiro mês.",
-    rating: 5,
-    avatar: "CO",
-  },
-  {
-    name: "Rafael Santos",
-    role: "Barbeiro — Corte Perfeito",
-    content:
-      "O chatbot é incrível! Agenda sozinho enquanto estou trabalhando. Nunca mais perdi cliente por falta de resposta.",
-    rating: 5,
-    avatar: "RS",
-  },
-  {
-    name: "Diego Ferreira",
-    role: "Gerente — Barber Shop Premium",
-    content:
-      "O controle financeiro me deu clareza total do negócio. Agora sei exatamente quanto cada barbeiro traz por mês.",
-    rating: 5,
-    avatar: "DF",
-  },
-];
-
-const stats = [
-  { value: "5.000+", label: "Barbearias ativas" },
-  { value: "2M+", label: "Agendamentos realizados" },
-  { value: "98%", label: "Satisfação dos clientes" },
-  { value: "R$ 50M+", label: "Em receita gerada" },
+const trustPoints = [
+  { icon: Shield, title: "Sem fidelidade", desc: "Cancele quando quiser, sem multa." },
+  { icon: Clock, title: "No ar em minutos", desc: "Crie sua conta e comece a agendar hoje." },
+  { icon: Shield, title: "Dados protegidos", desc: "Conexão criptografada e tratamento alinhado à LGPD." },
+  { icon: MessageSquareText, title: "Suporte em português", desc: "Time de suporte local, sem robô de call center." },
 ];
 
 export default function HomePage() {
-  const [activePlanIndex, setActivePlanIndex] = useState(2);
-  const selectedPlan = plans[activePlanIndex];
-
-  const cyclePlan = (direction: "next" | "prev") => {
-    setActivePlanIndex((prev) => {
-      if (direction === "next") return (prev + 1) % plans.length;
-      return (prev - 1 + plans.length) % plans.length;
-    });
-  };
-
   return (
     <div className="min-h-screen bg-black">
       <MarketingNav />
@@ -187,20 +144,20 @@ export default function HomePage() {
         <div className="relative max-w-6xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm font-medium px-4 py-2 rounded-full mb-8">
             <Zap className="w-4 h-4" />
-            O sistema #1 para barbearias no Brasil
+            Gestão completa para barbearias
           </div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-6">
-            Sua barbearia no
+            Menos tempo na agenda,
             <br />
             <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
-              próximo nível
+              mais tempo cortando
             </span>
           </h1>
 
           <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Agendamento automático, chatbot inteligente, gestão financeira e
-            muito mais. Tudo que sua barbearia precisa em uma plataforma.
+            Agendamento online, chatbot, financeiro e gestão de equipe em um
+            só lugar — para você parar de perder cliente por falta de resposta.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -208,7 +165,7 @@ export default function HomePage() {
               href="/register"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold px-8 py-4 rounded-xl hover:opacity-90 transition-all text-lg shadow-lg shadow-amber-500/25 hover:scale-105"
             >
-              Começar grátis
+              Começar agora
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
@@ -219,155 +176,21 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Stats */}
+          {/* Trust points */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 backdrop-blur-sm"
-              >
-                <p className="text-3xl font-black text-white mb-1">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-zinc-500">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Demo preview */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-black text-white mb-3">
-              Veja as partes que você pediu em ação
-            </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
-              Planos, chat de ajuda e personalização do chatbot em uma experiência que fica clara para o barbeiro e para o cliente.
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
-              <div className="flex items-center gap-2 text-amber-400 mb-4">
-                <CreditCard className="w-5 h-5" />
-                <h3 className="text-lg font-bold text-white">Planos e upgrade</h3>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { label: "Starter", value: "Grátis" },
-                  { label: "Pro", value: "R$ 97/mês" },
-                  { label: "Enterprise", value: "R$ 197/mês" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5">
-                    <span className="text-sm text-zinc-300">{item.label}</span>
-                    <span className="text-sm font-semibold text-amber-400">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-              <Link href="/register?plan=pro" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300">
-                Ver opções <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
-              <div className="flex items-center gap-2 text-amber-400 mb-4">
-                <MessageSquareText className="w-5 h-5" />
-                <h3 className="text-lg font-bold text-white">Chat para o cliente</h3>
-              </div>
-              <div className="rounded-2xl bg-zinc-950 border border-zinc-800 p-4 space-y-3">
-                <div className="rounded-2xl bg-zinc-800 px-3 py-2 text-sm text-zinc-200">
-                  Olá! Como posso te ajudar hoje?
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {['Horário', 'Agendar', 'Preços'].map((item) => (
-                    <span key={item} className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400">
-                      {item}
-                    </span>
-                  ))}
-                </div>
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
-                  Atendimento rápido, automático e com aparência personalizada.
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
-              <div className="flex items-center gap-2 text-amber-400 mb-4">
-                <Palette className="w-5 h-5" />
-                <h3 className="text-lg font-bold text-white">Painel do barbeiro</h3>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { title: "Chatbot", desc: "Nome, mensagem e FAQ" },
-                  { title: "Plano", desc: "Personalização e WhatsApp" },
-                  { title: "Visual", desc: "Cores e prévia da página" },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-3">
-                    <p className="text-sm font-semibold text-white">{item.title}</p>
-                    <p className="text-xs text-zinc-500 mt-1">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-              <Link href="/dashboard/settings" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300">
-                Abrir configurações <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-10 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
-            {/* Fake browser bar */}
-            <div className="bg-zinc-950 px-4 py-3 flex items-center gap-3 border-b border-zinc-800">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-              </div>
-              <div className="flex-1 bg-zinc-800 rounded-md px-3 py-1 text-xs text-zinc-500 max-w-xs mx-auto text-center">
-                app.cortix.com.br/dashboard
-              </div>
-            </div>
-            {/* Dashboard mock */}
-            <div className="p-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { label: "Receita Hoje", value: "R$ 1.250", change: "+12%", positive: true },
-                { label: "Agendamentos", value: "18", change: "+5", positive: true },
-                { label: "Clientes Novos", value: "7", change: "+3", positive: true },
-                { label: "Ticket Médio", value: "R$ 69", change: "+8%", positive: true },
-              ].map((item) => (
+            {trustPoints.map((point) => {
+              const Icon = point.icon;
+              return (
                 <div
-                  key={item.label}
-                  className="bg-zinc-800 rounded-xl p-4 border border-zinc-700"
+                  key={point.title}
+                  className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 backdrop-blur-sm text-left"
                 >
-                  <p className="text-xs text-zinc-500 mb-2">{item.label}</p>
-                  <p className="text-2xl font-bold text-white">{item.value}</p>
-                  <span className="text-xs text-green-400 font-medium">
-                    {item.change} hoje
-                  </span>
+                  <Icon className="w-5 h-5 text-amber-400 mb-3" />
+                  <p className="text-sm font-bold text-white mb-1">{point.title}</p>
+                  <p className="text-xs text-zinc-500">{point.desc}</p>
                 </div>
-              ))}
-            </div>
-            <div className="px-6 pb-6">
-              <div className="bg-zinc-800 rounded-xl p-4 border border-zinc-700 flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="h-2 bg-zinc-700 rounded-full mb-2 w-full">
-                    <div className="h-2 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full w-3/4" />
-                  </div>
-                  <div className="h-2 bg-zinc-700 rounded-full mb-2 w-4/5">
-                    <div className="h-2 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full w-1/2" />
-                  </div>
-                  <div className="h-2 bg-zinc-700 rounded-full w-2/3">
-                    <div className="h-2 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full w-4/5" />
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-zinc-500">Meta mensal</p>
-                  <p className="text-xl font-bold text-white">R$ 28.500</p>
-                  <p className="text-xs text-amber-400">75% atingida</p>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -482,52 +305,11 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 md:p-8 mb-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-400">
-                  <Zap className="w-4 h-4" /> Demonstração do plano {selectedPlan.name}
-                </div>
-                <h3 className="mt-4 text-2xl font-black text-white">{selectedPlan.name}</h3>
-                <p className="mt-2 text-zinc-400">{selectedPlan.description}</p>
-              </div>
-              <div className="text-left md:text-right">
-                <p className="text-3xl font-black text-white">{selectedPlan.price}</p>
-                <p className="text-sm text-zinc-500">{selectedPlan.period}</p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-3 md:grid-cols-2">
-              {selectedPlan.features.slice(0, 6).map((feature) => (
-                <div key={feature} className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-3 text-sm text-zinc-300">
-                  <CheckCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                  {feature}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href={selectedPlan.href}
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 px-5 py-3 font-bold text-black transition-all hover:opacity-90"
-              >
-                {selectedPlan.cta}
-              </Link>
-              <button
-                onClick={() => cyclePlan("next")}
-                className="inline-flex items-center justify-center rounded-xl border border-zinc-700 px-5 py-3 font-semibold text-zinc-300 transition-all hover:border-amber-500 hover:text-amber-400"
-              >
-                Ver próximo plano
-              </button>
-            </div>
-          </div>
-
           <div className="grid md:grid-cols-3 gap-6 items-stretch">
-            {plans.map((plan, index) => (
-              <button
+            {plans.map((plan) => (
+              <div
                 key={plan.name}
-                onClick={() => setActivePlanIndex(index)}
-                className={`relative text-left bg-zinc-900 border-2 ${plan.color} rounded-2xl p-8 flex flex-col transition-all ${activePlanIndex === index ? "scale-[1.02] shadow-xl shadow-amber-500/10" : "hover:border-zinc-600"}`}
+                className={`relative text-left bg-zinc-900 border-2 ${plan.color} rounded-2xl p-8 flex flex-col ${plan.highlight ? "scale-[1.02] shadow-xl shadow-amber-500/10" : ""}`}
               >
                 {plan.badge && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-xs font-bold px-4 py-1.5 rounded-full">
@@ -558,58 +340,66 @@ export default function HomePage() {
                   ))}
                 </ul>
 
-                <span
+                <Link
+                  href={plan.href}
                   className={`block text-center py-3 px-6 rounded-xl font-bold transition-all ${
-                    activePlanIndex === index
-                      ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-black"
-                      : "border border-zinc-700 text-zinc-300"
+                    plan.highlight
+                      ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-black hover:opacity-90"
+                      : "border border-zinc-700 text-zinc-300 hover:border-amber-500 hover:text-amber-400"
                   }`}
                 >
-                  {activePlanIndex === index ? "Plano ativo" : plan.cta}
-                </span>
-              </button>
+                  {plan.cta}
+                </Link>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-4 bg-zinc-950">
+      {/* Trust / why choose us */}
+      <section id="why-us" className="py-20 px-4 bg-zinc-950">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-white mb-4">
-              O que dizem nossos clientes
+              Por que barbearias escolhem o CORTIX
             </h2>
+            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+              Construído para quem administra uma barbearia no dia a dia, sem depender de suporte técnico.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <div
-                key={t.name}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl p-6"
-              >
-                <div className="flex mb-4">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 text-amber-400 fill-amber-400"
-                    />
-                  ))}
-                </div>
-                <p className="text-zinc-300 text-sm leading-relaxed mb-6">
-                  &ldquo;{t.content}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black text-sm font-bold">
-                    {t.avatar}
+            {[
+              {
+                icon: Clock,
+                title: "Configura em minutos",
+                desc: "Cadastre serviços, horários e equipe — sua página de agendamento fica no ar no mesmo dia.",
+              },
+              {
+                icon: Shield,
+                title: "Sem letras miúdas",
+                desc: "Preço fechado, sem taxa de adesão e sem multa de cancelamento.",
+              },
+              {
+                icon: MessageSquareText,
+                title: "Suporte de verdade",
+                desc: "Time em português para tirar dúvida durante a configuração e o uso do dia a dia.",
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="bg-zinc-900 border border-zinc-800 rounded-xl p-6"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-amber-400" />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-white">{t.name}</p>
-                    <p className="text-xs text-zinc-500">{t.role}</p>
-                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">{item.desc}</p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -639,11 +429,11 @@ export default function HomePage() {
               },
               {
                 q: "O chatbot funciona no WhatsApp?",
-                a: "Nos planos Pro e Enterprise, oferecemos integração com WhatsApp Business API para agendamento automático via chat.",
+                a: "Nos planos Pro e White Label, oferecemos integração com WhatsApp Business API para agendamento automático via chat.",
               },
               {
                 q: "Como funciona o período de teste?",
-                a: "O plano Starter é gratuito para sempre. Os planos Pro e Enterprise têm 14 dias de teste grátis, sem cartão de crédito.",
+                a: "O plano Starter começa em R$ 29/mês. Os planos Pro e White Label têm 14 dias de teste grátis, sem cartão de crédito.",
               },
             ].map((faq, i) => (
               <div
@@ -664,18 +454,18 @@ export default function HomePage() {
           <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border border-amber-500/20 rounded-3xl p-12">
             <Clock className="w-12 h-12 text-amber-400 mx-auto mb-6" />
             <h2 className="text-4xl font-black text-white mb-4">
-              Comece agora, gratuitamente
+              Pronto para organizar sua barbearia?
             </h2>
             <p className="text-zinc-400 text-lg mb-8 max-w-xl mx-auto">
-              Junte-se a mais de 5.000 barbearias que já transformaram seu
-              negócio com o CORTIX.
+              Crie sua conta agora e tenha sua página de agendamento no ar
+              ainda hoje.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/register"
                 className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold px-8 py-4 rounded-xl hover:opacity-90 transition-all text-lg"
               >
-                Criar conta grátis
+                Criar minha conta
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link

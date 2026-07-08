@@ -1,13 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const selectedPlanParam = searchParams.get("plan")?.toLowerCase() ?? "starter";
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    barbershopName: "",
+    barbershopSlug: "",
+    city: "",
+    plan: selectedPlanParam === "enterprise" ? "white-label" : selectedPlanParam,
+  });
+
+  const updateField = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const planOptions = [
+    { value: "starter", label: "Starter (R$ 29/mês)", description: "Gestão básica para começar" },
+    { value: "pro", label: "Pro (R$ 79/mês)", description: "Mais recursos e automações" },
+    { value: "white-label", label: "White Label (R$ 299/mês + 3%)", description: "App própria e branding completo" },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,10 +39,25 @@ export default function RegisterPage() {
       setStep(2);
       return;
     }
+    setError(null);
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error ?? "Não foi possível criar a conta");
+        setIsLoading(false);
+        return;
+      }
       window.location.href = "/dashboard";
-    }, 1500);
+    } catch {
+      setError("Erro de conexão. Tente novamente.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -57,21 +96,21 @@ export default function RegisterPage() {
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
                 Seu nome completo
               </label>
-              <input type="text" required placeholder="João Silva"
+              <input type="text" required placeholder="João Silva" value={form.name} onChange={updateField("name")}
                 className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
                 E-mail
               </label>
-              <input type="email" required placeholder="seu@email.com"
+              <input type="email" required placeholder="seu@email.com" value={form.email} onChange={updateField("email")}
                 className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
                 WhatsApp
               </label>
-              <input type="tel" placeholder="(11) 99999-9999"
+              <input type="tel" placeholder="(11) 99999-9999" value={form.phone} onChange={updateField("phone")}
                 className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
             </div>
             <div>
@@ -79,7 +118,7 @@ export default function RegisterPage() {
                 Senha
               </label>
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} required placeholder="Mínimo 8 caracteres"
+                <input type={showPassword ? "text" : "password"} required minLength={8} placeholder="Mínimo 8 caracteres" value={form.password} onChange={updateField("password")}
                   className="w-full h-12 px-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
@@ -98,6 +137,8 @@ export default function RegisterPage() {
                 type="text"
                 required
                 placeholder="Barbearia do João"
+                value={form.barbershopName}
+                onChange={updateField("barbershopName")}
                 className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
               />
             </div>
@@ -113,6 +154,8 @@ export default function RegisterPage() {
                   type="text"
                   required
                   placeholder="minha-barbearia"
+                  value={form.barbershopSlug}
+                  onChange={updateField("barbershopSlug")}
                   className="flex-1 h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-r-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                 />
               </div>
@@ -124,6 +167,8 @@ export default function RegisterPage() {
               <input
                 type="text"
                 placeholder="São Paulo, SP"
+                value={form.city}
+                onChange={updateField("city")}
                 className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
               />
             </div>
@@ -131,22 +176,23 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Plano
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {["Starter (Grátis)", "Pro (R$ 97)", "Enterprise (R$ 197)"].map(
-                  (plan, i) => (
-                    <label key={plan} className="cursor-pointer">
-                      <input
-                        type="radio"
-                        name="plan"
-                        defaultChecked={i === 0}
-                        className="sr-only peer"
-                      />
-                      <div className="text-center p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-zinc-400 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400 transition-all">
-                        {plan}
-                      </div>
-                    </label>
-                  )
-                )}
+              <div className="grid gap-2">
+                {planOptions.map((plan) => (
+                  <label key={plan.value} className="cursor-pointer">
+                    <input
+                      type="radio"
+                      name="plan"
+                      value={plan.value}
+                      checked={form.plan === plan.value}
+                      onChange={() => setForm((prev) => ({ ...prev, plan: plan.value }))}
+                      className="sr-only peer"
+                    />
+                    <div className="p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-left text-xs text-zinc-400 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400 transition-all">
+                      <div className="font-semibold text-sm text-white">{plan.label}</div>
+                      <div className="text-zinc-500 mt-1">{plan.description}</div>
+                    </div>
+                  </label>
+                ))}
               </div>
             </div>
           </>
@@ -176,6 +222,12 @@ export default function RegisterPage() {
           </button>
         )}
       </form>
+
+      {error && (
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+          <p className="text-xs text-red-400 text-center">{error}</p>
+        </div>
+      )}
 
       <p className="mt-6 text-xs text-zinc-600 text-center">
         Ao criar uma conta, você concorda com nossos{" "}

@@ -1,7 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Scissors } from "lucide-react";
+import { getSession } from "@/lib/auth";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession();
+
+  if (!session || session.role !== "SUPER_ADMIN") {
+    redirect("/login");
+  }
+
+  const initials = session.name
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
     <div className="min-h-screen bg-zinc-950">
       {/* Admin topbar */}
@@ -22,7 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Voltar ao painel →
           </Link>
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-            SA
+            {initials}
           </div>
         </div>
       </header>

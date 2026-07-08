@@ -20,6 +20,10 @@ model User {
   barbershop    Barbershop? @relation("BarbershopOwner")
   staffProfile  Staff?
   appointments  Appointment[] @relation("ClientAppointments")
+  refreshTokens RefreshToken[]
+  loyaltyAccounts LoyaltyAccount[]
+  clientOf      BarbershopClient[]
+  reviewsGiven  Review[]
 }
 
 model Barbershop {
@@ -41,6 +45,7 @@ model Barbershop {
   whatsapp        String?
   isActive        Boolean  @default(true)
   plan            String   @default("FREE")
+  pointsPerReal   Int      @default(10)
   ownerId         String   @unique
   owner           User     @relation("BarbershopOwner", fields: [ownerId], references: [id])
   createdAt       DateTime @default(now())
@@ -53,6 +58,8 @@ model Barbershop {
   transactions    FinancialTransaction[]
   chatMessages    ChatMessage[]
   workingHours    WorkingHour[]
+  loyaltyAccounts LoyaltyAccount[]
+  clients         BarbershopClient[]
 }
 
 model Staff {
@@ -73,12 +80,14 @@ model Staff {
 
   appointments  Appointment[]
   availability  Availability[]
+  reviews       Review[]
 }
 
 model Service {
   id            String   @id @default(cuid())
   name          String
   description   String?
+  image         String?
   duration      Int
   price         Float
   category      String   @default("HAIRCUT")
@@ -114,12 +123,33 @@ model Appointment {
   client        User?    @relation("ClientAppointments", fields: [clientId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  review        Review?
+}
+
+// One review per appointment, left by the client after it's COMPLETED.
+// staffId is denormalized from the appointment so average-rating queries
+// don't need to join through Appointment.
+model Review {
+  id            String   @id @default(cuid())
+  appointmentId String   @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  staffId       String
+  staff         Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  clientId      String
+  client        User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  rating        Int
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  @@index([staffId])
 }
 
 model Product {
   id            String   @id @default(cuid())
   name          String
   description   String?
+  image         String?
   sku           String?
   price         Float
   costPrice     Float?
@@ -156,6 +186,8 @@ model WorkingHour {
   isOpen        Boolean  @default(true)
   barbershopId  String
   barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  @@unique([barbershopId, dayOfWeek])
 }
 
 model Availability {
@@ -176,4 +208,62 @@ model ChatMessage {
   barbershopId  String
   barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
+}
+
+model RefreshToken {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Marks a User as a client of a barbershop even before they have any
+// Appointment — lets a gestor pre-register a client (see /api/clients POST).
+// Clients who only ever booked as a guest have no row here; they're derived
+// straight from Appointment instead (see the GET handler's merge logic).
+model BarbershopClient {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershopId  String
+  barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, barbershopId])
+}
+
+// tier is derived from `points` (see src/lib/loyalty.ts TIER_THRESHOLDS) —
+// stored redundantly so it can be queried/sorted without recomputing.
+model LoyaltyAccount {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershopId  String
+  barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  points        Int      @default(0)
+  tier          String   @default("BRONZE")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  transactions  PointsTransaction[]
+
+  @@unique([userId, barbershopId])
+}
+
+model PointsTransaction {
+  id                String   @id @default(cuid())
+  loyaltyAccountId  String
+  loyaltyAccount    LoyaltyAccount @relation(fields: [loyaltyAccountId], references: [id], onDelete: Cascade)
+  amount            Int
+  type              String   // EARNED | REDEEMED | ADJUSTED
+  appointmentId     String?
+  description       String?
+  createdAt         DateTime @default(now())
+
+  @@index([loyaltyAccountId])
 }

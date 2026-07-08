@@ -1,45 +1,136 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, AlertTriangle, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { apiGet, apiPost } from "@/lib/apiClient";
+import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
+import { PhotoUpload } from "@/components/dashboard/PhotoUpload";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
-const products = [
-  { id: "1", name: "Pomada Cabelo Black", brand: "Arnica", sku: "ARN-001", price: 35, cost: 18, quantity: 24, minQuantity: 5, category: "Finalizadores" },
-  { id: "2", name: "Óleo de Barba", brand: "Barbeador Pro", sku: "BBP-002", price: 45, cost: 22, quantity: 3, minQuantity: 5, category: "Barba" },
-  { id: "3", name: "Shampoo Profissional 500ml", brand: "Wella", sku: "WEL-003", price: 55, cost: 28, quantity: 12, minQuantity: 3, category: "Cabelo" },
-  { id: "4", name: "Condicionador 500ml", brand: "Wella", sku: "WEL-004", price: 50, cost: 25, quantity: 8, minQuantity: 3, category: "Cabelo" },
-  { id: "5", name: "Navalha Descartável (cx 100)", brand: "Gillette", sku: "GIL-005", price: 85, cost: 60, quantity: 2, minQuantity: 3, category: "Ferramentas" },
-  { id: "6", name: "Pente Profissional", brand: "Hercules", sku: "HER-006", price: 25, cost: 12, quantity: 15, minQuantity: 5, category: "Ferramentas" },
-  { id: "7", name: "Gel para Cabelo 240g", brand: "Salon Line", sku: "SLN-007", price: 28, cost: 14, quantity: 20, minQuantity: 5, category: "Finalizadores" },
-  { id: "8", name: "Tintura Cabelo #1 (Preto)", brand: "L'Oréal", sku: "LOR-008", price: 40, cost: 20, quantity: 1, minQuantity: 3, category: "Coloração" },
-];
+interface ApiProduct {
+  id: string;
+  name: string;
+  image: string | null;
+  brand: string | null;
+  sku: string | null;
+  price: number;
+  costPrice: number | null;
+  quantity: number;
+  minQuantity: number;
+  category: string | null;
+}
 
 export default function InventoryPage() {
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: () => apiGet<ApiProduct[]>("/api/products") });
+
+  const createProduct = useMutation({
+    mutationFn: (data: Record<string, unknown>) => apiPost("/api/products", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      setModalOpen(false);
+      setImage(null);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    createProduct.mutate({
+      name: form.get("name"),
+      image: image || undefined,
+      brand: form.get("brand") || undefined,
+      sku: form.get("sku") || undefined,
+      category: form.get("category") || undefined,
+      price: Number(form.get("price")),
+      costPrice: form.get("costPrice") ? Number(form.get("costPrice")) : undefined,
+      quantity: Number(form.get("quantity")),
+      minQuantity: Number(form.get("minQuantity")),
+    });
+  };
 
   const filtered = products.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.brand.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase())
+      (p.brand ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (p.category ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   const lowStock = products.filter((p) => p.quantity <= p.minQuantity);
-  const totalValue = products.reduce((a, p) => a + p.cost * p.quantity, 0);
+  const totalValue = products.reduce((a, p) => a + (p.costPrice ?? 0) * p.quantity, 0);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <FormModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setImage(null); }}
+        title="Novo produto"
+        onSubmit={handleSubmit}
+        isPending={createProduct.isPending}
+        error={createProduct.error?.message}
+        submitLabel="Criar produto"
+      >
         <div>
-          <h1 className="text-2xl font-black text-white">Estoque</h1>
-          <p className="text-zinc-500 text-sm mt-1">{products.length} produtos cadastrados</p>
+          <label className={labelCls}>Foto</label>
+          <PhotoUpload value={image} onChange={setImage} shape="square" />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-lg hover:opacity-90 transition-all">
-          <Plus className="w-4 h-4" />
-          Novo produto
-        </button>
-      </div>
+        <div>
+          <label className={labelCls}>Nome</label>
+          <input name="name" required className={fieldCls} placeholder="Ex: Pomada Cabelo Black" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Marca</label>
+            <input name="brand" className={fieldCls} />
+          </div>
+          <div>
+            <label className={labelCls}>SKU</label>
+            <input name="sku" className={fieldCls} />
+          </div>
+        </div>
+        <div>
+          <label className={labelCls}>Categoria</label>
+          <input name="category" className={fieldCls} placeholder="Finalizadores" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Preço de venda (R$)</label>
+            <input name="price" type="number" min={0} step="0.01" required className={fieldCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Preço de custo (R$)</label>
+            <input name="costPrice" type="number" min={0} step="0.01" className={fieldCls} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Quantidade</label>
+            <input name="quantity" type="number" min={0} defaultValue={0} className={fieldCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Estoque mínimo</label>
+            <input name="minQuantity" type="number" min={0} defaultValue={5} className={fieldCls} />
+          </div>
+        </div>
+      </FormModal>
+
+      <PageHeader
+        icon={Package}
+        title="Estoque"
+        subtitle={`${products.length} produtos cadastrados`}
+        action={
+          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+            <Plus className="w-4 h-4" />
+            Novo produto
+          </button>
+        }
+      />
 
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4">
@@ -104,17 +195,29 @@ export default function InventoryPage() {
                 return (
                   <tr key={product.id} className={`hover:bg-white/2 transition-colors ${isLow ? "bg-amber-500/2" : ""}`}>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-white">{product.name}</p>
-                      <p className="text-xs text-zinc-500">{product.brand} · {product.sku}</p>
+                      <div className="flex items-center gap-3">
+                        {product.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={product.image} alt={product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                            <Package className="w-4 h-4 text-zinc-600" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-medium text-white">{product.name}</p>
+                          <p className="text-xs text-zinc-500">{[product.brand, product.sku].filter(Boolean).join(" · ")}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-4 hidden md:table-cell">
                       <span className="text-xs bg-zinc-800 border border-zinc-700 text-zinc-400 px-2 py-0.5 rounded-full">
-                        {product.category}
+                        {product.category ?? "—"}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
                       <p className="text-sm font-medium text-amber-400">{formatCurrency(product.price)}</p>
-                      <p className="text-xs text-zinc-600">custo: {formatCurrency(product.cost)}</p>
+                      {product.costPrice != null && <p className="text-xs text-zinc-600">custo: {formatCurrency(product.costPrice)}</p>}
                     </td>
                     <td className="px-4 py-4 text-center">
                       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${isLow ? "bg-amber-500/10 text-amber-400 border border-amber-500/30" : "bg-green-500/10 text-green-400 border border-green-500/30"}`}>
@@ -123,13 +226,18 @@ export default function InventoryPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right hidden sm:table-cell">
-                      <p className="text-sm font-medium text-white">{formatCurrency(product.cost * product.quantity)}</p>
+                      <p className="text-sm font-medium text-white">{formatCurrency((product.costPrice ?? 0) * product.quantity)}</p>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          {filtered.length === 0 && (
+            <div className="text-center py-12 text-zinc-500">
+              Nenhum produto cadastrado ainda
+            </div>
+          )}
         </div>
       </div>
     </div>

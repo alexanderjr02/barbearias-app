@@ -23,7 +23,7 @@ const PLAN_ICONS = {
   ENTERPRISE: Crown,
 };
 
-const PLAN_PRICES: Record<string, number> = { FREE: 0, PRO: 97, ENTERPRISE: 197 };
+const PLAN_PRICES: Record<string, number> = { FREE: 29, PRO: 79, ENTERPRISE: 299 };
 
 function PlanBadge({ plan }: { plan: string }) {
   const Icon = PLAN_ICONS[plan as keyof typeof PLAN_ICONS] ?? Check;
@@ -166,7 +166,7 @@ export default function AdminPage() {
             <Crown className="w-5 h-5 text-purple-400" />
           </div>
           <p className="text-2xl font-black text-purple-400">{byPlan.ENTERPRISE}</p>
-          <p className="text-sm text-zinc-500">Enterprise</p>
+          <p className="text-sm text-zinc-500">White Label</p>
         </div>
 
         <div className="bg-zinc-900 border border-green-500/20 rounded-xl p-5">
@@ -197,7 +197,7 @@ export default function AdminPage() {
               className={cn("px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
                 planFilter === f ? "bg-purple-500/20 border border-purple-500/40 text-purple-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300"
               )}>
-              {f === "ALL" ? "Todos" : f === "FREE" ? "Starter" : f}
+              {f === "ALL" ? "Todos" : f === "FREE" ? "Starter" : f === "ENTERPRISE" ? "White Label" : f}
             </button>
           ))}
         </div>

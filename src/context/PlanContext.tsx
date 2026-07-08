@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useCallback, ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiGet, apiPatch } from "@/lib/apiClient";
 
 export type Plan = "FREE" | "PRO" | "ENTERPRISE";
 
@@ -68,25 +63,25 @@ export const PLAN_INFO: Record<
     color: "text-zinc-400",
     bg: "bg-zinc-800",
     badgeBg: "bg-zinc-700 text-zinc-300",
-    price: "Grátis",
+    price: "R$ 29/mês",
     appointmentsLimit: 50,
-    staffLimit: 1,
+    staffLimit: 3,
   },
   PRO: {
     label: "Pro",
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     badgeBg: "bg-amber-500/20 text-amber-400",
-    price: "R$ 97/mês",
+    price: "R$ 79/mês",
     appointmentsLimit: Infinity,
     staffLimit: 10,
   },
   ENTERPRISE: {
-    label: "Enterprise",
+    label: "White Label",
     color: "text-purple-400",
     bg: "bg-purple-500/10",
     badgeBg: "bg-purple-500/20 text-purple-400",
-    price: "R$ 197/mês",
+    price: "R$ 299/mês + 3%",
     appointmentsLimit: Infinity,
     staffLimit: Infinity,
   },
@@ -95,45 +90,48 @@ export const PLAN_INFO: Record<
 interface PlanContextType {
   plan: Plan;
   can: (feature: Feature) => boolean;
-  setPlan: (plan: Plan) => void;
-  appointmentsUsed: number;
+  setPlan: (plan: Plan) => Promise<void>;
   appointmentsLimit: number;
+  isLoading: boolean;
 }
 
 const PlanContext = createContext<PlanContextType>({
   plan: "FREE",
   can: () => false,
-  setPlan: () => {},
-  appointmentsUsed: 18,
-  appointmentsLimit: 50,
+  setPlan: async () => {},
+  appointmentsLimit: PLAN_INFO.FREE.appointmentsLimit,
+  isLoading: true,
 });
 
+// The plan lives on the Barbershop record — this reads/writes it for real
+// instead of the old localStorage-only toggle, so gating actually reflects
+// what the gestor is subscribed to (and demo accounts can showcase each tier).
 export function PlanProvider({ children }: { children: ReactNode }) {
-  const [plan, setPlanState] = useState<Plan>("ENTERPRISE");
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const stored = localStorage.getItem("cortix_plan") as Plan | null;
-    const initialPlan = stored && stored in FEATURES_BY_PLAN ? stored : "ENTERPRISE";
-    setPlanState(initialPlan);
-    localStorage.setItem("cortix_plan", initialPlan);
-  }, []);
+  const { data, isLoading } = useQuery({
+    queryKey: ["barbershop-plan"],
+    queryFn: () => apiGet<{ plan: Plan }>("/api/barbershop"),
+    retry: false,
+    staleTime: 60_000,
+  });
 
-  const setPlan = useCallback((newPlan: Plan) => {
-    setPlanState(newPlan);
-    localStorage.setItem("cortix_plan", newPlan);
-  }, []);
+  const plan: Plan = data?.plan && data.plan in FEATURES_BY_PLAN ? data.plan : "FREE";
 
-  const can = useCallback(
-    (feature: Feature) => FEATURES_BY_PLAN[plan].includes(feature),
-    [plan]
+  const setPlan = useCallback(
+    async (newPlan: Plan) => {
+      await apiPatch("/api/barbershop", { plan: newPlan });
+      await queryClient.invalidateQueries({ queryKey: ["barbershop-plan"] });
+    },
+    [queryClient]
   );
+
+  const can = useCallback((feature: Feature) => FEATURES_BY_PLAN[plan].includes(feature), [plan]);
 
   const appointmentsLimit = PLAN_INFO[plan].appointmentsLimit;
 
   return (
-    <PlanContext.Provider
-      value={{ plan, can, setPlan, appointmentsUsed: 18, appointmentsLimit }}
-    >
+    <PlanContext.Provider value={{ plan, can, setPlan, appointmentsLimit, isLoading }}>
       {children}
     </PlanContext.Provider>
   );

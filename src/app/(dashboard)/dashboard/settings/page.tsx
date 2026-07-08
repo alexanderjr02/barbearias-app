@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Palette,
   Store,
@@ -14,9 +15,23 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { usePlan, PLAN_INFO } from "@/context/PlanContext";
+import { usePlan, PLAN_INFO, FEATURES_BY_PLAN, type Feature } from "@/context/PlanContext";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { cn } from "@/lib/utils";
+import { apiGet, apiPatch } from "@/lib/apiClient";
+
+interface BarbershopMe {
+  id: string;
+  name: string;
+  slug: string;
+  phone: string | null;
+  email: string | null;
+  instagram: string | null;
+  city: string | null;
+  description: string | null;
+  primaryColor: string;
+  workingHours: { dayOfWeek: number; isOpen: boolean; openTime: string; closeTime: string }[];
+}
 
 const tabs = [
   { id: "profile", label: "Barbearia", icon: Store },
@@ -25,6 +40,19 @@ const tabs = [
   { id: "notifications", label: "Notificações", icon: Bell },
   { id: "chatbot", label: "Chatbot", icon: MessageSquareText },
   { id: "billing", label: "Plano", icon: CreditCard },
+];
+
+const PLAN_FEATURE_LABELS: { feature: Feature; label: string }[] = [
+  { feature: "unlimited_appointments", label: "Agendamentos ilimitados" },
+  { feature: "multiple_staff", label: "Equipe com mais barbeiros" },
+  { feature: "advanced_reports", label: "Relatórios avançados" },
+  { feature: "chatbot_customization", label: "Chatbot personalizável" },
+  { feature: "chatbot_whatsapp", label: "WhatsApp Business" },
+  { feature: "financial_full", label: "Financeiro completo" },
+  { feature: "inventory", label: "Controle de estoque" },
+  { feature: "marketing", label: "Marketing e campanhas" },
+  { feature: "staff_commission", label: "Comissão por barbeiro" },
+  { feature: "export_data", label: "Exportar dados" },
 ];
 
 const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -78,13 +106,89 @@ const defaultChatbot: ChatbotConfig = {
 };
 
 export default function SettingsPage() {
-  const { plan, can } = usePlan();
+  const { plan, can, setPlan } = usePlan();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("profile");
   const [primaryColor, setPrimaryColor] = useState("#D4AF37");
   const [hours, setHours] = useState(defaultHours);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [chatbot, setChatbot] = useState<ChatbotConfig>(defaultChatbot);
   const [chatbotSaved, setChatbotSaved] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [hoursSaved, setHoursSaved] = useState(false);
+  const [appearanceSaved, setAppearanceSaved] = useState(false);
+
+  const { data: barbershop } = useQuery({
+    queryKey: ["barbershop-me"],
+    queryFn: () => apiGet<BarbershopMe>("/api/barbershop"),
+  });
+
+  useEffect(() => {
+    if (!barbershop) return;
+    setPrimaryColor(barbershop.primaryColor);
+    if (barbershop.workingHours.length > 0) {
+      setHours(
+        days.map((day, i) => {
+          const wh = barbershop.workingHours.find((h) => h.dayOfWeek === i);
+          return wh
+            ? { day, isOpen: wh.isOpen, open: wh.openTime, close: wh.closeTime }
+            : { day, isOpen: i !== 0, open: "09:00", close: i === 6 ? "18:00" : "20:00" };
+        })
+      );
+    }
+  }, [barbershop]);
+
+  const updateBarbershop = useMutation({
+    mutationFn: (data: Record<string, unknown>) => apiPatch("/api/barbershop", data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["barbershop-me"] }),
+  });
+
+  const handleProfileSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    updateBarbershop.mutate(
+      {
+        name: form.get("name"),
+        phone: form.get("phone"),
+        email: form.get("email"),
+        instagram: form.get("instagram"),
+        city: form.get("city"),
+        description: form.get("description"),
+      },
+      {
+        onSuccess: () => {
+          setProfileSaved(true);
+          setTimeout(() => setProfileSaved(false), 1600);
+        },
+      }
+    );
+  };
+
+  const saveAppearance = () => {
+    updateBarbershop.mutate(
+      { primaryColor },
+      {
+        onSuccess: () => {
+          setAppearanceSaved(true);
+          setTimeout(() => setAppearanceSaved(false), 1600);
+        },
+      }
+    );
+  };
+
+  const saveHours = () => {
+    updateBarbershop.mutate(
+      {
+        workingHours: hours.map((h, i) => ({ dayOfWeek: i, isOpen: h.isOpen, openTime: h.open, closeTime: h.close })),
+      },
+      {
+        onSuccess: () => {
+          setHoursSaved(true);
+          setTimeout(() => setHoursSaved(false), 1600);
+        },
+      }
+    );
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem("cortix_chatbot_config");
@@ -156,35 +260,47 @@ export default function SettingsPage() {
 
         <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           {activeTab === "profile" && (
-            <div className="space-y-5">
+            <form key={barbershop?.id} onSubmit={handleProfileSubmit} className="space-y-5">
               <h2 className="text-lg font-bold text-white">Informações da Barbearia</h2>
               <div className="grid sm:grid-cols-2 gap-4">
-                {[
-                  { label: "Nome da barbearia", placeholder: "Barbearia do João", defaultValue: "Barbearia do João" },
-                  { label: "Link personalizado", placeholder: "minha-barbearia", defaultValue: "barbearia-do-joao" },
-                  { label: "Telefone / WhatsApp", placeholder: "(11) 99999-9999", defaultValue: "(11) 99999-9999" },
-                  { label: "E-mail", placeholder: "contato@barbearia.com", defaultValue: "contato@barbearia.com" },
-                  { label: "Instagram", placeholder: "@suabarbearia", defaultValue: "@barbearia_joao" },
-                  { label: "Cidade", placeholder: "São Paulo, SP", defaultValue: "São Paulo, SP" },
-                ].map((field) => (
-                  <div key={field.label}>
-                    <label className="block text-sm font-medium text-zinc-300 mb-2">{field.label}</label>
-                    <input type="text" defaultValue={field.defaultValue} placeholder={field.placeholder} className={inputCls} />
-                  </div>
-                ))}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Nome da barbearia</label>
+                  <input name="name" type="text" defaultValue={barbershop?.name} placeholder="Barbearia do João" className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Link personalizado</label>
+                  <input type="text" defaultValue={barbershop?.slug} disabled className={cn(inputCls, "opacity-60 cursor-not-allowed")} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Telefone / WhatsApp</label>
+                  <input name="phone" type="text" defaultValue={barbershop?.phone ?? ""} placeholder="(11) 99999-9999" className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">E-mail</label>
+                  <input name="email" type="text" defaultValue={barbershop?.email ?? ""} placeholder="contato@barbearia.com" className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Instagram</label>
+                  <input name="instagram" type="text" defaultValue={barbershop?.instagram ?? ""} placeholder="@suabarbearia" className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Cidade</label>
+                  <input name="city" type="text" defaultValue={barbershop?.city ?? ""} placeholder="São Paulo, SP" className={inputCls} />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">Descrição</label>
                 <textarea
+                  name="description"
                   rows={3}
-                  defaultValue="A melhor barbearia da região! Especialistas em corte degradê e barba. Venha nos visitar!"
+                  defaultValue={barbershop?.description ?? ""}
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                 />
               </div>
-              <button className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm">
-                Salvar alterações
+              <button type="submit" disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
+                {profileSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar alterações"}
               </button>
-            </div>
+            </form>
           )}
 
           {activeTab === "appearance" && (
@@ -215,8 +331,10 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-zinc-300 mb-3">Preview da página de agendamento</label>
                 <div className="rounded-xl overflow-hidden border border-zinc-700">
                   <div className="h-12 flex items-center px-4 gap-3" style={{ backgroundColor: primaryColor }}>
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white">BJ</div>
-                    <span className="font-bold text-white">Barbearia do João</span>
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white">
+                      {(barbershop?.name ?? "").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "BJ"}
+                    </div>
+                    <span className="font-bold text-white">{barbershop?.name ?? "Sua barbearia"}</span>
                   </div>
                   <div className="bg-zinc-800 p-4 text-center">
                     <p className="text-sm text-zinc-400">Sua página personalizada de agendamento</p>
@@ -226,8 +344,8 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              <button className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm">
-                Salvar aparência
+              <button onClick={saveAppearance} disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
+                {appearanceSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar aparência"}
               </button>
             </div>
           )}
@@ -254,9 +372,27 @@ export default function SettingsPage() {
                     </label>
                     {h.isOpen ? (
                       <div className="flex items-center gap-2">
-                        <input type="time" defaultValue={h.open} className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        <input
+                          type="time"
+                          value={h.open}
+                          onChange={(e) => {
+                            const updated = [...hours];
+                            updated[i] = { ...updated[i], open: e.target.value };
+                            setHours(updated);
+                          }}
+                          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
                         <span className="text-zinc-500 text-sm">até</span>
-                        <input type="time" defaultValue={h.close} className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        <input
+                          type="time"
+                          value={h.close}
+                          onChange={(e) => {
+                            const updated = [...hours];
+                            updated[i] = { ...updated[i], close: e.target.value };
+                            setHours(updated);
+                          }}
+                          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
                       </div>
                     ) : (
                       <span className="text-xs text-zinc-600">Fechado</span>
@@ -264,8 +400,8 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </div>
-              <button className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm">
-                Salvar horários
+              <button onClick={saveHours} disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
+                {hoursSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar horários"}
               </button>
             </div>
           )}
@@ -435,42 +571,65 @@ export default function SettingsPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-bold text-white">Plano e recursos</h2>
-                  <p className="text-sm text-zinc-500 mt-1">Ajuste seu plano e veja o que cada opção desbloqueia.</p>
+                  <p className="text-sm text-zinc-500 mt-1">Compare os planos e veja exatamente o que cada um desbloqueia.</p>
                 </div>
-                <button onClick={() => setUpgradeOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-sm font-semibold">
-                  <Sparkles className="w-4 h-4" /> Mudar plano
+                <button onClick={() => setUpgradeOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-sm font-semibold whitespace-nowrap">
+                  <Sparkles className="w-4 h-4" /> Assinar um plano
                 </button>
               </div>
 
-              <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", planInfo.badgeBg)}>{planInfo.label}</span>
-                    <p className="text-3xl font-black text-white mt-3">{planInfo.price}</p>
-                    <p className="text-sm text-zinc-400 mt-1">{plan === "FREE" ? "Ideal para começar" : "Acesso completo aos recursos premium"}</p>
-                  </div>
-                  <div className="text-right text-sm text-zinc-400">
-                    <p>{plan === "FREE" ? "50 agendamentos/mês" : "Agendamentos ilimitados"}</p>
-                    <p>{plan === "FREE" ? "1 barbeiro" : plan === "PRO" ? "Até 10 barbeiros" : "Barbeiros ilimitados"}</p>
-                  </div>
-                </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                {(["FREE", "PRO", "ENTERPRISE"] as const).map((p) => {
+                  const info = PLAN_INFO[p];
+                  const isCurrent = plan === p;
+                  return (
+                    <div
+                      key={p}
+                      className={cn(
+                        "relative rounded-2xl border p-5 flex flex-col",
+                        isCurrent ? "border-amber-500/50 bg-amber-500/[0.04]" : "border-zinc-800 bg-zinc-950/40"
+                      )}
+                    >
+                      {isCurrent && (
+                        <span className="absolute -top-2.5 left-5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black">
+                          SEU PLANO ATUAL
+                        </span>
+                      )}
+                      <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border w-fit", info.badgeBg)}>{info.label}</span>
+                      <p className="text-2xl font-black text-white mt-3">{info.price}</p>
+                      <p className="text-xs text-zinc-500 mt-1 mb-4">
+                        {Number.isFinite(info.appointmentsLimit) ? `${info.appointmentsLimit} agend./mês` : "Agendamentos ilimitados"} · {Number.isFinite(info.staffLimit) ? `até ${info.staffLimit} barbeiros` : "barbeiros ilimitados"}
+                      </p>
+                      <div className="space-y-1.5 flex-1">
+                        {PLAN_FEATURE_LABELS.map(({ feature, label }) => {
+                          const included = FEATURES_BY_PLAN[p].includes(feature);
+                          return (
+                            <div key={feature} className={cn("flex items-center gap-2 text-xs", included ? "text-zinc-300" : "text-zinc-600")}>
+                              {included ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" /> : <Lock className="w-3.5 h-3.5 text-zinc-700 flex-shrink-0" />}
+                              {label}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={() => !isCurrent && setPlan(p)}
+                        disabled={isCurrent}
+                        className={cn(
+                          "mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all",
+                          isCurrent
+                            ? "bg-zinc-800 text-zinc-500 cursor-default"
+                            : "bg-gradient-to-r from-amber-500 to-yellow-400 text-black hover:opacity-90"
+                        )}
+                      >
+                        {isCurrent ? "Plano ativo" : `Ver como ${info.label}`}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-
-              <div className="grid md:grid-cols-2 gap-3">
-                {[
-                  "Chatbot personalizável",
-                  "WhatsApp Business",
-                  "Relatórios avançados",
-                  "Marketing e campanhas",
-                  "Controle de estoque",
-                  "Exportar dados",
-                ].map((feature) => (
-                  <div key={feature} className="flex items-center gap-2 text-sm text-zinc-300 rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2.5">
-                    <CheckCircle className="w-4 h-4 text-amber-400" />
-                    {feature}
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-zinc-600">
+                &ldquo;Ver como&rdquo; troca o plano da sua barbearia instantaneamente, para fins de demonstração — sem cobrança real.
+              </p>
             </div>
           )}
         </div>

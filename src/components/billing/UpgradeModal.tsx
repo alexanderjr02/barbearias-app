@@ -48,18 +48,18 @@ const PLANS = [
     features: [
       "Agendamentos ilimitados",
       "Até 10 barbeiros",
-      "Relatórios avançados",
-      "Chatbot personalizável",
-      "WhatsApp Business",
-      "Marketing e campanhas",
+      "Chatbot com IA básica",
+      "Análises detalhadas",
+      "Fidelização avançada",
+      "Suporte prioritário",
+      "Customização de cores e logo",
       "Controle de estoque",
-      "Exportar dados",
     ],
   },
   {
     id: "ENTERPRISE" as Plan,
     icon: Crown,
-    badge: "Redes e franquias",
+    badge: "Para expansão",
     badgeColor: "bg-purple-500/20 text-purple-400 border-purple-500/30",
     activeBorder: "border-purple-500",
     activeBg: "bg-purple-500/5",
@@ -67,11 +67,14 @@ const PLANS = [
     iconBg: "bg-purple-500/20",
     features: [
       "Tudo do Pro",
+      "App própria com domínio customizado",
+      "Publicável na App Store e Play Store",
+      "Branding 100% personalizado",
+      "Sem marca da plataforma",
+      "Dashboard barbeiro completo",
+      "Marketplace de produtos",
+      "WhatsApp Business integrado",
       "Barbeiros ilimitados",
-      "Múltiplas unidades",
-      "API personalizada",
-      "Domínio próprio",
-      "Gerente de conta",
     ],
   },
 ];
@@ -105,8 +108,8 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
   const handlePay = async () => {
     if (!validate()) return;
     setProcessing(true);
-    await new Promise(r => setTimeout(r, 2200));
-    setPlan(selectedPlan);
+    await new Promise(r => setTimeout(r, 1400));
+    await setPlan(selectedPlan);
     setProcessing(false);
     setStep("success");
   };
@@ -164,7 +167,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-zinc-300">Starter (plano atual)</p>
-                  <p className="text-xs text-zinc-500">50 agend./mês · 1 barbeiro · Chatbot básico</p>
+                  <p className="text-xs text-zinc-500">{PLAN_INFO.FREE.appointmentsLimit} agend./mês · até {PLAN_INFO.FREE.staffLimit} barbeiros · Chatbot básico</p>
                 </div>
                 <span className="text-xs font-bold text-zinc-500">Grátis</span>
               </div>

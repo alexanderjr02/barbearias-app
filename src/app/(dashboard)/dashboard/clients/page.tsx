@@ -1,62 +1,197 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Search, Star, Phone, Calendar, TrendingUp } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Search, Star, Phone, Users, Camera, Loader2, Award } from "lucide-react";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
+import { apiGet, apiPatch, apiPost, apiUpload } from "@/lib/apiClient";
+import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
-const clients = [
-  { id: "1", name: "Lucas Mendes", phone: "(11) 99999-0001", email: "lucas@email.com", visits: 24, totalSpent: 1320, lastVisit: "2025-07-01", favorite: "Corte + Barba", isVip: true },
-  { id: "2", name: "Pedro Alves", phone: "(11) 99999-0002", email: "pedro@email.com", visits: 18, totalSpent: 810, lastVisit: "2025-06-28", favorite: "Corte Degradê", isVip: false },
-  { id: "3", name: "Marcos Lima", phone: "(11) 99999-0003", email: "marcos@email.com", visits: 31, totalSpent: 775, lastVisit: "2025-07-02", favorite: "Barba", isVip: true },
-  { id: "4", name: "Felipe Costa", phone: "(11) 99999-0004", email: "felipe@email.com", visits: 8, totalSpent: 280, lastVisit: "2025-06-15", favorite: "Corte Simples", isVip: false },
-  { id: "5", name: "Gabriel Rocha", phone: "(11) 99999-0005", email: "gabriel@email.com", visits: 45, totalSpent: 2475, lastVisit: "2025-07-01", favorite: "Corte + Barba", isVip: true },
-  { id: "6", name: "Rafael Torres", phone: "(11) 99999-0006", email: "rafael@email.com", visits: 12, totalSpent: 540, lastVisit: "2025-06-20", favorite: "Tratamento", isVip: false },
-  { id: "7", name: "Bruno Dias", phone: "(11) 99999-0007", email: "bruno@email.com", visits: 5, totalSpent: 150, lastVisit: "2025-06-01", favorite: "Corte Infantil", isVip: false },
-  { id: "8", name: "Thiago Carvalho", phone: "(11) 99999-0008", email: "thiago@email.com", visits: 22, totalSpent: 1210, lastVisit: "2025-06-30", favorite: "Corte + Barba", isVip: true },
-];
+interface ApiClient {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  visits: number;
+  totalSpent: number;
+  lastVisit: string;
+  favorite: string;
+  points: number | null;
+  tier: "BRONZE" | "SILVER" | "GOLD" | null;
+  hasAccount: boolean;
+  avatar: string | null;
+}
+
+const TIER_LABELS: Record<string, string> = { BRONZE: "Bronze", SILVER: "Prata", GOLD: "Ouro" };
+const TIER_COLORS: Record<string, string> = {
+  BRONZE: "bg-zinc-700/40 border-zinc-600 text-zinc-300",
+  SILVER: "bg-slate-400/10 border-slate-400/30 text-slate-300",
+  GOLD: "bg-amber-500/10 border-amber-500/30 text-amber-400",
+};
+
+function initialsOf(name: string) {
+  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function ClientAvatar({ client, onChange }: { client: ApiClient; onChange: (avatar: string | null) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const initials = initialsOf(client.name);
+
+  if (!client.hasAccount) {
+    return (
+      <div
+        title="Disponível após o primeiro login do cliente"
+        className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500 text-xs font-bold flex-shrink-0"
+      >
+        {initials}
+      </div>
+    );
+  }
+
+  const handleFile = async (file?: File) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url } = await apiUpload(file);
+      onChange(url);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={() => inputRef.current?.click()}
+      title="Alterar foto"
+      className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-zinc-700 bg-zinc-800 group"
+    >
+      {client.avatar ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={client.avatar} alt={client.name} className="w-full h-full object-cover" />
+      ) : (
+        <span className="w-full h-full flex items-center justify-center text-zinc-400 text-xs font-bold">{initials}</span>
+      )}
+      <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        {uploading ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Camera className="w-3.5 h-3.5 text-white" />}
+      </span>
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
+    </button>
+  );
+}
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => apiGet<ApiClient[]>("/api/clients") });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["clients"] });
+
+  const updateAvatar = useMutation({
+    mutationFn: ({ id, avatar }: { id: string; avatar: string | null }) => apiPatch(`/api/clients/${id}`, { avatar }),
+    onSuccess: invalidate,
+  });
+
+  const createClient = useMutation({
+    mutationFn: (data: Record<string, unknown>) => apiPost("/api/clients", data),
+    onSuccess: () => {
+      invalidate();
+      setModalOpen(false);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    createClient.mutate({
+      name: form.get("name"),
+      email: form.get("email"),
+      phone: form.get("phone") || undefined,
+      password: form.get("password"),
+    });
+  };
 
   const filtered = clients.filter((c) => {
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.phone.includes(search) ||
-      c.email.toLowerCase().includes(search.toLowerCase());
+      (c.email ?? "").toLowerCase().includes(search.toLowerCase());
     const matchFilter =
       filter === "all" ||
-      (filter === "vip" && c.isVip) ||
-      (filter === "regular" && !c.isVip);
+      (filter === "gold" && c.tier === "GOLD") ||
+      (filter === "no-account" && !c.tier);
     return matchSearch && matchFilter;
   });
 
+  const goldCount = clients.filter((c) => c.tier === "GOLD").length;
+  const totalSpentAll = clients.reduce((a, c) => a + c.totalSpent, 0);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <FormModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Cadastrar cliente"
+        onSubmit={handleSubmit}
+        isPending={createClient.isPending}
+        error={createClient.error?.message}
+        submitLabel="Cadastrar cliente"
+      >
+        <p className="text-xs text-zinc-500">
+          O cliente recebe um acesso próprio para acompanhar o histórico e os pontos pelo app.
+        </p>
         <div>
-          <h1 className="text-2xl font-black text-white">Clientes</h1>
-          <p className="text-zinc-500 text-sm mt-1">{clients.length} clientes cadastrados</p>
+          <label className={labelCls}>Nome</label>
+          <input name="name" required className={fieldCls} placeholder="Ex: Maria Souza" />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-lg hover:opacity-90 transition-all">
-          <Plus className="w-4 h-4" />
-          Novo cliente
-        </button>
-      </div>
+        <div>
+          <label className={labelCls}>E-mail</label>
+          <input name="email" type="email" required className={fieldCls} placeholder="cliente@email.com" />
+        </div>
+        <div>
+          <label className={labelCls}>Telefone</label>
+          <input name="phone" className={fieldCls} placeholder="(11) 99999-9999" />
+        </div>
+        <div>
+          <label className={labelCls}>Senha inicial</label>
+          <input name="password" type="password" minLength={8} required className={fieldCls} placeholder="Mínimo 8 caracteres" />
+        </div>
+      </FormModal>
+
+      <PageHeader
+        icon={Users}
+        title="Clientes"
+        subtitle={`${clients.length} clientes cadastrados · ${goldCount} no nível Ouro`}
+        action={
+          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+            <Plus className="w-4 h-4" />
+            Cadastrar cliente
+          </button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: "Total de Clientes", value: "342", icon: "👥" },
-          { label: "Clientes VIP", value: "28", icon: "⭐" },
-          { label: "Novos este mês", value: "7", icon: "🆕" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
-            <p className="text-2xl mb-1">{stat.icon}</p>
-            <p className="text-2xl font-bold text-white">{stat.value}</p>
-            <p className="text-xs text-zinc-500">{stat.label}</p>
-          </div>
-        ))}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+          <Users className="w-4 h-4 text-blue-400 mb-2" />
+          <p className="text-2xl font-black text-white">{clients.length}</p>
+          <p className="text-xs text-zinc-500">Total de clientes</p>
+        </div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+          <Award className="w-4 h-4 text-amber-400 mb-2 fill-amber-400" />
+          <p className="text-2xl font-black text-white">{goldCount}</p>
+          <p className="text-xs text-zinc-500">Clientes Ouro</p>
+        </div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+          <Star className="w-4 h-4 text-emerald-400 mb-2" />
+          <p className="text-2xl font-black text-white">{formatCurrency(totalSpentAll)}</p>
+          <p className="text-xs text-zinc-500">Receita acumulada</p>
+        </div>
       </div>
 
       {/* Filters */}
@@ -72,69 +207,74 @@ export default function ClientsPage() {
           />
         </div>
         <div className="flex gap-2">
-          {["all", "vip", "regular"].map((f) => (
+          {["all", "gold", "no-account"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                filter === f
-                  ? "bg-amber-500/20 border border-amber-500/40 text-amber-400"
-                  : "bg-zinc-800 border border-zinc-700 text-zinc-400"
-              }`}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
+                filter === f ? "bg-amber-500/20 border border-amber-500/40 text-amber-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400"
+              )}
             >
-              {f === "all" ? "Todos" : f === "vip" ? "VIP" : "Regular"}
+              {f === "all" ? "Todos" : f === "gold" ? "Ouro" : "Sem conta"}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((client) => (
-          <div key={client.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-all group cursor-pointer">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black text-sm font-bold">
-                  {client.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                </div>
-                <div>
-                  <p className="font-bold text-white text-sm">{client.name}</p>
-                  <p className="text-xs text-zinc-500 flex items-center gap-1">
-                    <Phone className="w-3 h-3" /> {client.phone}
-                  </p>
-                </div>
-              </div>
-              {client.isVip && (
-                <span className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs px-2 py-0.5 rounded-full font-medium">
-                  <Star className="w-3 h-3 fill-amber-400" /> VIP
-                </span>
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="bg-zinc-800/50 rounded-lg p-2">
-                <p className="text-lg font-bold text-white">{client.visits}</p>
-                <p className="text-xs text-zinc-500">Visitas</p>
-              </div>
-              <div className="bg-zinc-800/50 rounded-lg p-2">
-                <p className="text-sm font-bold text-amber-400">{formatCurrency(client.totalSpent)}</p>
-                <p className="text-xs text-zinc-500">Total gasto</p>
-              </div>
-              <div className="bg-zinc-800/50 rounded-lg p-2">
-                <p className="text-sm font-bold text-white">{formatCurrency(client.totalSpent / client.visits)}</p>
-                <p className="text-xs text-zinc-500">Ticket médio</p>
-              </div>
-            </div>
-
-            <div className="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
-              <span>Favorito: <span className="text-zinc-300">{client.favorite}</span></span>
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {formatDate(client.lastVisit)}
-              </span>
-            </div>
-          </div>
-        ))}
+      {/* Table */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-6 py-3">Cliente</th>
+                <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Nível</th>
+                <th className="text-center text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3">Visitas</th>
+                <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Total gasto</th>
+                <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Ticket médio</th>
+                <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Favorito</th>
+                <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-6 py-3">Última visita</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {filtered.map((client) => (
+                <tr key={client.id} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <ClientAvatar client={client} onChange={(avatar) => updateAvatar.mutate({ id: client.id, avatar })} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{client.name}</p>
+                        <p className="text-xs text-zinc-500 flex items-center gap-1">
+                          <Phone className="w-3 h-3" /> {client.phone}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5 hidden sm:table-cell">
+                    {client.tier ? (
+                      <span className={cn("inline-flex items-center gap-1 border text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap", TIER_COLORS[client.tier])}>
+                        <Star className="w-3 h-3 fill-current" /> {TIER_LABELS[client.tier]} · {client.points}pts
+                      </span>
+                    ) : (
+                      <span className="text-xs text-zinc-600">Sem conta</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3.5 text-center text-sm font-semibold text-white">{client.visits}</td>
+                  <td className="px-4 py-3.5 text-right hidden md:table-cell text-sm font-semibold text-amber-400">{formatCurrency(client.totalSpent)}</td>
+                  <td className="px-4 py-3.5 text-right hidden lg:table-cell text-sm text-zinc-300">
+                    {formatCurrency(client.visits > 0 ? client.totalSpent / client.visits : 0)}
+                  </td>
+                  <td className="px-4 py-3.5 hidden lg:table-cell text-sm text-zinc-400 max-w-[160px] truncate">{client.favorite || "—"}</td>
+                  <td className="px-6 py-3.5 text-right text-xs text-zinc-500 whitespace-nowrap">
+                    {client.visits > 0 ? formatDate(client.lastVisit) : `Desde ${formatDate(client.lastVisit)}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filtered.length === 0 && <div className="text-center py-12 text-zinc-500">Nenhum cliente encontrado</div>}
+        </div>
       </div>
     </div>
   );

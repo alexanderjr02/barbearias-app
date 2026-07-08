@@ -7,13 +7,31 @@ import { Eye, EyeOff, Scissors } from "lucide-react";
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    setTimeout(() => {
-      window.location.href = "/dashboard";
-    }, 1500);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error ?? "Não foi possível entrar");
+        setIsLoading(false);
+        return;
+      }
+      window.location.href = data.user.role === "SUPER_ADMIN" ? "/admin" : "/dashboard";
+    } catch {
+      setError("Erro de conexão. Tente novamente.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -34,6 +52,8 @@ export default function LoginPage() {
           <input
             type="email"
             required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
             className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
           />
@@ -47,6 +67,8 @@ export default function LoginPage() {
             <input
               type={showPassword ? "text" : "password"}
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full h-12 px-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
             />
@@ -82,9 +104,15 @@ export default function LoginPage() {
         </button>
       </form>
 
+      {error && (
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+          <p className="text-xs text-red-400 text-center">{error}</p>
+        </div>
+      )}
+
       <div className="mt-6 p-4 bg-amber-500/5 border border-amber-500/15 rounded-2xl">
         <p className="text-xs text-zinc-500 text-center">
-          <span className="text-amber-400 font-semibold">Demo:</span> Use qualquer e-mail e senha para entrar
+          <span className="text-amber-400 font-semibold">Demo:</span> demo@cortix.app / demo123456
         </p>
       </div>
     </div>

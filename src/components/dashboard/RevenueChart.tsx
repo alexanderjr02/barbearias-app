@@ -1,28 +1,14 @@
 "use client";
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
+import { apiGet } from "@/lib/apiClient";
 import { useState } from "react";
 
-const weekData = [
-  { name: "Seg", receita: 420, despesas: 120 },
-  { name: "Ter", receita: 580, despesas: 140 },
-  { name: "Qua", receita: 390, despesas: 100 },
-  { name: "Qui", receita: 720, despesas: 160 },
-  { name: "Sex", receita: 950, despesas: 200 },
-  { name: "Sáb", receita: 1200, despesas: 180 },
-  { name: "Dom", receita: 380, despesas: 80 },
-];
-
-const monthData = [
-  { name: "Jan", receita: 18500, despesas: 6200 },
-  { name: "Fev", receita: 21000, despesas: 6800 },
-  { name: "Mar", receita: 19800, despesas: 7100 },
-  { name: "Abr", receita: 24500, despesas: 7300 },
-  { name: "Mai", receita: 22100, despesas: 6900 },
-  { name: "Jun", receita: 26800, despesas: 7500 },
-  { name: "Jul", receita: 28500, despesas: 7800 },
-];
+interface ReportsResponse {
+  series: { label: string; receita: number; despesas: number }[];
+}
 
 const ChartTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -44,7 +30,11 @@ const ChartTooltip = ({ active, payload, label }: any) => {
 
 export function RevenueChart() {
   const [period, setPeriod] = useState<"week" | "month">("week");
-  const data = period === "week" ? weekData : monthData;
+  const { data: reports } = useQuery({
+    queryKey: ["dashboard-reports", period],
+    queryFn: () => apiGet<ReportsResponse>(`/api/dashboard/reports?range=${period}`),
+  });
+  const data = (reports?.series ?? []).map((s) => ({ name: s.label, receita: s.receita, despesas: s.despesas }));
   const totalReceita = data.reduce((a, d) => a + d.receita, 0);
   const totalDespesas = data.reduce((a, d) => a + d.despesas, 0);
 
