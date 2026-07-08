@@ -285,14 +285,14 @@ export default function StaffPage() {
           Nenhum barbeiro cadastrado ainda
         </div>
       )}
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
         {[...filtered].sort((a, b) => b.revenue - a.revenue).map((member, index) => {
           const isTop = index === 0 && member.revenue > 0 && member.isActive;
           return (
             <div
               key={member.id}
               className={cn(
-                "relative bg-zinc-900 border rounded-2xl p-5 transition-all",
+                "relative flex flex-col h-full bg-zinc-900 border rounded-2xl p-5 transition-all",
                 member.isActive ? "border-zinc-800 hover:border-zinc-700 hover:shadow-xl hover:shadow-black/30" : "border-zinc-800/50 opacity-60"
               )}
             >
@@ -332,7 +332,7 @@ export default function StaffPage() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-800/80">
+              <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-800/80">
                 <div className="flex items-center gap-1.5">
                   <Scissors className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-sm font-bold text-white">{member.appointmentsCount}</span>
