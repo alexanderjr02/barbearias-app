@@ -16,16 +16,16 @@ export function MarketingNav() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--mkt-bg)]/85 backdrop-blur-xl border-b border-[var(--mkt-border)]">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--mkt-gold)] to-amber-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center">
               <Scissors className="w-4 h-4 text-black" />
             </div>
-            <span className="text-xl font-black text-[var(--mkt-text)] tracking-tight">
-              CORT<span className="text-[var(--mkt-gold)]">IX</span>
+            <span className="text-xl font-black text-white tracking-tight">
+              CORT<span className="text-amber-400">IX</span>
             </span>
           </Link>
 
@@ -35,7 +35,7 @@ export function MarketingNav() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-[var(--mkt-text-dim)] hover:text-[var(--mkt-text)] transition-colors"
+                className="text-sm text-zinc-400 hover:text-white transition-colors"
               >
                 {link.label}
               </Link>
@@ -56,7 +56,7 @@ export function MarketingNav() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden text-[var(--mkt-text-dim)] hover:text-[var(--mkt-text)]"
+            className="md:hidden text-zinc-400 hover:text-white"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -66,19 +66,19 @@ export function MarketingNav() {
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="md:hidden bg-[var(--mkt-surface)] border-t border-[var(--mkt-border)]">
+        <div className="md:hidden bg-zinc-950 border-t border-zinc-800">
           <div className="px-4 py-4 space-y-3">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="block text-[var(--mkt-text-dim)] hover:text-[var(--mkt-text)] py-2 transition-colors"
+                className="block text-zinc-400 hover:text-white py-2 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <div className="pt-3 space-y-2 border-t border-[var(--mkt-border)]">
+            <div className="pt-3 space-y-2 border-t border-zinc-800">
               <Link href="/login" className="block">
                 <Button variant="ghost" className="w-full">
                   Entrar
