@@ -332,19 +332,19 @@ export default function StaffPage() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-800/80">
-                <div className="flex items-center gap-1.5">
-                  <Scissors className="w-3.5 h-3.5 text-blue-400" />
+              <div className="grid grid-cols-3 divide-x divide-zinc-800 mt-auto pt-4 border-t border-zinc-800/80">
+                <div className="flex items-center justify-center gap-1.5">
+                  <Scissors className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
                   <span className="text-sm font-bold text-white">{member.appointmentsCount}</span>
                   <span className="text-xs text-zinc-500">cortes</span>
                 </div>
-                <div className="w-px h-6 bg-zinc-800" />
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="flex items-center justify-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
                   <span className="text-sm font-bold text-amber-400">{formatCurrency(member.revenue)}</span>
                 </div>
-                <div className="w-px h-6 bg-zinc-800" />
-                <div className="text-sm font-bold text-white">{Math.round(member.commissionRate * 100)}%</div>
+                <div className="flex items-center justify-center text-sm font-bold text-white">
+                  {Math.round(member.commissionRate * 100)}%
+                </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-2">
