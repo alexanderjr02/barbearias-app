@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/br_phone_formatter.dart';
 import '../auth/session_provider.dart';
 import 'booking_repository.dart';
 
@@ -19,6 +22,13 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   final _phoneController = TextEditingController();
   final _phoneFocus = FocusNode();
   bool _phoneTouched = false;
+
+  // If the client already has a phone on file, we skip asking for it again —
+  // shown instead as a confirmed chip they can tap to override just for this
+  // booking. Only offer "save for next time" when there was nothing on file.
+  bool _hasSavedPhone = false;
+  bool _phoneConfirmed = false;
+  bool _savePhoneToProfile = true;
 
   List<ClientBarbershop> _barbershops = [];
   BarbershopDetail? _detail;
@@ -42,6 +52,17 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
     _phoneFocus.addListener(() {
       if (!_phoneFocus.hasFocus && !_phoneTouched) setState(() => _phoneTouched = true);
     });
+
+    final savedPhone = context.read<SessionProvider>().session?.phone?.trim();
+    if (savedPhone != null && savedPhone.length >= 8) {
+      _phoneController.text = savedPhone;
+      _hasSavedPhone = true;
+      _phoneConfirmed = true;
+      // Tapping "Alterar" only overrides the number for this one booking —
+      // don't silently rewrite their saved profile without the explicit
+      // "salvar" checkbox, which only shows up when there was nothing saved.
+      _savePhoneToProfile = false;
+    }
   }
 
   @override
@@ -175,12 +196,14 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
       _phoneController.text.trim().length >= 8;
 
   Future<void> _submit() async {
-    final session = context.read<SessionProvider>().session;
+    final sessionProvider = context.read<SessionProvider>();
+    final session = sessionProvider.session;
     if (!_canSubmit || session == null) return;
     setState(() {
       _submitting = true;
       _error = null;
     });
+    final phone = _phoneController.text.trim();
     try {
       await _repository.createAppointment(
         barbershopId: _selectedShop!.id,
@@ -190,9 +213,15 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
         startTime: _selectedTime!,
         durationMinutes: _selectedService!.duration,
         clientName: session.name,
-        clientPhone: _phoneController.text.trim(),
+        clientPhone: phone,
         totalPrice: _selectedService!.price,
       );
+      // Remember the number for next time — only when it's new or changed,
+      // and never lets a save failure block the booking that already went
+      // through.
+      if (_savePhoneToProfile && phone != (session.phone ?? '')) {
+        unawaited(sessionProvider.updateProfile(phone: phone));
+      }
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       setState(() => _error = e.message);
@@ -298,7 +327,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                       Text('Escolha o profissional', style: labelStyle),
                       const SizedBox(height: 10),
                       SizedBox(
-                        height: 128,
+                        height: 144,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: _detail!.staff.length,
@@ -431,36 +460,78 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                       Row(
                         children: [
                           Text('Seu telefone', style: labelStyle),
-                          const SizedBox(width: 4),
-                          Text('*', style: TextStyle(color: kDangerColor, fontWeight: FontWeight.bold, fontSize: 15)),
+                          if (!_phoneConfirmed) ...[
+                            const SizedBox(width: 4),
+                            Text('*', style: TextStyle(color: kDangerColor, fontWeight: FontWeight.bold, fontSize: 15)),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Builder(builder: (context) {
-                        final invalid = _phoneTouched && _phoneController.text.trim().length < 8;
-                        return TextField(
-                          controller: _phoneController,
-                          focusNode: _phoneFocus,
-                          keyboardType: TextInputType.phone,
-                          style: TextStyle(color: palette.textPrimary),
-                          decoration: InputDecoration(
-                            hintText: '(11) 99999-9999',
-                            hintStyle: TextStyle(color: palette.textFaint),
-                            filled: true,
-                            fillColor: palette.surfaceAlt,
-                            helperText: invalid ? null : 'Obrigatório para confirmarmos o agendamento.',
-                            helperStyle: TextStyle(color: palette.textFaint, fontSize: 11.5),
-                            errorText: invalid ? 'Informe um telefone válido para continuar.' : null,
-                            errorStyle: TextStyle(color: kDangerColor, fontSize: 11.5),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accent, width: 1.5)),
-                            errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: kDangerColor, width: 1.5)),
-                            focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: kDangerColor, width: 1.5)),
+                      if (_phoneConfirmed)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                          decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(12)),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle_rounded, size: 18, color: accent),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(_phoneController.text, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600)),
+                              ),
+                              GestureDetector(
+                                onTap: () => setState(() => _phoneConfirmed = false),
+                                child: Text('Alterar', style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 12.5)),
+                              ),
+                            ],
                           ),
-                          onChanged: (_) => setState(() {}),
-                        );
-                      }),
+                        )
+                      else ...[
+                        Builder(builder: (context) {
+                          final invalid = _phoneTouched && _phoneController.text.trim().length < 8;
+                          return TextField(
+                            controller: _phoneController,
+                            focusNode: _phoneFocus,
+                            keyboardType: TextInputType.phone,
+                            inputFormatters: [BrPhoneFormatter()],
+                            style: TextStyle(color: palette.textPrimary),
+                            decoration: InputDecoration(
+                              hintText: '(11) 99999-9999',
+                              hintStyle: TextStyle(color: palette.textFaint),
+                              filled: true,
+                              fillColor: palette.surfaceAlt,
+                              helperText: invalid ? null : 'Obrigatório para confirmarmos o agendamento.',
+                              helperStyle: TextStyle(color: palette.textFaint, fontSize: 11.5),
+                              errorText: invalid ? 'Informe um telefone válido para continuar.' : null,
+                              errorStyle: TextStyle(color: kDangerColor, fontSize: 11.5),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accent, width: 1.5)),
+                              errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: kDangerColor, width: 1.5)),
+                              focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: kDangerColor, width: 1.5)),
+                            ),
+                            onChanged: (_) => setState(() {}),
+                          );
+                        }),
+                        if (!_hasSavedPhone) ...[
+                          const SizedBox(height: 10),
+                          GestureDetector(
+                            onTap: () => setState(() => _savePhoneToProfile = !_savePhoneToProfile),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _savePhoneToProfile ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                                  size: 19,
+                                  color: _savePhoneToProfile ? accent : palette.textFaint,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text('Salvar no meu perfil para não precisar digitar de novo', style: TextStyle(color: palette.textSecondary, fontSize: 12.5)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                       if (_error != null) ...[
                         const SizedBox(height: 12),
                         Text(_error!, style: const TextStyle(color: Colors.redAccent)),
@@ -511,7 +582,7 @@ class _BarberCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         width: 104,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           color: palette.surface,
           borderRadius: BorderRadius.circular(18),
@@ -525,7 +596,7 @@ class _BarberCard extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 CircleAvatar(
-                  radius: 32,
+                  radius: 28,
                   backgroundColor: palette.surfaceAlt,
                   backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
                   child: avatarUrl == null ? Text(initials(staff.name), style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold, fontSize: 15)) : null,
@@ -542,7 +613,7 @@ class _BarberCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               staff.name.split(' ').first,
               style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 12.5),
