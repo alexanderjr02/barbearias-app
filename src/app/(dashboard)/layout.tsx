@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { NpsPrompt } from "@/components/layout/NpsPrompt";
 import { getSession } from "@/lib/auth";
 
 export default async function DashboardLayout({
@@ -23,6 +24,7 @@ export default async function DashboardLayout({
         <Topbar />
         <main className="flex-1 p-6 overflow-x-hidden">{children}</main>
       </div>
+      <NpsPrompt />
     </div>
   );
 }

@@ -188,7 +188,7 @@ export default function FinancePage() {
                       <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ background: "#27272a", border: "1px solid #3f3f46", borderRadius: "8px", fontSize: "12px" }} />
+                  <Tooltip formatter={((v: number) => formatCurrency(v)) as never} contentStyle={{ background: "#27272a", border: "1px solid #3f3f46", borderRadius: "8px", fontSize: "12px" }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-1.5 mt-3 max-h-32 overflow-y-auto">

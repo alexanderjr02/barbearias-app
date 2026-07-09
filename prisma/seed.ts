@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
@@ -25,18 +26,41 @@ async function main() {
     },
   });
 
-  // Create platform super-admin (for /admin panel access)
-  const superAdminPassword = await bcrypt.hash("admin123456", 10);
-  await prisma.user.upsert({
-    where: { email: "admin@cortix.app" },
-    update: {},
-    create: {
-      name: "Admin Cortix",
-      email: "admin@cortix.app",
-      password: superAdminPassword,
-      role: "SUPER_ADMIN",
-    },
-  });
+  // The real owner's SUPER_ADMIN account is the ONLY account allowed into
+  // /admin — no generic placeholder admin account is seeded anymore (demo@
+  // and other test accounts stay OWNER/BARBER/CLIENT for testing the
+  // gestor/barber/client side only). Only created once (upsert skips
+  // regenerating/printing the password on every re-seed, since a re-run
+  // shouldn't silently invalidate a password the owner may have changed).
+  let ownerGeneratedPassword: string | null = null;
+  const existingOwnerAdmin = await prisma.user.findUnique({ where: { email: "alexanderjunior044@gmail.com" } });
+  if (!existingOwnerAdmin) {
+    ownerGeneratedPassword = crypto.randomBytes(9).toString("base64url");
+    await prisma.user.create({
+      data: {
+        name: "Alexander Nascimento de Araujo Junior",
+        email: "alexanderjunior044@gmail.com",
+        password: await bcrypt.hash(ownerGeneratedPassword, 10),
+        role: "SUPER_ADMIN",
+      },
+    });
+  }
+
+  // Plan pricing/limits, editable later from /admin/settings — matches the
+  // prices already shown in PlanContext.tsx (FREE/"Starter" is R$29, not
+  // actually free) so nothing changes for existing gestors on first deploy.
+  const planPricingDefaults: Record<string, { price: number; appointmentsLimit: number | null; staffLimit: number | null }> = {
+    FREE: { price: 29, appointmentsLimit: 50, staffLimit: 3 },
+    PRO: { price: 79, appointmentsLimit: null, staffLimit: 10 },
+    ENTERPRISE: { price: 299, appointmentsLimit: null, staffLimit: null },
+  };
+  for (const [plan, pricing] of Object.entries(planPricingDefaults)) {
+    await prisma.platformSetting.upsert({
+      where: { key: `plan_pricing:${plan}` },
+      update: {},
+      create: { key: `plan_pricing:${plan}`, value: JSON.stringify(pricing) },
+    });
+  }
 
   // Create barbershop
   const barbershop = await prisma.barbershop.upsert({
@@ -256,7 +280,11 @@ async function main() {
   console.log(`\n🔑 Login demo Pro (gestor):\n   E-mail: demo@cortix.app\n   Senha: demo123456`);
   console.log(`\n🔑 Login demo Starter (gestor):\n   E-mail: demo.starter@cortix.app\n   Senha: demo123456`);
   console.log(`\n🔑 Login demo White Label (gestor):\n   E-mail: demo.enterprise@cortix.app\n   Senha: demo123456`);
-  console.log(`\n🔑 Login super admin:\n   E-mail: admin@cortix.app\n   Senha: admin123456`);
+  if (ownerGeneratedPassword) {
+    console.log(`\n🔑 Login super admin (dono):\n   E-mail: alexanderjunior044@gmail.com\n   Senha: ${ownerGeneratedPassword}\n   (troque essa senha depois de entrar)`);
+  } else {
+    console.log(`\nℹ️  Conta do dono (alexanderjunior044@gmail.com) já existe — senha não foi alterada nem reimpressa.`);
+  }
 
   await prisma.$disconnect();
 }

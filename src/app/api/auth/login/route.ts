@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { signAccessToken } from "@/lib/auth";
-import { generateRefreshToken } from "@/lib/refreshToken";
+import { signPendingTwoFactorToken } from "@/lib/auth";
 import { isRole } from "@/lib/roles";
-import { setSessionCookies } from "@/lib/sessionCookies";
+import { completeLogin } from "@/lib/completeLogin";
+import { getClientIp } from "@/lib/requestIp";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -21,30 +21,34 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email },
-      include: { barbershop: true, staffProfile: true },
+      include: { barbershop: true, staffProfile: { include: { barbershop: true } } },
     });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return NextResponse.json({ error: "E-mail ou senha inválidos" }, { status: 401 });
     }
 
+    if (!user.isActive) {
+      return NextResponse.json({ error: "Esta conta foi desativada" }, { status: 403 });
+    }
+
+    const resolvedBarbershop = user.barbershop ?? user.staffProfile?.barbershop ?? null;
+    if (resolvedBarbershop && !resolvedBarbershop.isActive) {
+      return NextResponse.json({ error: "Esta barbearia está suspensa" }, { status: 403 });
+    }
+
+    // Password is correct, but a 2FA-enabled account (opt-in, only relevant
+    // for SUPER_ADMIN today) needs a second step before a real session is
+    // issued — see /api/auth/verify-2fa.
+    if (user.twoFactorEnabled) {
+      const pendingToken = await signPendingTwoFactorToken(user.id);
+      return NextResponse.json({ requiresTwoFactor: true, pendingToken });
+    }
+
     const role = isRole(user.role) ? user.role : "CLIENT";
-    const barbershopId = user.barbershop?.id ?? user.staffProfile?.barbershopId ?? null;
+    const barbershopId = resolvedBarbershop?.id ?? null;
 
-    const session = { sub: user.id, role, name: user.name, email: user.email, barbershopId };
-    const accessToken = await signAccessToken(session);
-    const { token: refreshToken, tokenHash, expiresAt } = generateRefreshToken();
-
-    await prisma.refreshToken.create({ data: { userId: user.id, tokenHash, expiresAt } });
-
-    const response = NextResponse.json({
-      user: { id: user.id, name: user.name, email: user.email, role, barbershopId },
-      accessToken,
-      refreshToken,
-    });
-
-    setSessionCookies(response, accessToken, refreshToken);
-    return response;
+    return await completeLogin({ sub: user.id, role, name: user.name, email: user.email, barbershopId }, getClientIp(request));
   } catch (error) {
     console.error("[login]", error);
     return NextResponse.json({ error: "Erro ao entrar" }, { status: 500 });

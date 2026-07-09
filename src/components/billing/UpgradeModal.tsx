@@ -80,7 +80,7 @@ const PLANS = [
 ];
 
 export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
-  const { setPlan } = usePlan();
+  const { setPlan, formatPrice, pricing } = usePlan();
   const [selectedPlan, setSelectedPlan] = useState<Plan>(defaultPlan);
   const [step, setStep] = useState<"plans" | "payment" | "success">("plans");
 
@@ -167,7 +167,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-zinc-300">Starter (plano atual)</p>
-                  <p className="text-xs text-zinc-500">{PLAN_INFO.FREE.appointmentsLimit} agend./mês · até {PLAN_INFO.FREE.staffLimit} barbeiros · Chatbot básico</p>
+                  <p className="text-xs text-zinc-500">{pricing?.FREE?.appointmentsLimit ?? PLAN_INFO.FREE.appointmentsLimit} agend./mês · até {pricing?.FREE?.staffLimit ?? PLAN_INFO.FREE.staffLimit} barbeiros · Chatbot básico</p>
                 </div>
                 <span className="text-xs font-bold text-zinc-500">Grátis</span>
               </div>
@@ -192,7 +192,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
                             <span className={cn("text-xs px-2 py-0.5 rounded-full border font-medium", p.badgeColor)}>{p.badge}</span>
                           </div>
                           <div className="flex items-baseline gap-0.5 mt-0.5">
-                            <span className="text-lg font-black text-white">{info.price.split("/")[0]}</span>
+                            <span className="text-lg font-black text-white">{formatPrice(p.id).split("/")[0]}</span>
                             <span className="text-zinc-500 text-xs">/mês</span>
                           </div>
                         </div>
@@ -292,7 +292,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
               <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-400">Plano {planInfo.label}</span>
-                  <span className="font-bold text-white">{planInfo.price}</span>
+                  <span className="font-bold text-white">{formatPrice(selectedPlan)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-zinc-500 border-t border-zinc-700 pt-2">
                   <span>14 dias de teste grátis incluídos</span>
@@ -345,7 +345,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
                 className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                 {processing
                   ? <><div className="w-4 h-4 border-2 border-black/40 border-t-black rounded-full animate-spin" /> Processando...</>
-                  : <><Lock className="w-3.5 h-3.5" /> Assinar por {planInfo.price}</>
+                  : <><Lock className="w-3.5 h-3.5" /> Assinar por {formatPrice(selectedPlan)}</>
                 }
               </button>
             </>

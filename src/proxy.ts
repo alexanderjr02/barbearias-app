@@ -50,7 +50,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (request.nextUrl.pathname.startsWith("/admin") && session.role !== "SUPER_ADMIN") {
+  if (request.nextUrl.pathname.startsWith("/admin") && session.role !== "SUPER_ADMIN" && session.role !== "SUPPORT_ADMIN") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

@@ -89,12 +89,20 @@ export const PLAN_INFO: Record<
   },
 };
 
+export type LivePricing = { price: number; appointmentsLimit: number | null; staffLimit: number | null };
+
 interface PlanContextType {
   plan: Plan;
   can: (feature: Feature) => boolean;
   setPlan: (plan: Plan) => Promise<void>;
   appointmentsLimit: number;
   isLoading: boolean;
+  // Real price/limits from /admin/settings (PlatformSetting), falling back to
+  // PLAN_INFO's static defaults while loading — so editing prices in the
+  // admin panel is actually reflected here instead of the old hardcoded
+  // strings.
+  pricing: Record<Plan, LivePricing> | null;
+  formatPrice: (plan: Plan) => string;
 }
 
 const PlanContext = createContext<PlanContextType>({
@@ -103,6 +111,8 @@ const PlanContext = createContext<PlanContextType>({
   setPlan: async () => {},
   appointmentsLimit: PLAN_INFO.FREE.appointmentsLimit,
   isLoading: true,
+  pricing: null,
+  formatPrice: (plan) => PLAN_INFO[plan].price,
 });
 
 // The plan lives on the Barbershop record — this reads/writes it for real
@@ -114,6 +124,13 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const { data, isLoading } = useQuery({
     queryKey: ["barbershop-plan"],
     queryFn: () => apiGet<{ plan: Plan }>("/api/barbershop"),
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  const { data: pricing } = useQuery({
+    queryKey: ["plan-pricing"],
+    queryFn: () => apiGet<Record<Plan, LivePricing>>("/api/plan-pricing"),
     retry: false,
     staleTime: 60_000,
   });
@@ -130,10 +147,23 @@ export function PlanProvider({ children }: { children: ReactNode }) {
 
   const can = useCallback((feature: Feature) => FEATURES_BY_PLAN[plan].includes(feature), [plan]);
 
-  const appointmentsLimit = PLAN_INFO[plan].appointmentsLimit;
+  const livePlanPricing = pricing?.[plan];
+  // A live appointmentsLimit of `null` means "unlimited" — must map to
+  // Infinity, not fall through to the static default's finite number.
+  const appointmentsLimit = livePlanPricing ? livePlanPricing.appointmentsLimit ?? Infinity : PLAN_INFO[plan].appointmentsLimit;
+
+  const formatPrice = useCallback(
+    (p: Plan) => {
+      const live = pricing?.[p];
+      if (!live) return PLAN_INFO[p].price;
+      const formatted = `R$ ${live.price.toLocaleString("pt-BR")}/mês`;
+      return p === "ENTERPRISE" ? `${formatted} + 3%` : formatted;
+    },
+    [pricing]
+  );
 
   return (
-    <PlanContext.Provider value={{ plan, can, setPlan, appointmentsLimit, isLoading }}>
+    <PlanContext.Provider value={{ plan, can, setPlan, appointmentsLimit, isLoading, pricing: pricing ?? null, formatPrice }}>
       {children}
     </PlanContext.Provider>
   );

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
+import { recordPlanChangeInvoice, PLANS, type PlatformPlan } from "@/lib/billing";
 
 // GET /api/barbershop?slug=xxx (public) or GET /api/barbershop (own shop, session-based)
 export async function GET(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    if (!barbershop) {
+    if (!barbershop || !barbershop.isActive) {
       return NextResponse.json({ error: "Barbershop not found" }, { status: 404 });
     }
 
@@ -56,8 +57,6 @@ const PROFILE_FIELDS = [
   "whatsapp",
 ] as const;
 
-const VALID_PLANS = ["FREE", "PRO", "ENTERPRISE"];
-
 // PATCH /api/barbershop — updates the caller's own barbershop profile/branding/hours,
 // and (demo/self-service) plan changes triggered from the Upgrade modal.
 export async function PATCH(request: NextRequest) {
@@ -75,17 +74,23 @@ export async function PATCH(request: NextRequest) {
   for (const field of PROFILE_FIELDS) {
     if (typeof body[field] === "string") data[field] = body[field];
   }
-  if (typeof body.plan === "string" && VALID_PLANS.includes(body.plan)) {
+  if (typeof body.plan === "string" && PLANS.includes(body.plan as PlatformPlan)) {
     data.plan = body.plan;
   }
   if (typeof body.pointsPerReal === "number" && body.pointsPerReal >= 0) {
     data.pointsPerReal = body.pointsPerReal;
   }
 
+  const previous = await prisma.barbershop.findUnique({ where: { id: session.barbershopId }, select: { plan: true } });
+
   const barbershop = await prisma.barbershop.update({
     where: { id: session.barbershopId },
     data,
   });
+
+  if (typeof data.plan === "string" && previous) {
+    await recordPlanChangeInvoice(session.barbershopId, data.plan as PlatformPlan, previous.plan);
+  }
 
   if (Array.isArray(body.workingHours)) {
     await Promise.all(

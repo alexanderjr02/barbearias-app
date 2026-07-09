@@ -107,7 +107,7 @@ const defaultChatbot: ChatbotConfig = {
 };
 
 export default function SettingsPage() {
-  const { plan, can, setPlan } = usePlan();
+  const { plan, can, setPlan, formatPrice, pricing } = usePlan();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("profile");
   const [primaryColor, setPrimaryColor] = useState("#D4AF37");
@@ -597,9 +597,11 @@ export default function SettingsPage() {
                         </span>
                       )}
                       <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border w-fit", info.badgeBg)}>{info.label}</span>
-                      <p className="text-2xl font-black text-white mt-3">{info.price}</p>
+                      <p className="text-2xl font-black text-white mt-3">{formatPrice(p)}</p>
                       <p className="text-xs text-zinc-500 mt-1 mb-4">
-                        {Number.isFinite(info.appointmentsLimit) ? `${info.appointmentsLimit} agend./mês` : "Agendamentos ilimitados"} · {Number.isFinite(info.staffLimit) ? `até ${info.staffLimit} barbeiros` : "barbeiros ilimitados"}
+                        {pricing?.[p]?.appointmentsLimit != null ? `${pricing[p].appointmentsLimit} agend./mês` : pricing?.[p] ? "Agendamentos ilimitados" : (Number.isFinite(info.appointmentsLimit) ? `${info.appointmentsLimit} agend./mês` : "Agendamentos ilimitados")}
+                        {" · "}
+                        {pricing?.[p]?.staffLimit != null ? `até ${pricing[p].staffLimit} barbeiros` : pricing?.[p] ? "barbeiros ilimitados" : (Number.isFinite(info.staffLimit) ? `até ${info.staffLimit} barbeiros` : "barbeiros ilimitados")}
                       </p>
                       <div className="space-y-1.5 flex-1">
                         {PLAN_FEATURE_LABELS.map(({ feature, label }) => {
