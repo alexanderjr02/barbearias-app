@@ -323,8 +323,13 @@ export default function AppointmentsPage() {
               const extraCount = info.segments.length - shownSegments.length;
               return (
                 <div key={s.id} className="flex items-start gap-2.5">
-                  <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0 mt-0.5", color.dot)}>
-                    {s.name.slice(0, 1).toUpperCase()}
+                  <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0 mt-0.5 overflow-hidden", color.dot)}>
+                    {s.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={s.avatar} alt={s.name} className="w-full h-full object-cover" />
+                    ) : (
+                      s.name.slice(0, 1).toUpperCase()
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
@@ -620,8 +625,13 @@ export default function AppointmentsPage() {
                 const weekMax = Math.max(1, ...daily.map((list) => list.length));
                 return (
                   <div key={s.id} className="flex items-center gap-3">
-                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-black flex-shrink-0", color.dot)}>
-                      {s.name.slice(0, 1).toUpperCase()}
+                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-black flex-shrink-0 overflow-hidden", color.dot)}>
+                      {s.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.avatar} alt={s.name} className="w-full h-full object-cover" />
+                      ) : (
+                        s.name.slice(0, 1).toUpperCase()
+                      )}
                     </div>
                     <span className="text-xs text-zinc-300 w-20 truncate flex items-center gap-1">
                       {s.name.split(" ")[0]}
