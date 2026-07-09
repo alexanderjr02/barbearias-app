@@ -6,6 +6,8 @@ import '../../core/theme/cortix_theme.dart';
 import '../auth/session_provider.dart';
 import 'brand_controller.dart';
 import 'gestor_repository.dart';
+import 'widgets/announcements_sheet.dart';
+import 'widgets/nps_prompt_sheet.dart';
 import 'widgets/revenue_chart_card.dart';
 
 class GestorDashboardScreen extends StatefulWidget {
@@ -19,11 +21,34 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
   final _repository = GestorRepository();
   late Future<DashboardSummary> _future;
   BrandController? _brand;
+  List<GestorAnnouncement> _announcements = [];
 
   @override
   void initState() {
     super.initState();
     _future = _repository.dashboardSummary();
+    _loadAnnouncements();
+    _maybePromptNps();
+  }
+
+  Future<void> _loadAnnouncements() async {
+    try {
+      final list = await _repository.activeAnnouncements();
+      if (mounted) setState(() => _announcements = list);
+    } catch (_) {
+      // Non-critical — the bell just stays empty if this fails.
+    }
+  }
+
+  Future<void> _maybePromptNps() async {
+    try {
+      final shouldPrompt = await _repository.npsShouldPrompt();
+      if (shouldPrompt && mounted) {
+        NpsPromptSheet.show(context, repository: _repository);
+      }
+    } catch (_) {
+      // Non-critical — simply skip the prompt this session.
+    }
   }
 
   @override
@@ -131,6 +156,30 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                                 Text(firstName, style: TextStyle(color: palette.textPrimary, fontSize: 24, fontWeight: FontWeight.w800)),
                               ],
                             ),
+                          ),
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              IconButton(
+                                onPressed: () => AnnouncementsSheet.show(
+                                  context,
+                                  initial: _announcements,
+                                  repository: _repository,
+                                  onChanged: _loadAnnouncements,
+                                ),
+                                icon: Icon(Icons.notifications_outlined, color: palette.textPrimary),
+                              ),
+                              if (_announcements.isNotEmpty)
+                                Positioned(
+                                  top: 10,
+                                  right: 10,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(color: accent, shape: BoxShape.circle, border: Border.all(color: palette.bg, width: 1.5)),
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ),

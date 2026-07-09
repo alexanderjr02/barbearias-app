@@ -656,6 +656,22 @@ class GestorSubscriptionPlan {
       );
 }
 
+class GestorAnnouncement {
+  final String id;
+  final String title;
+  final String body;
+  final DateTime createdAt;
+
+  GestorAnnouncement({required this.id, required this.title, required this.body, required this.createdAt});
+
+  factory GestorAnnouncement.fromJson(Map<String, dynamic> json) => GestorAnnouncement(
+        id: json['id'],
+        title: json['title'],
+        body: json['body'],
+        createdAt: DateTime.parse(json['createdAt']),
+      );
+}
+
 class GestorRepository {
   Future<MeLite> me() async {
     final data = await ApiClient.instance.get('/me');
@@ -984,5 +1000,26 @@ class GestorRepository {
 
   Future<void> updateSubscriberStatus(String subscriptionId, String status) async {
     await ApiClient.instance.patch('/client-subscriptions/$subscriptionId', data: {'status': status});
+  }
+
+  Future<List<GestorAnnouncement>> activeAnnouncements() async {
+    final data = await ApiClient.instance.get('/announcements/active') as List;
+    return data.map((e) => GestorAnnouncement.fromJson(e)).toList();
+  }
+
+  Future<void> dismissAnnouncement(String id) async {
+    await ApiClient.instance.post('/announcements/$id/dismiss');
+  }
+
+  Future<bool> npsShouldPrompt() async {
+    final data = await ApiClient.instance.get('/nps');
+    return data['shouldPrompt'] as bool;
+  }
+
+  Future<void> submitNps({required int score, String? comment}) async {
+    await ApiClient.instance.post('/nps', data: {
+      'score': score,
+      if (comment != null && comment.isNotEmpty) 'comment': comment,
+    });
   }
 }
