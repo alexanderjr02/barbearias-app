@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'booking_repository.dart';
 import 'client_subscription_repository.dart';
@@ -179,7 +180,7 @@ class _BarbershopPlansBodyState extends State<_BarbershopPlansBody> {
       await _repository.cancelMySubscription(sub.id);
       _refresh();
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted) AppToast.error(context, e.message);
     }
   }
 

@@ -4,10 +4,12 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import 'client_repository.dart';
 import 'cliente_subscriptions_screen.dart';
 import 'new_appointment_screen.dart';
+import 'widgets/client_notifications_sheet.dart';
 
 const _activeStatuses = {'SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'};
 
@@ -28,11 +30,22 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
   final _repository = ClientRepository();
   late Future<_HomeData> _future;
   bool _busy = false;
+  int _unreadNotifications = 0;
 
   @override
   void initState() {
     super.initState();
     _future = _load();
+    _loadNotificationCount();
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final result = await _repository.notifications();
+      if (mounted) setState(() => _unreadNotifications = result.unreadCount);
+    } catch (_) {
+      // Non-critical — the bell just stays empty if this fails.
+    }
   }
 
   Future<_HomeData> _load() async {
@@ -140,7 +153,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
       await _repository.cancelAppointment(apt.id);
       _refresh();
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted) AppToast.error(context, e.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -175,7 +188,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
       _refresh();
       if (booked != true) return;
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted) AppToast.error(context, e.message);
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -236,7 +249,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
       await _repository.submitReview(appointmentId: apt.id, rating: rating, comment: commentController.text);
       _refresh();
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted) AppToast.error(context, e.message);
     }
   }
 
@@ -309,6 +322,31 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                                 ],
                               ),
                             ),
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                IconButton(
+                                  onPressed: () => ClientNotificationsSheet.show(
+                                    context,
+                                    onFetch: _repository.notifications,
+                                    onMarkAllRead: _repository.markAllNotificationsRead,
+                                    onChanged: _loadNotificationCount,
+                                  ),
+                                  icon: Icon(Icons.notifications_outlined, color: palette.textPrimary),
+                                ),
+                                if (_unreadNotifications > 0)
+                                  Positioned(
+                                    top: 10,
+                                    right: 10,
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(color: accent, shape: BoxShape.circle, border: Border.all(color: palette.bg, width: 1.5)),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(width: 4),
                             CircleAvatar(
                               radius: 24,
                               backgroundColor: palette.surfaceAlt,

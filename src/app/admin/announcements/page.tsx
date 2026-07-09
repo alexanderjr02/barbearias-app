@@ -6,6 +6,7 @@ import { Megaphone, Plus } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 import { cn, formatDateTime } from "@/lib/utils";
 
 const AUDIENCE_LABEL: Record<string, string> = { ALL: "Todos os planos", FREE: "Só Starter", PRO: "Só Pro", ENTERPRISE: "Só White Label" };
@@ -34,6 +35,7 @@ export default function AdminAnnouncementsPage() {
   const toggleActive = async (a: Announcement) => {
     await apiPatch(`/api/admin/announcements/${a.id}`, { isActive: !a.isActive });
     queryClient.invalidateQueries({ queryKey: ["admin-announcements"] });
+    toast.success(a.isActive ? "Aviso desativado" : "Aviso ativado");
   };
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,6 +51,7 @@ export default function AdminAnnouncementsPage() {
       });
       setCreateOpen(false);
       queryClient.invalidateQueries({ queryKey: ["admin-announcements"] });
+      toast.success("Aviso publicado");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar aviso");
     } finally {

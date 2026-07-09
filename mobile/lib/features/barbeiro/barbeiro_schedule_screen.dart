@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import 'barber_repository.dart';
 
@@ -94,9 +95,9 @@ class _BarbeiroScheduleScreenState extends State<BarbeiroScheduleScreen> {
     try {
       await _repository.saveSchedule(staffId, schedule.days);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Horário salvo!')));
+      AppToast.success(context, 'Horário salvo!');
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted) AppToast.error(context, e.message);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -144,7 +145,7 @@ class _BarbeiroScheduleScreenState extends State<BarbeiroScheduleScreen> {
       if (!mounted) return;
       setState(() => _timeOff = _timeOff.where((t) => t.id != entry.id).toList());
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted) AppToast.error(context, e.message);
     }
   }
 

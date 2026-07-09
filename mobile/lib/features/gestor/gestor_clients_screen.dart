@@ -3,7 +3,9 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
+import '../../core/widgets/skeleton.dart';
 import 'gestor_repository.dart';
 
 const _tierLabels = {'BRONZE': 'Bronze', 'SILVER': 'Prata', 'GOLD': 'Ouro'};
@@ -12,6 +14,12 @@ const _tierColors = {
   'SILVER': Color(0xFFC7CDD6),
   'GOLD': Color(0xFFF5C518),
 };
+
+Color _colorFromHex(String hex, [Color fallback = const Color(0xFFD4AF37)]) {
+  final cleaned = hex.replaceFirst('#', '');
+  final value = int.tryParse(cleaned.length == 6 ? 'FF$cleaned' : cleaned, radix: 16);
+  return value != null ? Color(value) : fallback;
+}
 
 class GestorClientsScreen extends StatefulWidget {
   const GestorClientsScreen({super.key});
@@ -72,7 +80,10 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
         CortixField(controller: passwordCtrl, obscureText: true, hint: 'Mínimo 8 caracteres'),
       ],
     );
-    if (saved == true) _refresh();
+    if (saved == true) {
+      _refresh();
+      if (mounted) AppToast.success(context, 'Cliente cadastrado.');
+    }
   }
 
   Future<void> _changeAvatar(GestorClient c) async {
@@ -83,7 +94,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
       await _repository.updateClientAvatar(c.id, url);
       _refresh();
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Falha ao enviar a foto.')));
+      if (mounted) AppToast.error(context, 'Falha ao enviar a foto.');
     }
   }
 
@@ -107,7 +118,12 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                itemCount: 6,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (context, i) => const SkeletonBox(height: 72, borderRadius: 14),
+              );
             }
             if (snapshot.hasError) {
               return ListView(children: [
@@ -118,10 +134,14 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
             final all = snapshot.data ?? [];
             final filtered = all.where((c) {
               final matchSearch = _search.isEmpty || c.name.toLowerCase().contains(_search.toLowerCase()) || c.phone.contains(_search);
-              final matchFilter = _filter == 'all' || (_filter == 'gold' && c.tier == 'GOLD') || (_filter == 'no-account' && !c.hasAccount);
+              final matchFilter = _filter == 'all' ||
+                  (_filter == 'gold' && c.tier == 'GOLD') ||
+                  (_filter == 'subscribers' && c.subscription != null) ||
+                  (_filter == 'no-account' && !c.hasAccount);
               return matchSearch && matchFilter;
             }).toList();
             final goldCount = all.where((c) => c.tier == 'GOLD').length;
+            final subscriberCount = all.where((c) => c.subscription != null).length;
 
             return Column(
               children: [
@@ -135,6 +155,10 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: _MiniStat(label: 'Ouro', value: '$goldCount', icon: Icons.star_rounded, palette: palette, iconColor: const Color(0xFFF5C518)),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _MiniStat(label: 'Assinantes', value: '$subscriberCount', icon: Icons.workspace_premium_rounded, palette: palette, iconColor: Theme.of(context).colorScheme.primary),
                       ),
                     ],
                   ),
@@ -164,6 +188,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
                     children: [
                       ('all', 'Todos'),
                       ('gold', 'Ouro'),
+                      ('subscribers', 'Assinantes'),
                       ('no-account', 'Sem conta'),
                     ].map((f) {
                       final selected = _filter == f.$1;
@@ -232,8 +257,28 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(c.name, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600, fontSize: 13.5), overflow: TextOverflow.ellipsis),
+                                          Row(
+                                            children: [
+                                              Flexible(child: Text(c.name, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600, fontSize: 13.5), overflow: TextOverflow.ellipsis)),
+                                              if (c.subscription != null) ...[
+                                                const SizedBox(width: 5),
+                                                Icon(Icons.workspace_premium_rounded, size: 13, color: c.subscription!.status == 'PAST_DUE' ? Colors.redAccent : _colorFromHex(c.subscription!.planColor)),
+                                              ],
+                                            ],
+                                          ),
                                           Text(c.phone, style: TextStyle(color: palette.textSecondary, fontSize: 11.5)),
+                                          if (c.subscription != null)
+                                            Padding(
+                                              padding: const EdgeInsets.only(top: 3),
+                                              child: Text(
+                                                c.subscription!.status == 'PAST_DUE' ? '${c.subscription!.planName} · pagamento pendente' : c.subscription!.planName,
+                                                style: TextStyle(
+                                                  color: c.subscription!.status == 'PAST_DUE' ? Colors.redAccent : _colorFromHex(c.subscription!.planColor),
+                                                  fontSize: 10.5,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
                                           if (tierColor != null)
                                             Padding(
                                               padding: const EdgeInsets.only(top: 3),
@@ -292,7 +337,7 @@ class _MiniStat extends StatelessWidget {
           const SizedBox(width: 8),
           Text(value, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(color: palette.textFaint, fontSize: 11)),
+          Flexible(child: Text(label, style: TextStyle(color: palette.textFaint, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis)),
         ],
       ),
     );

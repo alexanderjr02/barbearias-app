@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 
 const PLAN_LABEL: Record<string, string> = { FREE: "Starter", PRO: "Pro", ENTERPRISE: "White Label" };
@@ -99,6 +100,7 @@ export default function AdminBillingPage() {
   const reconcile = async (id: string, status: "PAID" | "FAILED") => {
     await apiPatch(`/api/admin/billing/invoices/${id}`, { status });
     invalidate();
+    toast.success(status === "PAID" ? "Fatura marcada como paga" : "Fatura marcada como falhada");
   };
 
   const submitRefund = async (id: string) => {
@@ -107,6 +109,7 @@ export default function AdminBillingPage() {
     setRefundingId(null);
     setRefundReason("");
     invalidate();
+    toast.success("Reembolso registrado");
   };
 
   const runRenewals = async () => {

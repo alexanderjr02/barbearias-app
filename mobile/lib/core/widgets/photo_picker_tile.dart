@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../api/api_client.dart';
 import '../theme/app_theme.dart';
+import 'app_toast.dart';
 
 /// Square tap-to-upload photo tile shared by every Gestor create/edit form
 /// (services, products, staff) — picks an image, uploads it through
@@ -37,7 +38,7 @@ class _PhotoPickerTileState extends State<PhotoPickerTile> {
       widget.onChanged(url);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Falha ao enviar a foto.')));
+        AppToast.error(context, 'Falha ao enviar a foto.');
       }
     } finally {
       if (mounted) setState(() => _uploading = false);

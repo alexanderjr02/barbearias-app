@@ -30,7 +30,7 @@ export function NpsPrompt() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-5 z-50">
+    <div className="fixed bottom-24 right-5 w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-5 z-50">
       <button onClick={() => setDismissed(true)} className="absolute top-3 right-3 text-zinc-600 hover:text-zinc-300">
         <X className="w-4 h-4" />
       </button>

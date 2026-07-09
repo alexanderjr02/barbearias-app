@@ -14,7 +14,7 @@ export async function GET() {
     orderBy: { updatedAt: "desc" },
     include: {
       _count: { select: { messages: true } },
-      messages: { orderBy: { createdAt: "desc" }, take: 1, select: { body: true, createdAt: true } },
+      messages: { orderBy: { createdAt: "desc" }, take: 1, select: { body: true, createdAt: true, author: { select: { role: true } } } },
     },
   });
 
@@ -26,6 +26,10 @@ export async function GET() {
       priority: t.priority,
       messageCount: t._count.messages,
       lastMessage: t.messages[0]?.body ?? null,
+      // Lets the UI flag "the CORTIX team replied and you haven't answered
+      // yet" without a separate read/unread table — derived straight from
+      // who wrote the most recent message.
+      lastMessageIsAdmin: t.messages[0] ? ["SUPER_ADMIN", "SUPPORT_ADMIN"].includes(t.messages[0].author.role) : false,
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
     }))

@@ -1,4 +1,7 @@
 import '../../core/api/api_client.dart';
+import '../../core/models/notification_models.dart';
+
+export '../../core/models/notification_models.dart';
 
 class BarberAppointment {
   final String id;
@@ -342,5 +345,23 @@ class BarberRepository {
 
   Future<void> removeTimeOff(String staffId, String timeOffId) async {
     await ApiClient.instance.delete('/staff/$staffId/time-off/$timeOffId');
+  }
+
+  Future<List<GestorAnnouncement>> activeAnnouncements() async {
+    final data = await ApiClient.instance.get('/announcements/active') as List;
+    return data.map((e) => GestorAnnouncement.fromJson(e)).toList();
+  }
+
+  Future<void> dismissAnnouncement(String id) async {
+    await ApiClient.instance.post('/announcements/$id/dismiss');
+  }
+
+  Future<GestorNotificationsResult> notifications() async {
+    final data = await ApiClient.instance.get('/notifications');
+    return GestorNotificationsResult.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    await ApiClient.instance.post('/notifications/read-all');
   }
 }

@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/bell_sheet.dart';
+import '../../core/widgets/skeleton.dart';
 import '../auth/session_provider.dart';
 import 'brand_controller.dart';
 import 'gestor_repository.dart';
-import 'widgets/announcements_sheet.dart';
 import 'widgets/nps_prompt_sheet.dart';
+import 'widgets/onboarding_checklist_card.dart';
 import 'widgets/revenue_chart_card.dart';
 
 class GestorDashboardScreen extends StatefulWidget {
@@ -22,12 +24,14 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
   late Future<DashboardSummary> _future;
   BrandController? _brand;
   List<GestorAnnouncement> _announcements = [];
+  int _unreadNotifications = 0;
 
   @override
   void initState() {
     super.initState();
     _future = _repository.dashboardSummary();
     _loadAnnouncements();
+    _loadNotificationCount();
     _maybePromptNps();
   }
 
@@ -38,6 +42,20 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
     } catch (_) {
       // Non-critical — the bell just stays empty if this fails.
     }
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final result = await _repository.notifications();
+      if (mounted) setState(() => _unreadNotifications = result.unreadCount);
+    } catch (_) {
+      // Non-critical — the bell just stays empty if this fails.
+    }
+  }
+
+  void _refreshBell() {
+    _loadAnnouncements();
+    _loadNotificationCount();
   }
 
   Future<void> _maybePromptNps() async {
@@ -113,7 +131,24 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 90, 16, 20),
+                children: [
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.5,
+                    children: List.generate(4, (_) => const SkeletonBox(height: 90, borderRadius: 16)),
+                  ),
+                  const SizedBox(height: 12),
+                  const SkeletonBox(height: 64, borderRadius: 16),
+                  const SizedBox(height: 20),
+                  const SkeletonBox(height: 160, borderRadius: 16),
+                ],
+              );
             }
             if (snapshot.hasError) {
               return ListView(children: [
@@ -161,15 +196,17 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                             clipBehavior: Clip.none,
                             children: [
                               IconButton(
-                                onPressed: () => AnnouncementsSheet.show(
+                                onPressed: () => BellSheet.show(
                                   context,
-                                  initial: _announcements,
-                                  repository: _repository,
-                                  onChanged: _loadAnnouncements,
+                                  announcements: _announcements,
+                                  onDismissAnnouncement: _repository.dismissAnnouncement,
+                                  onFetchNotifications: _repository.notifications,
+                                  onMarkAllRead: _repository.markAllNotificationsRead,
+                                  onChanged: _refreshBell,
                                 ),
                                 icon: Icon(Icons.notifications_outlined, color: palette.textPrimary),
                               ),
-                              if (_announcements.isNotEmpty)
+                              if (_announcements.isNotEmpty || _unreadNotifications > 0)
                                 Positioned(
                                   top: 10,
                                   right: 10,
@@ -186,6 +223,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                     ),
                   ),
                 ),
+                const SliverToBoxAdapter(child: OnboardingChecklistCard()),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                   sliver: SliverList(

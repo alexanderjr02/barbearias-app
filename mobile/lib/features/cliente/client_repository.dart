@@ -1,4 +1,7 @@
 import '../../core/api/api_client.dart';
+import '../../core/models/notification_models.dart';
+
+export '../../core/models/notification_models.dart';
 
 class ClientAppointment {
   final String id;
@@ -71,5 +74,14 @@ class ClientRepository {
       'rating': rating,
       if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
     });
+  }
+
+  Future<GestorNotificationsResult> notifications() async {
+    final data = await ApiClient.instance.get('/client/notifications');
+    return GestorNotificationsResult.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    await ApiClient.instance.post('/client/notifications/read-all');
   }
 }

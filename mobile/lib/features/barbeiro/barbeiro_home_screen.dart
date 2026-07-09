@@ -4,6 +4,8 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/app_toast.dart';
+import '../../core/widgets/bell_sheet.dart';
 import '../auth/session_provider.dart';
 import '../gestor/brand_controller.dart';
 import 'barber_repository.dart';
@@ -29,11 +31,38 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
   final _repository = BarberRepository();
   late Future<_HomeData> _future;
   BrandController? _brand;
+  List<GestorAnnouncement> _announcements = [];
+  int _unreadNotifications = 0;
 
   @override
   void initState() {
     super.initState();
     _future = _load();
+    _loadAnnouncements();
+    _loadNotificationCount();
+  }
+
+  Future<void> _loadAnnouncements() async {
+    try {
+      final list = await _repository.activeAnnouncements();
+      if (mounted) setState(() => _announcements = list);
+    } catch (_) {
+      // Non-critical — the bell just stays empty if this fails.
+    }
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final result = await _repository.notifications();
+      if (mounted) setState(() => _unreadNotifications = result.unreadCount);
+    } catch (_) {
+      // Non-critical — the bell just stays empty if this fails.
+    }
+  }
+
+  void _refreshBell() {
+    _loadAnnouncements();
+    _loadNotificationCount();
   }
 
   @override
@@ -73,7 +102,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
       _refresh();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        AppToast.error(context, e.message);
       }
     }
   }
@@ -240,6 +269,33 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
                               ],
                             ),
                           ),
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              IconButton(
+                                onPressed: () => BellSheet.show(
+                                  context,
+                                  announcements: _announcements,
+                                  onDismissAnnouncement: _repository.dismissAnnouncement,
+                                  onFetchNotifications: _repository.notifications,
+                                  onMarkAllRead: _repository.markAllNotificationsRead,
+                                  onChanged: _refreshBell,
+                                ),
+                                icon: Icon(Icons.notifications_outlined, color: palette.textPrimary),
+                              ),
+                              if (_announcements.isNotEmpty || _unreadNotifications > 0)
+                                Positioned(
+                                  top: 10,
+                                  right: 10,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(color: accent, shape: BoxShape.circle, border: Border.all(color: palette.bg, width: 1.5)),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 4),
                           CircleAvatar(
                             radius: 24,
                             backgroundColor: palette.surfaceAlt,

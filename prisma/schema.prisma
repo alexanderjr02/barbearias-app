@@ -45,6 +45,7 @@ model User {
 
   announcementDismissals AnnouncementDismissal[]
   npsResponses     NpsResponse[]
+  clientNotifications Notification[] @relation("ClientNotifications")
 }
 
 model Barbershop {
@@ -67,6 +68,7 @@ model Barbershop {
   isActive        Boolean  @default(true)
   plan            String   @default("FREE")
   pointsPerReal   Int      @default(10)
+  onboardingDismissed Boolean @default(false)
   ownerId         String   @unique
   owner           User     @relation("BarbershopOwner", fields: [ownerId], references: [id])
   createdAt       DateTime @default(now())
@@ -88,6 +90,32 @@ model Barbershop {
   whiteLabelRequest WhiteLabelRequest?
   supportTickets    SupportTicket[]
   npsResponses      NpsResponse[]
+  notifications     Notification[]
+}
+
+// Gestor-facing notification feed — shared per barbershop (not per user),
+// since teams here are small enough that "someone on the team saw it" is
+// good enough. Distinct from NotificationLog, which is the platform admin's
+// own outbound-email audit trail.
+model Notification {
+  id           String   @id @default(cuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  // Set only for client-targeted notifications (their own appointment was
+  // confirmed/cancelled/completed by the shop) — null means "shop-wide",
+  // visible to gestor/staff via /api/notifications instead.
+  clientId     String?
+  client       User?    @relation("ClientNotifications", fields: [clientId], references: [id], onDelete: Cascade)
+  type         String   // NEW_APPOINTMENT | APPOINTMENT_CANCELLED | SUPPORT_REPLY | APPOINTMENT_CONFIRMED | APPOINTMENT_CANCELLED_BY_SHOP | APPOINTMENT_COMPLETED
+  title        String
+  body         String
+  link         String?
+  read         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([barbershopId])
+  @@index([clientId])
+  @@index([read])
 }
 
 model Staff {

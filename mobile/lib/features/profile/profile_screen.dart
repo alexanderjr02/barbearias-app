@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_controller.dart';
+import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import 'profile_repository.dart';
 
@@ -53,11 +54,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       final ok = await context.read<SessionProvider>().updateProfile(avatar: url);
       if (!ok && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível salvar a foto.')));
+        AppToast.error(context, 'Não foi possível salvar a foto.');
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Falha ao enviar a foto.')));
+        AppToast.error(context, 'Falha ao enviar a foto.');
       }
     } finally {
       if (mounted) setState(() => _uploadingAvatar = false);
@@ -75,9 +76,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _saving = false;
         if (ok) _dirty = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? 'Perfil atualizado.' : 'Não foi possível salvar. Tente novamente.')),
-      );
+      if (ok) {
+        AppToast.success(context, 'Perfil atualizado.');
+      } else {
+        AppToast.error(context, 'Não foi possível salvar. Tente novamente.');
+      }
     }
   }
 

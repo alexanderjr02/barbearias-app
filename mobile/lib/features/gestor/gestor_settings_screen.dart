@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/photo_picker_tile.dart';
 import 'brand_controller.dart';
@@ -221,7 +222,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         });
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível salvar.')));
+      if (mounted) AppToast.error(context, 'Não foi possível salvar.');
     } finally {
       if (mounted) setState(() => _savingProfile = false);
     }
@@ -239,7 +240,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         });
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível salvar.')));
+      if (mounted) AppToast.error(context, 'Não foi possível salvar.');
     } finally {
       if (mounted) setState(() => _savingColor = false);
     }
@@ -256,7 +257,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         });
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível salvar.')));
+      if (mounted) AppToast.error(context, 'Não foi possível salvar.');
     } finally {
       if (mounted) setState(() => _savingHours = false);
     }
@@ -266,9 +267,12 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     setState(() => _savingPlan = true);
     try {
       await _repository.updatePlan(plan);
-      if (mounted) setState(() => _plan = plan);
+      if (mounted) {
+        setState(() => _plan = plan);
+        AppToast.success(context, 'Plano atualizado.');
+      }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível trocar de plano.')));
+      if (mounted) AppToast.error(context, 'Não foi possível trocar de plano.');
     } finally {
       if (mounted) setState(() => _savingPlan = false);
     }
@@ -353,7 +357,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
                     final url = await _repository.uploadImage(file);
                     setTabState(() => _coverImage = url);
                   } catch (_) {
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Falha ao enviar a foto.')));
+                    if (mounted) AppToast.error(context, 'Falha ao enviar a foto.');
                   }
                 },
                 child: Container(

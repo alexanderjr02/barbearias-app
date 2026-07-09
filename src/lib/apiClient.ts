@@ -1,7 +1,14 @@
+import { toast } from "@/lib/toast";
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Erro na requisição");
+    const message = body.error || "Erro na requisição";
+    // Every apiGet/apiPost/... call funnels through here, so this is the one
+    // place that guarantees a failure is never silent — even in screens that
+    // don't render their own inline error state (e.g. a bare delete button).
+    toast.error(message);
+    throw new Error(message);
   }
   return res.json();
 }

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { apiGet, apiPatch } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 import { cn, formatDate } from "@/lib/utils";
 
 const PLAN_BADGE: Record<string, { label: string; icon: typeof Check; cls: string }> = {
@@ -79,6 +80,7 @@ export default function AdminBarbershopsPage() {
     await apiPatch(`/api/admin/barbershops/${shop.id}`, { isActive: !shop.isActive });
     queryClient.invalidateQueries({ queryKey: ["admin-barbershops"] });
     queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    toast.success(shop.isActive ? "Barbearia suspensa" : "Barbearia reativada");
   };
 
   const shops = data?.barbershops ?? [];

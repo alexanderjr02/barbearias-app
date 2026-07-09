@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { validateRequestedSlot } from "@/lib/scheduling";
+import { notifyBarbershop } from "@/lib/gestorNotifications";
 
 // GET /api/appointments?barbershopId=xxx&staffId=yyy&from=YYYY-MM-DD&to=YYYY-MM-DD
 // staffId optional (a gestor viewing a single barber's agenda). from/to are
@@ -103,6 +104,19 @@ export async function POST(request: NextRequest) {
         service: true,
       },
     });
+
+    // A staff member booking a walk-in never notifies themselves — only a
+    // client (logged in or guest) creating their own appointment does.
+    const isClientInitiated = !session || session.role === "CLIENT";
+    if (isClientInitiated) {
+      await notifyBarbershop(
+        barbershopId,
+        "NEW_APPOINTMENT",
+        "Novo agendamento",
+        `${clientName} agendou ${appointment.service.name} às ${startTime}`,
+        "/dashboard/appointments"
+      );
+    }
 
     return NextResponse.json(appointment, { status: 201 });
   } catch {

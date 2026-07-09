@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:image_picker/image_picker.dart';
 import '../../core/api/api_client.dart';
+import '../../core/models/notification_models.dart';
+
+export '../../core/models/notification_models.dart';
 
 class DashboardSummary {
   final double todayRevenue;
@@ -76,6 +79,20 @@ class RecentAppointment {
       );
 }
 
+class ClientSubscriptionInfo {
+  final String planName;
+  final String planColor;
+  final String status;
+
+  ClientSubscriptionInfo({required this.planName, required this.planColor, required this.status});
+
+  factory ClientSubscriptionInfo.fromJson(Map<String, dynamic> json) => ClientSubscriptionInfo(
+        planName: json['planName'],
+        planColor: json['planColor'],
+        status: json['status'],
+      );
+}
+
 class GestorClient {
   final String id;
   final String name;
@@ -89,6 +106,7 @@ class GestorClient {
   final String? tier;
   final bool hasAccount;
   final String? avatar;
+  final ClientSubscriptionInfo? subscription;
 
   GestorClient({
     required this.id,
@@ -103,6 +121,7 @@ class GestorClient {
     required this.tier,
     required this.hasAccount,
     required this.avatar,
+    required this.subscription,
   });
 
   factory GestorClient.fromJson(Map<String, dynamic> json) => GestorClient(
@@ -118,6 +137,7 @@ class GestorClient {
         tier: json['tier'],
         hasAccount: json['hasAccount'] == true,
         avatar: json['avatar'],
+        subscription: json['subscription'] != null ? ClientSubscriptionInfo.fromJson(json['subscription']) : null,
       );
 }
 
@@ -656,19 +676,105 @@ class GestorSubscriptionPlan {
       );
 }
 
-class GestorAnnouncement {
+class SupportTicketSummary {
   final String id;
-  final String title;
+  final String subject;
+  final String status;
+  final String priority;
+  final int messageCount;
+  final String? lastMessage;
+  final bool lastMessageIsAdmin;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  SupportTicketSummary({
+    required this.id,
+    required this.subject,
+    required this.status,
+    required this.priority,
+    required this.messageCount,
+    required this.lastMessage,
+    required this.lastMessageIsAdmin,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory SupportTicketSummary.fromJson(Map<String, dynamic> json) => SupportTicketSummary(
+        id: json['id'],
+        subject: json['subject'],
+        status: json['status'],
+        priority: json['priority'],
+        messageCount: json['messageCount'] as int,
+        lastMessage: json['lastMessage'],
+        lastMessageIsAdmin: json['lastMessageIsAdmin'] == true,
+        createdAt: DateTime.parse(json['createdAt']),
+        updatedAt: DateTime.parse(json['updatedAt']),
+      );
+}
+
+class SupportTicketMessage {
+  final String id;
   final String body;
+  final String authorName;
+  final bool isAdmin;
   final DateTime createdAt;
 
-  GestorAnnouncement({required this.id, required this.title, required this.body, required this.createdAt});
+  SupportTicketMessage({required this.id, required this.body, required this.authorName, required this.isAdmin, required this.createdAt});
 
-  factory GestorAnnouncement.fromJson(Map<String, dynamic> json) => GestorAnnouncement(
+  factory SupportTicketMessage.fromJson(Map<String, dynamic> json) => SupportTicketMessage(
         id: json['id'],
-        title: json['title'],
         body: json['body'],
+        authorName: json['authorName'],
+        isAdmin: json['isAdmin'] == true,
         createdAt: DateTime.parse(json['createdAt']),
+      );
+}
+
+class SupportTicketDetail {
+  final String id;
+  final String subject;
+  final String status;
+  final String priority;
+  final DateTime createdAt;
+  final List<SupportTicketMessage> messages;
+
+  SupportTicketDetail({required this.id, required this.subject, required this.status, required this.priority, required this.createdAt, required this.messages});
+
+  factory SupportTicketDetail.fromJson(Map<String, dynamic> json) => SupportTicketDetail(
+        id: json['id'],
+        subject: json['subject'],
+        status: json['status'],
+        priority: json['priority'],
+        createdAt: DateTime.parse(json['createdAt']),
+        messages: (json['messages'] as List).map((e) => SupportTicketMessage.fromJson(e)).toList(),
+      );
+}
+
+class OnboardingStep {
+  final String key;
+  final String label;
+  final bool done;
+
+  OnboardingStep({required this.key, required this.label, required this.done});
+
+  factory OnboardingStep.fromJson(Map<String, dynamic> json) => OnboardingStep(key: json['key'], label: json['label'], done: json['done'] == true);
+}
+
+class OnboardingStatus {
+  final List<OnboardingStep> steps;
+  final int completedCount;
+  final int totalCount;
+  final bool allDone;
+  final bool dismissed;
+
+  OnboardingStatus({required this.steps, required this.completedCount, required this.totalCount, required this.allDone, required this.dismissed});
+
+  factory OnboardingStatus.fromJson(Map<String, dynamic> json) => OnboardingStatus(
+        steps: (json['steps'] as List).map((e) => OnboardingStep.fromJson(e)).toList(),
+        completedCount: json['completedCount'] as int,
+        totalCount: json['totalCount'] as int,
+        allDone: json['allDone'] == true,
+        dismissed: json['dismissed'] == true,
       );
 }
 
@@ -1002,6 +1108,24 @@ class GestorRepository {
     await ApiClient.instance.patch('/client-subscriptions/$subscriptionId', data: {'status': status});
   }
 
+  Future<OnboardingStatus> onboardingStatus() async {
+    final data = await ApiClient.instance.get('/onboarding');
+    return OnboardingStatus.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> dismissOnboarding() async {
+    await ApiClient.instance.patch('/onboarding', data: {'dismissed': true});
+  }
+
+  Future<GestorNotificationsResult> notifications() async {
+    final data = await ApiClient.instance.get('/notifications');
+    return GestorNotificationsResult.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    await ApiClient.instance.post('/notifications/read-all');
+  }
+
   Future<List<GestorAnnouncement>> activeAnnouncements() async {
     final data = await ApiClient.instance.get('/announcements/active') as List;
     return data.map((e) => GestorAnnouncement.fromJson(e)).toList();
@@ -1021,5 +1145,27 @@ class GestorRepository {
       'score': score,
       if (comment != null && comment.isNotEmpty) 'comment': comment,
     });
+  }
+
+  Future<List<SupportTicketSummary>> supportTickets() async {
+    final data = await ApiClient.instance.get('/support/tickets') as List;
+    return data.map((e) => SupportTicketSummary.fromJson(e)).toList();
+  }
+
+  Future<SupportTicketDetail> supportTicketDetail(String id) async {
+    final data = await ApiClient.instance.get('/support/tickets/$id');
+    return SupportTicketDetail.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> createSupportTicket({required String subject, required String body, String priority = 'NORMAL'}) async {
+    await ApiClient.instance.post('/support/tickets', data: {'subject': subject, 'body': body, 'priority': priority});
+  }
+
+  Future<void> replySupportTicket(String id, String body) async {
+    await ApiClient.instance.post('/support/tickets/$id', data: {'body': body});
+  }
+
+  Future<void> closeSupportTicket(String id) async {
+    await ApiClient.instance.patch('/support/tickets/$id', data: {'status': 'CLOSED'});
   }
 }

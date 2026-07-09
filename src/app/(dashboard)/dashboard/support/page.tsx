@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LifeBuoy, Plus, MessageCircle } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cn, formatDateTime } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface TicketRow {
   id: string;
@@ -51,6 +53,7 @@ export default function SupportPage() {
       });
       setCreateOpen(false);
       queryClient.invalidateQueries({ queryKey: ["support-tickets"] });
+      toast.success("Chamado aberto");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao abrir chamado");
     } finally {
@@ -100,6 +103,13 @@ export default function SupportPage() {
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
         <div className="divide-y divide-zinc-800">
+          {isLoading && (
+            <div className="p-5 space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 rounded-lg" />
+              ))}
+            </div>
+          )}
           {!isLoading && (tickets ?? []).length === 0 && (
             <div className="text-center py-16 text-zinc-500">
               <LifeBuoy className="w-8 h-8 mx-auto mb-2 opacity-30" />

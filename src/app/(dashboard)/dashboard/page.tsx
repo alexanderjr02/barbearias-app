@@ -14,6 +14,8 @@ import {
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { formatCurrency } from "@/lib/utils";
 import { apiGet } from "@/lib/apiClient";
 
@@ -63,7 +65,16 @@ export default function DashboardPage() {
         subtitle={today.charAt(0).toUpperCase() + today.slice(1)}
       />
 
+      <OnboardingChecklist />
+
       {/* Stats */}
+      {isLoading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[104px] rounded-xl" />
+          ))}
+        </div>
+      ) : (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Receita Hoje"
@@ -94,6 +105,7 @@ export default function DashboardPage() {
           description="este mês"
         />
       </div>
+      )}
 
       {/* Chart + Top Barbers */}
       <div className="grid lg:grid-cols-3 gap-6">
@@ -158,6 +170,13 @@ export default function DashboardPage() {
           </a>
         </div>
         <div className="divide-y divide-zinc-800">
+          {isLoading && (
+            <div className="p-6 space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 rounded-lg" />
+              ))}
+            </div>
+          )}
           {!isLoading && (summary?.recentAppointments ?? []).length === 0 && (
             <p className="text-sm text-zinc-500 px-6 py-8 text-center">Nenhum agendamento para hoje.</p>
           )}

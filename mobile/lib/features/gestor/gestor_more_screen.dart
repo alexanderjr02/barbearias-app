@@ -8,6 +8,7 @@ import 'gestor_reports_screen.dart';
 import 'gestor_services_screen.dart';
 import 'gestor_settings_screen.dart';
 import 'gestor_subscriptions_screen.dart';
+import 'gestor_support_screen.dart';
 
 class GestorMoreScreen extends StatelessWidget {
   const GestorMoreScreen({super.key});
@@ -84,6 +85,15 @@ class GestorMoreScreen extends StatelessWidget {
             palette: palette,
             accent: accent,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorSettingsScreen())),
+          ),
+          const SizedBox(height: 10),
+          _MenuTile(
+            icon: Icons.support_agent_rounded,
+            label: 'Suporte',
+            sub: 'Fale com a equipe CORTIX sobre dúvidas ou problemas',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorSupportScreen())),
           ),
           const SizedBox(height: 10),
           _MenuTile(

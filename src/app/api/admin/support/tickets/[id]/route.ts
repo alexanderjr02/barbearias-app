@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAnyAdminSession } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
+import { notifyBarbershop } from "@/lib/gestorNotifications";
 
 const STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
 
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "Mensagem vazia" }, { status: 400 });
   }
 
-  const ticket = await prisma.supportTicket.findUnique({ where: { id }, select: { status: true } });
+  const ticket = await prisma.supportTicket.findUnique({ where: { id }, select: { status: true, barbershopId: true, subject: true } });
   if (!ticket) {
     return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     data: { status: ticket.status === "OPEN" ? "IN_PROGRESS" : ticket.status },
   });
   await logAdminAction({ actorId: session.sub, action: "support.reply_sent", targetType: "SupportTicket", targetId: id });
+  await notifyBarbershop(ticket.barbershopId, "SUPPORT_REPLY", "Suporte respondeu", `Nova resposta em "${ticket.subject}"`, `/dashboard/support/${id}`);
 
   return NextResponse.json(message, { status: 201 });
 }

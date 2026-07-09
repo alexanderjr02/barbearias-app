@@ -2,11 +2,13 @@
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Star, Phone, Users, Camera, Loader2, Award } from "lucide-react";
+import { Plus, Search, Star, Phone, Users, Camera, Loader2, Award, Crown } from "lucide-react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { apiGet, apiPatch, apiPost, apiUpload } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface ApiClient {
   id: string;
@@ -21,6 +23,7 @@ interface ApiClient {
   tier: "BRONZE" | "SILVER" | "GOLD" | null;
   hasAccount: boolean;
   avatar: string | null;
+  subscription: { planName: string; planColor: string; status: "ACTIVE" | "PAST_DUE" } | null;
 }
 
 const TIER_LABELS: Record<string, string> = { BRONZE: "Bronze", SILVER: "Prata", GOLD: "Ouro" };
@@ -88,7 +91,7 @@ export default function ClientsPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => apiGet<ApiClient[]>("/api/clients") });
+  const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: () => apiGet<ApiClient[]>("/api/clients") });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["clients"] });
 
@@ -102,6 +105,7 @@ export default function ClientsPage() {
     onSuccess: () => {
       invalidate();
       setModalOpen(false);
+      toast.success("Cliente cadastrado");
     },
   });
 
@@ -124,11 +128,13 @@ export default function ClientsPage() {
     const matchFilter =
       filter === "all" ||
       (filter === "gold" && c.tier === "GOLD") ||
-      (filter === "no-account" && !c.tier);
+      (filter === "no-account" && !c.tier) ||
+      (filter === "subscribers" && !!c.subscription);
     return matchSearch && matchFilter;
   });
 
   const goldCount = clients.filter((c) => c.tier === "GOLD").length;
+  const subscriberCount = clients.filter((c) => c.subscription).length;
   const totalSpentAll = clients.reduce((a, c) => a + c.totalSpent, 0);
 
   return (
@@ -176,7 +182,7 @@ export default function ClientsPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
           <Users className="w-4 h-4 text-blue-400 mb-2" />
           <p className="text-2xl font-black text-white">{clients.length}</p>
@@ -186,6 +192,11 @@ export default function ClientsPage() {
           <Award className="w-4 h-4 text-amber-400 mb-2 fill-amber-400" />
           <p className="text-2xl font-black text-white">{goldCount}</p>
           <p className="text-xs text-zinc-500">Clientes Ouro</p>
+        </div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+          <Crown className="w-4 h-4 text-violet-400 mb-2" />
+          <p className="text-2xl font-black text-white">{subscriberCount}</p>
+          <p className="text-xs text-zinc-500">Assinantes</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
           <Star className="w-4 h-4 text-emerald-400 mb-2" />
@@ -206,8 +217,8 @@ export default function ClientsPage() {
             className="w-full pl-9 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
-        <div className="flex gap-2">
-          {["all", "gold", "no-account"].map((f) => (
+        <div className="flex gap-2 flex-wrap">
+          {["all", "gold", "subscribers", "no-account"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -216,7 +227,7 @@ export default function ClientsPage() {
                 filter === f ? "bg-amber-500/20 border border-amber-500/40 text-amber-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400"
               )}
             >
-              {f === "all" ? "Todos" : f === "gold" ? "Ouro" : "Sem conta"}
+              {f === "all" ? "Todos" : f === "gold" ? "Ouro" : f === "subscribers" ? "Assinantes" : "Sem conta"}
             </button>
           ))}
         </div>
@@ -238,13 +249,35 @@ export default function ClientsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
-              {filtered.map((client) => (
+              {isLoading &&
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-3.5" colSpan={7}>
+                      <Skeleton className="h-10 rounded-lg" />
+                    </td>
+                  </tr>
+                ))}
+              {!isLoading && filtered.map((client) => (
                 <tr key={client.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-3.5">
                     <div className="flex items-center gap-3">
                       <ClientAvatar client={client} onChange={(avatar) => updateAvatar.mutate({ id: client.id, avatar })} />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{client.name}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-semibold text-white truncate">{client.name}</p>
+                          {client.subscription && (
+                            <span
+                              title={client.subscription.status === "PAST_DUE" ? "Assinatura com pagamento pendente" : "Assinante ativo"}
+                              className={cn(
+                                "inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full border flex-shrink-0",
+                                client.subscription.status === "PAST_DUE" ? "border-red-500/40 text-red-400 bg-red-500/10" : "border-transparent"
+                              )}
+                              style={client.subscription.status === "ACTIVE" ? { backgroundColor: `${client.subscription.planColor}1a`, color: client.subscription.planColor } : undefined}
+                            >
+                              <Crown className="w-2.5 h-2.5" /> {client.subscription.planName}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-zinc-500 flex items-center gap-1">
                           <Phone className="w-3 h-3" /> {client.phone}
                         </p>
@@ -273,7 +306,7 @@ export default function ClientsPage() {
               ))}
             </tbody>
           </table>
-          {filtered.length === 0 && <div className="text-center py-12 text-zinc-500">Nenhum cliente encontrado</div>}
+          {!isLoading && filtered.length === 0 && <div className="text-center py-12 text-zinc-500">Nenhum cliente encontrado</div>}
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { apiGet } from "@/lib/apiClient";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { NewAppointmentModal } from "@/components/dashboard/NewAppointmentModal";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface ApiAppointment {
   id: string;
@@ -853,7 +854,15 @@ export default function AppointmentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {filteredList.map((apt) => {
+                {isLoading &&
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4" colSpan={6}>
+                        <Skeleton className="h-10 rounded-lg" />
+                      </td>
+                    </tr>
+                  ))}
+                {!isLoading && filteredList.map((apt) => {
                   const status = statusOf(apt.status);
                   return (
                     <tr key={apt.id} className="hover:bg-white/2 transition-colors group">
