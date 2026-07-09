@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       include: {
         staff: true,
         service: true,
+        client: { select: { id: true, name: true, avatar: true } },
       },
       orderBy: { date: hasRange ? "asc" : "desc" },
       ...(!hasRange && { take: 50 }),
@@ -77,6 +78,10 @@ export async function POST(request: NextRequest) {
     }
 
     const session = await getSession();
+    // Only a CLIENT's own session auto-links the appointment to their
+    // account — a staff member (owner/manager/barber) booking a walk-in on
+    // someone else's behalf must never have the booking attributed to them.
+    const selfBookingClientId = session?.role === "CLIENT" ? session.sub : undefined;
 
     const appointment = await prisma.appointment.create({
       data: {
@@ -89,7 +94,7 @@ export async function POST(request: NextRequest) {
         clientName,
         clientPhone,
         clientEmail,
-        clientId: session?.sub,
+        clientId: selfBookingClientId,
         totalPrice: totalPrice || 0,
         status: "SCHEDULED",
       },

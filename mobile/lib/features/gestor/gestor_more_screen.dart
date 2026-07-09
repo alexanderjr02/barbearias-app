@@ -7,6 +7,7 @@ import 'gestor_marketing_screen.dart';
 import 'gestor_reports_screen.dart';
 import 'gestor_services_screen.dart';
 import 'gestor_settings_screen.dart';
+import 'gestor_subscriptions_screen.dart';
 
 class GestorMoreScreen extends StatelessWidget {
   const GestorMoreScreen({super.key});
@@ -65,6 +66,15 @@ class GestorMoreScreen extends StatelessWidget {
             palette: palette,
             accent: accent,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorFinanceScreen())),
+          ),
+          const SizedBox(height: 10),
+          _MenuTile(
+            icon: Icons.repeat_rounded,
+            label: 'Assinaturas',
+            sub: 'Planos recorrentes e assinantes',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorSubscriptionsScreen())),
           ),
           const SizedBox(height: 10),
           _MenuTile(

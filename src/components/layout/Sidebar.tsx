@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Calendar, Users, UserCheck, Scissors,
   TrendingUp, Package, Megaphone, Settings, LogOut,
-  ChevronLeft, ChevronRight, Sparkles, Crown,
+  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -21,6 +21,7 @@ const navItems = [
   { label: "Financeiro", href: "/dashboard/finance", icon: TrendingUp },
   { label: "Estoque", href: "/dashboard/inventory", icon: Package },
   { label: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
+  { label: "Assinaturas", href: "/dashboard/subscriptions", icon: Repeat },
 ];
 
 const UPSELL_PITCH: Record<"FREE" | "PRO", { badge: string; text: string; target: "PRO" | "ENTERPRISE" }> = {

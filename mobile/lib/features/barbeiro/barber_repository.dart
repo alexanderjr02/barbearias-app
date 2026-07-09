@@ -148,6 +148,20 @@ class ClientRankingEntry {
       );
 }
 
+class ClientMembership {
+  final String planName;
+  final String planColor;
+  final String status; // ACTIVE | PAST_DUE
+
+  ClientMembership({required this.planName, required this.planColor, required this.status});
+
+  factory ClientMembership.fromJson(Map<String, dynamic> json) => ClientMembership(
+        planName: json['planName'],
+        planColor: json['planColor'] ?? '#D4AF37',
+        status: json['status'],
+      );
+}
+
 /// A client as registered on the barbershop (not just the ones with a
 /// completed visit under this barber) — used so a client the barber just
 /// registered shows up immediately, before they've ever been served.
@@ -159,6 +173,7 @@ class BarberClientEntry {
   final int visits;
   final double totalSpent;
   final String? avatar;
+  final ClientMembership? subscription;
 
   BarberClientEntry({
     required this.id,
@@ -168,6 +183,7 @@ class BarberClientEntry {
     required this.visits,
     required this.totalSpent,
     required this.avatar,
+    required this.subscription,
   });
 
   factory BarberClientEntry.fromJson(Map<String, dynamic> json) => BarberClientEntry(
@@ -178,6 +194,7 @@ class BarberClientEntry {
         visits: json['visits'] as int? ?? 0,
         totalSpent: (json['totalSpent'] as num?)?.toDouble() ?? 0,
         avatar: json['avatar'],
+        subscription: json['subscription'] != null ? ClientMembership.fromJson(json['subscription']) : null,
       );
 }
 

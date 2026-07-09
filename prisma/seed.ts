@@ -179,6 +179,79 @@ async function main() {
     });
   }
 
+  // Demo subscription plans (client_subscriptions is a White Label-only
+  // feature — enterpriseShop is the only seeded barbershop on that plan).
+  const existingPlanCount = await prisma.subscriptionPlan.count({ where: { barbershopId: enterpriseShop.id } });
+  if (existingPlanCount === 0) {
+    const premiumPlan = await prisma.subscriptionPlan.create({
+      data: {
+        barbershopId: enterpriseShop.id,
+        name: "Ilimitado Premium",
+        description: "Para quem vem toda semana",
+        price: 99.9,
+        billingCycle: "MONTHLY",
+        benefits: "Cortes ilimitados\nPrioridade no agendamento\n10% de desconto em produtos",
+        color: "#8B5CF6",
+      },
+    });
+    const beardPlan = await prisma.subscriptionPlan.create({
+      data: {
+        barbershopId: enterpriseShop.id,
+        name: "Barba & Cabelo",
+        description: "2 cortes + 2 barbas por mês",
+        price: 59.9,
+        billingCycle: "MONTHLY",
+        benefits: "2 cortes por mês\n2 barbas por mês\nAgendamento facilitado pelo WhatsApp",
+        color: "#D4AF37",
+      },
+    });
+
+    const now = new Date();
+    const daysAgo = (n: number) => new Date(now.getTime() - n * 24 * 60 * 60 * 1000);
+    const daysFromNow = (n: number) => new Date(now.getTime() + n * 24 * 60 * 60 * 1000);
+
+    await prisma.clientSubscription.createMany({
+      data: [
+        { planId: premiumPlan.id, clientName: "Rafael Torres", clientPhone: "(31) 99111-2233", paymentMethod: "CREDIT_CARD", status: "ACTIVE", startedAt: daysAgo(65), nextBillingAt: daysFromNow(5) },
+        { planId: premiumPlan.id, clientName: "Diego Martins", clientPhone: "(31) 99222-3344", paymentMethod: "PIX", status: "ACTIVE", startedAt: daysAgo(20), nextBillingAt: daysFromNow(10) },
+        { planId: premiumPlan.id, clientName: "Felipe Nogueira", clientPhone: "(31) 99333-4455", paymentMethod: "CREDIT_CARD", status: "PAST_DUE", startedAt: daysAgo(95), nextBillingAt: daysAgo(3) },
+        { planId: beardPlan.id, clientName: "Lucas Barreto", clientPhone: "(31) 99444-5566", paymentMethod: "PIX", status: "ACTIVE", startedAt: daysAgo(12), nextBillingAt: daysFromNow(18) },
+      ],
+    });
+
+    // Real completed appointments for Rafael Torres, matched by phone, so the
+    // subscription usage/ROI card has genuine data on a fresh seed instead of
+    // showing every subscriber as an unused-plan risk.
+    const entServices = await prisma.service.findMany({ where: { barbershopId: enterpriseShop.id } });
+    const entStaff = await prisma.staff.findMany({ where: { barbershopId: enterpriseShop.id } });
+    if (entServices.length > 0 && entStaff.length > 0) {
+      const rafaelVisits = [
+        { daysBack: 60, service: entServices[0] },
+        { daysBack: 44, service: entServices[1] ?? entServices[0] },
+        { daysBack: 28, service: entServices[2] ?? entServices[0] },
+        { daysBack: 10, service: entServices[0] },
+      ];
+      for (const v of rafaelVisits) {
+        const d = daysAgo(v.daysBack);
+        await prisma.appointment.create({
+          data: {
+            barbershopId: enterpriseShop.id,
+            staffId: entStaff[0].id,
+            serviceId: v.service.id,
+            clientName: "Rafael Torres",
+            clientPhone: "(31) 99111-2233",
+            date: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())),
+            startTime: "10:00",
+            endTime: "10:30",
+            status: "COMPLETED",
+            totalPrice: v.service.price,
+            paymentStatus: "PAID",
+          },
+        });
+      }
+    }
+  }
+
   console.log("✅ Seed concluído com sucesso!");
   console.log(`\n🔑 Login demo Pro (gestor):\n   E-mail: demo@cortix.app\n   Senha: demo123456`);
   console.log(`\n🔑 Login demo Starter (gestor):\n   E-mail: demo.starter@cortix.app\n   Senha: demo123456`);

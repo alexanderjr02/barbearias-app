@@ -53,6 +53,7 @@ const PLAN_FEATURE_LABELS: { feature: Feature; label: string }[] = [
   { feature: "marketing", label: "Marketing e campanhas" },
   { feature: "staff_commission", label: "Comissão por barbeiro" },
   { feature: "export_data", label: "Exportar dados" },
+  { feature: "client_subscriptions", label: "Assinaturas de clientes" },
 ];
 
 const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];

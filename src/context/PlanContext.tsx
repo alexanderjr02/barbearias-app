@@ -16,7 +16,8 @@ export type Feature =
   | "inventory"
   | "financial_full"
   | "export_data"
-  | "staff_commission";
+  | "staff_commission"
+  | "client_subscriptions";
 
 export const FEATURES_BY_PLAN: Record<Plan, Feature[]> = {
   FREE: [],
@@ -43,6 +44,7 @@ export const FEATURES_BY_PLAN: Record<Plan, Feature[]> = {
     "financial_full",
     "export_data",
     "staff_commission",
+    "client_subscriptions",
   ],
 };
 

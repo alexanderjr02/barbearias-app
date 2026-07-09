@@ -5,6 +5,13 @@ import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'barber_repository.dart';
 
+Color _colorFromHex(String hex, [Color fallback = const Color(0xFFD4AF37)]) {
+  final cleaned = hex.replaceAll('#', '');
+  if (cleaned.length != 6) return fallback;
+  final value = int.tryParse(cleaned, radix: 16);
+  return value == null ? fallback : Color(0xFF000000 | value);
+}
+
 class ClientRankingScreen extends StatefulWidget {
   const ClientRankingScreen({super.key});
 
@@ -110,10 +117,35 @@ class _ClientRankingScreenState extends State<ClientRankingScreen> {
             // list below rather than on the loyalty podium.
             final podium = all.where((c) => c.visits > 0).take(3).toList();
             final rest = all.where((c) => !podium.contains(c)).toList();
+            final members = all.where((c) => c.subscription != null).toList();
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
+                // A "who's a paying member" row, browsable like stories —
+                // so the barber spots a subscriber before even opening the
+                // full list, the same at-a-glance instinct as checking who's
+                // online, repurposed for "who's already invested here".
+                if (members.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.workspace_premium_rounded, size: 15, color: Color(0xFFD4AF37)),
+                      const SizedBox(width: 6),
+                      Text('Membros ativos · ${members.length}', style: TextStyle(color: palette.textFaint, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 88,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: members.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 12),
+                      itemBuilder: (context, i) => RiseIn(delay: Duration(milliseconds: 40 * i), child: _MemberChip(entry: members[i], initials: _initials, palette: palette)),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                ],
                 if (podium.isNotEmpty) _Podium(entries: podium, initials: _initials, palette: palette),
                 if (rest.isNotEmpty) ...[
                   const SizedBox(height: 24),
@@ -205,6 +237,17 @@ class _PodiumSlot extends StatelessWidget {
                     child: Text('$place°', style: TextStyle(color: contrastingTextColor(color), fontSize: 10, fontWeight: FontWeight.w900)),
                   ),
                 ),
+                if (entry.subscription != null)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(color: _colorFromHex(entry.subscription!.planColor), shape: BoxShape.circle, border: Border.all(color: palette.bg, width: 2)),
+                      child: const Icon(Icons.workspace_premium_rounded, size: 10, color: Colors.white),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 10),
@@ -236,23 +279,47 @@ class _RankRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarUrl = resolveAssetUrl(entry.avatar);
+    final membership = entry.subscription;
+    final memberColor = membership != null ? _colorFromHex(membership.planColor) : null;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: memberColor != null ? Border.all(color: memberColor.withValues(alpha: 0.35)) : null,
+      ),
       child: Row(
         children: [
           SizedBox(width: 26, child: Text('$position°', style: TextStyle(color: palette.textFaint, fontWeight: FontWeight.bold, fontSize: 13))),
           const SizedBox(width: 6),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: palette.surfaceAlt,
-            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-            child: avatarUrl == null ? Text(initials(entry.name), style: TextStyle(color: palette.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)) : null,
+          Container(
+            padding: EdgeInsets.all(memberColor != null ? 2 : 0),
+            decoration: memberColor != null ? BoxDecoration(shape: BoxShape.circle, border: Border.all(color: memberColor, width: 2)) : null,
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: palette.surfaceAlt,
+              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl == null ? Text(initials(entry.name), style: TextStyle(color: palette.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)) : null,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(entry.name, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600, fontSize: 13.5), overflow: TextOverflow.ellipsis),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(entry.name, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600, fontSize: 13.5), overflow: TextOverflow.ellipsis),
+                if (membership != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.workspace_premium_rounded, size: 11, color: memberColor),
+                      const SizedBox(width: 3),
+                      Flexible(child: Text(membership.planName, style: TextStyle(color: memberColor, fontSize: 10.5, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
+                    ],
+                  ),
+              ],
+            ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -267,4 +334,39 @@ class _RankRow extends StatelessWidget {
   }
 
   String initials(String name) => name.trim().isEmpty ? '?' : name.trim().split(RegExp(r'\s+')).map((e) => e[0]).take(2).join().toUpperCase();
+}
+
+class _MemberChip extends StatelessWidget {
+  final BarberClientEntry entry;
+  final String Function(String) initials;
+  final AppPalette palette;
+  const _MemberChip({required this.entry, required this.initials, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = resolveAssetUrl(entry.avatar);
+    final color = _colorFromHex(entry.subscription!.planColor);
+    return SizedBox(
+      width: 68,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(2.5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: SweepGradient(colors: [color, Color.lerp(color, Colors.white, 0.4)!, color]),
+            ),
+            child: CircleAvatar(
+              radius: 24,
+              backgroundColor: palette.surfaceAlt,
+              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl == null ? Text(initials(entry.name), style: TextStyle(color: palette.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)) : null,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(entry.name.split(' ').first, style: TextStyle(color: palette.textPrimary, fontSize: 10.5, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
 }

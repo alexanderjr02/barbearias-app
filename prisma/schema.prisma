@@ -24,6 +24,7 @@ model User {
   loyaltyAccounts LoyaltyAccount[]
   clientOf      BarbershopClient[]
   reviewsGiven  Review[]
+  clientSubscriptions ClientSubscription[] @relation("ClientSubscriptions")
 }
 
 model Barbershop {
@@ -60,6 +61,7 @@ model Barbershop {
   workingHours    WorkingHour[]
   loyaltyAccounts LoyaltyAccount[]
   clients         BarbershopClient[]
+  subscriptionPlans SubscriptionPlan[]
 }
 
 model Staff {
@@ -285,4 +287,45 @@ model PointsTransaction {
   createdAt         DateTime @default(now())
 
   @@index([loyaltyAccountId])
+}
+
+// Recurring membership plans a barbershop can offer its clients (auto
+// monthly billing, like a gym or Netflix) — a White Label (ENTERPRISE)
+// platform-plan exclusive, gated in src/context/PlanContext.tsx. Payment is
+// simulated for now (see UpgradeModal.tsx for the same "no real gateway"
+// pattern); client-facing subscribe flow is a future phase.
+model SubscriptionPlan {
+  id            String   @id @default(cuid())
+  barbershopId  String
+  barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  price         Float
+  billingCycle  String   @default("MONTHLY") // MONTHLY | QUARTERLY | ANNUAL
+  benefits      String   // bullet points, one per line
+  color         String   @default("#D4AF37")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions ClientSubscription[]
+}
+
+model ClientSubscription {
+  id            String    @id @default(cuid())
+  planId        String
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  clientName    String
+  clientPhone   String
+  clientId      String?
+  client        User?     @relation("ClientSubscriptions", fields: [clientId], references: [id])
+  paymentMethod String    // PIX | CREDIT_CARD
+  status        String    @default("ACTIVE") // ACTIVE | PAST_DUE | CANCELLED
+  startedAt     DateTime  @default(now())
+  nextBillingAt DateTime
+  cancelledAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([planId])
 }

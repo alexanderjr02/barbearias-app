@@ -44,3 +44,8 @@ next-env.d.ts
 
 # user-uploaded images (local disk storage, not source)
 /public/uploads
+
+# compiled Flutter web build, served temporarily for phone testing via the
+# /mobile-app rewrite in next.config.ts — regenerate with:
+# flutter build web --release --base-href /mobile-app/ --dart-define=API_BASE_URL=/api/v1
+/public/mobile-app

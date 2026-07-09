@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
 import '../auth/session_provider.dart';
 import 'client_repository.dart';
+import 'cliente_subscriptions_screen.dart';
 import 'new_appointment_screen.dart';
 
 const _activeStatuses = {'SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'};
@@ -335,6 +336,60 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                           )),
                           const SizedBox(height: 22),
                         ],
+                        RiseIn(
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(18),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientSubscriptionsScreen())),
+                              child: Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [accent.withValues(alpha: 0.18), accent.withValues(alpha: 0.04)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(color: accent.withValues(alpha: 0.28)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 46,
+                                      height: 46,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(colors: [accent, Color.lerp(accent, Colors.black, 0.35)!]),
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 4))],
+                                      ),
+                                      child: Icon(Icons.workspace_premium_rounded, color: contrastingTextColor(accent), size: 22),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text('Assinaturas', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                                              const SizedBox(width: 5),
+                                              Icon(Icons.auto_awesome_rounded, size: 13, color: accent),
+                                            ],
+                                          ),
+                                          Text('Planos recorrentes com benefícios exclusivos', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(Icons.chevron_right_rounded, color: accent),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 22),
                         if (loyalty.isNotEmpty) ...[
                           Text('Meus pontos', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
                           const SizedBox(height: 12),

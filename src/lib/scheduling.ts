@@ -86,6 +86,90 @@ export async function getEffectiveSchedule(
   return { isOpen: true, openTime: shopHours.openTime, closeTime: shopHours.closeTime, source: "shop" };
 }
 
+// Shared by getEffectiveSchedule (single day/staff) and getRangeScheduleByStaff
+// (batched range) so the resolution order — time off > personal override >
+// shop default — only lives in one place.
+function resolveDaySchedule(params: {
+  hasTimeOff: boolean;
+  availability: { isAvailable: boolean; startTime: string; endTime: string } | undefined;
+  shopHours: { isOpen: boolean; openTime: string; closeTime: string } | undefined;
+}): DaySchedule {
+  const { hasTimeOff, availability, shopHours } = params;
+  if (hasTimeOff) {
+    return { isOpen: false, openTime: null, closeTime: null, source: "blocked" };
+  }
+  if (availability) {
+    return {
+      isOpen: availability.isAvailable,
+      openTime: availability.isAvailable ? availability.startTime : null,
+      closeTime: availability.isAvailable ? availability.endTime : null,
+      source: "staff",
+    };
+  }
+  if (!shopHours || !shopHours.isOpen) {
+    return { isOpen: false, openTime: null, closeTime: null, source: "shop" };
+  }
+  return { isOpen: true, openTime: shopHours.openTime, closeTime: shopHours.closeTime, source: "shop" };
+}
+
+function enumerateDateKeys(fromDateKey: string, toDateKey: string): string[] {
+  const keys: string[] = [];
+  let cursor = new Date(`${fromDateKey}T00:00:00Z`);
+  const end = new Date(`${toDateKey}T00:00:00Z`);
+  while (cursor <= end) {
+    keys.push(cursor.toISOString().slice(0, 10));
+    cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000);
+  }
+  return keys;
+}
+
+// Batched version of getEffectiveSchedule for a date range across many staff
+// at once — three queries total instead of staff.length * days.length —
+// powers the Agenda page's month/week free-hours indicators.
+export async function getRangeScheduleByStaff(params: {
+  barbershopId: string;
+  staffIds: string[];
+  fromDateKey: string;
+  toDateKey: string;
+}): Promise<Map<string, Map<string, DaySchedule>>> {
+  const { barbershopId, staffIds, fromDateKey, toDateKey } = params;
+  const dateKeys = enumerateDateKeys(fromDateKey, toDateKey);
+
+  const [timeOffs, availabilities, workingHours] = await Promise.all([
+    prisma.staffTimeOff.findMany({
+      where: { staffId: { in: staffIds }, date: { gte: new Date(fromDateKey), lte: new Date(toDateKey) } },
+    }),
+    prisma.availability.findMany({ where: { staffId: { in: staffIds } } }),
+    prisma.workingHour.findMany({ where: { barbershopId } }),
+  ]);
+
+  const timeOffKeys = new Set(timeOffs.map((t: { staffId: string; date: Date }) => `${t.staffId}|${t.date.toISOString().slice(0, 10)}`));
+  const availabilityByKey = new Map<string, { isAvailable: boolean; startTime: string; endTime: string }>(
+    availabilities.map((a: { staffId: string; dayOfWeek: number; isAvailable: boolean; startTime: string; endTime: string }) => [`${a.staffId}|${a.dayOfWeek}`, a])
+  );
+  const shopHoursByDay = new Map<number, { isOpen: boolean; openTime: string; closeTime: string }>(
+    workingHours.map((h: { dayOfWeek: number; isOpen: boolean; openTime: string; closeTime: string }) => [h.dayOfWeek, h])
+  );
+
+  const result = new Map<string, Map<string, DaySchedule>>();
+  for (const staffId of staffIds) {
+    const dayMap = new Map<string, DaySchedule>();
+    for (const dateKey of dateKeys) {
+      const dayOfWeek = dayOfWeekFromDateKey(dateKey);
+      dayMap.set(
+        dateKey,
+        resolveDaySchedule({
+          hasTimeOff: timeOffKeys.has(`${staffId}|${dateKey}`),
+          availability: availabilityByKey.get(`${staffId}|${dayOfWeek}`),
+          shopHours: shopHoursByDay.get(dayOfWeek),
+        })
+      );
+    }
+    result.set(staffId, dayMap);
+  }
+  return result;
+}
+
 export type SlotStatus = "available" | "past" | "booked";
 
 export interface Slot {

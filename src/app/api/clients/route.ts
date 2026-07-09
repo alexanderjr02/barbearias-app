@@ -14,7 +14,7 @@ export async function GET() {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const [appointments, loyaltyAccounts, registeredClients] = await Promise.all([
+  const [appointments, loyaltyAccounts, registeredClients, subscriptions] = await Promise.all([
     prisma.appointment.findMany({
       where: { barbershopId: session.barbershopId, status: { not: "CANCELLED" } },
       include: { service: { select: { name: true } } },
@@ -25,9 +25,20 @@ export async function GET() {
       where: { barbershopId: session.barbershopId },
       include: { user: { select: { id: true, name: true, email: true, phone: true, avatar: true } } },
     }),
+    // Active/past-due memberships at this barbershop — surfaced to whoever's
+    // looking at the client list (gestor on the web, barber on the app) so
+    // the person about to serve someone knows they're a subscriber before
+    // ever asking.
+    prisma.clientSubscription.findMany({
+      where: { plan: { barbershopId: session.barbershopId }, status: { in: ["ACTIVE", "PAST_DUE"] } },
+      include: { plan: { select: { name: true, color: true } } },
+    }),
   ]);
 
   const loyaltyByUserId = new Map(loyaltyAccounts.map((a) => [a.userId, a]));
+  const subscriptionByClientId = new Map(
+    subscriptions.filter((s) => s.clientId).map((s) => [s.clientId as string, { planName: s.plan.name, planColor: s.plan.color, status: s.status }])
+  );
 
   const linkedClientIds = Array.from(new Set(appointments.map((a) => a.clientId).filter((v): v is string => !!v)));
   const linkedUsers = linkedClientIds.length
@@ -104,6 +115,7 @@ export async function GET() {
       tier: loyalty?.tier ?? null,
       hasAccount: !!g.clientId,
       avatar: g.clientId ? avatarByUserId.get(g.clientId) ?? null : null,
+      subscription: g.clientId ? subscriptionByClientId.get(g.clientId) ?? null : null,
     };
   });
 
@@ -124,6 +136,7 @@ export async function GET() {
       tier: loyalty?.tier ?? null,
       hasAccount: true,
       avatar: rc.user.avatar,
+      subscription: subscriptionByClientId.get(rc.userId) ?? null,
     });
   }
 

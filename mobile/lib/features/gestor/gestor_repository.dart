@@ -170,10 +170,13 @@ class GestorAppointment {
   final String id;
   final String clientName;
   final String clientPhone;
+  final String? clientAvatar;
   final String date;
   final String startTime;
+  final String endTime;
   final String status;
   final double totalPrice;
+  final String staffId;
   final String staffName;
   final String serviceName;
 
@@ -181,10 +184,13 @@ class GestorAppointment {
     required this.id,
     required this.clientName,
     required this.clientPhone,
+    required this.clientAvatar,
     required this.date,
     required this.startTime,
+    required this.endTime,
     required this.status,
     required this.totalPrice,
+    required this.staffId,
     required this.staffName,
     required this.serviceName,
   });
@@ -193,12 +199,62 @@ class GestorAppointment {
         id: json['id'],
         clientName: json['clientName'],
         clientPhone: json['clientPhone'],
+        clientAvatar: json['client']?['avatar'],
         date: json['date'],
         startTime: json['startTime'],
+        endTime: json['endTime'] ?? json['startTime'],
         status: json['status'],
         totalPrice: (json['totalPrice'] as num).toDouble(),
+        staffId: json['staff']['id'],
         staffName: json['staff']['name'],
         serviceName: json['service']['name'],
+      );
+}
+
+class StaffDaySchedule {
+  final String staffId;
+  final bool isOpen;
+  final String? openTime;
+  final String? closeTime;
+  final String source;
+
+  StaffDaySchedule({required this.staffId, required this.isOpen, required this.openTime, required this.closeTime, required this.source});
+
+  factory StaffDaySchedule.fromJson(Map<String, dynamic> json) => StaffDaySchedule(
+        staffId: json['staffId'],
+        isOpen: json['isOpen'] == true,
+        openTime: json['openTime'],
+        closeTime: json['closeTime'],
+        source: json['source'] ?? 'shop',
+      );
+}
+
+class GestorAppointmentSlot {
+  final String time;
+  final String status; // available | past | booked
+
+  GestorAppointmentSlot({required this.time, required this.status});
+
+  factory GestorAppointmentSlot.fromJson(Map<String, dynamic> json) => GestorAppointmentSlot(time: json['time'], status: json['status']);
+
+  bool get isAvailable => status == 'available';
+}
+
+class GestorDaySlots {
+  final bool isOpen;
+  final String? openTime;
+  final String? closeTime;
+  final String source;
+  final List<GestorAppointmentSlot> slots;
+
+  GestorDaySlots({required this.isOpen, this.openTime, this.closeTime, required this.source, required this.slots});
+
+  factory GestorDaySlots.fromJson(Map<String, dynamic> json) => GestorDaySlots(
+        isOpen: json['isOpen'] == true,
+        openTime: json['openTime'],
+        closeTime: json['closeTime'],
+        source: json['source'] ?? 'shop',
+        slots: (json['slots'] as List).map((e) => GestorAppointmentSlot.fromJson(e)).toList(),
       );
 }
 
@@ -500,6 +556,106 @@ class ReportsData {
       );
 }
 
+class SubscriptionVisit {
+  final String date;
+  final String service;
+  final String staff;
+  final double price;
+
+  SubscriptionVisit({required this.date, required this.service, required this.staff, required this.price});
+
+  factory SubscriptionVisit.fromJson(Map<String, dynamic> json) => SubscriptionVisit(
+        date: json['date'],
+        service: json['service'],
+        staff: json['staff'],
+        price: (json['price'] as num).toDouble(),
+      );
+}
+
+class GestorSubscriber {
+  final String id;
+  final String clientName;
+  final String clientPhone;
+  final String? clientAvatar;
+  final String paymentMethod; // PIX | CREDIT_CARD
+  final String status; // ACTIVE | PAST_DUE | CANCELLED
+  final String startedAt;
+  final String nextBillingAt;
+  final int visitCount;
+  final double valueConsumed;
+  final double totalPaid;
+  final String? lastVisitAt;
+  final List<SubscriptionVisit> recentVisits;
+
+  GestorSubscriber({
+    required this.id,
+    required this.clientName,
+    required this.clientPhone,
+    required this.clientAvatar,
+    required this.paymentMethod,
+    required this.status,
+    required this.startedAt,
+    required this.nextBillingAt,
+    required this.visitCount,
+    required this.valueConsumed,
+    required this.totalPaid,
+    required this.lastVisitAt,
+    required this.recentVisits,
+  });
+
+  factory GestorSubscriber.fromJson(Map<String, dynamic> json) => GestorSubscriber(
+        id: json['id'],
+        clientName: json['clientName'],
+        clientPhone: json['clientPhone'],
+        clientAvatar: json['clientAvatar'],
+        paymentMethod: json['paymentMethod'],
+        status: json['status'],
+        startedAt: json['startedAt'],
+        nextBillingAt: json['nextBillingAt'],
+        visitCount: json['visitCount'] as int,
+        valueConsumed: (json['valueConsumed'] as num).toDouble(),
+        totalPaid: (json['totalPaid'] as num).toDouble(),
+        lastVisitAt: json['lastVisitAt'],
+        recentVisits: (json['recentVisits'] as List).map((e) => SubscriptionVisit.fromJson(e)).toList(),
+      );
+}
+
+class GestorSubscriptionPlan {
+  final String id;
+  final String name;
+  final String? description;
+  final double price;
+  final String billingCycle; // MONTHLY | QUARTERLY | ANNUAL
+  final String benefits;
+  final String color;
+  final bool isActive;
+  final List<GestorSubscriber> subscriptions;
+
+  GestorSubscriptionPlan({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.billingCycle,
+    required this.benefits,
+    required this.color,
+    required this.isActive,
+    required this.subscriptions,
+  });
+
+  factory GestorSubscriptionPlan.fromJson(Map<String, dynamic> json) => GestorSubscriptionPlan(
+        id: json['id'],
+        name: json['name'],
+        description: json['description'],
+        price: (json['price'] as num).toDouble(),
+        billingCycle: json['billingCycle'],
+        benefits: json['benefits'] ?? '',
+        color: json['color'] ?? '#D4AF37',
+        isActive: json['isActive'] == true,
+        subscriptions: (json['subscriptions'] as List).map((e) => GestorSubscriber.fromJson(e)).toList(),
+      );
+}
+
 class GestorRepository {
   Future<MeLite> me() async {
     final data = await ApiClient.instance.get('/me');
@@ -516,12 +672,52 @@ class GestorRepository {
     return ReportsData.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<List<GestorAppointment>> appointments(String barbershopId, {String? from, String? to}) async {
+  Future<List<GestorAppointment>> appointments(String barbershopId, {String? from, String? to, String? staffId}) async {
     final query = <String, dynamic>{'barbershopId': barbershopId};
     if (from != null) query['from'] = from;
     if (to != null) query['to'] = to;
+    if (staffId != null) query['staffId'] = staffId;
     final data = await ApiClient.instance.get('/appointments', query: query) as List;
     return data.map((e) => GestorAppointment.fromJson(e)).toList();
+  }
+
+  Future<List<StaffDaySchedule>> dayScheduleFor(String dateKey) async {
+    final data = await ApiClient.instance.get('/staff/day-schedule', query: {'date': dateKey}) as List;
+    return data.map((e) => StaffDaySchedule.fromJson(e)).toList();
+  }
+
+  Future<GestorDaySlots> slotsFor({required String barbershopId, required String staffId, required String dateKey, required int duration}) async {
+    final data = await ApiClient.instance.get('/appointments/slots', query: {
+      'barbershopId': barbershopId,
+      'staffId': staffId,
+      'date': dateKey,
+      'duration': duration.toString(),
+    });
+    return GestorDaySlots.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> createAppointment({
+    required String barbershopId,
+    required String staffId,
+    required String serviceId,
+    required String dateKey,
+    required String startTime,
+    required String endTime,
+    required String clientName,
+    required String clientPhone,
+    required double totalPrice,
+  }) {
+    return ApiClient.instance.post('/appointments', data: {
+      'barbershopId': barbershopId,
+      'staffId': staffId,
+      'serviceId': serviceId,
+      'date': dateKey,
+      'startTime': startTime,
+      'endTime': endTime,
+      'clientName': clientName,
+      'clientPhone': clientPhone,
+      'totalPrice': totalPrice,
+    });
   }
 
   Future<List<GestorClient>> clients() async {
@@ -736,5 +932,57 @@ class GestorRepository {
     });
     final result = await ApiClient.instance.post('/upload', data: formData);
     return result['url'] as String;
+  }
+
+  Future<List<GestorSubscriptionPlan>> subscriptionPlans() async {
+    final data = await ApiClient.instance.get('/subscription-plans') as List;
+    return data.map((e) => GestorSubscriptionPlan.fromJson(e)).toList();
+  }
+
+  Future<void> createSubscriptionPlan({
+    required String name,
+    String? description,
+    required double price,
+    required String billingCycle,
+    required String benefits,
+    required String color,
+  }) async {
+    await ApiClient.instance.post('/subscription-plans', data: {
+      'name': name,
+      'description': description,
+      'price': price,
+      'billingCycle': billingCycle,
+      'benefits': benefits,
+      'color': color,
+    });
+  }
+
+  Future<void> updateSubscriptionPlan(
+    String id, {
+    String? name,
+    String? description,
+    double? price,
+    String? billingCycle,
+    String? benefits,
+    String? color,
+    bool? isActive,
+  }) async {
+    await ApiClient.instance.patch('/subscription-plans/$id', data: {
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (price != null) 'price': price,
+      if (billingCycle != null) 'billingCycle': billingCycle,
+      if (benefits != null) 'benefits': benefits,
+      if (color != null) 'color': color,
+      if (isActive != null) 'isActive': isActive,
+    });
+  }
+
+  Future<void> deleteSubscriptionPlan(String id) async {
+    await ApiClient.instance.delete('/subscription-plans/$id');
+  }
+
+  Future<void> updateSubscriberStatus(String subscriptionId, String status) async {
+    await ApiClient.instance.patch('/client-subscriptions/$subscriptionId', data: {'status': status});
   }
 }
