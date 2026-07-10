@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { redirectTo } from "@/lib/utils";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,7 +19,7 @@ export default function LoginPage() {
   const [code, setCode] = useState("");
 
   const finishLogin = (data: { user: { role: string } }) => {
-    window.location.href = data.user.role === "SUPER_ADMIN" || data.user.role === "SUPPORT_ADMIN" ? "/admin" : "/dashboard";
+    redirectTo(data.user.role === "SUPER_ADMIN" || data.user.role === "SUPPORT_ADMIN" ? "/admin" : "/dashboard");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,6 +40,28 @@ export default function LoginPage() {
       }
       if (data.requiresTwoFactor) {
         setPendingToken(data.pendingToken);
+        setIsLoading(false);
+        return;
+      }
+      finishLogin(data);
+    } catch {
+      setError("Erro de conexão. Tente novamente.");
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (idToken: string) => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error ?? "Não foi possível entrar com o Google");
         setIsLoading(false);
         return;
       }
@@ -129,12 +153,31 @@ export default function LoginPage() {
   return (
     <div className="w-full max-w-md">
       <h1 className="text-3xl font-black text-white mb-1">Entrar na conta</h1>
-      <p className="text-zinc-500 text-sm mb-8">
-        Não tem conta?{" "}
+      <p className="text-zinc-500 text-sm mb-1">
+        É dono de barbearia e não tem conta?{" "}
         <Link href="/register" className="text-amber-400 hover:text-amber-300 font-medium transition-colors">
           Cadastre-se grátis
         </Link>
       </p>
+      <p className="text-zinc-600 text-xs mb-8">
+        É cliente?{" "}
+        <Link href="/register/cliente" className="text-amber-400/80 hover:text-amber-300 font-medium transition-colors">
+          Crie sua conta de cliente
+        </Link>
+      </p>
+
+      {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+        <>
+          <div className="mb-5">
+            <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signin_with" />
+          </div>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-zinc-800" />
+            <span className="text-xs text-zinc-600">ou entre com e-mail</span>
+            <div className="flex-1 h-px bg-zinc-800" />
+          </div>
+        </>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

@@ -41,6 +41,15 @@ export function slugify(text: string): string {
     .trim();
 }
 
+// A plain top-level function (not inline in a component) so assigning
+// window.location.href doesn't read as "modifying a variable defined
+// outside the component" to the React Compiler's purity checks — used for
+// post-auth redirects, which need a full page load (not router.push) so the
+// just-set session cookie is picked up fresh.
+export function redirectTo(url: string) {
+  window.location.href = url;
+}
+
 export function getInitials(name: string): string {
   return name
     .split(" ")

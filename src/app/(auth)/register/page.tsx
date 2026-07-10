@@ -3,7 +3,33 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff, Check, X } from "lucide-react";
+import { registerOwnerSchema } from "@/lib/validation";
+import { slugify, redirectTo } from "@/lib/utils";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { z } from "zod";
+
+type FormValues = z.infer<typeof registerOwnerSchema>;
+
+const STEP_1_FIELDS = ["name", "email", "password", "phone"] as const;
+
+function passwordStrength(password: string): { score: number; label: string; color: string } {
+  if (!password) return { score: 0, label: "", color: "bg-zinc-800" };
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password) && /[^a-zA-Z0-9]/.test(password)) score++;
+  const levels = [
+    { label: "Muito fraca", color: "bg-red-500" },
+    { label: "Fraca", color: "bg-orange-500" },
+    { label: "Razoável", color: "bg-yellow-500" },
+    { label: "Forte", color: "bg-emerald-500" },
+  ];
+  return { score, ...levels[Math.min(score, 3)] };
+}
 
 // useSearchParams() opts this page out of static prerendering unless it's
 // wrapped in Suspense — without it, `next build` fails to prerender /register.
@@ -21,21 +47,35 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    barbershopName: "",
-    barbershopSlug: "",
-    city: "",
-    plan: selectedPlanParam === "enterprise" ? "white-label" : selectedPlanParam,
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [slugEdited, setSlugEdited] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    trigger,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerOwnerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      phone: "",
+      barbershopName: "",
+      barbershopSlug: "",
+      city: "",
+      cnpj: "",
+      plan: selectedPlanParam === "enterprise" ? "white-label" : selectedPlanParam,
+    },
   });
 
-  const updateField = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-  };
+  const password = watch("password");
+  const barbershopSlug = watch("barbershopSlug");
+  const plan = watch("plan");
+  const strength = passwordStrength(password ?? "");
 
   const planOptions = [
     { value: "starter", label: "Starter (R$ 29/mês)", description: "Gestão básica para começar" },
@@ -43,29 +83,29 @@ function RegisterForm() {
     { value: "white-label", label: "White Label (R$ 299/mês + 3%)", description: "App própria e branding completo" },
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step === 1) {
-      setStep(2);
-      return;
-    }
-    setError(null);
+  const goToStep2 = async () => {
+    const valid = await trigger(STEP_1_FIELDS);
+    if (valid) setStep(2);
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    setServerError(null);
     setIsLoading(true);
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(values),
       });
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error ?? "Não foi possível criar a conta");
+        setServerError(data.error ?? "Não foi possível criar a conta");
         setIsLoading(false);
         return;
       }
-      window.location.href = "/dashboard";
+      redirectTo("/dashboard");
     } catch {
-      setError("Erro de conexão. Tente novamente.");
+      setServerError("Erro de conexão. Tente novamente.");
       setIsLoading(false);
     }
   };
@@ -75,10 +115,16 @@ function RegisterForm() {
       <h1 className="text-3xl font-black text-white mb-1">
         Criar conta grátis
       </h1>
-      <p className="text-zinc-500 text-sm mb-6">
+      <p className="text-zinc-500 text-sm mb-1">
         Já tem conta?{" "}
         <Link href="/login" className="text-amber-400 hover:text-amber-300 font-medium transition-colors">
           Entrar
+        </Link>
+      </p>
+      <p className="text-zinc-600 text-xs mb-6">
+        É cliente e quer agendar horários?{" "}
+        <Link href="/register/cliente" className="text-amber-400/80 hover:text-amber-300 font-medium transition-colors">
+          Crie sua conta de cliente
         </Link>
       </p>
 
@@ -99,42 +145,89 @@ function RegisterForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {step === 1 && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+        <>
+          <GoogleSignInButton
+            text="signup_with"
+            onSuccess={async (idToken) => {
+              setServerError(null);
+              setIsLoading(true);
+              const response = await fetch("/api/auth/google", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken }),
+              });
+              const data = await response.json();
+              if (!response.ok) {
+                setServerError(data.error);
+                setIsLoading(false);
+                return;
+              }
+              // A brand new Google sign-in always becomes a CLIENT (see
+              // /api/auth/google) — an owner still needs to fill in the
+              // barbershop form below, Google can't supply that.
+              redirectTo(data.user.role === "CLIENT" ? "/" : "/dashboard");
+            }}
+          />
+          <p className="text-[11px] text-zinc-600 text-center mt-2 mb-5">
+            Entrar com Google aqui cria uma conta de <strong className="text-zinc-500">cliente</strong>. Para dono de barbearia, preencha o formulário abaixo.
+          </p>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-zinc-800" />
+            <span className="text-xs text-zinc-600">ou preencha seus dados</span>
+            <div className="flex-1 h-px bg-zinc-800" />
+          </div>
+        </>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {step === 1 ? (
           <>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
                 Seu nome completo
               </label>
-              <input type="text" required placeholder="João Silva" value={form.name} onChange={updateField("name")}
+              <input type="text" placeholder="João Silva" {...register("name")}
                 className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
+              {errors.name && <p className="text-xs text-red-400 mt-1.5">{errors.name.message}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
                 E-mail
               </label>
-              <input type="email" required placeholder="seu@email.com" value={form.email} onChange={updateField("email")}
+              <input type="email" placeholder="seu@email.com" {...register("email")}
                 className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
+              {errors.email && <p className="text-xs text-red-400 mt-1.5">{errors.email.message}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
                 WhatsApp
               </label>
-              <input type="tel" placeholder="(11) 99999-9999" value={form.phone} onChange={updateField("phone")}
+              <input type="tel" placeholder="(11) 99999-9999" {...register("phone")}
                 className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
+              {errors.phone && <p className="text-xs text-red-400 mt-1.5">{errors.phone.message}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
                 Senha
               </label>
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} required minLength={8} placeholder="Mínimo 8 caracteres" value={form.password} onChange={updateField("password")}
+                <input type={showPassword ? "text" : "password"} placeholder="Mínimo 8 caracteres" {...register("password")}
                   className="w-full h-12 px-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {password && (
+                <div className="mt-2 flex items-center gap-1.5">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= strength.score ? strength.color : "bg-zinc-800"}`} />
+                  ))}
+                  <span className="text-[10px] text-zinc-500 ml-1 whitespace-nowrap">{strength.label}</span>
+                </div>
+              )}
+              {errors.password && <p className="text-xs text-red-400 mt-1.5">{errors.password.message}</p>}
             </div>
           </>
         ) : (
@@ -145,12 +238,15 @@ function RegisterForm() {
               </label>
               <input
                 type="text"
-                required
                 placeholder="Barbearia do João"
-                value={form.barbershopName}
-                onChange={updateField("barbershopName")}
+                {...register("barbershopName", {
+                  onChange: (e) => {
+                    if (!slugEdited) setValue("barbershopSlug", slugify(e.target.value), { shouldValidate: true });
+                  },
+                })}
                 className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
               />
+              {errors.barbershopName && <p className="text-xs text-red-400 mt-1.5">{errors.barbershopName.message}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-2">
@@ -162,44 +258,64 @@ function RegisterForm() {
                 </span>
                 <input
                   type="text"
-                  required
                   placeholder="minha-barbearia"
-                  value={form.barbershopSlug}
-                  onChange={updateField("barbershopSlug")}
+                  {...register("barbershopSlug", { onChange: () => setSlugEdited(true) })}
                   className="flex-1 h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-r-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                 />
               </div>
+              {errors.barbershopSlug ? (
+                <p className="text-xs text-red-400 mt-1.5">{errors.barbershopSlug.message}</p>
+              ) : (
+                barbershopSlug && (
+                  <p className="text-xs text-zinc-600 mt-1.5 flex items-center gap-1">
+                    <Check className="w-3 h-3 text-emerald-500" /> cortix.app/{barbershopSlug}
+                  </p>
+                )
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Cidade
-              </label>
-              <input
-                type="text"
-                placeholder="São Paulo, SP"
-                value={form.city}
-                onChange={updateField("city")}
-                className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Cidade
+                </label>
+                <input
+                  type="text"
+                  placeholder="São Paulo, SP"
+                  {...register("city")}
+                  className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                />
+                {errors.city && <p className="text-xs text-red-400 mt-1.5">{errors.city.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  CNPJ <span className="text-zinc-600 normal-case font-normal">(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="00.000.000/0000-00"
+                  {...register("cnpj")}
+                  className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                />
+                {errors.cnpj && <p className="text-xs text-red-400 mt-1.5">{errors.cnpj.message}</p>}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Plano
               </label>
               <div className="grid gap-2">
-                {planOptions.map((plan) => (
-                  <label key={plan.value} className="cursor-pointer">
+                {planOptions.map((p) => (
+                  <label key={p.value} className="cursor-pointer">
                     <input
                       type="radio"
-                      name="plan"
-                      value={plan.value}
-                      checked={form.plan === plan.value}
-                      onChange={() => setForm((prev) => ({ ...prev, plan: plan.value }))}
+                      value={p.value}
+                      checked={plan === p.value}
+                      onChange={() => setValue("plan", p.value)}
                       className="sr-only peer"
                     />
                     <div className="p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-left text-xs text-zinc-400 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400 transition-all">
-                      <div className="font-semibold text-sm text-white">{plan.label}</div>
-                      <div className="text-zinc-500 mt-1">{plan.description}</div>
+                      <div className="font-semibold text-sm text-white">{p.label}</div>
+                      <div className="text-zinc-500 mt-1">{p.description}</div>
                     </div>
                   </label>
                 ))}
@@ -209,7 +325,8 @@ function RegisterForm() {
         )}
 
         <button
-          type="submit"
+          type={step === 1 ? "button" : "submit"}
+          onClick={step === 1 ? goToStep2 : undefined}
           disabled={isLoading}
           className="w-full h-12 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-70 flex items-center justify-center gap-2 text-base"
         >
@@ -233,9 +350,10 @@ function RegisterForm() {
         )}
       </form>
 
-      {error && (
-        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-          <p className="text-xs text-red-400 text-center">{error}</p>
+      {serverError && (
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-2">
+          <X className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-red-400">{serverError}</p>
         </div>
       )}
 
