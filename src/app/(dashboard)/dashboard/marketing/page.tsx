@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, MessageSquare, Users, Megaphone, Send, Bell } from "lucide-react";
+import { Mail, MessageSquare, Users, Megaphone, Bell } from "lucide-react";
 
 const campaigns = [
   { id: "1", name: "Promoção Julho", type: "WhatsApp", status: "Enviada", recipients: 245, opened: 198, date: "01/07/2025" },

@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Calendar, Users, Scissors, MoreHorizontal,
   X, UserCheck, TrendingUp, Package, Megaphone, Settings,
   BarChart3, LogOut, Plus, Lock,
+  type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,7 @@ const primaryItems = [
   { label: "Serviços", href: "/dashboard/services", icon: Scissors },
 ];
 
-const moreItems: { label: string; href: string; icon: any; feature?: Feature }[] = [
+const moreItems: { label: string; href: string; icon: LucideIcon; feature?: Feature }[] = [
   { label: "Equipe", href: "/dashboard/staff", icon: UserCheck, feature: "multiple_staff" },
   { label: "Financeiro", href: "/dashboard/finance", icon: TrendingUp },
   { label: "Estoque", href: "/dashboard/inventory", icon: Package, feature: "inventory" },

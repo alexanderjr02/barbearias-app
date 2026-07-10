@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, Zap, TrendingUp, Calendar, ChevronRight, Lightbulb } from "lucide-react";
+import { X, Send, Bot, Zap, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { nextMessageId, pickRandom, randomDelay } from "@/lib/chatWidget";
 
 interface Message {
   id: string;
@@ -98,7 +99,7 @@ export function AdminChatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     id: "0", role: "bot",
-    content: `Olá! 👋 Sou seu assistente de gestão.\n\n${INSIGHTS[Math.floor(Math.random() * INSIGHTS.length)]}\n\nComo posso te ajudar hoje?`,
+    content: `Olá! 👋 Sou seu assistente de gestão.\n\n${pickRandom(INSIGHTS)}\n\nComo posso te ajudar hoje?`,
   }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -108,13 +109,13 @@ export function AdminChatbot() {
 
   const send = (text: string) => {
     if (!text.trim()) return;
-    setMessages(p => [...p, { id: Date.now().toString(), role: "user", content: text }]);
+    setMessages(p => [...p, { id: nextMessageId(), role: "user", content: text }]);
     setInput("");
     setTyping(true);
     setTimeout(() => {
-      setMessages(p => [...p, { id: (Date.now() + 1).toString(), role: "bot", content: getResponse(text) }]);
+      setMessages(p => [...p, { id: nextMessageId(), role: "bot", content: getResponse(text) }]);
       setTyping(false);
-    }, 700 + Math.random() * 600);
+    }, randomDelay(700, 600));
   };
 
   const shortcuts = [

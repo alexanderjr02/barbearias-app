@@ -10,12 +10,24 @@ interface ReportsResponse {
   series: { label: string; receita: number; despesas: number }[];
 }
 
-const ChartTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadEntry {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface ChartTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+}
+
+const ChartTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-zinc-800 border border-zinc-700/80 rounded-xl p-3 shadow-2xl shadow-black/50">
         <p className="text-zinc-400 text-xs font-medium mb-2">{label}</p>
-        {payload.map((entry: any) => (
+        {payload.map((entry) => (
           <div key={entry.name} className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
             <span className="text-zinc-400 capitalize text-xs">{entry.name}:</span>

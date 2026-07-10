@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-interface ChatSession {
-  barbershopId: string;
-  messages: Array<{ role: string; content: string }>;
-  state?: string;
-}
-
-const sessions = new Map<string, ChatSession>();
-
-function getBotResponse(message: string, barbershopId: string): string {
+function getBotResponse(message: string): string {
   const lower = message.toLowerCase();
 
   if (lower.match(/olá|oi|hey|bom dia|boa tarde|boa noite/)) {
@@ -53,7 +45,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate bot response
-    const botResponse = getBotResponse(message, barbershopId);
+    const botResponse = getBotResponse(message);
 
     // Store bot response
     await prisma.chatMessage.create({
@@ -66,12 +58,12 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ response: botResponse });
-  } catch (error) {
+  } catch {
     // Fallback without DB
     const body = await request.json().catch(() => ({}));
     const { message = "" } = body as { message?: string };
     return NextResponse.json({
-      response: getBotResponse(message, ""),
+      response: getBotResponse(message),
     });
   }
 }

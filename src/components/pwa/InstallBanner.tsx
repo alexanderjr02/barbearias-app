@@ -1,13 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Download, X, Share, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Platform = "android" | "ios" | null;
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 export function InstallBanner() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
   const [platform, setPlatform] = useState<Platform>(null);
   const [step, setStep] = useState<"banner" | "ios-instructions">("banner");
@@ -16,13 +22,13 @@ export function InstallBanner() {
     // Already installed as PWA
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
     if (isStandalone) return;
     if (localStorage.getItem("cortix-pwa-dismissed")) return;
 
     const ua = navigator.userAgent.toLowerCase();
-    const isIOS = /iphone|ipad|ipod/.test(ua) && !(window as any).MSStream;
+    const isIOS = /iphone|ipad|ipod/.test(ua) && !(window as Window & { MSStream?: unknown }).MSStream;
     const isAndroid = /android/.test(ua);
 
     if (isIOS) {
@@ -35,25 +41,25 @@ export function InstallBanner() {
     }
 
     if (isAndroid) {
-      const handler = (e: any) => {
+      const handler = (e: BeforeInstallPromptEvent) => {
         e.preventDefault();
         setDeferredPrompt(e);
         setPlatform("android");
         setShow(true);
       };
-      window.addEventListener("beforeinstallprompt", handler);
-      return () => window.removeEventListener("beforeinstallprompt", handler);
+      window.addEventListener("beforeinstallprompt", handler as EventListener);
+      return () => window.removeEventListener("beforeinstallprompt", handler as EventListener);
     }
 
     // Desktop Chrome — also support install
-    const handler = (e: any) => {
+    const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setPlatform("android");
       setShow(true);
     };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    window.addEventListener("beforeinstallprompt", handler as EventListener);
+    return () => window.removeEventListener("beforeinstallprompt", handler as EventListener);
   }, []);
 
   const dismiss = () => {
@@ -80,7 +86,7 @@ export function InstallBanner() {
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-zinc-800">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/25">
-            <img src="/icons/icon.svg" alt="CORTIX" className="w-6 h-6" />
+            <Image src="/icons/icon.svg" alt="CORTIX" width={24} height={24} className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-white">Instalar CORTIX</p>

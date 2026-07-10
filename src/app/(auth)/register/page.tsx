@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 // useSearchParams() opts this page out of static prerendering unless it's
 // wrapped in Suspense — without it, `next build` fails to prerender /register.

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, ChevronRight, Phone, MapPin, Clock } from "lucide-react";
+import { useState, useRef, useEffect, useMemo, type CSSProperties } from "react";
+import { MessageCircle, X, Send, Bot, ChevronRight, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { nextMessageId, randomDelay } from "@/lib/chatWidget";
 
 interface Message {
   id: string;
@@ -107,21 +108,27 @@ interface Props {
   primaryColor?: string;
 }
 
-export function ClientChatbot({ slug, barbershopName = "Barbearia", primaryColor = "#D4AF37" }: Props) {
+export function ClientChatbot({ barbershopName = "Barbearia", primaryColor = "#D4AF37" }: Props) {
   const [open, setOpen] = useState(false);
-  const [config, setConfig] = useState<ChatbotConfig>({ ...DEFAULT_CONFIG, primaryColor });
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [storedOverrides] = useState<Partial<ChatbotConfig> | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem("cortix_chatbot_config");
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored) as Partial<ChatbotConfig>;
+    } catch {
+      return null;
+    }
+  });
+  const config = useMemo<ChatbotConfig>(
+    () => ({ ...DEFAULT_CONFIG, ...storedOverrides, primaryColor }),
+    [storedOverrides, primaryColor]
+  );
+  const [messages, setMessages] = useState<Message[]>(() => [{ id: "0", role: "bot", content: config.welcomeMessage }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(`cortix_chatbot_config`);
-    const cfg = stored ? { ...DEFAULT_CONFIG, ...JSON.parse(stored), primaryColor } : { ...DEFAULT_CONFIG, primaryColor };
-    setConfig(cfg);
-    setMessages([{ id: "0", role: "bot", content: cfg.welcomeMessage }]);
-  }, [primaryColor]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -129,13 +136,13 @@ export function ClientChatbot({ slug, barbershopName = "Barbearia", primaryColor
 
   const send = (text: string) => {
     if (!text.trim()) return;
-    setMessages(p => [...p, { id: Date.now().toString(), role: "user", content: text }]);
+    setMessages(p => [...p, { id: nextMessageId(), role: "user", content: text }]);
     setInput("");
     setTyping(true);
     setTimeout(() => {
-      setMessages(p => [...p, { id: (Date.now() + 1).toString(), role: "bot", content: respond(text) }]);
+      setMessages(p => [...p, { id: nextMessageId(), role: "bot", content: respond(text) }]);
       setTyping(false);
-    }, 800 + Math.random() * 500);
+    }, randomDelay(800, 500));
   };
 
   const quickReplies = [
@@ -225,7 +232,7 @@ export function ClientChatbot({ slug, barbershopName = "Barbearia", primaryColor
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && send(input)}
               placeholder="Digite uma mensagem..."
               className="flex-1 h-9 px-3 bg-zinc-100 border border-zinc-200 rounded-xl text-zinc-800 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": config.primaryColor + "66" } as any}
+              style={{ "--tw-ring-color": config.primaryColor + "66" } as CSSProperties}
             />
             <button onClick={() => send(input)} disabled={!input.trim()}
               className="w-9 h-9 rounded-xl flex items-center justify-center disabled:opacity-40 transition-all hover:opacity-90 text-white"

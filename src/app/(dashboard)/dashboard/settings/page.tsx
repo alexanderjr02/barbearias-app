@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Palette,
@@ -113,7 +113,17 @@ export default function SettingsPage() {
   const [primaryColor, setPrimaryColor] = useState("#D4AF37");
   const [hours, setHours] = useState(defaultHours);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [chatbot, setChatbot] = useState<ChatbotConfig>(defaultChatbot);
+  const [chatbot, setChatbot] = useState<ChatbotConfig>(() => {
+    if (typeof window === "undefined") return defaultChatbot;
+    const stored = localStorage.getItem("cortix_chatbot_config");
+    if (!stored) return defaultChatbot;
+    try {
+      const parsed = JSON.parse(stored) as Partial<ChatbotConfig>;
+      return { ...defaultChatbot, ...parsed, whatsapp: { ...defaultChatbot.whatsapp, ...parsed.whatsapp } };
+    } catch {
+      return defaultChatbot;
+    }
+  });
   const [chatbotSaved, setChatbotSaved] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [hoursSaved, setHoursSaved] = useState(false);
@@ -124,8 +134,11 @@ export default function SettingsPage() {
     queryFn: () => apiGet<BarbershopMe>("/api/barbershop"),
   });
 
-  useEffect(() => {
-    if (!barbershop) return;
+  // Seed the editable color/hours state once the barbershop data arrives —
+  // adjusted during render (not an effect) since it only reacts to `barbershop` changing.
+  const [syncedBarbershop, setSyncedBarbershop] = useState<BarbershopMe | undefined>(undefined);
+  if (barbershop && barbershop !== syncedBarbershop) {
+    setSyncedBarbershop(barbershop);
     setPrimaryColor(barbershop.primaryColor);
     if (barbershop.workingHours.length > 0) {
       setHours(
@@ -137,7 +150,7 @@ export default function SettingsPage() {
         })
       );
     }
-  }, [barbershop]);
+  }
 
   const updateBarbershop = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiPatch("/api/barbershop", data),
@@ -190,17 +203,6 @@ export default function SettingsPage() {
       }
     );
   };
-
-  useEffect(() => {
-    const stored = localStorage.getItem("cortix_chatbot_config");
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored) as Partial<ChatbotConfig>;
-      setChatbot((prev) => ({ ...prev, ...parsed, whatsapp: { ...prev.whatsapp, ...parsed.whatsapp } }));
-    } catch {
-      // ignore invalid storage
-    }
-  }, []);
 
   const canCustomize = can("chatbot_customization");
   const canWhatsapp = can("chatbot_whatsapp");

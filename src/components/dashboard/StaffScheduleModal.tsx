@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, Clock, CalendarOff, Plus, Trash2, Loader2, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -81,10 +81,13 @@ export function StaffScheduleModal({ staffId, staffName, onClose }: Props) {
     queryFn: () => apiGet<ApiTimeOff[]>(`/api/staff/${staffId}/time-off`),
   });
 
-  useEffect(() => {
-    if (!data) return;
+  // Seed local editable state from the fetched availability — adjusted during
+  // render (not an effect) since it only reacts to `data` arriving/changing.
+  const [syncedData, setSyncedData] = useState<AvailabilityResponse | undefined>(undefined);
+  if (data && data !== syncedData) {
+    setSyncedData(data);
     setDays(
-      Array.from({ length: 7 }, (_, dayOfWeek) => {
+      Array.from({ length: 7 }, (_, dayOfWeek): DayState => {
         const override = data.availability.find((a) => a.dayOfWeek === dayOfWeek);
         if (!override) return { dayOfWeek, mode: "default", startTime: "09:00", endTime: "18:00" };
         return {
@@ -95,7 +98,7 @@ export function StaffScheduleModal({ staffId, staffName, onClose }: Props) {
         };
       })
     );
-  }, [data]);
+  }
 
   const saveSchedule = useMutation({
     mutationFn: () => apiPut(`/api/staff/${staffId}/availability`, { days }),

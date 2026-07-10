@@ -38,9 +38,17 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Clear the previous search as soon as the palette opens again — adjusted
+  // during render (not an effect) since it only reacts to the `open` prop
+  // flipping, not to any value that needs to be read after paint.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setQuery("");
+  }
+
   useEffect(() => {
     if (open) {
-      setQuery("");
       setTimeout(() => inputRef.current?.focus(), 10);
     }
   }, [open]);

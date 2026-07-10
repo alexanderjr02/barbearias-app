@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Scissors, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { nextMessageId, randomDelay } from "@/lib/chatWidget";
 
 interface Message {
   id: string;
@@ -83,7 +84,7 @@ export function ChatbotWidget() {
     if (!content.trim()) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: nextMessageId(),
       role: "user",
       content: content.trim(),
       timestamp: new Date(),
@@ -95,14 +96,14 @@ export function ChatbotWidget() {
 
     setTimeout(() => {
       const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: nextMessageId(),
         role: "bot",
         content: getBotResponse(content),
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMessage]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 500);
+    }, randomDelay(1000, 500));
   };
 
   return (

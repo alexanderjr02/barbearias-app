@@ -10,10 +10,6 @@ import {
   MessageCircle,
   Phone,
   MapPin,
-  User,
-  Calendar,
-  Zap,
-  ArrowRight,
 } from "lucide-react";
 import { ChatbotWidget } from "@/components/chatbot/ChatbotWidget";
 import { cn, formatCurrency } from "@/lib/utils";

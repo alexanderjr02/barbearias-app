@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Scissors, Bot, Zap, ChevronRight } from "lucide-react";
+import { MessageCircle, X, Send, Scissors, Bot, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { nextMessageId, randomDelay } from "@/lib/chatWidget";
 
 interface Message {
   id: string;
@@ -139,15 +140,15 @@ export function LandingChatbot() {
 
   const send = (text: string) => {
     if (!text.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text };
+    const userMsg: Message = { id: nextMessageId(), role: "user", content: text };
     setMessages(p => [...p, userMsg]);
     setInput("");
     setTyping(true);
     setTimeout(() => {
       const answer = getBotResponse(text) ?? DEFAULT_RESPONSE;
-      setMessages(p => [...p, { id: (Date.now() + 1).toString(), role: "bot", content: answer }]);
+      setMessages(p => [...p, { id: nextMessageId(), role: "bot", content: answer }]);
       setTyping(false);
-    }, 900 + Math.random() * 600);
+    }, randomDelay(900, 600));
   };
 
   return (

@@ -59,7 +59,7 @@ export default function FinancePage() {
   const profit = data?.summary.profit ?? 0;
   const serviceRevenue = data?.summary.serviceRevenue ?? 0;
   const manualIncome = data?.summary.manualIncome ?? 0;
-  const transactions = data?.transactions ?? [];
+  const transactions = useMemo(() => data?.transactions ?? [], [data?.transactions]);
   const margin = income > 0 ? Math.round((profit / income) * 100) : 0;
 
   const expensesByCategory = useMemo(() => {

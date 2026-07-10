@@ -9,6 +9,7 @@ import {
 import {
   DollarSign, TrendingUp, Calendar,
   BarChart3, Percent,
+  type LucideIcon,
 } from "lucide-react";
 import { usePlan } from "@/context/PlanContext";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -30,12 +31,24 @@ interface ReportsResponse {
   retention: { name: string; novos: number; retornantes: number }[];
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadEntry {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-3 shadow-2xl">
       <p className="text-xs text-zinc-400 mb-2 font-medium">{label}</p>
-      {payload.map((entry: any) => (
+      {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 text-xs">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-zinc-400 capitalize">{entry.name}:</span>
@@ -50,7 +63,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 function KpiCard({ title, value, icon: Icon, iconColor = "text-amber-400", sub }: {
   title: string; value: string;
-  icon: any; iconColor?: string; sub?: string;
+  icon: LucideIcon; iconColor?: string; sub?: string;
 }) {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
@@ -220,7 +233,7 @@ export default function ReportsPage() {
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: any) => [`${v}%`, "Participação"]} contentStyle={{ background: "#27272a", border: "1px solid #3f3f46", borderRadius: "8px", fontSize: "12px" }} />
+                <Tooltip formatter={(v) => [`${v}%`, "Participação"]} contentStyle={{ background: "#27272a", border: "1px solid #3f3f46", borderRadius: "8px", fontSize: "12px" }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex-1 space-y-2">

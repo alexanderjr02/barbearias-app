@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { store, Barbershop } from "@/lib/store";
 
 interface BarbershopContextType {
@@ -14,15 +14,15 @@ const BarbershopContext = createContext<BarbershopContextType>({
 });
 
 export function BarbershopProvider({ children }: { children: ReactNode }) {
-  const [barbershop, setBarbershop] = useState<Barbershop | null>(null);
+  // store.getCurrentShop() is safe to call on the server too — it's guarded
+  // internally and returns null when there's no window/localStorage — so a
+  // lazy initializer reads it immediately instead of only after a mount effect.
+  const [barbershop, setBarbershop] = useState<Barbershop | null>(() => store.getCurrentShop());
 
   const load = () => {
     const shop = store.getCurrentShop();
     if (shop) setBarbershop(shop);
   };
-
-  // Load immediately on client mount
-  useEffect(() => { load(); }, []);
 
   return (
     <BarbershopContext.Provider value={{ barbershop, reload: load }}>

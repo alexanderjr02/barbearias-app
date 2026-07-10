@@ -123,7 +123,6 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
   if (!open) return null;
 
   const planInfo = PLAN_INFO[selectedPlan];
-  const planDef = PLANS.find(p => p.id === selectedPlan)!;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">

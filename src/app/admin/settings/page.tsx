@@ -283,7 +283,7 @@ function NpsSection() {
             <div key={r.id} className="px-5 py-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm text-zinc-300">{r.barbershopName} · {r.userName}</p>
-                {r.comment && <p className="text-xs text-zinc-500 mt-0.5">"{r.comment}"</p>}
+                {r.comment && <p className="text-xs text-zinc-500 mt-0.5">&quot;{r.comment}&quot;</p>}
                 <p className="text-[10px] text-zinc-700 mt-1">{formatDateTime(r.createdAt)}</p>
               </div>
               <span className={cn("text-lg font-black flex-shrink-0", r.score >= 9 ? "text-emerald-400" : r.score >= 7 ? "text-amber-400" : "text-red-400")}>{r.score}</span>
