@@ -95,6 +95,11 @@ Widget flutuante nas páginas públicas e no painel, hoje com respostas automát
 
 ```
 cortix/
+├── Dockerfile                  # Build multi-stage (deps → build → runtime)
+├── docker-compose.yml          # Sobe tudo com `docker compose up -d --build`
+├── docker-entrypoint.sh        # Roda as migrations antes de iniciar o servidor
+├── .github/workflows/ci.yml    # Type-check + lint + build a cada push/PR
+│
 ├── prisma/
 │   ├── schema.prisma          # Modelos do banco (multi-tenant)
 │   ├── migrations/            # Histórico de migrations
@@ -122,6 +127,7 @@ cortix/
 │   │   ├── admin/              # Painel interno, restrito a SUPER_ADMIN
 │   │   ├── booking/[slug]/     # Agendamento público por barbearia
 │   │   ├── api/                # Rotas legadas (usadas pelo próprio painel web)
+│   │   ├── api/health/         # Health check (usado pelo Docker/orquestrador)
 │   │   └── api/v1/             # API versionada (painel web + app Flutter), envelope {data,error}
 │   │
 │   ├── components/             # Layout, dashboard, chatbot, billing, UI base
@@ -200,13 +206,49 @@ Faça login com o mesmo usuário do painel web — o `role` da conta decide se o
 ## 📄 Variáveis de ambiente
 
 ```env
-# Banco de dados (SQLite em dev; troca de provider no Prisma para produção)
+# Banco de dados (SQLite — arquivo local em dev, volume Docker em produção)
 DATABASE_URL="file:./dev.db"
 
-# Autenticação (JWT próprio — src/lib/auth.ts)
-JWT_ACCESS_SECRET="sua-chave-secreta-aqui"
-JWT_REFRESH_SECRET="outra-chave-secreta-aqui"
+# Autenticação (JWT próprio — src/lib/auth.ts). Gere uma chave forte e
+# EXCLUSIVA de produção — nunca reaproveite a de desenvolvimento:
+#   openssl rand -base64 48
+JWT_SECRET="sua-chave-secreta-aqui"
 ```
+
+Veja `.env.example` para o modelo mínimo.
+
+---
+
+## 🚀 Deploy em produção
+
+O jeito recomendado é via Docker — já testado de ponta a ponta (build, migrations automáticas, persistência de dados):
+
+```bash
+docker compose up -d --build
+```
+
+Sobe em **http://localhost:3000** (ou na porta/host que você configurar na frente, ex.: nginx + certificado TLS). Na primeira vez, roda com um banco vazio e aplica todas as migrations sozinho.
+
+**O que cada volume guarda** (definidos em `docker-compose.yml`):
+- `db-data` → o banco SQLite (`/app/data/dev.db` dentro do container)
+- `uploads-data` → fotos enviadas pelo painel (`/app/public/uploads`)
+
+Os dados sobrevivem a `docker compose down` e a rebuilds da imagem — só somem se você remover os volumes explicitamente (`docker compose down -v`).
+
+**Pra levar os dados que você já tem localmente** (em vez de começar com banco vazio), copie o `dev.db` pro volume antes do primeiro `up`:
+
+```bash
+docker volume create barbearias-app_db-data
+docker run --rm -v barbearias-app_db-data:/data -v "$(pwd)":/host:ro alpine cp /host/dev.db /data/dev.db
+docker run --rm -v barbearias-app_db-data:/data alpine chown -R 1001:1001 /data
+docker compose up -d --build
+```
+
+**Health check**: `GET /api/health` (usado pelo `healthcheck` do `docker-compose.yml` — confirma que o processo subiu *e* que o banco está respondendo, não só que o Next.js iniciou).
+
+**Antes de ir ao ar de verdade**, troque pelo menos:
+- `JWT_SECRET` — chave forte, diferente da de desenvolvimento (veja acima)
+- Um reverse proxy (nginx/Caddy) na frente, com HTTPS — o Next.js sozinho não faz TLS
 
 ---
 
@@ -230,11 +272,16 @@ Contrato completo, com todas as rotas e papéis, em **[docs/api-v1.md](docs/api-
 
 ## 🤝 Como contribuir
 
-1. Fork o repositório
-2. Crie uma branch: `git checkout -b feature/minha-funcionalidade`
-3. Commit: `git commit -m "feat: descrição da mudança"`
-4. Push: `git push origin feature/minha-funcionalidade`
-5. Abra um Pull Request descrevendo o que foi feito
+Fluxo trunk-based: `master` fica sempre pronta pra produção — mudanças maiores ou arriscadas passam por uma branch curta antes de voltar.
+
+1. Crie uma branch a partir de `master`: `git checkout -b feature/minha-funcionalidade` (ou `fix/...`)
+2. Commit: `git commit -m "feat: descrição da mudança"`
+3. Push: `git push origin feature/minha-funcionalidade`
+4. Abra um Pull Request descrevendo o que foi feito — o CI (`.github/workflows/ci.yml`) roda type-check, lint e build de produção automaticamente
+5. Merge em `master` depois de revisado e com o CI verde
+6. Ao publicar uma versão que vai pro ar, marque com uma tag: `git tag v1.1.0 && git push --tags`
+
+> Recomendado (não configurado automaticamente): ative a proteção da branch `master` em *Settings → Branches* no GitHub, exigindo Pull Request e CI verde antes do merge.
 
 ---
 

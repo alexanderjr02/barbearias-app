@@ -45,7 +45,12 @@ next-env.d.ts
 # user-uploaded images (local disk storage, not source)
 /public/uploads
 
-# compiled Flutter web build, served temporarily for phone testing via the
-# /mobile-app rewrite in next.config.ts — regenerate with:
-# flutter build web --release --base-href /mobile-app/ --dart-define=API_BASE_URL=/api/v1
+# compiled Flutter web build — was served temporarily via a /mobile-app
+# rewrite for phone testing during development, since removed. Regenerate
+# with: flutter build web --release --dart-define=API_BASE_URL=http://<ip>:3000/api/v1
 /public/mobile-app
+
+# local SQLite database — dev/test data only, never production data.
+# See README "Deploy em produção" for how the real database is provided
+# (a Docker volume), not a file tracked in git.
+/dev.db
