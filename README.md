@@ -95,10 +95,10 @@ Widget flutuante nas páginas públicas e no painel, hoje com respostas automát
 
 ```
 cortix/
-├── Dockerfile                  # Build multi-stage (deps → build → runtime)
-├── docker-compose.yml          # Sobe tudo com `docker compose up -d --build`
+├── Dockerfile                  # Build multi-stage do painel web (deps → build → runtime)
+├── docker-compose.yml          # Sobe painel web + app Flutter web com `docker compose up -d --build`
 ├── docker-entrypoint.sh        # Roda as migrations antes de iniciar o servidor
-├── .github/workflows/ci.yml    # Type-check + lint + build a cada push/PR
+├── .github/workflows/ci.yml    # Type-check + lint + testes + build a cada push/PR
 │
 ├── prisma/
 │   ├── schema.prisma          # Modelos do banco (multi-tenant)
@@ -110,6 +110,7 @@ cortix/
 │   └── apresentacao-cliente.md # Documento não técnico: o que já funciona e o que falta
 │
 ├── mobile/                     # App Flutter (Android/iOS/Web)
+│   ├── Dockerfile               # Build web (flutter build web) servido via nginx
 │   └── lib/
 │       ├── core/                # Tema, API client, storage de sessão
 │       └── features/
@@ -249,6 +250,18 @@ docker compose up -d --build
 **Antes de ir ao ar de verdade**, troque pelo menos:
 - `JWT_SECRET` — chave forte, diferente da de desenvolvimento (veja acima)
 - Um reverse proxy (nginx/Caddy) na frente, com HTTPS — o Next.js sozinho não faz TLS
+
+### App Flutter Web
+
+O `docker compose up -d --build` acima também sobe a versão web do app Flutter (serviço `mobile-web`, `mobile/Dockerfile`) em **http://localhost:8081**, servida como arquivos estáticos via nginx.
+
+Diferente do painel web, o Flutter Web não lê variáveis de ambiente em tempo de execução — o endereço da API (`API_BASE_URL`) é **compilado dentro do JS** no momento do build. Por padrão aponta pra `http://localhost:3000/api/v1` (o próprio serviço `app` publicado na sua máquina); pra apontar pra um domínio real em produção, defina no seu `.env` antes do build:
+
+```env
+MOBILE_API_BASE_URL=https://seu-dominio.com/api/v1
+```
+
+e rode `docker compose up -d --build` de novo (só o `mobile-web` precisa rebuildar quando essa variável muda).
 
 ---
 

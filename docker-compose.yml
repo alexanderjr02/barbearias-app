@@ -20,6 +20,21 @@ services:
       retries: 3
       start_period: 15s
 
+  mobile-web:
+    build:
+      context: ./mobile
+      args:
+        # Browser-reachable address for the API — Flutter Web bakes this in
+        # at build time, so it can't be a Docker-internal service name like
+        # http://app:3000. Override via MOBILE_API_BASE_URL in .env for a
+        # non-localhost deploy (e.g. a real domain).
+        API_BASE_URL: ${MOBILE_API_BASE_URL:-http://localhost:3000/api/v1}
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    depends_on:
+      - app
+
 volumes:
   db-data:
   uploads-data:
