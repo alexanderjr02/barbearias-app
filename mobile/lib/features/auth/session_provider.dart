@@ -64,6 +64,50 @@ class SessionProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> registerClient({
+    required String name,
+    required String email,
+    required String password,
+    required String phone,
+    required String dateOfBirth,
+  }) async {
+    isBusy = true;
+    error = null;
+    notifyListeners();
+    try {
+      await _repository.registerClient(name: name, email: email, password: password, phone: phone, dateOfBirth: dateOfBirth);
+      session = await _repository.me();
+      status = SessionStatus.authenticated;
+      _loadBrandColor();
+      return true;
+    } catch (e) {
+      error = e.toString();
+      return false;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> loginWithGoogle(String idToken) async {
+    isBusy = true;
+    error = null;
+    notifyListeners();
+    try {
+      await _repository.loginWithGoogle(idToken);
+      session = await _repository.me();
+      status = SessionStatus.authenticated;
+      _loadBrandColor();
+      return true;
+    } catch (e) {
+      error = e.toString();
+      return false;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     session = null;

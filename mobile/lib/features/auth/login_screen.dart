@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/aurora_background.dart';
+import '../../core/widgets/social_sign_in_button.dart';
+import 'google_auth_service.dart';
+import 'register_client_screen.dart';
 import 'session_provider.dart';
 
 enum _RolePick { client, barber, manager }
@@ -31,6 +34,23 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) return;
     await sessionProvider.login(email, password);
+  }
+
+  Future<void> _handleGoogleSignIn(SessionProvider sessionProvider) async {
+    try {
+      final idToken = await GoogleAuthService.signInAndGetIdToken();
+      if (idToken == null || !mounted) return; // user cancelled
+      await sessionProvider.loginWithGoogle(idToken);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFF18181F),
+          content: Text(e.toString(), style: const TextStyle(color: Colors.white)),
+        ),
+      );
+    }
   }
 
   void _comingSoon(String provider) {
@@ -101,15 +121,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           _RoleSelector(value: _role, onChanged: (r) => setState(() => _role = r)),
                           const SizedBox(height: 20),
 
-                          _SocialButton(
+                          SocialSignInButton(
                             label: 'Continuar com Google',
                             icon: Icons.g_mobiledata_rounded,
                             background: Colors.white,
                             foreground: Colors.black87,
-                            onTap: () => _comingSoon('Google'),
+                            onTap: () => _handleGoogleSignIn(sessionProvider),
                           ),
                           const SizedBox(height: 10),
-                          _SocialButton(
+                          SocialSignInButton(
                             label: 'Continuar com Apple',
                             icon: Icons.apple_rounded,
                             background: Colors.black,
@@ -161,6 +181,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: sessionProvider.isBusy
                                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                                 : const Text('Entrar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: TextButton(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const RegisterClientScreen()),
+                              ),
+                              child: const Text(
+                                'Sou cliente e quero criar uma conta',
+                                style: TextStyle(color: Colors.white54, fontSize: 12.5),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -229,32 +261,3 @@ class _RoleSelector extends StatelessWidget {
   }
 }
 
-class _SocialButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color background;
-  final Color foreground;
-  final Color? border;
-  final VoidCallback onTap;
-
-  const _SocialButton({required this.label, required this.icon, required this.background, required this.foreground, required this.onTap, this.border});
-
-  @override
-  Widget build(BuildContext context) {
-    return PulseButton(
-      onPressed: onTap,
-      color: background,
-      borderColor: border,
-      height: 48,
-      borderRadius: BorderRadius.circular(14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: foreground, size: 22),
-          const SizedBox(width: 10),
-          Text(label, style: TextStyle(color: foreground, fontWeight: FontWeight.w600, fontSize: 14)),
-        ],
-      ),
-    );
-  }
-}
