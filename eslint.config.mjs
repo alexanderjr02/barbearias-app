@@ -13,11 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     // The Flutter app lives in its own subdirectory — its compiled web
-    // output (mobile/build, mobile/.dart_tool) includes multi-megabyte
-    // generated main.dart.js bundles that aren't meant to be parsed as
-    // hand-written JS; linting them was blowing the heap (OOM), both
-    // locally and in CI.
+    // output (mobile/build, mobile/.dart_tool, and any Flutter web build
+    // copied into public/mobile-app for local testing) includes
+    // multi-megabyte generated main.dart.js bundles that aren't meant to
+    // be parsed as hand-written JS. Linting them was blowing the heap
+    // (OOM) and, once that was fixed, was still >99% of every lint run's
+    // "errors" — none of it real.
     "mobile/**",
+    "public/mobile-app/**",
   ]),
 ]);
 
