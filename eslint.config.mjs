@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The Flutter app lives in its own subdirectory — its compiled web
+    // output (mobile/build, mobile/.dart_tool) includes multi-megabyte
+    // generated main.dart.js bundles that aren't meant to be parsed as
+    // hand-written JS; linting them was blowing the heap (OOM), both
+    // locally and in CI.
+    "mobile/**",
   ]),
 ]);
 
