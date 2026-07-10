@@ -54,3 +54,6 @@ next-env.d.ts
 # See README "Deploy em produção" for how the real database is provided
 # (a Docker volume), not a file tracked in git.
 /dev.db
+
+# disposable SQLite db created by the integration tests (tests/setup/globalSetup.ts)
+/tests/test.db
