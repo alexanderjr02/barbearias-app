@@ -13,6 +13,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
+# NEXT_PUBLIC_* vars are inlined into the client JS bundle at build time —
+# unlike GOOGLE_CLIENT_ID (read server-side, per-request), this one has to
+# be present *here*, not just in the running container's environment.
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=""
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 RUN npm run build
 
 # --- Runtime image ---

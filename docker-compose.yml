@@ -1,12 +1,22 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        # NEXT_PUBLIC_* is baked into the client bundle at build time — see
+        # the Dockerfile comment. Leave unset to keep the Google button
+        # hidden (nothing breaks; it's just not shown).
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: file:/app/data/dev.db
       JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no seu .env}
       NODE_ENV: production
+      # Read server-side, per-request (src/app/api/auth/google/route.ts) —
+      # unlike NEXT_PUBLIC_GOOGLE_CLIENT_ID above, this one only needs to be
+      # in the running container, not baked in at build time.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     volumes:
       - db-data:/app/data
       - uploads-data:/app/public/uploads
