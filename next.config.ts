@@ -3,14 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   devIndicators: false,
-  // Temporary: serves the Flutter mobile app's static web build for local
-  // testing. Removed again once verification is done.
-  async rewrites() {
-    return [
-      { source: "/mobile-app", destination: "/mobile-app/index.html" },
-      { source: "/mobile-app/", destination: "/mobile-app/index.html" },
-    ];
-  },
+  // Traces only the files each route actually needs into .next/standalone —
+  // the Docker image copies that instead of the full node_modules tree.
+  output: "standalone",
 };
 
 export default nextConfig;

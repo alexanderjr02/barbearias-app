@@ -1,0 +1,20 @@
+node_modules
+.next
+.git
+.gitignore
+
+# The Flutter source project isn't needed to build the Next.js image — its
+# web build output already lives in public/mobile-app.
+mobile
+
+# Data — provided by volumes at runtime, never baked into the image.
+dev.db
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Secrets — passed at runtime via docker-compose env_file, not build args.
+.env
+.env.local
+
+*.log
+README.md
