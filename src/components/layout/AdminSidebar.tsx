@@ -126,10 +126,6 @@ export function AdminSidebar() {
             {!collapsed && <span className="text-sm font-medium">Configurações</span>}
           </Link>
         )}
-        <Link href="/dashboard" className={cn("flex items-center rounded-lg transition-all text-zinc-500 hover:bg-white/5 hover:text-zinc-200", collapsed ? "justify-center w-10 h-10 mx-auto" : "gap-3 px-3 py-2.5")}>
-          <ChevronLeft className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
-          {!collapsed && <span className="text-sm font-medium">Voltar ao painel</span>}
-        </Link>
         <button onClick={() => setCollapsed(!collapsed)} className={cn("w-full flex items-center rounded-lg transition-all text-zinc-600 hover:bg-white/5 hover:text-zinc-400", collapsed ? "justify-center h-10" : "gap-3 px-3 py-2.5")}>
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4 flex-shrink-0" /><span className="text-sm font-medium">Recolher</span></>}
         </button>
