@@ -116,6 +116,7 @@ export default function ClientsPage() {
       name: form.get("name"),
       email: form.get("email"),
       phone: form.get("phone") || undefined,
+      dateOfBirth: form.get("dateOfBirth") || undefined,
       password: form.get("password"),
     });
   };
@@ -162,6 +163,10 @@ export default function ClientsPage() {
         <div>
           <label className={labelCls}>Telefone</label>
           <input name="phone" className={fieldCls} placeholder="(11) 99999-9999" />
+        </div>
+        <div>
+          <label className={labelCls}>Data de nascimento</label>
+          <input name="dateOfBirth" type="date" max={new Date().toISOString().slice(0, 10)} className={fieldCls} />
         </div>
         <div>
           <label className={labelCls}>Senha inicial</label>
