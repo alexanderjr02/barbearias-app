@@ -26,7 +26,8 @@ export async function GET() {
     prisma.review.aggregate({ where: { staffId: staff.id }, _avg: { rating: true }, _count: { rating: true } }),
   ]);
 
-  const revenue = monthAppointments.reduce((acc, a) => acc + a.totalPrice, 0);
+  type MonthAppointmentRow = (typeof monthAppointments)[number];
+  const revenue = monthAppointments.reduce((acc: number, a: MonthAppointmentRow) => acc + a.totalPrice, 0);
   const completedCount = monthAppointments.length;
 
   return NextResponse.json({

@@ -28,8 +28,9 @@ export async function GET(request: NextRequest) {
     include: { plan: true },
     orderBy: { createdAt: "desc" },
   });
+  type SubscriptionRow = (typeof mine)[number];
   const mySubscription =
-    mine.find((s) => s.status === "ACTIVE" || s.status === "PAST_DUE") ?? mine[0] ?? null;
+    mine.find((s: SubscriptionRow) => s.status === "ACTIVE" || s.status === "PAST_DUE") ?? mine[0] ?? null;
 
   // The same "what did I actually get for my money" math the gestor sees,
   // mirrored back to the client — most subscription products only ever show
@@ -44,13 +45,13 @@ export async function GET(request: NextRequest) {
     const monthsActive = Math.max(1, Math.round((Date.now() - mySubscription.startedAt.getTime()) / (30 * 24 * 60 * 60 * 1000)));
     usage = {
       visitCount: visits.length,
-      valueConsumed: visits.reduce((acc, v) => acc + v.totalPrice, 0),
+      valueConsumed: visits.reduce((acc: number, v: (typeof visits)[number]) => acc + v.totalPrice, 0),
       totalPaid: monthsActive * mySubscription.plan.price,
     };
   }
 
   return NextResponse.json({
-    plans: plans.map((p) => ({
+    plans: plans.map((p: (typeof plans)[number]) => ({
       id: p.id,
       name: p.name,
       description: p.description,

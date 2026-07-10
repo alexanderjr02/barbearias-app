@@ -37,15 +37,20 @@ export async function GET() {
     }),
   ]);
 
-  const todayCompleted = todayAppointments.filter((a) => a.status === "COMPLETED");
-  const todayRevenue = todayCompleted.reduce((acc, a) => acc + a.totalPrice, 0);
-  const yesterdayRevenue = yesterdayAppointments.reduce((acc, a) => acc + a.totalPrice, 0);
-  const todayCount = todayAppointments.filter((a) => a.status !== "CANCELLED").length;
-  const unconfirmedToday = todayAppointments.filter((a) => a.status === "SCHEDULED").length;
+  type TodayAppointmentRow = (typeof todayAppointments)[number];
+  type YesterdayAppointmentRow = (typeof yesterdayAppointments)[number];
+  type MonthAppointmentRow = (typeof monthAppointments)[number];
+  type ActiveClientAppointmentRow = (typeof activeClientAppointments)[number];
 
-  const activeClients = new Set(activeClientAppointments.map((a) => a.clientId ?? a.clientPhone)).size;
+  const todayCompleted = todayAppointments.filter((a: TodayAppointmentRow) => a.status === "COMPLETED");
+  const todayRevenue = todayCompleted.reduce((acc: number, a: TodayAppointmentRow) => acc + a.totalPrice, 0);
+  const yesterdayRevenue = yesterdayAppointments.reduce((acc: number, a: YesterdayAppointmentRow) => acc + a.totalPrice, 0);
+  const todayCount = todayAppointments.filter((a: TodayAppointmentRow) => a.status !== "CANCELLED").length;
+  const unconfirmedToday = todayAppointments.filter((a: TodayAppointmentRow) => a.status === "SCHEDULED").length;
 
-  const monthRevenue = monthAppointments.reduce((acc, a) => acc + a.totalPrice, 0);
+  const activeClients = new Set(activeClientAppointments.map((a: ActiveClientAppointmentRow) => a.clientId ?? a.clientPhone)).size;
+
+  const monthRevenue = monthAppointments.reduce((acc: number, a: MonthAppointmentRow) => acc + a.totalPrice, 0);
   const avgTicket = monthAppointments.length > 0 ? monthRevenue / monthAppointments.length : 0;
 
   const barberTotals = new Map<string, { name: string; appointments: number; revenue: number }>();
@@ -60,7 +65,7 @@ export async function GET() {
     .slice(0, 5);
   const maxBarberAppointments = topBarbers[0]?.appointments || 1;
 
-  const recentAppointments = todayAppointments.slice(0, 8).map((apt) => ({
+  const recentAppointments = todayAppointments.slice(0, 8).map((apt: TodayAppointmentRow) => ({
     id: apt.id,
     client: apt.clientName,
     service: apt.service.name,

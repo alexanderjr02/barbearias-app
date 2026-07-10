@@ -16,8 +16,9 @@ export async function GET() {
     orderBy: { points: "desc" },
   });
 
+  type AccountRow = (typeof accounts)[number];
   return NextResponse.json(
-    accounts.map((a) => ({
+    accounts.map((a: AccountRow) => ({
       barbershopName: a.barbershop.name,
       barbershopSlug: a.barbershop.slug,
       points: a.points,

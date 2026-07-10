@@ -26,7 +26,8 @@ export async function GET() {
     take: 50,
   });
 
+  type AppointmentRow = (typeof appointments)[number];
   return NextResponse.json(
-    appointments.map((a) => ({ ...a, hasReview: !!a.review, review: undefined }))
+    appointments.map((a: AppointmentRow) => ({ ...a, hasReview: !!a.review, review: undefined }))
   );
 }

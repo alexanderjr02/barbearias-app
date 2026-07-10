@@ -22,9 +22,12 @@ export async function GET() {
     }),
   ]);
 
-  const serviceRevenue = completedAppointments.reduce((acc, a) => acc + a.totalPrice, 0);
-  const manualIncome = transactions.filter((t) => t.type === "INCOME").reduce((acc, t) => acc + t.amount, 0);
-  const expenses = transactions.filter((t) => t.type === "EXPENSE").reduce((acc, t) => acc + t.amount, 0);
+  type AppointmentRow = (typeof completedAppointments)[number];
+  type TransactionRow = (typeof transactions)[number];
+
+  const serviceRevenue = completedAppointments.reduce((acc: number, a: AppointmentRow) => acc + a.totalPrice, 0);
+  const manualIncome = transactions.filter((t: TransactionRow) => t.type === "INCOME").reduce((acc: number, t: TransactionRow) => acc + t.amount, 0);
+  const expenses = transactions.filter((t: TransactionRow) => t.type === "EXPENSE").reduce((acc: number, t: TransactionRow) => acc + t.amount, 0);
   const income = serviceRevenue + manualIncome;
 
   return NextResponse.json({

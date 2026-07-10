@@ -2,10 +2,20 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
 
+// useSearchParams() opts this page out of static prerendering unless it's
+// wrapped in Suspense — without it, `next build` fails to prerender /register.
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const searchParams = useSearchParams();
   const selectedPlanParam = searchParams.get("plan")?.toLowerCase() ?? "starter";
   const [showPassword, setShowPassword] = useState(false);

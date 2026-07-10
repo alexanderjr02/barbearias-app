@@ -14,7 +14,7 @@ export async function GET() {
     orderBy: { createdAt: "asc" },
   });
 
-  const result = services.map((service) => ({
+  const result = services.map((service: (typeof services)[number]) => ({
     id: service.id,
     name: service.name,
     description: service.description,

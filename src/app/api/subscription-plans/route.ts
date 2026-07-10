@@ -30,7 +30,10 @@ export async function GET() {
   // gestor can actually act on: how much of what they're paying for has
   // this client actually used, and does the math still make sense for the
   // shop? Matched by phone since a subscriber doesn't need a client login.
-  const phones = [...new Set(plans.flatMap((p) => p.subscriptions.map((s) => s.clientPhone)))];
+  type PlanRow = (typeof plans)[number];
+  type SubscriptionRow = PlanRow["subscriptions"][number];
+
+  const phones = [...new Set(plans.flatMap((p: PlanRow) => p.subscriptions.map((s: SubscriptionRow) => s.clientPhone)))];
   const usageAppointments = phones.length
     ? await prisma.appointment.findMany({
         where: { barbershopId: session.barbershopId, clientPhone: { in: phones }, status: "COMPLETED" },
@@ -39,7 +42,9 @@ export async function GET() {
       })
     : [];
 
-  const result = plans.map((plan) => ({
+  type UsageAppointmentRow = (typeof usageAppointments)[number];
+
+  const result = plans.map((plan: PlanRow) => ({
     id: plan.id,
     name: plan.name,
     description: plan.description,
@@ -48,9 +53,9 @@ export async function GET() {
     benefits: plan.benefits,
     color: plan.color,
     isActive: plan.isActive,
-    subscriptions: plan.subscriptions.map((sub) => {
-      const visits = usageAppointments.filter((a) => a.clientPhone === sub.clientPhone && a.date >= sub.startedAt);
-      const valueConsumed = visits.reduce((acc, v) => acc + v.totalPrice, 0);
+    subscriptions: plan.subscriptions.map((sub: SubscriptionRow) => {
+      const visits = usageAppointments.filter((a: UsageAppointmentRow) => a.clientPhone === sub.clientPhone && a.date >= sub.startedAt);
+      const valueConsumed = visits.reduce((acc: number, v: UsageAppointmentRow) => acc + v.totalPrice, 0);
       const monthsActive = Math.max(1, Math.round((Date.now() - sub.startedAt.getTime()) / (30 * 24 * 60 * 60 * 1000)));
       const totalPaid = monthsActive * plan.price;
       return {
@@ -66,7 +71,7 @@ export async function GET() {
         valueConsumed,
         totalPaid,
         lastVisitAt: visits[0]?.date ?? null,
-        recentVisits: visits.slice(0, 5).map((v) => ({ date: v.date, service: v.service.name, staff: v.staff.name, price: v.totalPrice })),
+        recentVisits: visits.slice(0, 5).map((v: UsageAppointmentRow) => ({ date: v.date, service: v.service.name, staff: v.staff.name, price: v.totalPrice })),
       };
     }),
   }));

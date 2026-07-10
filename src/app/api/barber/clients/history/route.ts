@@ -37,12 +37,13 @@ export async function GET(request: NextRequest) {
     take: 20,
   });
 
-  const completed = appointments.filter((a) => a.status === "COMPLETED");
+  type AppointmentRow = (typeof appointments)[number];
+  const completed = appointments.filter((a: AppointmentRow) => a.status === "COMPLETED");
 
   return NextResponse.json({
     clientName: reference.clientName,
     totalVisits: completed.length,
-    totalSpent: completed.reduce((acc, a) => acc + a.totalPrice, 0),
+    totalSpent: completed.reduce((acc: number, a: AppointmentRow) => acc + a.totalPrice, 0),
     appointments,
   });
 }

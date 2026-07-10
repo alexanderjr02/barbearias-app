@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const inRange = allAppointments.filter((a) => a.date >= rangeStart);
+  type AppointmentRow = (typeof allAppointments)[number];
+  const inRange = allAppointments.filter((a: AppointmentRow) => a.date >= rangeStart);
 
   const buckets = new Map<
     string,
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
   const totalRevenue = series.reduce((a, b) => a + b.receita, 0);
   const totalExpenses = series.reduce((a, b) => a + b.despesas, 0);
   const totalAppointments = series.reduce((a, b) => a + b.agendamentos, 0);
-  const completedInRange = inRange.filter((a) => a.status === "COMPLETED");
+  const completedInRange = inRange.filter((a: AppointmentRow) => a.status === "COMPLETED");
 
   const serviceTotals = new Map<string, { name: string; count: number }>();
   for (const apt of completedInRange) {

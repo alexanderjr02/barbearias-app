@@ -21,7 +21,7 @@ export async function GET() {
 
   return NextResponse.json({
     pointsPerReal: barbershop?.pointsPerReal ?? 10,
-    accounts: accounts.map((a) => ({
+    accounts: accounts.map((a: (typeof accounts)[number]) => ({
       id: a.id,
       name: a.user.name,
       email: a.user.email,

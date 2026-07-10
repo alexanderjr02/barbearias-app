@@ -21,10 +21,13 @@ export async function GET() {
     orderBy: { createdAt: "asc" },
   });
 
-  const result = staff.map((member) => {
-    const revenue = member.appointments.reduce((acc, a) => acc + a.totalPrice, 0);
+  type StaffRow = (typeof staff)[number];
+  const result = staff.map((member: StaffRow) => {
+    const revenue = member.appointments.reduce((acc: number, a: StaffRow["appointments"][number]) => acc + a.totalPrice, 0);
     const avgRating =
-      member.reviews.length > 0 ? member.reviews.reduce((acc, r) => acc + r.rating, 0) / member.reviews.length : null;
+      member.reviews.length > 0
+        ? member.reviews.reduce((acc: number, r: StaffRow["reviews"][number]) => acc + r.rating, 0) / member.reviews.length
+        : null;
     return {
       id: member.id,
       name: member.name,

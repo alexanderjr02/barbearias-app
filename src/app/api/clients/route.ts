@@ -35,16 +35,22 @@ export async function GET() {
     }),
   ]);
 
-  const loyaltyByUserId = new Map(loyaltyAccounts.map((a) => [a.userId, a]));
-  const subscriptionByClientId = new Map(
-    subscriptions.filter((s) => s.clientId).map((s) => [s.clientId as string, { planName: s.plan.name, planColor: s.plan.color, status: s.status }])
+  type LoyaltyAccountRow = (typeof loyaltyAccounts)[number];
+  type SubscriptionRow = (typeof subscriptions)[number];
+  type AppointmentRow = (typeof appointments)[number];
+
+  const loyaltyByUserId = new Map<string, LoyaltyAccountRow>(loyaltyAccounts.map((a: LoyaltyAccountRow) => [a.userId, a]));
+  const subscriptionByClientId = new Map<string, { planName: string; planColor: string; status: string }>(
+    subscriptions
+      .filter((s: SubscriptionRow) => s.clientId)
+      .map((s: SubscriptionRow) => [s.clientId as string, { planName: s.plan.name, planColor: s.plan.color, status: s.status }])
   );
 
-  const linkedClientIds = Array.from(new Set(appointments.map((a) => a.clientId).filter((v): v is string => !!v)));
+  const linkedClientIds = Array.from(new Set(appointments.map((a: AppointmentRow) => a.clientId).filter((v: string | null): v is string => !!v)));
   const linkedUsers = linkedClientIds.length
     ? await prisma.user.findMany({ where: { id: { in: linkedClientIds } }, select: { id: true, avatar: true } })
     : [];
-  const avatarByUserId = new Map(linkedUsers.map((u) => [u.id, u.avatar]));
+  const avatarByUserId = new Map(linkedUsers.map((u: (typeof linkedUsers)[number]) => [u.id, u.avatar]));
 
   type Group = {
     key: string;

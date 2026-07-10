@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,7 +48,17 @@ interface ListResponse {
   pageSize: number;
 }
 
+// useSearchParams() opts this page out of static prerendering unless it's
+// wrapped in Suspense — without it, `next build` fails to prerender this page.
 export default function AdminBarbershopsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminBarbershopsPageInner />
+    </Suspense>
+  );
+}
+
+function AdminBarbershopsPageInner() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
