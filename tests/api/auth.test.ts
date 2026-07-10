@@ -49,6 +49,7 @@ describe("POST /api/auth/register", () => {
       password: "senha12345",
       barbershopName: "Barbearia Dup",
       barbershopSlug: unique("dup-shop"),
+      city: "São Paulo, SP",
       plan: "starter",
     };
 
@@ -77,6 +78,134 @@ describe("POST /api/auth/register", () => {
     const { status } = await postJson<RegisterBody>("/api/auth/register", { email: "no-name@cortix.test" });
     expect(status).toBe(400);
   });
+
+  it("rejects registration without barbershop info (no more ownerless accounts)", async () => {
+    const { status, body } = await postJson<RegisterBody>("/api/auth/register", {
+      name: "Sem Barbearia",
+      email: `${unique("noshop")}@cortix.test`,
+      password: "senha12345",
+    });
+    expect(status).toBe(400);
+    expect(body.error).toBeTruthy();
+  });
+
+  it("rejects an invalid barbershop slug (uppercase/spaces)", async () => {
+    const { status } = await postJson<RegisterBody>("/api/auth/register", {
+      name: "Slug Ruim",
+      email: `${unique("badslug")}@cortix.test`,
+      password: "senha12345",
+      barbershopName: "Barbearia Slug",
+      barbershopSlug: "Minha Barbearia!!",
+      city: "São Paulo, SP",
+    });
+    expect(status).toBe(400);
+  });
+
+  it("rejects a duplicate barbershop slug even with a fresh email, without orphaning the user", async () => {
+    const slug = unique("taken-slug");
+    const first = await postJson<RegisterBody>("/api/auth/register", {
+      name: "Primeiro",
+      email: `${unique("slugowner1")}@cortix.test`,
+      password: "senha12345",
+      barbershopName: "Primeira Barbearia",
+      barbershopSlug: slug,
+      city: "São Paulo, SP",
+    });
+    expect(first.status).toBe(201);
+
+    const clashEmail = `${unique("slugowner2")}@cortix.test`;
+    const second = await postJson<RegisterBody>("/api/auth/register", {
+      name: "Segundo",
+      email: clashEmail,
+      password: "senha12345",
+      barbershopName: "Segunda Barbearia",
+      barbershopSlug: slug,
+      city: "São Paulo, SP",
+    });
+    expect(second.status).toBe(409);
+
+    // The email must not have been consumed by the failed attempt — the
+    // whole User+Barbershop creation is one transaction now.
+    const retry = await postJson<RegisterBody>("/api/auth/register", {
+      name: "Segundo de Novo",
+      email: clashEmail,
+      password: "senha12345",
+      barbershopName: "Segunda Barbearia",
+      barbershopSlug: unique("taken-slug-2"),
+      city: "São Paulo, SP",
+    });
+    expect(retry.status).toBe(201);
+  });
+});
+
+describe("POST /api/auth/register/client", () => {
+  it("creates a client account with no barbershop attached", async () => {
+    const email = `${unique("client")}@cortix.test`;
+    const { status, body } = await postJson<RegisterBody>("/api/auth/register/client", {
+      name: "Cliente Novo",
+      email,
+      password: "senha12345",
+      phone: "11999990000",
+      dateOfBirth: "1995-06-15",
+    });
+    expect(status).toBe(201);
+    expect(body.user?.email).toBe(email);
+    expect(body.user?.barbershopId).toBeNull();
+    expect(body.accessToken).toBeTruthy();
+  });
+
+  it("rejects someone under 13", async () => {
+    const { status, body } = await postJson<RegisterBody>("/api/auth/register/client", {
+      name: "Muito Novo",
+      email: `${unique("kid")}@cortix.test`,
+      password: "senha12345",
+      phone: "11999990000",
+      dateOfBirth: new Date().toISOString().slice(0, 10),
+    });
+    expect(status).toBe(400);
+    expect(body.error).toBeTruthy();
+  });
+
+  it("rejects a missing date of birth", async () => {
+    const { status } = await postJson<RegisterBody>("/api/auth/register/client", {
+      name: "Sem Data",
+      email: `${unique("nodob")}@cortix.test`,
+      password: "senha12345",
+      phone: "11999990000",
+    });
+    expect(status).toBe(400);
+  });
+
+  it("rejects a duplicate email", async () => {
+    const email = `${unique("clientdup")}@cortix.test`;
+    const payload = {
+      name: "Cliente Dup",
+      email,
+      password: "senha12345",
+      phone: "11999990000",
+      dateOfBirth: "1995-06-15",
+    };
+    const first = await postJson<RegisterBody>("/api/auth/register/client", payload);
+    expect(first.status).toBe(201);
+
+    const second = await postJson<RegisterBody>("/api/auth/register/client", payload);
+    expect(second.status).toBe(409);
+  });
+});
+
+describe("POST /api/auth/google", () => {
+  it("responds 501 when GOOGLE_CLIENT_ID isn't configured (the test environment doesn't set it)", async () => {
+    const { status, body } = await postJson<{ error?: string }>("/api/auth/google", { idToken: "x".repeat(30) });
+    expect(status).toBe(501);
+    expect(body.error).toBeTruthy();
+  });
+
+  it("rejects an obviously-too-short token before ever calling Google", async () => {
+    const { status } = await postJson<{ error?: string }>("/api/auth/google", { idToken: "short" });
+    // With no GOOGLE_CLIENT_ID configured this still short-circuits to 501
+    // (checked first) — either way, it must never be a 500.
+    expect([400, 501]).toContain(status);
+  });
 });
 
 describe("POST /api/auth/login", () => {
@@ -89,6 +218,7 @@ describe("POST /api/auth/login", () => {
       password,
       barbershopName: "Barbearia Login",
       barbershopSlug: unique("login-shop"),
+      city: "São Paulo, SP",
       plan: "starter",
     });
 
@@ -106,6 +236,7 @@ describe("POST /api/auth/login", () => {
       password: "senha12345",
       barbershopName: "Barbearia Wrongpw",
       barbershopSlug: unique("wrongpw-shop"),
+      city: "São Paulo, SP",
       plan: "starter",
     });
 
@@ -132,6 +263,7 @@ describe("GET /api/auth/me", () => {
       password: "senha12345",
       barbershopName: "Barbearia Me",
       barbershopSlug: unique("me-shop"),
+      city: "São Paulo, SP",
       plan: "starter",
     });
 

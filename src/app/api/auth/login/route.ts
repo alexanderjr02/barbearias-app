@@ -24,7 +24,17 @@ export async function POST(request: NextRequest) {
       include: { barbershop: true, staffProfile: { include: { barbershop: true } } },
     });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      return NextResponse.json({ error: "E-mail ou senha inválidos" }, { status: 401 });
+    }
+
+    // Google-only account (see /api/auth/google) — never had a password to
+    // check against, so bcrypt.compare(_, null) would throw either way.
+    if (!user.password) {
+      return NextResponse.json({ error: "Esta conta usa login com Google — use o botão \"Continuar com Google\"" }, { status: 401 });
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
       return NextResponse.json({ error: "E-mail ou senha inválidos" }, { status: 401 });
     }
 

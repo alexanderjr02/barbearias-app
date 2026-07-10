@@ -10,10 +10,17 @@ model User {
   id            String   @id @default(cuid())
   name          String
   email         String   @unique
-  password      String
+  // Nullable: a Google-only account (see src/app/api/auth/google/route.ts)
+  // never sets a password — login/route.ts rejects password login for those
+  // with a clear "use Google" error instead of a bcrypt.compare() crash.
+  password      String?
   role          String   @default("OWNER")
   phone         String?
   avatar        String?
+  dateOfBirth   DateTime?
+  // Set once, on first Google sign-in — links this account to that Google
+  // identity for all future logins (find-by-googleId before find-by-email).
+  googleId      String?  @unique
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -57,6 +64,7 @@ model Barbershop {
   coverImage      String?
   phone           String?
   email           String?
+  cnpj            String?
   address         String?
   city            String?
   state           String?

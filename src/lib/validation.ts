@@ -1,0 +1,154 @@
+import { z } from "zod";
+
+// Accepts formatted ("(11) 99999-9999") or plain-digit Brazilian phone
+// numbers — landline (10 digits) or mobile (11 digits), area code required.
+export const phoneSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ""))
+  .refine((v) => v.length === 10 || v.length === 11, {
+    message: "Telefone inválido — use DDD + número",
+  });
+
+export const optionalPhoneSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v.replace(/\D/g, "") : v))
+  .refine((v) => !v || v.length === 10 || v.length === 11, {
+    message: "Telefone inválido — use DDD + número",
+  });
+
+export const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .email("E-mail inválido");
+
+// At least 8 chars, at least one letter and one number — enough friction to
+// discourage "12345678" without demanding a symbol nobody remembers.
+export const passwordSchema = z
+  .string()
+  .min(8, "A senha deve ter pelo menos 8 caracteres")
+  .refine((v) => /[a-zA-Z]/.test(v) && /[0-9]/.test(v), {
+    message: "A senha deve ter letras e números",
+  });
+
+export const nameSchema = z
+  .string()
+  .trim()
+  .min(2, "Nome muito curto")
+  .max(120, "Nome muito longo");
+
+// Becomes part of the public booking URL — lowercase letters, numbers and
+// hyphens only, can't start/end with a hyphen.
+export const slugSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(3, "Link precisa ter pelo menos 3 caracteres")
+  .max(60, "Link muito longo")
+  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use apenas letras minúsculas, números e hífen");
+
+// Light format check (14 digits), not a full checksum validator — good
+// enough to catch typos without rejecting real CNPJs on a checksum bug.
+export const cnpjSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v.replace(/\D/g, "") : v))
+  .refine((v) => !v || v.length === 14, { message: "CNPJ inválido — deve ter 14 dígitos" });
+
+const MIN_CLIENT_AGE = 13;
+const MAX_AGE = 120;
+
+// "YYYY-MM-DD" (native <input type="date"> format) — must be a real past
+// date and imply an age between MIN_CLIENT_AGE and MAX_AGE.
+export const dateOfBirthSchema = z
+  .string()
+  .refine((v) => !Number.isNaN(new Date(v).getTime()), { message: "Data de nascimento inválida" })
+  .refine(
+    (v) => {
+      const date = new Date(v);
+      const age = ageFromDate(date);
+      return age >= MIN_CLIENT_AGE && age <= MAX_AGE;
+    },
+    { message: `É preciso ter entre ${MIN_CLIENT_AGE} e ${MAX_AGE} anos` }
+  );
+
+export const optionalDateOfBirthSchema = z
+  .string()
+  .trim()
+  .optional()
+  .refine((v) => !v || !Number.isNaN(new Date(v).getTime()), { message: "Data de nascimento inválida" })
+  .refine(
+    (v) => {
+      if (!v) return true;
+      const age = ageFromDate(new Date(v));
+      return age >= MIN_CLIENT_AGE && age <= MAX_AGE;
+    },
+    { message: `É preciso ter entre ${MIN_CLIENT_AGE} e ${MAX_AGE} anos` }
+  );
+
+function ageFromDate(date: Date): number {
+  const now = new Date();
+  let age = now.getFullYear() - date.getFullYear();
+  const monthDiff = now.getMonth() - date.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < date.getDate())) age--;
+  return age;
+}
+
+// POST /api/auth/register — owner creating their account + barbershop in one
+// step. Barbershop fields are mandatory: this route only ever creates an
+// OWNER, and an ownerless account serves no purpose in this app.
+export const registerOwnerSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+  phone: optionalPhoneSchema,
+  barbershopName: nameSchema,
+  barbershopSlug: slugSchema,
+  city: z.string().trim().min(1, "Cidade é obrigatória"),
+  cnpj: cnpjSchema,
+  plan: z.string().optional(),
+});
+
+// POST /api/auth/register/client — client self-signup. Not tied to a
+// barbershop at creation time (that happens via BarbershopClient once they
+// book/interact with a specific shop).
+export const registerClientSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+  phone: phoneSchema,
+  dateOfBirth: dateOfBirthSchema,
+});
+
+export const googleAuthSchema = z.object({
+  idToken: z.string().min(20, "Token do Google ausente ou inválido"),
+});
+
+// POST /api/clients — gestor pre-registering a client from the dashboard.
+export const clientCreateSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+  phone: optionalPhoneSchema,
+  dateOfBirth: optionalDateOfBirthSchema,
+});
+
+// POST /api/staff — email/password are optional (profile-only staff has
+// neither), but must be valid *when present*.
+export const staffCreateSchema = z.object({
+  name: nameSchema,
+  role: z.string().optional(),
+  specialties: z.string().optional(),
+  avatar: z.string().optional(),
+  commissionRate: z.number().min(0).max(1).optional(),
+  email: emailSchema.optional(),
+  password: passwordSchema.optional(),
+});
+
+export function firstFieldError(error: z.ZodError): string {
+  return error.issues[0]?.message ?? "Dados inválidos";
+}

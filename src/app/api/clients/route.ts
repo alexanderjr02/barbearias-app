@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
+import { clientCreateSchema, firstFieldError } from "@/lib/validation";
 
 // Clients come from two sources, merged here:
 // 1. Guest/booked appointments (clientName/clientPhone/clientEmail on
@@ -158,23 +159,26 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
-  if (!body?.name || !body?.email || !body?.password) {
-    return NextResponse.json({ error: "Nome, e-mail e senha são obrigatórios" }, { status: 400 });
+  if (!body) {
+    return NextResponse.json({ error: "Corpo da requisição inválido" }, { status: 400 });
   }
-  if (body.password.length < 8) {
-    return NextResponse.json({ error: "A senha deve ter pelo menos 8 caracteres" }, { status: 400 });
+  const parsed = clientCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstFieldError(parsed.error) }, { status: 400 });
   }
+  const { name, email, password, phone, dateOfBirth } = parsed.data;
 
-  const existingUser = await prisma.user.findUnique({ where: { email: body.email } });
+  const existingUser = await prisma.user.findUnique({ where: { email } });
 
   const user = existingUser
     ? existingUser
     : await prisma.user.create({
         data: {
-          name: body.name,
-          email: body.email,
-          phone: body.phone || undefined,
-          password: await bcrypt.hash(body.password, 10),
+          name,
+          email,
+          phone: phone || undefined,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+          password: await bcrypt.hash(password, 10),
           role: "CLIENT",
         },
       });

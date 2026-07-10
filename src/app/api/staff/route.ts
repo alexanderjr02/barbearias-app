@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
+import { staffCreateSchema, firstFieldError } from "@/lib/validation";
 
 export async function GET() {
   const session = await requireBarbershopSession();
@@ -54,26 +55,28 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
-  if (!body?.name) {
-    return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
+  if (!body) {
+    return NextResponse.json({ error: "Corpo da requisição inválido" }, { status: 400 });
   }
+  const parsed = staffCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstFieldError(parsed.error) }, { status: 400 });
+  }
+  const { name, role, specialties, avatar, commissionRate, email, password } = parsed.data;
 
   // Optionally create a login for this barber (Role.BARBER) so they can use
   // the mobile app. Without email/password, the Staff row is profile-only.
   let userId: string | undefined;
-  if (body.email && body.password) {
-    if (body.password.length < 8) {
-      return NextResponse.json({ error: "A senha deve ter pelo menos 8 caracteres" }, { status: 400 });
-    }
-    const existingUser = await prisma.user.findUnique({ where: { email: body.email } });
+  if (email && password) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     const user = await prisma.user.create({
       data: {
-        name: body.name,
-        email: body.email,
-        password: await bcrypt.hash(body.password, 10),
+        name,
+        email,
+        password: await bcrypt.hash(password, 10),
         role: "BARBER",
       },
     });
@@ -82,11 +85,11 @@ export async function POST(request: NextRequest) {
 
   const member = await prisma.staff.create({
     data: {
-      name: body.name,
-      role: body.role || "BARBER",
-      specialties: body.specialties,
-      avatar: typeof body.avatar === "string" ? body.avatar : undefined,
-      commissionRate: body.commissionRate ?? 0.4,
+      name,
+      role: role || "BARBER",
+      specialties,
+      avatar,
+      commissionRate: commissionRate ?? 0.4,
       barbershopId: session.barbershopId,
       userId,
     },

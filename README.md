@@ -200,7 +200,7 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3000/api/v1
 flutter run --dart-define=API_BASE_URL=http://SEU_IP_NA_REDE:3000/api/v1
 ```
 
-Faça login com o mesmo usuário do painel web — o `role` da conta decide se o app abre a experiência de gestor, barbeiro ou cliente.
+Faça login com o mesmo usuário do painel web — o `role` da conta decide se o app abre a experiência de gestor, barbeiro ou cliente. Cliente também pode criar a própria conta direto pelo app ("Sou cliente e quero criar uma conta" na tela de login) ou pelo site em `/register/cliente`.
 
 ---
 
@@ -214,9 +214,25 @@ DATABASE_URL="file:./dev.db"
 # EXCLUSIVA de produção — nunca reaproveite a de desenvolvimento:
 #   openssl rand -base64 48
 JWT_SECRET="sua-chave-secreta-aqui"
+
+# Login com Google (opcional) — veja a seção "Login com Google" abaixo.
+GOOGLE_CLIENT_ID=""
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=""
 ```
 
 Veja `.env.example` para o modelo mínimo.
+
+### Login com Google
+
+Sem configurar nada, o botão "Continuar com Google" fica **oculto** no painel web e a rota `/api/auth/google` responde 501 — nada quebra, o login por e-mail/senha continua funcionando normalmente. Para habilitar:
+
+1. Crie um OAuth Client ID em [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) — tipo **Web application**, com seu(s) domínio(s) em "Authorized JavaScript origins" (ex.: `http://localhost:3000` em dev).
+2. No `.env`, defina `GOOGLE_CLIENT_ID` e `NEXT_PUBLIC_GOOGLE_CLIENT_ID` com o **mesmo valor** (o client ID, não o secret — essa integração usa Google Identity Services, que não precisa de client secret).
+3. Rebuilde (`docker compose up -d --build`, ou reinicie `npm run dev`).
+
+Um login com Google novo (e-mail que ainda não existe) sempre vira uma conta **CLIENT** — dono de barbearia continua se cadastrando pelo formulário completo (`/register`), já que o Google não tem como preencher os dados da barbearia. Se o e-mail já existir (de qualquer papel), o Google só fica vinculado como forma de login adicional.
+
+Pro **app Flutter**, o mesmo Client ID precisa ser passado via `--dart-define=GOOGLE_CLIENT_ID=...`, e no Android/iOS também é necessário configurar `google-services.json` (Android) e o URL scheme reverso (iOS) — veja a documentação do pacote [`google_sign_in`](https://pub.dev/packages/google_sign_in) para o passo a passo específico de cada plataforma.
 
 ---
 
