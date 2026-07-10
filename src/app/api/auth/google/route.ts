@@ -3,7 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { prisma } from "@/lib/db";
 import { isRole } from "@/lib/roles";
 import { completeLogin } from "@/lib/completeLogin";
-import { getClientIp } from "@/lib/requestIp";
+import { getClientIp, isSecureRequest } from "@/lib/requestIp";
 import { googleAuthSchema, firstFieldError } from "@/lib/validation";
 
 // Verifies a Google Identity Services ID token (sent by the web button or
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     const role = isRole(user.role) ? user.role : "CLIENT";
     const barbershopId = resolvedBarbershop?.id ?? null;
 
-    return await completeLogin({ sub: user.id, role, name: user.name, email: user.email, barbershopId }, getClientIp(request));
+    return await completeLogin({ sub: user.id, role, name: user.name, email: user.email, barbershopId }, getClientIp(request), isSecureRequest(request));
   } catch (error) {
     console.error("[auth/google]", error);
     return NextResponse.json({ error: "Não foi possível entrar com o Google" }, { status: 401 });

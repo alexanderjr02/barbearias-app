@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { ACCESS_COOKIE, REFRESH_COOKIE, ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from "./auth";
 
-export function setSessionCookies(response: NextResponse, accessToken: string, refreshToken: string) {
-  const secure = process.env.NODE_ENV === "production";
+export function setSessionCookies(response: NextResponse, accessToken: string, refreshToken: string, secure: boolean) {
   response.cookies.set(ACCESS_COOKIE, accessToken, {
     httpOnly: true,
     secure,

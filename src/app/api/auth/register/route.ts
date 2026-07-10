@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { signAccessToken } from "@/lib/auth";
 import { generateRefreshToken } from "@/lib/refreshToken";
 import { setSessionCookies } from "@/lib/sessionCookies";
+import { isSecureRequest } from "@/lib/requestIp";
 import { registerOwnerSchema, firstFieldError } from "@/lib/validation";
 
 const PLAN_BY_FORM_VALUE: Record<string, string> = {
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
       { success: true, user: { id: user.id, name: user.name, email: user.email, role: "OWNER", barbershopId: barbershop.id }, accessToken, refreshToken },
       { status: 201 }
     );
-    setSessionCookies(response, accessToken, refreshToken);
+    setSessionCookies(response, accessToken, refreshToken, isSecureRequest(request));
     return response;
   } catch {
     return NextResponse.json({ error: "Erro ao criar conta" }, { status: 500 });

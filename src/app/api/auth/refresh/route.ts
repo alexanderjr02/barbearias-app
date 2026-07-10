@@ -4,6 +4,7 @@ import { signAccessToken, REFRESH_COOKIE } from "@/lib/auth";
 import { generateRefreshToken, hashToken } from "@/lib/refreshToken";
 import { isRole } from "@/lib/roles";
 import { setSessionCookies, clearSessionCookies } from "@/lib/sessionCookies";
+import { isSecureRequest } from "@/lib/requestIp";
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     await prisma.refreshToken.create({ data: { userId: user.id, tokenHash: newHash, expiresAt } });
 
     const response = NextResponse.json({ accessToken, refreshToken: newRefreshToken });
-    setSessionCookies(response, accessToken, newRefreshToken);
+    setSessionCookies(response, accessToken, newRefreshToken, isSecureRequest(request));
     return response;
   } catch {
     return NextResponse.json({ error: "Erro ao renovar sessão" }, { status: 500 });

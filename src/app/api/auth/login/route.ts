@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { signPendingTwoFactorToken } from "@/lib/auth";
 import { isRole } from "@/lib/roles";
 import { completeLogin } from "@/lib/completeLogin";
-import { getClientIp } from "@/lib/requestIp";
+import { getClientIp, isSecureRequest } from "@/lib/requestIp";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const role = isRole(user.role) ? user.role : "CLIENT";
     const barbershopId = resolvedBarbershop?.id ?? null;
 
-    return await completeLogin({ sub: user.id, role, name: user.name, email: user.email, barbershopId }, getClientIp(request));
+    return await completeLogin({ sub: user.id, role, name: user.name, email: user.email, barbershopId }, getClientIp(request), isSecureRequest(request));
   } catch (error) {
     console.error("[login]", error);
     return NextResponse.json({ error: "Erro ao entrar" }, { status: 500 });

@@ -5,10 +5,10 @@ import { generateRefreshToken } from "./refreshToken";
 import { setSessionCookies } from "./sessionCookies";
 import { notify } from "./notifications";
 
-// Shared by the normal single-step login (/api/auth/login) and the second
-// step of 2FA (/api/auth/verify-2fa) — issuing a session is identical either
-// way, only how we got there differs.
-export async function completeLogin(session: SessionPayload, ipAddress?: string | null) {
+// Shared by the normal single-step login (/api/auth/login), the second step
+// of 2FA (/api/auth/verify-2fa), and Google sign-in (/api/auth/google) —
+// issuing a session is identical either way, only how we got there differs.
+export async function completeLogin(session: SessionPayload, ipAddress: string | null | undefined, secure: boolean) {
   const accessToken = await signAccessToken(session);
   const { token: refreshToken, tokenHash, expiresAt } = generateRefreshToken();
 
@@ -39,6 +39,6 @@ export async function completeLogin(session: SessionPayload, ipAddress?: string 
     refreshToken,
   });
 
-  setSessionCookies(response, accessToken, refreshToken);
+  setSessionCookies(response, accessToken, refreshToken, secure);
   return response;
 }

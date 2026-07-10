@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { signAccessToken } from "@/lib/auth";
 import { generateRefreshToken } from "@/lib/refreshToken";
 import { setSessionCookies } from "@/lib/sessionCookies";
+import { isSecureRequest } from "@/lib/requestIp";
 import { registerClientSchema, firstFieldError } from "@/lib/validation";
 
 // POST /api/auth/register/client — a client creating their own account
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       { success: true, user: { id: user.id, name: user.name, email: user.email, role: "CLIENT", barbershopId: null }, accessToken, refreshToken },
       { status: 201 }
     );
-    setSessionCookies(response, accessToken, refreshToken);
+    setSessionCookies(response, accessToken, refreshToken, isSecureRequest(request));
     return response;
   } catch (error) {
     console.error("[auth/register/client]", error);

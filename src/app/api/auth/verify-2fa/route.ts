@@ -4,7 +4,7 @@ import { verifyPendingTwoFactorToken } from "@/lib/auth";
 import { isRole } from "@/lib/roles";
 import { completeLogin } from "@/lib/completeLogin";
 import { verifyCode } from "@/lib/twoFactor";
-import { getClientIp } from "@/lib/requestIp";
+import { getClientIp, isSecureRequest } from "@/lib/requestIp";
 
 // POST /api/auth/verify-2fa — second step of login for a 2FA-enabled
 // account. Body: { pendingToken, code }.
@@ -39,5 +39,5 @@ export async function POST(request: NextRequest) {
   const role = isRole(user.role) ? user.role : "CLIENT";
   const barbershopId = resolvedBarbershop?.id ?? null;
 
-  return await completeLogin({ sub: user.id, role, name: user.name, email: user.email, barbershopId }, getClientIp(request));
+  return await completeLogin({ sub: user.id, role, name: user.name, email: user.email, barbershopId }, getClientIp(request), isSecureRequest(request));
 }

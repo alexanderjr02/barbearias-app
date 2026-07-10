@@ -65,6 +65,13 @@ export default async function setup() {
     DATABASE_URL: `file:${TEST_DB_FILE}`,
     JWT_SECRET: "vitest-test-secret-do-not-use-in-prod",
     NODE_ENV: "test",
+    // Explicitly blank (not just "unset") — Next's dotenv loader only fills
+    // in a var from .env when it's *not already present* in process.env, so
+    // this stops the developer's real GOOGLE_CLIENT_ID (in their local
+    // .env) from leaking into the test run and making the "not configured"
+    // test flaky depending on whose machine it runs on.
+    GOOGLE_CLIENT_ID: "",
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: "",
   };
 
   await runToCompletion("node", ["node_modules/prisma/build/index.js", "db", "push", "--accept-data-loss"], env);

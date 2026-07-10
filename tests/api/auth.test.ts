@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getJson, postJson, unique } from "../setup/client";
+import { BASE_URL, getJson, postJson, unique } from "../setup/client";
 
 interface RegisterBody {
   success?: boolean;
@@ -251,6 +251,42 @@ describe("POST /api/auth/login", () => {
       password: "senha12345",
     });
     expect(status).toBe(401);
+  });
+
+  // Regression: session cookies were marked Secure purely from
+  // NODE_ENV === "production", which docker-compose.yml sets even though it
+  // serves plain HTTP with no reverse proxy/TLS by default. A Secure cookie
+  // over plain HTTP on a non-localhost origin is silently dropped by the
+  // browser — login/register appear to succeed (the JSON body is fine) but
+  // no session ever sticks, and every following request looks
+  // unauthenticated. The test server runs over plain HTTP, so the fix
+  // (src/lib/requestIp.ts isSecureRequest) must produce a non-Secure cookie
+  // here regardless of NODE_ENV.
+  it("does not mark the session cookie Secure when the request itself is plain HTTP", async () => {
+    const email = `${unique("cookiesecure")}@cortix.test`;
+    const password = "senha12345";
+    await postJson<RegisterBody>("/api/auth/register", {
+      name: "Cookie Secure Test",
+      email,
+      password,
+      barbershopName: "Barbearia Cookie",
+      barbershopSlug: unique("cookie-shop"),
+      city: "São Paulo, SP",
+      plan: "starter",
+    });
+
+    const res = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    expect(res.status).toBe(200);
+    // Two Set-Cookie headers (access + refresh) — headers.get() would join
+    // them with a comma and corrupt the syntax, so use getSetCookie().
+    const cookies = res.headers.getSetCookie();
+    const accessCookie = cookies.find((c) => c.startsWith("cortix_access"));
+    expect(accessCookie).toBeTruthy();
+    expect(accessCookie!.toLowerCase()).not.toContain("secure");
   });
 });
 
