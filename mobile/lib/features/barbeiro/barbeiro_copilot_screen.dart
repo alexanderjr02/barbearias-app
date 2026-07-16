@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/typewriter_text.dart';
+import '../../core/widgets/voice_input_button.dart';
 import '../gestor/gestor_repository.dart';
 
 /// The barber's personal Copiloto — a chat that answers about their own work:
@@ -24,13 +26,58 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
   final _repository = GestorRepository();
   final _input = TextEditingController();
   final _scroll = ScrollController();
+  final FlutterTts _tts = FlutterTts();
+  bool _speak = false;
   final List<_Msg> _messages = [];
   List<String> _suggestions = const ['Quanto vou receber esse mês?', 'Quem é meu próximo cliente?', 'Meus clientes sumidos'];
   bool _sending = false;
+  bool _greetingLoading = true;
+  String? _conversationId;
   String? _note;
 
   @override
+  void initState() {
+    super.initState();
+    _loadConversation();
+  }
+
+  Future<void> _loadConversation() async {
+    try {
+      final res = await _repository.copilotHistory();
+      if (!mounted) return;
+      _conversationId = res.conversationId ?? 'c${DateTime.now().millisecondsSinceEpoch}';
+      if (res.messages.isNotEmpty) {
+        setState(() {
+          _greetingLoading = false;
+          _messages.addAll(res.messages.map((h) => _Msg(h.role == 'user' ? 'user' : 'assistant', h.text)));
+        });
+        _scrollToEnd();
+      } else {
+        _loadGreeting();
+      }
+    } catch (_) {
+      _conversationId ??= 'c${DateTime.now().millisecondsSinceEpoch}';
+      _loadGreeting();
+    }
+  }
+
+  Future<void> _loadGreeting() async {
+    try {
+      final res = await _repository.copilotGreeting();
+      if (!mounted) return;
+      setState(() {
+        _greetingLoading = false;
+        if (res.greeting.trim().isNotEmpty) _messages.add(_Msg('assistant', res.greeting));
+      });
+      _scrollToEnd();
+    } catch (_) {
+      if (mounted) setState(() => _greetingLoading = false);
+    }
+  }
+
+  @override
   void dispose() {
+    _tts.stop();
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -47,7 +94,7 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
     _scrollToEnd();
     try {
       final history = _messages.map((m) => {'role': m.role, 'content': m.text}).toList();
-      final res = await _repository.copilotChat(history);
+      final res = await _repository.copilotChat(history, conversationId: _conversationId);
       if (mounted) {
         setState(() {
           _messages.add(_Msg('assistant', res.reply));
@@ -55,6 +102,11 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
           _note = res.aiPowered ? null : res.note;
         });
         _scrollToEnd();
+        if (_speak && res.reply.trim().isNotEmpty) {
+          _tts.setLanguage('pt-BR');
+          _tts.stop();
+          _tts.speak(res.reply);
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _messages.add(_Msg('assistant', 'Não consegui responder agora. Tente de novo.')));
@@ -67,6 +119,15 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) _scroll.animateTo(_scroll.position.maxScrollExtent, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
     });
+  }
+
+  void _newConversation() {
+    setState(() {
+      _messages.clear();
+      _greetingLoading = true;
+      _conversationId = 'c${DateTime.now().millisecondsSinceEpoch}';
+    });
+    _loadGreeting();
   }
 
   @override
@@ -90,6 +151,22 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: Icon(_speak ? Icons.volume_up_rounded : Icons.volume_off_rounded, color: _speak ? accent : null),
+            tooltip: _speak ? 'Voz ligada' : 'Ler respostas em voz alta',
+            onPressed: () {
+              setState(() => _speak = !_speak);
+              if (!_speak) _tts.stop();
+            },
+          ),
+          if (_messages.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.add_comment_outlined),
+              tooltip: 'Nova conversa',
+              onPressed: _newConversation,
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -98,7 +175,7 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
               controller: _scroll,
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               children: [
-                if (_messages.isEmpty) ...[
+                if (_messages.isEmpty && !_greetingLoading) ...[
                   Container(
                     width: 60,
                     height: 60,
@@ -110,8 +187,8 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
                   const SizedBox(height: 6),
                   Text('Pergunte sobre seus ganhos, seu próximo cliente (com preferências e a receita do último corte) ou quem sumiu.', style: TextStyle(color: palette.textFaint, fontSize: 13, height: 1.4)),
                 ],
-                ..._messages.map((m) => _Bubble(msg: m, palette: palette, accent: accent)),
-                if (_sending) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text('pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
+                ..._messages.asMap().entries.map((e) => _Bubble(msg: e.value, palette: palette, accent: accent, animate: e.value.role == 'assistant' && e.key == _messages.length - 1)),
+                if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando seu resumo…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
               ],
             ),
           ),
@@ -162,7 +239,8 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                VoiceInputButton(controller: _input, color: palette.textSecondary),
+                const SizedBox(width: 4),
                 GestureDetector(
                   onTap: _sending ? null : () => _send(),
                   child: Container(
@@ -185,7 +263,8 @@ class _Bubble extends StatelessWidget {
   final _Msg msg;
   final AppPalette palette;
   final Color accent;
-  const _Bubble({required this.msg, required this.palette, required this.accent});
+  final bool animate;
+  const _Bubble({required this.msg, required this.palette, required this.accent, this.animate = false});
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +285,9 @@ class _Bubble extends StatelessWidget {
           ),
           border: isUser ? null : Border.all(color: palette.border),
         ),
-        child: Text(msg.text, style: TextStyle(color: isUser ? contrastingTextColor(accent) : palette.textPrimary, fontSize: 13.5, height: 1.4)),
+        child: isUser
+            ? Text(msg.text, style: TextStyle(color: contrastingTextColor(accent), fontSize: 13.5, height: 1.4))
+            : TypewriterText(text: msg.text, animate: animate, style: TextStyle(color: palette.textPrimary, fontSize: 13.5, height: 1.4)),
       ),
     );
   }

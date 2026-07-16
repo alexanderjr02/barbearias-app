@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
 import { planHasAI } from "@/lib/billing";
-import { runCopilot, simulatedReply, copilotSuggestions, unavailableAiNote, type CopilotRole, type ChatTurn } from "@/lib/chatbot/copilot";
+import { runCopilot, simulatedReply, copilotSuggestions, unavailableAiNote, type CopilotRole, type ChatTurn, type CopilotAction } from "@/lib/chatbot/copilot";
 
 // POST /api/copilot/chat { messages: [{role, content}] } — the business copilot
 // for the gestor/barber. Uses the AI loop when a key is configured, otherwise
@@ -44,10 +44,13 @@ export async function POST(request: NextRequest) {
   if (!lastUser) return NextResponse.json({ error: "Mensagem vazia" }, { status: 400 });
 
   let reply: string;
+  let actions: CopilotAction[] = [];
   const aiPowered = assistantEnabled();
   if (aiPowered) {
     try {
-      reply = await runCopilot(role, session.barbershopId, staffId, history);
+      const res = await runCopilot(role, session.barbershopId, staffId, history);
+      reply = res.reply;
+      actions = res.actions;
     } catch {
       reply = await simulatedReply(role, session.barbershopId, staffId, lastUser.content);
     }
@@ -55,5 +58,16 @@ export async function POST(request: NextRequest) {
     reply = await simulatedReply(role, session.barbershopId, staffId, lastUser.content);
   }
 
-  return NextResponse.json({ reply, aiPowered, note: unavailableAiNote(), suggestions: copilotSuggestions(role) });
+  // Persist this turn so the conversation survives closing/reopening AND can be
+  // browsed later. Each conversation is its own thread (conversationId).
+  const conversationId = typeof body?.conversationId === "string" && body.conversationId.trim() ? body.conversationId.trim() : "default";
+  const memSession = `copilot:${session.sub}:${conversationId}`;
+  try {
+    await prisma.chatMessage.create({ data: { content: lastUser.content, role: "USER", sessionId: memSession, barbershopId: session.barbershopId } });
+    await prisma.chatMessage.create({ data: { content: reply, role: "BOT", sessionId: memSession, barbershopId: session.barbershopId } });
+  } catch {
+    // non-critical
+  }
+
+  return NextResponse.json({ reply, actions, aiPowered, note: unavailableAiNote(), suggestions: copilotSuggestions(role) });
 }

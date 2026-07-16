@@ -187,6 +187,129 @@ export async function tomorrowAppointments(barbershopId: string) {
   return { total: list.length, unconfirmed: list.filter((a) => a.status === "SCHEDULED").length, list };
 }
 
+// ---- Predictive / diagnostic ----
+
+const onlyDigits8 = (p: string | null | undefined) => (p ?? "").replace(/\D/g, "").slice(-8);
+
+/** Tomorrow's appointments whose client has a history of no-shows. */
+export async function noShowRisk(barbershopId: string) {
+  const startTomorrow = addUtcDays(startOfUtcDay(new Date()), 1);
+  const endTomorrow = addUtcDays(startTomorrow, 1);
+  const [tomorrow, noShows] = await Promise.all([
+    prisma.appointment.findMany({
+      where: { barbershopId, date: { gte: startTomorrow, lt: endTomorrow }, status: { in: ["SCHEDULED", "CONFIRMED"] } },
+      select: { clientName: true, clientPhone: true, startTime: true, staff: { select: { name: true } } },
+    }),
+    prisma.appointment.findMany({ where: { barbershopId, status: "NO_SHOW" }, select: { clientPhone: true } }),
+  ]);
+  const counts = new Map<string, number>();
+  for (const n of noShows as { clientPhone: string }[]) {
+    const k = onlyDigits8(n.clientPhone);
+    if (k) counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  type T = { clientName: string; clientPhone: string; startTime: string; staff: { name: string } | null };
+  return (tomorrow as T[])
+    .map((a) => ({ clientName: a.clientName, startTime: a.startTime, staff: a.staff?.name ?? "barbeiro", pastNoShows: counts.get(onlyDigits8(a.clientPhone)) ?? 0 }))
+    .filter((x) => x.pastNoShows > 0)
+    .sort((a, b) => b.pastNoShows - a.pastNoShows);
+}
+
+/** Clients overdue vs their own visit cadence — about to lapse (but not yet churned). */
+export async function churnRisk(barbershopId: string, limit = 15) {
+  const startToday = startOfUtcDay(new Date());
+  const appts = await prisma.appointment.findMany({
+    where: { barbershopId, status: "COMPLETED" },
+    select: { clientId: true, clientName: true, clientPhone: true, date: true },
+    orderBy: { date: "asc" },
+  });
+  type A = { clientId: string | null; clientName: string; clientPhone: string; date: Date };
+  const byKey = new Map<string, { name: string; dates: Date[] }>();
+  for (const a of appts as A[]) {
+    const k = a.clientId ?? a.clientPhone ?? a.clientName;
+    if (!k) continue;
+    const cur = byKey.get(k) ?? { name: a.clientName, dates: [] };
+    cur.dates.push(a.date);
+    byKey.set(k, cur);
+  }
+  const out: { name: string; daysSince: number; avgCadence: number; visits: number }[] = [];
+  for (const c of byKey.values()) {
+    if (c.dates.length < 2) continue;
+    let gapSum = 0;
+    for (let i = 1; i < c.dates.length; i++) gapSum += (c.dates[i].getTime() - c.dates[i - 1].getTime()) / 86400000;
+    const avg = gapSum / (c.dates.length - 1);
+    if (avg <= 0) continue;
+    const last = c.dates[c.dates.length - 1];
+    const daysSince = Math.floor((startToday.getTime() - last.getTime()) / 86400000);
+    if (daysSince >= avg * 1.3 && daysSince < 45) out.push({ name: c.name, daysSince, avgCadence: Math.round(avg), visits: c.dates.length });
+  }
+  out.sort((a, b) => b.daysSince / b.avgCadence - a.daysSince / a.avgCadence);
+  return out.slice(0, limit);
+}
+
+/** Appointment volume by weekday over the last 90 days. */
+export async function busyDays(barbershopId: string) {
+  const since = addUtcDays(startOfUtcDay(new Date()), -90);
+  const appts = await prisma.appointment.findMany({
+    where: { barbershopId, status: { in: ["COMPLETED", "SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS"] }, date: { gte: since } },
+    select: { date: true },
+  });
+  const names = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+  const counts = [0, 0, 0, 0, 0, 0, 0];
+  for (const a of appts as { date: Date }[]) counts[a.date.getUTCDay()]++;
+  const ranked = counts.map((c, i) => ({ day: names[i], count: c })).sort((a, b) => b.count - a.count);
+  return { ranked, busiest: ranked[0], quietest: ranked[ranked.length - 1] };
+}
+
+/** Compares the last 7 days with the previous 7 and finds the biggest drag. */
+export async function diagnose(barbershopId: string) {
+  const startToday = startOfUtcDay(new Date());
+  const endToday = addUtcDays(startToday, 1);
+  const startWeek = addUtcDays(startToday, -6);
+  const startPrev = addUtcDays(startToday, -13);
+  type A = { totalPrice: number; staff: { name: string } };
+  const [thisW, prevW, noShows, timeOffs] = await Promise.all([
+    prisma.appointment.findMany({ where: { barbershopId, status: "COMPLETED", date: { gte: startWeek, lt: endToday } }, select: { totalPrice: true, staff: { select: { name: true } } } }),
+    prisma.appointment.findMany({ where: { barbershopId, status: "COMPLETED", date: { gte: startPrev, lt: startWeek } }, select: { totalPrice: true, staff: { select: { name: true } } } }),
+    prisma.appointment.count({ where: { barbershopId, status: "NO_SHOW", date: { gte: startWeek, lt: endToday } } }),
+    prisma.staffTimeOff.count({ where: { staff: { barbershopId }, date: { gte: startWeek, lt: endToday } } }),
+  ]);
+  const sum = (arr: A[]) => arr.reduce((s: number, a: A) => s + a.totalPrice, 0);
+  const thisRev = sum(thisW as A[]);
+  const prevRev = sum(prevW as A[]);
+  const perThis = new Map<string, number>();
+  const perPrev = new Map<string, number>();
+  for (const a of thisW as A[]) perThis.set(a.staff.name, (perThis.get(a.staff.name) ?? 0) + a.totalPrice);
+  for (const a of prevW as A[]) perPrev.set(a.staff.name, (perPrev.get(a.staff.name) ?? 0) + a.totalPrice);
+  const barberDeltas = [...new Set([...perThis.keys(), ...perPrev.keys()])]
+    .map((n) => ({ name: n, delta: (perThis.get(n) ?? 0) - (perPrev.get(n) ?? 0) }))
+    .sort((a, b) => a.delta - b.delta);
+  return {
+    thisRev,
+    prevRev,
+    delta: thisRev - prevRev,
+    deltaPercent: prevRev > 0 ? ((thisRev - prevRev) / prevRev) * 100 : null,
+    thisCount: (thisW as A[]).length,
+    prevCount: (prevW as A[]).length,
+    noShows,
+    timeOffs,
+    worstBarber: barberDeltas[0] ?? null,
+  };
+}
+
+/** Monthly revenue goal progress + what's needed per remaining day. */
+export async function goalProgress(barbershopId: string) {
+  const [shop, rows] = await Promise.all([
+    prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { monthlyGoal: true } }),
+    prisma.appointment.findMany({ where: { barbershopId, status: "COMPLETED", date: { gte: startOfUtcMonth(new Date()) } }, select: { totalPrice: true } }),
+  ]);
+  const revenue = (rows as { totalPrice: number }[]).reduce((s: number, a: { totalPrice: number }) => s + a.totalPrice, 0);
+  const now = new Date();
+  const daysInMonth = new Date(now.getUTCFullYear(), now.getUTCMonth() + 1, 0).getUTCDate();
+  const daysLeft = daysInMonth - now.getUTCDate();
+  const goal = shop?.monthlyGoal ?? null;
+  return { goal, revenue, percent: goal ? (revenue / goal) * 100 : null, daysLeft, neededPerDay: goal && daysLeft > 0 ? Math.max(0, (goal - revenue) / daysLeft) : null };
+}
+
 /** Composes the full gestor briefing — the proactive "bom dia" panel. */
 export async function buildBriefing(barbershopId: string) {
   const [revenue, churned, empty, stock, tomorrow] = await Promise.all([

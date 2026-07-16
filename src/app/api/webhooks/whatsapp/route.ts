@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendWhatsAppText } from "@/lib/whatsapp";
 import { runAssistant, assistantEnabled, type ChatTurn } from "@/lib/chatbot/assistant";
+import { runCopilot } from "@/lib/chatbot/copilot";
 import { planHasAI } from "@/lib/billing";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
 
@@ -66,7 +67,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { plan: true } });
+    const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { plan: true, owner: { select: { phone: true } } } });
+    // If the message comes from the OWNER's phone, they operate the business by
+    // WhatsApp via the Copiloto (agendar, cancelar, fechar agenda, financeiro…).
+    const fromDigits = from.replace(/\D/g, "").slice(-8);
+    const ownerDigits = (shop?.owner?.phone ?? "").replace(/\D/g, "").slice(-8);
+    const isGestor = ownerDigits.length >= 8 && fromDigits === ownerDigits;
+
     let reply: string;
     if (assistantEnabled() && planHasAI(shop?.plan)) {
       const rows: { content: string; role: string }[] = await prisma.chatMessage.findMany({
@@ -76,7 +83,12 @@ export async function POST(request: NextRequest) {
         select: { content: true, role: true },
       });
       const history: ChatTurn[] = rows.map((r) => ({ role: r.role === "USER" ? "user" : "assistant", content: r.content }));
-      reply = await runAssistant(barbershopId, history);
+      if (isGestor) {
+        const res = await runCopilot("GESTOR", barbershopId, null, history);
+        reply = res.reply + (res.actions.length ? `\n\n(Toque nas ações no painel/app: ${res.actions.map((a) => a.label).join(", ")})` : "");
+      } else {
+        reply = await runAssistant(barbershopId, history);
+      }
     } else {
       reply = "Oi! 👋 Para agendar, ver serviços ou seus horários, baixe nosso app ou acesse nossa página de agendamento. Se precisar, é só escrever *atendente* que chamamos a equipe.";
     }

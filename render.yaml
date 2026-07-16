@@ -65,3 +65,33 @@ services:
         sync: false
       - key: CRON_SECRET
         sync: false
+
+  # Copiloto proativo: todo dia 8h (BRT ≈ 11h UTC) checa cada barbearia Pro+ e
+  # notifica o gestor se houver algo pra resolver (sumidos, agenda vazia...).
+  - type: cron
+    name: cortix-daily-briefing
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "0 11 * * *"
+    dockerCommand: >-
+      sh -c 'curl -fsS "$APP_URL/api/cron/daily-briefing?secret=$CRON_SECRET" || true'
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
+  # Auto-piloto: todo dia 9h (BRT ≈ 12h UTC) roda as automações que cada
+  # barbearia ligou (confirmar amanhã, aniversário, win-back de sumidos).
+  - type: cron
+    name: cortix-automations
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "0 12 * * *"
+    dockerCommand: >-
+      sh -c 'curl -fsS "$APP_URL/api/cron/automations?secret=$CRON_SECRET" || true'
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false

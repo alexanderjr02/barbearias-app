@@ -227,6 +227,21 @@ class ClientRepository {
     return (data as Map<String, dynamic>)['response'] as String? ?? '';
   }
 
+  /// Personalized, logged-in client assistant — knows the client, remembers the
+  /// conversation. Preferred over [chatbotSend] when the client is signed in.
+  Future<String> clientChatSend({required String message, required String barbershopId}) async {
+    final data = await ApiClient.instance.post('/client/chat', data: {'message': message, 'barbershopId': barbershopId});
+    return (data as Map<String, dynamic>)['response'] as String? ?? '';
+  }
+
+  Future<List<({String role, String text})>> clientChatHistory(String barbershopId) async {
+    final data = await ApiClient.instance.get('/client/chat', query: {'barbershopId': barbershopId}) as Map<String, dynamic>;
+    return ((data['messages'] as List?) ?? []).map((e) {
+      final m = e as Map<String, dynamic>;
+      return (role: m['role'] as String? ?? 'assistant', text: m['content'] as String? ?? '');
+    }).toList();
+  }
+
   Future<void> markAllNotificationsRead() async {
     await ApiClient.instance.post('/client/notifications/read-all');
   }

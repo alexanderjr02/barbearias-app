@@ -86,6 +86,10 @@ model Barbershop {
   // Owner-set monthly revenue goal, powering the finance "meta & ponto de
   // equilíbrio" cockpit. Null until the gestor sets one.
   monthlyGoal     Float?
+  // Auto-piloto: automações que rodam sozinhas (cron), ligadas pelo gestor.
+  autoConfirm     Boolean  @default(false) // confirma agendamentos de amanhã
+  autoBirthday    Boolean  @default(false) // mensagem de aniversário
+  autoWinbackDays Int?     // win-back de clientes sumidos há N dias (null = off)
   instagram       String?
   whatsapp        String?
   // PIX key that receives digital tips (gorjetas). Shown to the client to pay
@@ -136,6 +140,7 @@ model Barbershop {
   waitlist        WaitlistEntry[]
   serviceInvoices ServiceInvoice[]
   tips            Tip[]
+  copilotMemories CopilotMemory[]
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
   platformInvoices  PlatformInvoice[]
@@ -285,6 +290,26 @@ model Review {
   createdAt     DateTime @default(now())
 
   @@index([staffId])
+}
+
+// Long-term memory of the Copiloto — durable facts and decisions about the
+// business ("subiu o degradê pra R$50 em 10/07", "foca nas terças") that the
+// AI records and reads back, so it acts like a consultant who remembers,
+// independent of the raw chat transcript (stored in ChatMessage).
+model CopilotMemory {
+  id           String     @id @default(cuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  // When set, this is a note ABOUT a specific client (per-client memory the
+  // barber saves — "alérgico a tal produto", "não gosta de conversa"). Null =
+  // a general business fact/decision.
+  clientId     String?
+  content      String
+  source       String     @default("chat") // chat | action
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId])
+  @@index([clientId])
 }
 
 model Product {

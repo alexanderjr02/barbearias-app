@@ -1001,19 +1001,28 @@ class BriefingCard {
       );
 }
 
+class CopilotAction {
+  final String id;
+  final String label;
+  CopilotAction({required this.id, required this.label});
+  factory CopilotAction.fromJson(Map<String, dynamic> j) => CopilotAction(id: j['id'] as String, label: j['label'] as String? ?? 'Executar');
+}
+
 class CopilotReply {
   final String reply;
   final bool aiPowered;
   final String note;
   final List<String> suggestions;
+  final List<CopilotAction> actions;
 
-  CopilotReply({required this.reply, required this.aiPowered, required this.note, required this.suggestions});
+  CopilotReply({required this.reply, required this.aiPowered, required this.note, required this.suggestions, required this.actions});
 
   factory CopilotReply.fromJson(Map<String, dynamic> j) => CopilotReply(
         reply: j['reply'] as String? ?? '',
         aiPowered: j['aiPowered'] == true,
         note: j['note'] as String? ?? '',
         suggestions: ((j['suggestions'] as List?) ?? []).map((e) => e as String).toList(),
+        actions: ((j['actions'] as List?) ?? []).map((e) => CopilotAction.fromJson(e as Map<String, dynamic>)).toList(),
       );
 }
 
@@ -1034,9 +1043,26 @@ class GestorRepository {
     return data['message'] as String? ?? 'Feito.';
   }
 
-  Future<CopilotReply> copilotChat(List<Map<String, String>> messages) async {
-    final data = await ApiClient.instance.post('/copilot/chat', data: {'messages': messages}) as Map<String, dynamic>;
+  Future<CopilotReply> copilotChat(List<Map<String, String>> messages, {String? conversationId}) async {
+    final data = await ApiClient.instance.post('/copilot/chat', data: {
+      'messages': messages,
+      if (conversationId != null) 'conversationId': conversationId,
+    }) as Map<String, dynamic>;
     return CopilotReply.fromJson(data);
+  }
+
+  Future<({String greeting, bool aiPowered, bool locked})> copilotGreeting() async {
+    final data = await ApiClient.instance.get('/copilot/greeting') as Map<String, dynamic>;
+    return (greeting: data['greeting'] as String? ?? '', aiPowered: data['aiPowered'] == true, locked: data['locked'] == true);
+  }
+
+  Future<({List<({String role, String text})> messages, String? conversationId})> copilotHistory() async {
+    final data = await ApiClient.instance.get('/copilot/history') as Map<String, dynamic>;
+    final msgs = ((data['messages'] as List?) ?? []).map((e) {
+      final m = e as Map<String, dynamic>;
+      return (role: m['role'] as String? ?? 'assistant', text: m['content'] as String? ?? '');
+    }).toList();
+    return (messages: msgs, conversationId: data['conversationId'] as String?);
   }
 
   Future<DashboardSummary> dashboardSummary() async {

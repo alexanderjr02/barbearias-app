@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/app_toast.dart';
+import '../../core/widgets/typewriter_text.dart';
+import '../../core/widgets/voice_input_button.dart';
 import 'gestor_repository.dart';
 
 /// The Copiloto — a business assistant for the gestor. Top: a proactive
@@ -19,13 +21,17 @@ class GestorCopilotScreen extends StatefulWidget {
 class _Msg {
   final String role; // 'user' | 'assistant'
   final String text;
-  _Msg(this.role, this.text);
+  final List<CopilotAction> actions;
+  bool actionsDone;
+  _Msg(this.role, this.text, {this.actions = const [], this.actionsDone = false});
 }
 
 class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
   final _repository = GestorRepository();
   final _input = TextEditingController();
   final _scroll = ScrollController();
+  final FlutterTts _tts = FlutterTts();
+  bool _speak = false;
 
   List<BriefingCard> _cards = [];
   bool _locked = false;
@@ -36,14 +42,53 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
   bool _sending = false;
   String? _note;
 
+  bool _greetingLoading = true;
+  String? _conversationId;
+
   @override
   void initState() {
     super.initState();
     _loadBriefing();
+    _loadConversation();
+  }
+
+  Future<void> _loadConversation() async {
+    try {
+      final res = await _repository.copilotHistory();
+      if (!mounted) return;
+      _conversationId = res.conversationId ?? 'c${DateTime.now().millisecondsSinceEpoch}';
+      if (res.messages.isNotEmpty) {
+        setState(() {
+          _greetingLoading = false;
+          _messages.addAll(res.messages.map((h) => _Msg(h.role == 'user' ? 'user' : 'assistant', h.text)));
+        });
+        _scrollToEnd();
+      } else {
+        _loadGreeting();
+      }
+    } catch (_) {
+      _conversationId ??= 'c${DateTime.now().millisecondsSinceEpoch}';
+      _loadGreeting();
+    }
+  }
+
+  Future<void> _loadGreeting() async {
+    try {
+      final res = await _repository.copilotGreeting();
+      if (!mounted) return;
+      setState(() {
+        _greetingLoading = false;
+        if (res.greeting.trim().isNotEmpty) _messages.add(_Msg('assistant', res.greeting));
+      });
+      _scrollToEnd();
+    } catch (_) {
+      if (mounted) setState(() => _greetingLoading = false);
+    }
   }
 
   @override
   void dispose() {
+    _tts.stop();
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -80,6 +125,31 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
     }
   }
 
+  String? _runningAction;
+
+  /// Executes an action the Copiloto proposed as an inline button in the chat.
+  Future<void> _runChatAction(_Msg msg, CopilotAction action) async {
+    setState(() => _runningAction = action.id);
+    try {
+      final result = await _repository.copilotAction(action.id);
+      if (mounted) {
+        AppToast.success(context, result);
+        setState(() {
+          msg.actionsDone = true;
+          _runningAction = null;
+          _messages.add(_Msg('assistant', 'Feito! $result'));
+        });
+        _loadBriefing();
+        _scrollToEnd();
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.error(context, 'Não foi possível executar');
+        setState(() => _runningAction = null);
+      }
+    }
+  }
+
   Future<void> _send([String? preset]) async {
     final text = (preset ?? _input.text).trim();
     if (text.isEmpty || _sending) return;
@@ -91,14 +161,19 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
     _scrollToEnd();
     try {
       final history = _messages.map((m) => {'role': m.role, 'content': m.text}).toList();
-      final res = await _repository.copilotChat(history);
+      final res = await _repository.copilotChat(history, conversationId: _conversationId);
       if (mounted) {
         setState(() {
-          _messages.add(_Msg('assistant', res.reply));
+          _messages.add(_Msg('assistant', res.reply, actions: res.actions));
           _suggestions = res.suggestions;
           _note = res.aiPowered ? null : res.note;
         });
         _scrollToEnd();
+        if (_speak && res.reply.trim().isNotEmpty) {
+          _tts.setLanguage('pt-BR');
+          _tts.stop();
+          _tts.speak(res.reply);
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _messages.add(_Msg('assistant', 'Não consegui responder agora. Tente de novo.')));
@@ -111,6 +186,22 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) _scroll.animateTo(_scroll.position.maxScrollExtent, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
     });
+  }
+
+  void _newConversation() {
+    setState(() {
+      _messages.clear();
+      _greetingLoading = true;
+      _conversationId = 'c${DateTime.now().millisecondsSinceEpoch}';
+    });
+    _loadGreeting();
+  }
+
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Bom dia';
+    if (h < 18) return 'Boa tarde';
+    return 'Boa noite';
   }
 
   IconData _iconFor(String key) {
@@ -151,6 +242,22 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: Icon(_speak ? Icons.volume_up_rounded : Icons.volume_off_rounded, color: _speak ? accent : null),
+            tooltip: _speak ? 'Voz ligada' : 'Ler respostas em voz alta',
+            onPressed: () {
+              setState(() => _speak = !_speak);
+              if (!_speak) _tts.stop();
+            },
+          ),
+          if (_messages.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.add_comment_outlined),
+              tooltip: 'Nova conversa',
+              onPressed: _newConversation,
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -159,15 +266,14 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
               controller: _scroll,
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               children: [
-                // ---- Briefing ----
-                Row(
-                  children: [
-                    Icon(Icons.wb_sunny_rounded, size: 16, color: accent),
-                    const SizedBox(width: 6),
-                    Text('Seu resumo de hoje', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15)),
-                  ],
+                // ---- Saudação + Briefing ----
+                Text('${_greeting()} 👋', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 22)),
+                const SizedBox(height: 2),
+                Text(
+                  (_loadingBriefing || _locked || _cards.isEmpty) ? 'Seu copiloto de gestão.' : 'O que precisa da sua atenção hoje:',
+                  style: TextStyle(color: palette.textFaint, fontSize: 13),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 if (_loadingBriefing)
                   const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator()))
                 else if (_locked)
@@ -208,10 +314,17 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                if (_messages.isEmpty)
-                  Text('Pergunte em português — eu leio os dados reais da sua barbearia.', style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.4)),
-                ..._messages.map((m) => _Bubble(msg: m, palette: palette, accent: accent)),
-                if (_sending) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text('pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
+                if (_messages.isEmpty && !_greetingLoading)
+                  Text('Me pergunte qualquer coisa sobre o negócio — eu leio os dados reais e te digo o que fazer. Você também pode pedir pra cadastrar serviço, mudar preço ou dar folga.', style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.45)),
+                ..._messages.asMap().entries.map((e) => _Bubble(
+                      msg: e.value,
+                      palette: palette,
+                      accent: accent,
+                      animate: e.value.role == 'assistant' && e.key == _messages.length - 1,
+                      runningAction: _runningAction,
+                      onAction: (a) => _runChatAction(e.value, a),
+                    )),
+                if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando seu resumo…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
               ],
             ),
           ),
@@ -264,7 +377,8 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                VoiceInputButton(controller: _input, color: palette.textSecondary),
+                const SizedBox(width: 4),
                 GestureDetector(
                   onTap: _sending ? null : () => _send(),
                   child: Container(
@@ -349,28 +463,58 @@ class _Bubble extends StatelessWidget {
   final _Msg msg;
   final AppPalette palette;
   final Color accent;
-  const _Bubble({required this.msg, required this.palette, required this.accent});
+  final bool animate;
+  final String? runningAction;
+  final void Function(CopilotAction)? onAction;
+  const _Bubble({required this.msg, required this.palette, required this.accent, this.animate = false, this.runningAction, this.onAction});
 
   @override
   Widget build(BuildContext context) {
     final isUser = msg.role == 'user';
+    final showActions = !isUser && msg.actions.isNotEmpty && !msg.actionsDone;
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(top: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-        decoration: BoxDecoration(
-          color: isUser ? accent : palette.surface,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isUser ? 16 : 4),
-            bottomRight: Radius.circular(isUser ? 4 : 16),
+      child: Column(
+        crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+            decoration: BoxDecoration(
+              color: isUser ? accent : palette.surface,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(isUser ? 16 : 4),
+                bottomRight: Radius.circular(isUser ? 4 : 16),
+              ),
+              border: isUser ? null : Border.all(color: palette.border),
+            ),
+            child: isUser
+                ? Text(msg.text, style: TextStyle(color: contrastingTextColor(accent), fontSize: 13.5, height: 1.4))
+                : TypewriterText(text: msg.text, animate: animate, style: TextStyle(color: palette.textPrimary, fontSize: 13.5, height: 1.4)),
           ),
-          border: isUser ? null : Border.all(color: palette.border),
-        ),
-        child: Text(msg.text, style: TextStyle(color: isUser ? contrastingTextColor(accent) : palette.textPrimary, fontSize: 13.5, height: 1.4)),
+          if (showActions)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (final a in msg.actions)
+                    ElevatedButton.icon(
+                      onPressed: runningAction != null ? null : () => onAction?.call(a),
+                      icon: runningAction == a.id
+                          ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: contrastingTextColor(accent)))
+                          : Icon(Icons.bolt_rounded, size: 16, color: contrastingTextColor(accent)),
+                      label: Text(a.label, style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.w700, fontSize: 12.5)),
+                      style: ElevatedButton.styleFrom(backgroundColor: accent, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

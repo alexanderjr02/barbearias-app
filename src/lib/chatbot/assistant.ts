@@ -207,8 +207,10 @@ function textFrom(content: Anthropic.ContentBlock[]): string {
   return content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
 }
 
-/** Runs the agentic tool loop and returns the assistant's final reply text. */
-export async function runAssistant(barbershopId: string, history: ChatTurn[]): Promise<string> {
+/** Runs the agentic tool loop and returns the assistant's final reply text.
+ * `clientContext`, when provided (logged-in client), personalizes the bot so it
+ * greets by name, remembers past visits/preferences and pre-fills bookings. */
+export async function runAssistant(barbershopId: string, history: ChatTurn[], clientContext?: string): Promise<string> {
   const client = new Anthropic();
 
   const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true, faqText: true } });
@@ -219,7 +221,9 @@ export async function runAssistant(barbershopId: string, history: ChatTurn[]): P
   const serviceList = services.map((s) => `- ${s.name}: R$ ${s.price.toFixed(2)} (${s.duration}min)`).join("\n") || "- (nenhum serviço cadastrado)";
   const staffList = staff.map((s) => `- ${s.name}`).join("\n") || "- (nenhum barbeiro cadastrado)";
 
-  const system = `Você é o assistente virtual da barbearia "${shop?.name ?? "nossa barbearia"}". Fale em português do Brasil, de forma simpática, breve e objetiva. Hoje é ${now.dateKey}.
+  const system = `Você é o assistente virtual da barbearia "${shop?.name ?? "nossa barbearia"}". Fale em português do Brasil, simpático mas direto e objetivo — como um recepcionista esperto, não um robô. Hoje é ${now.dateKey}.
+
+FORMATO (a resposta aparece num balão de chat): texto limpo, sem markdown — nada de **negrito**, ## ou listas com "-". Se listar serviços/horários, use "•" e vá direto. Respostas curtas (2–5 frases). Comece pela resposta, sem "Claro!" nem repetir a pergunta.
 
 Você pode AGENDAR, REAGENDAR e CANCELAR de verdade, além de tirar dúvidas. Use as ferramentas para dados reais — nunca invente horários ou preços.
 
@@ -228,7 +232,7 @@ ${serviceList}
 
 Barbeiros:
 ${staffList}
-${shop?.faqText ? `\nInformações e regras desta barbearia (use para responder dúvidas específicas; se a resposta estiver aqui, siga à risca):\n${shop.faqText}\n` : ""}
+${shop?.faqText ? `\nInformações e regras desta barbearia (use para responder dúvidas específicas; se a resposta estiver aqui, siga à risca):\n${shop.faqText}\n` : ""}${clientContext ? `\nSOBRE O CLIENTE COM QUEM VOCÊ ESTÁ FALANDO (use pra personalizar — chame pelo primeiro nome, lembre do histórico e ofereça repetir o de sempre; ao agendar, use estes dados sem pedir de novo):\n${clientContext}\n` : ""}
 Regras:
 - Para oferecer horários, sempre use check_availability (não invente).
 - Antes de agendar, colete nome e telefone/WhatsApp do cliente e confirme serviço, barbeiro, data e horário.

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/typewriter_text.dart';
+import '../../core/widgets/voice_input_button.dart';
 import '../cliente/booking_repository.dart';
 import '../cliente/client_repository.dart';
 import 'chatbot_responses.dart';
@@ -42,7 +44,6 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
 
   final _clientRepo = ClientRepository();
   final _bookingRepo = BookingRepository();
-  late final String _sessionId = 'mobile-${DateTime.now().millisecondsSinceEpoch}';
   String? _barbershopId;
 
   @override
@@ -55,7 +56,20 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
   Future<void> _resolveBarbershop() async {
     try {
       final shops = await _bookingRepo.myBarbershops();
-      if (mounted && shops.isNotEmpty) setState(() => _barbershopId = shops.first.id);
+      if (!mounted || shops.isEmpty) return;
+      final id = shops.first.id;
+      setState(() => _barbershopId = id);
+      // Pick up the conversation where it left off (persisted per client).
+      try {
+        final hist = await _clientRepo.clientChatHistory(id);
+        if (mounted && hist.isNotEmpty) {
+          setState(() {
+            _messages
+              ..clear()
+              ..addAll(hist.map((h) => _ChatMsg(h.text, h.role != 'user')));
+          });
+        }
+      } catch (_) {}
     } catch (_) {
       // Falls back to local canned replies if we can't resolve the shop.
     }
@@ -90,10 +104,10 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
     String reply;
     final shopId = _barbershopId;
     if (shopId != null) {
-      // Hits the real backend assistant — AI-powered when the shop is Pro+ and
-      // an Anthropic key is set, otherwise the server's canned answers.
+      // Personalized assistant for the logged-in client — knows who they are,
+      // remembers the conversation. AI when the shop is Pro+ with a key set.
       try {
-        reply = await _clientRepo.chatbotSend(message: text, sessionId: _sessionId, barbershopId: shopId);
+        reply = await _clientRepo.clientChatSend(message: text, barbershopId: shopId);
         if (reply.trim().isEmpty) reply = matchChatbotResponse(text) ?? chatbotDefaultResponse;
       } catch (_) {
         reply = matchChatbotResponse(text) ?? chatbotDefaultResponse;
@@ -280,6 +294,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                 if (index >= _messages.length) return _typingBubble();
                 final m = _messages[index];
                 return Align(
+                  key: ValueKey(index),
                   alignment: m.fromBot ? Alignment.centerLeft : Alignment.centerRight,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
@@ -305,7 +320,14 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                           ),
                           if (m.text.isNotEmpty) const SizedBox(height: 6),
                         ],
-                        if (m.text.isNotEmpty) Text(m.text, style: TextStyle(color: m.fromBot ? Colors.white : contrastingTextColor(accent), fontSize: 13, height: 1.35)),
+                        if (m.text.isNotEmpty)
+                          m.fromBot
+                              ? TypewriterText(
+                                  text: m.text,
+                                  animate: index == _messages.length - 1,
+                                  style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.35),
+                                )
+                              : Text(m.text, style: TextStyle(color: contrastingTextColor(accent), fontSize: 13, height: 1.35)),
                       ],
                     ),
                   ),
@@ -363,7 +385,8 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                VoiceInputButton(controller: _inputController, color: Colors.white70),
+                const SizedBox(width: 4),
                 GestureDetector(
                   onTap: () => _send(_inputController.text),
                   child: Container(
