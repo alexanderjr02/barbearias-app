@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+import { assistantEnabled } from "@/lib/chatbot/assistant";
+import { planHasAI } from "@/lib/billing";
+import { runCopilot, simulatedReply, copilotSuggestions, unavailableAiNote, type CopilotRole, type ChatTurn } from "@/lib/chatbot/copilot";
+
+// POST /api/copilot/chat { messages: [{role, content}] } — the business copilot
+// for the gestor/barber. Uses the AI loop when a key is configured, otherwise
+// a deterministic "simulated" responder so it's usable right now.
+export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+
+  const isGestor = session.role === "OWNER" || session.role === "MANAGER";
+  const isBarber = session.role === "BARBER";
+  if (!isGestor && !isBarber) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  if (!session.barbershopId) return NextResponse.json({ error: "Sem barbearia" }, { status: 400 });
+
+  // The Copiloto is a Pro+ feature.
+  const shop = await prisma.barbershop.findUnique({ where: { id: session.barbershopId }, select: { plan: true } });
+  if (!planHasAI(shop?.plan)) {
+    return NextResponse.json({
+      reply: "O Copiloto faz parte do plano Pro. Faça upgrade pra desbloquear seu assistente de negócio com IA. 🚀",
+      aiPowered: false,
+      locked: true,
+      note: "Recurso do plano Pro",
+      suggestions: [],
+    });
+  }
+
+  const role: CopilotRole = isBarber ? "BARBER" : "GESTOR";
+  let staffId: string | null = null;
+  if (isBarber) {
+    const staff = await prisma.staff.findUnique({ where: { userId: session.sub }, select: { id: true } });
+    staffId = staff?.id ?? null;
+  }
+
+  const body = await request.json().catch(() => null);
+  const history: ChatTurn[] = Array.isArray(body?.messages)
+    ? body.messages.filter((m: unknown): m is ChatTurn => !!m && typeof (m as ChatTurn).content === "string" && ((m as ChatTurn).role === "user" || (m as ChatTurn).role === "assistant"))
+    : [];
+  const lastUser = [...history].reverse().find((m) => m.role === "user");
+  if (!lastUser) return NextResponse.json({ error: "Mensagem vazia" }, { status: 400 });
+
+  let reply: string;
+  const aiPowered = assistantEnabled();
+  if (aiPowered) {
+    try {
+      reply = await runCopilot(role, session.barbershopId, staffId, history);
+    } catch {
+      reply = await simulatedReply(role, session.barbershopId, staffId, lastUser.content);
+    }
+  } else {
+    reply = await simulatedReply(role, session.barbershopId, staffId, lastUser.content);
+  }
+
+  return NextResponse.json({ reply, aiPowered, note: unavailableAiNote(), suggestions: copilotSuggestions(role) });
+}

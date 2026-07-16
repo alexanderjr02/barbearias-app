@@ -1,0 +1,67 @@
+# Render.com blueprint — deploy do CORTIX com HTTPS grátis (subdomínio
+# *.onrender.com) e disco persistente para o banco SQLite. Isso te coloca no ar
+# SEM domínio próprio: você aponta seu domínio depois, quando quiser.
+#
+# Como usar:
+#   1. Suba este repositório no GitHub.
+#   2. Em https://dashboard.render.com → New → Blueprint → conecte o repo.
+#   3. Render lê este arquivo, cria o serviço e pede as variáveis marcadas
+#      "sync: false" (cole os valores do seu .env).
+#   4. Deploy. Ao final você recebe uma URL https://cortix-xxxx.onrender.com.
+#   5. Defina APP_URL com essa URL (Settings → Environment) e faça redeploy.
+#   6. No Mercado Pago, cadastre o webhook: <APP_URL>/api/billing/webhook
+services:
+  - type: web
+    name: cortix
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter # tem custo; o "free" do Render hiberna e não aceita disco
+    healthCheckPath: /api/health
+    disk:
+      name: cortix-data
+      mountPath: /app/data # DATABASE_URL aponta para cá (SQLite persistente)
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        value: file:/app/data/dev.db
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true # Render gera um segredo forte automaticamente
+      - key: APP_URL
+        sync: false # cole a URL final do serviço aqui após o 1º deploy
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false # string que você também digita no painel da Meta (webhook)
+      - key: WHATSAPP_BARBERSHOP_ID
+        sync: false # id da barbearia dona do número do WhatsApp
+      - key: ANTHROPIC_API_KEY
+        sync: false # liga a IA (Copiloto + chatbot). Sem ela, modo simulado
+      - key: CRON_SECRET
+        sync: false # segredo do relatório semanal (cron)
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+  # Relatório semanal automático: dispara /api/cron/weekly-report toda
+  # segunda 8h (BRT ≈ 11h UTC). Cole o mesmo CRON_SECRET do serviço web.
+  - type: cron
+    name: cortix-weekly-report
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "0 11 * * 1"
+    dockerCommand: >-
+      sh -c 'curl -fsS "$APP_URL/api/cron/weekly-report?secret=$CRON_SECRET" || true'
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false

@@ -13,10 +13,21 @@ services:
       DATABASE_URL: file:/app/data/dev.db
       JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no seu .env}
       NODE_ENV: production
+      # Public base URL — used for e-mail links and the Mercado Pago webhook /
+      # back_url. Set to your HTTPS address (subdomínio da plataforma ou domínio).
+      APP_URL: ${APP_URL:-}
       # Read server-side, per-request (src/app/api/auth/google/route.ts) —
       # unlike NEXT_PUBLIC_GOOGLE_CLIENT_ID above, this one only needs to be
       # in the running container, not baked in at build time.
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      # E-mail (Resend) — redefinição de senha.
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      # Pagamento (Mercado Pago) — assinatura das barbearias.
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      # WhatsApp (Meta Cloud API) — confirmação de agendamento.
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
     volumes:
       - db-data:/app/data
       - uploads-data:/app/public/uploads

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/cortix_bottom_nav.dart';
 import '../chatbot/floating_chatbot.dart';
 import '../profile/profile_screen.dart';
 import 'cliente_home_screen.dart';
+import 'cliente_subscriptions_screen.dart';
+import 'cut_wallet_screen.dart';
 
-/// Bottom-tab shell for the cliente role: Início / Perfil. Wrapped in a
-/// Stack (rather than living inside the Scaffold) so the floating chatbot
-/// bubble sits above the bottom nav bar on every tab, not just one screen.
+/// Bottom-tab shell for the cliente role: Início / Cortes / Clube / Perfil.
+/// Wrapped in a Stack so the floating chatbot bubble sits above the nav bar.
 class ClienteShell extends StatefulWidget {
   const ClienteShell({super.key});
 
@@ -19,6 +21,8 @@ class _ClienteShellState extends State<ClienteShell> {
 
   static const _screens = [
     ClienteHomeScreen(),
+    CutWalletScreen(),
+    ClientSubscriptionsScreen(),
     ProfileScreen(),
   ];
 
@@ -28,15 +32,16 @@ class _ClienteShellState extends State<ClienteShell> {
     return Stack(
       children: [
         Scaffold(
+          backgroundColor: palette.bg,
           body: IndexedStack(index: _index, children: _screens),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _index,
-            onDestinationSelected: (i) => setState(() => _index = i),
-            backgroundColor: palette.surface,
-            indicatorColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Início'),
-              NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
+          bottomNavigationBar: CortixBottomNav(
+            index: _index,
+            onTap: (i) => setState(() => _index = i),
+            items: const [
+              CortixNavItem(Icons.home_rounded, 'Início'),
+              CortixNavItem(Icons.content_cut_rounded, 'Cortes'),
+              CortixNavItem(Icons.workspace_premium_rounded, 'Clube'),
+              CortixNavItem(Icons.person_rounded, 'Perfil'),
             ],
           ),
         ),

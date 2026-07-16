@@ -49,6 +49,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
     final emailCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
     final passwordCtrl = TextEditingController();
+    final dobNotifier = ValueNotifier<DateTime?>(null);
 
     final saved = await FormSheet.show(
       context,
@@ -63,6 +64,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
           email: emailCtrl.text.trim(),
           phone: phoneCtrl.text.trim(),
           password: passwordCtrl.text,
+          dateOfBirth: formatDobKey(dobNotifier.value),
         );
       },
       children: [
@@ -76,6 +78,23 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
         CortixField(controller: emailCtrl, keyboardType: TextInputType.emailAddress),
         const FieldLabel('Telefone'),
         CortixField(controller: phoneCtrl, keyboardType: TextInputType.phone, hint: '(11) 99999-9999'),
+        const FieldLabel('Data de nascimento'),
+        CortixDateField(value: dobNotifier),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            children: [
+              Icon(Icons.card_giftcard_rounded, size: 13, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Habilita felicitações e promoções de aniversário.',
+                  style: TextStyle(color: AppPalette.of(context).textFaint, fontSize: 11.5),
+                ),
+              ),
+            ],
+          ),
+        ),
         const FieldLabel('Senha inicial'),
         CortixField(controller: passwordCtrl, obscureText: true, hint: 'Mínimo 8 caracteres'),
       ],

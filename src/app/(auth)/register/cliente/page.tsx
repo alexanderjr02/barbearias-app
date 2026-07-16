@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, X } from "lucide-react";
 import { registerClientSchema } from "@/lib/validation";
-import { redirectTo } from "@/lib/utils";
+import { redirectTo, formatPhoneBR } from "@/lib/utils";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export default function RegisterClientPage() {
@@ -17,6 +17,7 @@ export default function RegisterClientPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(registerClientSchema),
@@ -115,7 +116,8 @@ export default function RegisterClientPage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">WhatsApp</label>
-            <input type="tel" placeholder="(11) 99999-9999" {...register("phone")}
+            <input type="tel" inputMode="numeric" placeholder="(11) 99999-9999"
+              {...register("phone", { onChange: (e) => setValue("phone", formatPhoneBR(e.target.value)) })}
               className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
             {errors.phone && <p className="text-xs text-red-400 mt-1.5">{errors.phone.message}</p>}
           </div>
@@ -158,9 +160,9 @@ export default function RegisterClientPage() {
 
       <p className="mt-6 text-xs text-zinc-600 text-center">
         Ao criar uma conta, você concorda com nossos{" "}
-        <a href="#" className="text-zinc-500 hover:underline">Termos de Uso</a>{" "}
+        <Link href="/termos" className="text-zinc-500 hover:underline">Termos de Uso</Link>{" "}
         e{" "}
-        <a href="#" className="text-zinc-500 hover:underline">Política de Privacidade</a>
+        <Link href="/privacidade" className="text-zinc-500 hover:underline">Política de Privacidade</Link>
       </p>
     </div>
   );

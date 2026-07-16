@@ -8,7 +8,9 @@ import 'gestor_reports_screen.dart';
 import 'gestor_services_screen.dart';
 import 'gestor_settings_screen.dart';
 import 'gestor_subscriptions_screen.dart';
+import 'gestor_reviews_screen.dart';
 import 'gestor_support_screen.dart';
+import 'gestor_waitlist_screen.dart';
 
 class GestorMoreScreen extends StatelessWidget {
   const GestorMoreScreen({super.key});
@@ -24,6 +26,24 @@ class GestorMoreScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _MenuTile(
+            icon: Icons.hourglass_bottom_rounded,
+            label: 'Fila de espera',
+            sub: 'Clientes aguardando um horário',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorWaitlistScreen())),
+          ),
+          const SizedBox(height: 10),
+          _MenuTile(
+            icon: Icons.star_rounded,
+            label: 'Avaliações',
+            sub: 'Nota e comentários dos clientes',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorReviewsScreen())),
+          ),
+          const SizedBox(height: 10),
           _MenuTile(
             icon: Icons.bar_chart_rounded,
             label: 'Relatórios',

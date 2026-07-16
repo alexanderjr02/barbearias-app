@@ -50,6 +50,30 @@ export function redirectTo(url: string) {
   window.location.href = url;
 }
 
+// As-you-type Brazilian input masks. Each takes the raw user input, keeps
+// only the digits, and re-formats — safe to call on every keystroke.
+export function formatPhoneBR(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.replace(/^(\d{0,2})/, "($1");
+  if (d.length <= 6) return d.replace(/^(\d{2})(\d{0,4})/, "($1) $2");
+  if (d.length <= 10) return d.replace(/^(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+  return d.replace(/^(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
+}
+
+export function formatCNPJ(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 14);
+  return d
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
+
+export function formatCEP(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 8);
+  return d.replace(/^(\d{5})(\d)/, "$1-$2");
+}
+
 export function getInitials(name: string): string {
   return name
     .split(" ")

@@ -9,8 +9,61 @@
 
 html { scroll-behavior: smooth; }
 
-body { font-family: Inter, system-ui, sans-serif; background-color: #09090b; color: #fff; line-height: 1.5; }
+body { font-family: var(--font-inter), Inter, system-ui, sans-serif; background-color: #09090b; color: #fff; line-height: 1.5; }
+
+/* Display font for headlines — apply via className="font-display". */
+.font-display { font-family: var(--font-sora), var(--font-inter), system-ui, sans-serif; letter-spacing: -0.02em; }
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #09090b; }
 ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+
+/* Auth screen ambience — slow drifting glow blobs + shimmer sweep. */
+@keyframes auth-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(24px, -28px) scale(1.08); }
+}
+@keyframes auth-float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 20px) scale(1.12); }
+}
+@keyframes auth-shimmer {
+  0% { transform: translateX(-120%) skewX(-12deg); }
+  100% { transform: translateX(220%) skewX(-12deg); }
+}
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.auth-float { animation: auth-float 14s ease-in-out infinite; }
+.auth-float-slow { animation: auth-float-slow 18s ease-in-out infinite; }
+.auth-shimmer { animation: auth-shimmer 3.2s ease-in-out infinite; }
+.auth-rise { animation: auth-rise 0.6s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-float, .auth-float-slow, .auth-shimmer, .auth-rise { animation: none; }
+}
+
+/* Landing effects ---------------------------------------------------------- */
+
+/* Slow zoom on hero/section photos — cinematic "Ken Burns" feel. */
+@keyframes kenburns { from { transform: scale(1.06); } to { transform: scale(1.16); } }
+.kenburns { animation: kenburns 22s ease-in-out infinite alternate; }
+
+/* Animated gradient sweep for headline highlights. */
+@keyframes gradient-pan { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.text-shimmer { background-size: 220% auto; animation: gradient-pan 6s ease infinite; }
+
+/* Scroll reveal — paired with the <Reveal> client wrapper, which adds
+   `is-visible` when the element enters the viewport. */
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); will-change: opacity, transform; }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+/* Soft marquee for a logo/benefit strip. */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee-track { animation: marquee 28s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kenburns, .text-shimmer, .marquee-track { animation: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}

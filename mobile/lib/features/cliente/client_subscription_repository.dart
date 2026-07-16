@@ -96,11 +96,23 @@ class ClientSubscriptionRepository {
     return BarbershopSubscriptions.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<void> subscribe({required String planId, required String paymentMethod}) {
-    return ApiClient.instance.post('/client/subscription-plans', data: {
+  /// Starts a subscription. Returns the payment payload: `{simulated: true}`,
+  /// `{pix: {qrCode, qrCodeBase64}}` or `{initPoint: ...}` (hosted checkout).
+  /// `cpfCnpj` is required by some providers (e.g. Asaas).
+  Future<Map<String, dynamic>> subscribe({required String planId, required String paymentMethod, String? cpfCnpj}) async {
+    final data = await ApiClient.instance.post('/client/subscription-plans', data: {
       'planId': planId,
       'paymentMethod': paymentMethod,
+      if (cpfCnpj != null && cpfCnpj.isNotEmpty) 'cpfCnpj': cpfCnpj,
     });
+    return (data as Map).cast<String, dynamic>();
+  }
+
+  /// Polls whether a pending payment has been confirmed. Returns the current
+  /// status ("PENDING" | "ACTIVE" | "CANCELLED").
+  Future<String> checkPaymentStatus(String subscriptionId) async {
+    final data = await ApiClient.instance.post('/client/subscriptions/check', data: {'subscriptionId': subscriptionId});
+    return ((data as Map)['status'] as String?) ?? 'PENDING';
   }
 
   Future<void> cancelMySubscription(String subscriptionId) {

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { validateRequestedSlot } from "@/lib/scheduling";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
+import { sendWhatsAppText, bookingConfirmationText } from "@/lib/whatsapp";
+import { appointmentLimitError } from "@/lib/planLimits";
 
 // GET /api/appointments?barbershopId=xxx&staffId=yyy&from=YYYY-MM-DD&to=YYYY-MM-DD
 // staffId optional (a gestor viewing a single barber's agenda). from/to are
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
       clientPhone,
       clientEmail,
       totalPrice,
+      referencePhoto,
     } = body;
 
     if (!barbershopId || !staffId || !serviceId || !date || !startTime || !clientName || !clientPhone) {
@@ -76,6 +79,12 @@ export async function POST(request: NextRequest) {
     });
     if (slotError) {
       return NextResponse.json({ error: slotError }, { status: 409 });
+    }
+
+    // Plan limit — the barbershop's monthly appointment quota.
+    const limitError = await appointmentLimitError(barbershopId);
+    if (limitError) {
+      return NextResponse.json({ error: limitError }, { status: 403 });
     }
 
     const session = await getSession();
@@ -98,10 +107,12 @@ export async function POST(request: NextRequest) {
         clientId: selfBookingClientId,
         totalPrice: totalPrice || 0,
         status: "SCHEDULED",
+        referencePhoto: typeof referencePhoto === "string" && referencePhoto.trim() ? referencePhoto.trim() : null,
       },
       include: {
         staff: true,
         service: true,
+        barbershop: { select: { name: true } },
       },
     });
 
@@ -116,6 +127,27 @@ export async function POST(request: NextRequest) {
         `${clientName} agendou ${appointment.service.name} às ${startTime}`,
         "/dashboard/appointments"
       );
+    }
+
+    // Best-effort WhatsApp confirmation to the client — never let a messaging
+    // failure (or missing config) break the booking itself.
+    try {
+      const iso = String(date).slice(0, 10);
+      const [y, m, d] = iso.split("-");
+      const dateLabel = d && m && y ? `${d}/${m}/${y}` : iso;
+      await sendWhatsAppText(
+        clientPhone,
+        bookingConfirmationText({
+          clientName,
+          barbershopName: appointment.barbershop.name,
+          serviceName: appointment.service.name,
+          staffName: appointment.staff.name,
+          dateLabel,
+          startTime,
+        })
+      );
+    } catch (err) {
+      console.error("[appointments] WhatsApp confirmation failed", err);
     }
 
     return NextResponse.json(appointment, { status: 201 });

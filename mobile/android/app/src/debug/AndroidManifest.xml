@@ -4,4 +4,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Debug-only: allow plain-HTTP (cleartext) so the app can reach the dev
+         backend over the LAN (http://<ip>:3000) while testing on a physical
+         phone. This override applies to debug builds only and never ships in
+         release, which stays HTTPS-only. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

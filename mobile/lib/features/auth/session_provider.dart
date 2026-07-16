@@ -21,7 +21,12 @@ class SessionProvider extends ChangeNotifier {
   /// callers should fall back to the default brand color.
   Color? brandColor;
 
+  /// The barbershop's cover image (absolute URL), shown as the home banner.
+  /// Only set when the brand uses an image background.
+  String? brandCover;
+
   Future<void> restore() async {
+    loadBrandFromSlug(); // white-label: theme login/register before auth
     try {
       final token = await TokenStorage.instance.accessToken.timeout(
         const Duration(seconds: 5),
@@ -129,6 +134,33 @@ class SessionProvider extends ChangeNotifier {
     } catch (_) {
       return false;
     }
+  }
+
+  /// White-label: when the app is built for a specific barbershop (via the
+  /// BRAND_SLUG dart-define), load its brand color up front so the pre-login
+  /// screens (login/register) are already themed with the barbershop's color.
+  Future<void> loadBrandFromSlug() async {
+    const slug = String.fromEnvironment('BRAND_SLUG');
+    if (slug.isEmpty) return;
+    try {
+      final data = await ApiClient.instance.get('/barbershop', query: {'slug': slug}) as Map<String, dynamic>?;
+      final hex = data?['primaryColor'] as String?;
+      final parsed = hex == null ? null : _parseHexColor(hex);
+      if (parsed != null) brandColor = parsed;
+      final bgType = data?['bgType'] as String?;
+      final cover = data?['coverImage'] as String?;
+      brandCover = (bgType == 'image' && cover != null && cover.isNotEmpty) ? _absUrl(cover) : null;
+      notifyListeners();
+    } catch (_) {
+      // keep the default brand on failure
+    }
+  }
+
+  String _absUrl(String url) {
+    if (url.startsWith('http')) return url;
+    const base = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    final origin = base.contains('/api') ? base.substring(0, base.indexOf('/api')) : base;
+    return '$origin$url';
   }
 
   Future<void> _loadBrandColor() async {

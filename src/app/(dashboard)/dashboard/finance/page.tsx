@@ -9,6 +9,8 @@ import { apiGet, apiPost } from "@/lib/apiClient";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { FinancialCockpit } from "@/components/dashboard/FinancialCockpit";
+import { DailyCashPanel } from "@/components/dashboard/DailyCashPanel";
 
 interface ApiTransaction {
   id: string;
@@ -126,6 +128,12 @@ export default function FinancePage() {
           </button>
         }
       />
+
+      {/* Meta & Ponto de Equilíbrio ao vivo */}
+      <FinancialCockpit />
+
+      {/* Caixa do Dia + fechamento */}
+      <DailyCashPanel />
 
       {/* Summary cards */}
       <div className="grid sm:grid-cols-3 gap-4">

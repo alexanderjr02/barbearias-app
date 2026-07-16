@@ -6,6 +6,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
+import '../barbeiro/barbeiro_copilot_screen.dart';
+import '../cliente/client_preferences_screen.dart';
 import 'profile_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -120,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: palette.bg,
       appBar: AppBar(backgroundColor: palette.bg, title: const Text('Perfil')),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
         children: [
           Center(
             child: GestureDetector(
@@ -209,6 +211,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   : Text('Salvar alterações', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
             ),
           ),
+          if (session?.isClient == true) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientPreferencesScreen())),
+                style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)),
+                icon: const Icon(Icons.tune_rounded),
+                label: const Text('Minhas preferências'),
+              ),
+            ),
+          ],
+          if (session?.isBarber == true) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BarbeiroCopilotScreen())),
+                style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)),
+                icon: const Icon(Icons.auto_awesome_rounded),
+                label: const Text('Meu Copiloto'),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           SizedBox(
             height: 48,

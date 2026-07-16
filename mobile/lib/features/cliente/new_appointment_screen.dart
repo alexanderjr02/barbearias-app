@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
@@ -9,9 +10,13 @@ import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/br_phone_formatter.dart';
 import '../auth/session_provider.dart';
 import 'booking_repository.dart';
+import 'client_repository.dart';
 
 class NewAppointmentScreen extends StatefulWidget {
-  const NewAppointmentScreen({super.key});
+  const NewAppointmentScreen({super.key, this.referencePhoto});
+
+  /// Pre-attached cut photo when the client came from "quero esse de novo".
+  final String? referencePhoto;
 
   @override
   State<NewAppointmentScreen> createState() => _NewAppointmentScreenState();
@@ -44,10 +49,13 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   bool _loadingSlots = false;
   bool _submitting = false;
   String? _error;
+  String? _reference;
+  final _clientRepo = ClientRepository();
 
   @override
   void initState() {
     super.initState();
+    _reference = widget.referencePhoto;
     _loadBarbershops();
     _phoneFocus.addListener(() {
       if (!_phoneFocus.hasFocus && !_phoneTouched) setState(() => _phoneTouched = true);
@@ -195,6 +203,75 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
       _selectedTime != null &&
       _phoneController.text.trim().length >= 8;
 
+  Future<void> _joinWaitlist() async {
+    final shop = _selectedShop;
+    if (shop == null) return;
+    try {
+      await _repository.joinWaitlist(shop.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(behavior: SnackBarBehavior.floating, content: Text('Você entrou na fila! Avisamos se abrir um horário. 🔔')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(behavior: SnackBarBehavior.floating, content: Text('Não foi possível entrar na fila.')));
+      }
+    }
+  }
+
+  Future<void> _uploadReference() async {
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1400, imageQuality: 88);
+    if (file == null || !mounted) return;
+    try {
+      final url = await _clientRepo.uploadImage(file);
+      if (mounted) setState(() => _reference = url);
+    } catch (_) {}
+  }
+
+  Future<void> _pickFromWallet() async {
+    List<CutPhoto> cuts;
+    try {
+      cuts = await _clientRepo.cuts();
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    if (cuts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sua Carteira de Cortes está vazia.')));
+      return;
+    }
+    final palette = AppPalette.of(context);
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: palette.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Escolha da sua Carteira', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15)),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              children: [
+                for (final c in cuts)
+                  GestureDetector(
+                    onTap: () => Navigator.of(sheetContext).pop(c.imageUrl),
+                    child: ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(resolveAssetUrl(c.imageUrl) ?? c.imageUrl, fit: BoxFit.cover)),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null && mounted) setState(() => _reference = picked);
+  }
+
   Future<void> _submit() async {
     final sessionProvider = context.read<SessionProvider>();
     final session = sessionProvider.session;
@@ -215,6 +292,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
         clientName: session.name,
         clientPhone: phone,
         totalPrice: _selectedService!.price,
+        referencePhoto: _reference,
       );
       // Remember the number for next time — only when it's new or changed,
       // and never lets a save failure block the booking that already went
@@ -252,7 +330,18 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
 
     return Scaffold(
       backgroundColor: palette.bg,
-      appBar: AppBar(backgroundColor: palette.bg, title: const Text('Novo agendamento')),
+      appBar: AppBar(
+        backgroundColor: palette.bg,
+        title: const Text('Novo agendamento'),
+        actions: [
+          if (_selectedShop != null)
+            IconButton(
+              tooltip: 'Avise-me se abrir horário',
+              onPressed: _joinWaitlist,
+              icon: const Icon(Icons.notifications_active_outlined),
+            ),
+        ],
+      ),
       body: _loadingShops
           ? const Center(child: CircularProgressIndicator())
           : _barbershops.isEmpty
@@ -532,6 +621,33 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                           ),
                         ],
                       ],
+                      const SizedBox(height: 18),
+                      Row(children: [
+                        Icon(Icons.auto_awesome_rounded, size: 15, color: accent),
+                        const SizedBox(width: 6),
+                        Text('Foto de referência (opcional)', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 13.5)),
+                      ]),
+                      const SizedBox(height: 4),
+                      Text('Mostre ao barbeiro o corte que você quer.', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                      const SizedBox(height: 10),
+                      if (_reference != null)
+                        Stack(children: [
+                          ClipRRect(borderRadius: BorderRadius.circular(14), child: Image.network(resolveAssetUrl(_reference) ?? _reference!, height: 150, width: double.infinity, fit: BoxFit.cover)),
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: GestureDetector(
+                              onTap: () => setState(() => _reference = null),
+                              child: Container(padding: const EdgeInsets.all(4), decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle), child: const Icon(Icons.close, color: Colors.white, size: 16)),
+                            ),
+                          ),
+                        ])
+                      else
+                        Row(children: [
+                          Expanded(child: OutlinedButton.icon(onPressed: _uploadReference, icon: const Icon(Icons.upload_rounded, size: 18), label: const Text('Enviar foto'), style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)))),
+                          const SizedBox(width: 10),
+                          Expanded(child: OutlinedButton.icon(onPressed: _pickFromWallet, icon: const Icon(Icons.content_cut_rounded, size: 18), label: const Text('Da Carteira'), style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)))),
+                        ]),
                       if (_error != null) ...[
                         const SizedBox(height: 12),
                         Text(_error!, style: const TextStyle(color: Colors.redAccent)),

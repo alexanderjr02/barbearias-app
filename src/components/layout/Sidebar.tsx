@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Calendar, Users, UserCheck, Scissors,
   TrendingUp, Package, Megaphone, Settings, LogOut,
-  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy,
+  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy, Hourglass, Star, FileText, Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -15,12 +15,16 @@ import { UpgradeModal } from "@/components/billing/UpgradeModal";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Agendamentos", href: "/dashboard/appointments", icon: Calendar },
+  { label: "Fila de espera", href: "/dashboard/waitlist", icon: Hourglass },
   { label: "Clientes", href: "/dashboard/clients", icon: Users },
+  { label: "Avaliações", href: "/dashboard/reviews", icon: Star },
   { label: "Equipe", href: "/dashboard/staff", icon: UserCheck },
   { label: "Serviços", href: "/dashboard/services", icon: Scissors },
   { label: "Financeiro", href: "/dashboard/finance", icon: TrendingUp },
+  { label: "Nota Fiscal", href: "/dashboard/fiscal", icon: FileText },
   { label: "Estoque", href: "/dashboard/inventory", icon: Package },
   { label: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
+  { label: "Aparência do app", href: "/dashboard/appearance", icon: Palette },
   { label: "Assinaturas", href: "/dashboard/subscriptions", icon: Repeat },
   { label: "Suporte", href: "/dashboard/support", icon: LifeBuoy },
 ];

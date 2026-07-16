@@ -191,6 +191,7 @@ class GestorAppointment {
   final String clientName;
   final String clientPhone;
   final String? clientAvatar;
+  final String? clientId;
   final String date;
   final String startTime;
   final String endTime;
@@ -199,12 +200,19 @@ class GestorAppointment {
   final String staffId;
   final String staffName;
   final String serviceName;
+  final String? referencePhoto;
+  final String? resultPhoto;
+  final String? recipeMachine;
+  final String? recipeFinish;
+  final String? recipeProducts;
+  final String? recipeNotes;
 
   GestorAppointment({
     required this.id,
     required this.clientName,
     required this.clientPhone,
     required this.clientAvatar,
+    this.clientId,
     required this.date,
     required this.startTime,
     required this.endTime,
@@ -213,13 +221,23 @@ class GestorAppointment {
     required this.staffId,
     required this.staffName,
     required this.serviceName,
+    this.referencePhoto,
+    this.resultPhoto,
+    this.recipeMachine,
+    this.recipeFinish,
+    this.recipeProducts,
+    this.recipeNotes,
   });
+
+  bool get hasRecipe =>
+      [recipeMachine, recipeFinish, recipeProducts, recipeNotes].any((e) => e != null && e.isNotEmpty);
 
   factory GestorAppointment.fromJson(Map<String, dynamic> json) => GestorAppointment(
         id: json['id'],
         clientName: json['clientName'],
         clientPhone: json['clientPhone'],
         clientAvatar: json['client']?['avatar'],
+        clientId: json['client']?['id'] as String?,
         date: json['date'],
         startTime: json['startTime'],
         endTime: json['endTime'] ?? json['startTime'],
@@ -228,6 +246,12 @@ class GestorAppointment {
         staffId: json['staff']['id'],
         staffName: json['staff']['name'],
         serviceName: json['service']['name'],
+        referencePhoto: json['referencePhoto'] as String?,
+        resultPhoto: json['resultPhoto'] as String?,
+        recipeMachine: json['recipeMachine'] as String?,
+        recipeFinish: json['recipeFinish'] as String?,
+        recipeProducts: json['recipeProducts'] as String?,
+        recipeNotes: json['recipeNotes'] as String?,
       );
 }
 
@@ -423,6 +447,8 @@ class BarbershopProfile {
   final String? phone;
   final String? email;
   final String? instagram;
+  final String? pixKey;
+  final String? faqText;
   final String? city;
   final String? description;
   final String? logo;
@@ -438,6 +464,8 @@ class BarbershopProfile {
     required this.phone,
     required this.email,
     required this.instagram,
+    this.pixKey,
+    this.faqText,
     required this.city,
     required this.description,
     required this.logo,
@@ -454,6 +482,8 @@ class BarbershopProfile {
         phone: json['phone'],
         email: json['email'],
         instagram: json['instagram'],
+        pixKey: json['pixKey'],
+        faqText: json['faqText'],
         city: json['city'],
         description: json['description'],
         logo: json['logo'],
@@ -778,10 +808,235 @@ class OnboardingStatus {
       );
 }
 
+/// Current-month figures for the "Meta & Ponto de Equilíbrio" cockpit.
+class FinanceOverview {
+  final double? goal;
+  final String monthLabel;
+  final int daysInMonth;
+  final int dayOfMonth;
+  final double monthExpenses;
+  final double monthRevenue;
+  final List<double> dailyRevenue;
+
+  FinanceOverview({
+    required this.goal,
+    required this.monthLabel,
+    required this.daysInMonth,
+    required this.dayOfMonth,
+    required this.monthExpenses,
+    required this.monthRevenue,
+    required this.dailyRevenue,
+  });
+
+  factory FinanceOverview.fromJson(Map<String, dynamic> j) => FinanceOverview(
+        goal: (j['goal'] as num?)?.toDouble(),
+        monthLabel: j['monthLabel'] as String? ?? '',
+        daysInMonth: (j['daysInMonth'] as num).toInt(),
+        dayOfMonth: (j['dayOfMonth'] as num).toInt(),
+        monthExpenses: (j['monthExpenses'] as num).toDouble(),
+        monthRevenue: (j['monthRevenue'] as num).toDouble(),
+        dailyRevenue: (j['dailyRevenue'] as List).map((e) => (e as num).toDouble()).toList(),
+      );
+}
+
+class CashMethodEntry {
+  final String method;
+  final double amount;
+  CashMethodEntry({required this.method, required this.amount});
+  factory CashMethodEntry.fromJson(Map<String, dynamic> j) =>
+      CashMethodEntry(method: j['method'] as String, amount: (j['amount'] as num).toDouble());
+}
+
+class CashBarberEntry {
+  final String staffId;
+  final String name;
+  final String? avatar;
+  final double revenue;
+  final int count;
+  final double commission;
+  CashBarberEntry({required this.staffId, required this.name, required this.avatar, required this.revenue, required this.count, required this.commission});
+  factory CashBarberEntry.fromJson(Map<String, dynamic> j) => CashBarberEntry(
+        staffId: j['staffId'] as String,
+        name: j['name'] as String,
+        avatar: j['avatar'] as String?,
+        revenue: (j['revenue'] as num).toDouble(),
+        count: (j['count'] as num).toInt(),
+        commission: (j['commission'] as num).toDouble(),
+      );
+}
+
+/// The "Caixa do Dia" — everything to close the till for a given day.
+class DailyCash {
+  final String date;
+  final double totalRevenue;
+  final double serviceRevenue;
+  final double manualIncome;
+  final double manualExpense;
+  final double net;
+  final double avgTicket;
+  final double totalCommission;
+  final double avgDailyRevenue;
+  final int appointmentCount;
+  final int vsAveragePct;
+  final List<CashMethodEntry> byMethod;
+  final List<CashBarberEntry> byBarber;
+
+  DailyCash({
+    required this.date,
+    required this.totalRevenue,
+    required this.serviceRevenue,
+    required this.manualIncome,
+    required this.manualExpense,
+    required this.net,
+    required this.avgTicket,
+    required this.totalCommission,
+    required this.avgDailyRevenue,
+    required this.appointmentCount,
+    required this.vsAveragePct,
+    required this.byMethod,
+    required this.byBarber,
+  });
+
+  factory DailyCash.fromJson(Map<String, dynamic> j) => DailyCash(
+        date: j['date'] as String,
+        totalRevenue: (j['totalRevenue'] as num).toDouble(),
+        serviceRevenue: (j['serviceRevenue'] as num).toDouble(),
+        manualIncome: (j['manualIncome'] as num).toDouble(),
+        manualExpense: (j['manualExpense'] as num).toDouble(),
+        net: (j['net'] as num).toDouble(),
+        avgTicket: (j['avgTicket'] as num).toDouble(),
+        totalCommission: (j['totalCommission'] as num).toDouble(),
+        avgDailyRevenue: (j['avgDailyRevenue'] as num).toDouble(),
+        appointmentCount: (j['appointmentCount'] as num).toInt(),
+        vsAveragePct: (j['vsAveragePct'] as num).toInt(),
+        byMethod: (j['byMethod'] as List).map((e) => CashMethodEntry.fromJson(e as Map<String, dynamic>)).toList(),
+        byBarber: (j['byBarber'] as List).map((e) => CashBarberEntry.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+}
+
+class ReviewItem {
+  final int rating;
+  final String? comment;
+  final String createdAt;
+  final String clientName;
+  final String staffName;
+  final String? serviceName;
+  ReviewItem({required this.rating, this.comment, required this.createdAt, required this.clientName, required this.staffName, this.serviceName});
+  factory ReviewItem.fromJson(Map<String, dynamic> j) => ReviewItem(
+        rating: (j['rating'] as num).toInt(),
+        comment: j['comment'] as String?,
+        createdAt: j['createdAt'] as String,
+        clientName: j['clientName'] as String? ?? 'Cliente',
+        staffName: j['staffName'] as String? ?? 'Barbeiro',
+        serviceName: j['serviceName'] as String?,
+      );
+}
+
+class BarberRating {
+  final String name;
+  final double average;
+  final int count;
+  BarberRating({required this.name, required this.average, required this.count});
+  factory BarberRating.fromJson(Map<String, dynamic> j) =>
+      BarberRating(name: j['name'] as String, average: (j['average'] as num).toDouble(), count: (j['count'] as num).toInt());
+}
+
+class ReviewsData {
+  final double average;
+  final int count;
+  final List<BarberRating> byBarber;
+  final List<ReviewItem> reviews;
+  final Map<int, int> distribution; // star (1..5) -> count
+  ReviewsData({required this.average, required this.count, required this.byBarber, required this.reviews, required this.distribution});
+  factory ReviewsData.fromJson(Map<String, dynamic> j) {
+    final s = j['summary'] as Map<String, dynamic>;
+    final dist = (s['distribution'] as Map?) ?? const {};
+    return ReviewsData(
+      average: (s['average'] as num).toDouble(),
+      count: (s['count'] as num).toInt(),
+      byBarber: (s['byBarber'] as List).map((e) => BarberRating.fromJson(e as Map<String, dynamic>)).toList(),
+      reviews: (j['reviews'] as List).map((e) => ReviewItem.fromJson(e as Map<String, dynamic>)).toList(),
+      distribution: {for (var k = 1; k <= 5; k++) k: ((dist['$k'] ?? dist[k] ?? 0) as num).toInt()},
+    );
+  }
+}
+
+class WaitlistEntry {
+  final String id;
+  final String clientName;
+  final String clientPhone;
+  final String? note;
+  final String createdAt;
+  WaitlistEntry({required this.id, required this.clientName, required this.clientPhone, this.note, required this.createdAt});
+  factory WaitlistEntry.fromJson(Map<String, dynamic> j) => WaitlistEntry(
+        id: j['id'] as String,
+        clientName: j['clientName'] as String,
+        clientPhone: j['clientPhone'] as String,
+        note: j['note'] as String?,
+        createdAt: j['createdAt'] as String,
+      );
+}
+
+class BriefingCard {
+  final String id;
+  final String kind;
+  final String icon;
+  final String title;
+  final String body;
+  final String? actionId;
+  final String? actionLabel;
+  final int count;
+
+  BriefingCard({required this.id, required this.kind, required this.icon, required this.title, required this.body, this.actionId, this.actionLabel, required this.count});
+
+  factory BriefingCard.fromJson(Map<String, dynamic> j) => BriefingCard(
+        id: j['id'] as String,
+        kind: j['kind'] as String? ?? '',
+        icon: j['icon'] as String? ?? '',
+        title: j['title'] as String? ?? '',
+        body: j['body'] as String? ?? '',
+        actionId: j['action']?['id'] as String?,
+        actionLabel: j['action']?['label'] as String?,
+        count: j['count'] as int? ?? 0,
+      );
+}
+
+class CopilotReply {
+  final String reply;
+  final bool aiPowered;
+  final String note;
+  final List<String> suggestions;
+
+  CopilotReply({required this.reply, required this.aiPowered, required this.note, required this.suggestions});
+
+  factory CopilotReply.fromJson(Map<String, dynamic> j) => CopilotReply(
+        reply: j['reply'] as String? ?? '',
+        aiPowered: j['aiPowered'] == true,
+        note: j['note'] as String? ?? '',
+        suggestions: ((j['suggestions'] as List?) ?? []).map((e) => e as String).toList(),
+      );
+}
+
 class GestorRepository {
   Future<MeLite> me() async {
     final data = await ApiClient.instance.get('/me');
     return MeLite.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<({List<BriefingCard> cards, bool locked})> copilotBriefing() async {
+    final data = await ApiClient.instance.get('/copilot/briefing') as Map<String, dynamic>;
+    final cards = ((data['cards'] as List?) ?? []).map((e) => BriefingCard.fromJson(e as Map<String, dynamic>)).toList();
+    return (cards: cards, locked: data['locked'] == true);
+  }
+
+  Future<String> copilotAction(String action) async {
+    final data = await ApiClient.instance.post('/copilot/action', data: {'action': action}) as Map<String, dynamic>;
+    return data['message'] as String? ?? 'Feito.';
+  }
+
+  Future<CopilotReply> copilotChat(List<Map<String, String>> messages) async {
+    final data = await ApiClient.instance.post('/copilot/chat', data: {'messages': messages}) as Map<String, dynamic>;
+    return CopilotReply.fromJson(data);
   }
 
   Future<DashboardSummary> dashboardSummary() async {
@@ -847,17 +1102,40 @@ class GestorRepository {
     return data.map((e) => GestorClient.fromJson(e)).toList();
   }
 
-  Future<void> createClient({required String name, required String email, String? phone, required String password}) async {
+  Future<void> createClient({required String name, required String email, String? phone, required String password, String? dateOfBirth}) async {
     await ApiClient.instance.post('/clients', data: {
       'name': name,
       'email': email,
       if (phone != null && phone.isNotEmpty) 'phone': phone,
+      if (dateOfBirth != null && dateOfBirth.isNotEmpty) 'dateOfBirth': dateOfBirth,
       'password': password,
     });
   }
 
   Future<void> updateClientAvatar(String id, String? avatar) async {
     await ApiClient.instance.patch('/clients/$id', data: {'avatar': avatar});
+  }
+
+  Future<List<WaitlistEntry>> waitlist() async {
+    final data = await ApiClient.instance.get('/waitlist') as List;
+    return data.map((e) => WaitlistEntry.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> addToWaitlist({required String clientName, required String clientPhone, String? note}) async {
+    await ApiClient.instance.post('/waitlist', data: {
+      'clientName': clientName,
+      'clientPhone': clientPhone,
+      if (note != null && note.isNotEmpty) 'note': note,
+    });
+  }
+
+  Future<void> removeFromWaitlist(String id) async {
+    await ApiClient.instance.delete('/waitlist/$id');
+  }
+
+  Future<ReviewsData> reviews() async {
+    final data = await ApiClient.instance.get('/reviews') as Map<String, dynamic>;
+    return ReviewsData.fromJson(data);
   }
 
   Future<List<GestorStaff>> staff() async {
@@ -911,6 +1189,20 @@ class GestorRepository {
   Future<FinanceSummary> finance() async {
     final data = await ApiClient.instance.get('/finance/transactions');
     return FinanceSummary.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<FinanceOverview> financeOverview() async {
+    final data = await ApiClient.instance.get('/finance/overview');
+    return FinanceOverview.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> setMonthlyGoal(double? goal) async {
+    await ApiClient.instance.patch('/finance/overview', data: {'goal': goal});
+  }
+
+  Future<DailyCash> dailyCash({String? date}) async {
+    final data = await ApiClient.instance.get('/finance/daily', query: date != null ? {'date': date} : null);
+    return DailyCash.fromJson(data as Map<String, dynamic>);
   }
 
   Future<void> createTransaction({
@@ -1013,11 +1305,25 @@ class GestorRepository {
     return BarbershopProfile.fromJson(data as Map<String, dynamic>);
   }
 
+  /// Payment-provider connection status for the gestor's own shop.
+  Future<({String? provider, bool connected})> paymentConnection() async {
+    final data = await ApiClient.instance.get('/barbershop') as Map<String, dynamic>;
+    return (provider: data['paymentProvider'] as String?, connected: data['paymentConnected'] == true);
+  }
+
+  /// Connects (or, with empty values, disconnects) a payment provider so the
+  /// barbershop receives client memberships straight into its own account.
+  Future<void> connectPayment({required String provider, required String apiKey}) async {
+    await ApiClient.instance.patch('/barbershop', data: {'paymentProvider': provider, 'paymentApiKey': apiKey});
+  }
+
   Future<void> updateBarbershopProfile({
     required String name,
     String? phone,
     String? email,
     String? instagram,
+    String? pixKey,
+    String? faqText,
     String? city,
     String? description,
     String? logo,
@@ -1030,6 +1336,8 @@ class GestorRepository {
       if (logo != null) 'logo': logo,
       if (coverImage != null) 'coverImage': coverImage,
       'instagram': instagram,
+      if (pixKey != null) 'pixKey': pixKey,
+      if (faqText != null) 'faqText': faqText,
       'city': city,
       'description': description,
     });

@@ -12,15 +12,20 @@ class GanhosScreen extends StatefulWidget {
 
 class _GanhosScreenState extends State<GanhosScreen> {
   final _repository = BarberRepository();
-  late Future<BarberStats> _future;
+  late Future<(BarberStats, BarberTips)> _future;
 
   @override
   void initState() {
     super.initState();
-    _future = _repository.myStats();
+    _future = _load();
   }
 
-  void _refresh() => setState(() => _future = _repository.myStats());
+  Future<(BarberStats, BarberTips)> _load() async {
+    final results = await Future.wait([_repository.myStats(), _repository.myTips()]);
+    return (results[0] as BarberStats, results[1] as BarberTips);
+  }
+
+  void _refresh() => setState(() => _future = _load());
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,7 @@ class _GanhosScreenState extends State<GanhosScreen> {
       appBar: AppBar(backgroundColor: palette.bg, elevation: 0, title: const Text('Meus ganhos')),
       body: RefreshIndicator(
         onRefresh: () async => _refresh(),
-        child: FutureBuilder<BarberStats>(
+        child: FutureBuilder<(BarberStats, BarberTips)>(
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -45,7 +50,8 @@ class _GanhosScreenState extends State<GanhosScreen> {
                 Center(child: Text('Erro: ${snapshot.error}', style: const TextStyle(color: Colors.redAccent))),
               ]);
             }
-            final stats = snapshot.data!;
+            final stats = snapshot.data!.$1;
+            final tips = snapshot.data!.$2;
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
@@ -89,6 +95,43 @@ class _GanhosScreenState extends State<GanhosScreen> {
                       const SizedBox(width: 12),
                       Expanded(child: _StatCard(icon: Icons.confirmation_number_outlined, label: 'Ticket médio', value: 'R\$ ${stats.avgTicket.toStringAsFixed(2)}', color: palette.textSecondary, palette: palette)),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                RiseIn(
+                  delay: const Duration(milliseconds: 60),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: palette.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: accent.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
+                          child: Icon(Icons.volunteer_activism_rounded, color: accent, size: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Gorjetas este mês', style: TextStyle(color: palette.textFaint, fontSize: 12)),
+                              const SizedBox(height: 2),
+                              Text('R\$ ${tips.total.toStringAsFixed(2)}', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 20)),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          tips.count == 0 ? 'nenhuma ainda' : '${tips.count} ${tips.count == 1 ? 'gorjeta' : 'gorjetas'}',
+                          style: TextStyle(color: palette.textFaint, fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),

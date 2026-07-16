@@ -28,6 +28,7 @@ model User {
   staffProfile  Staff?
   appointments  Appointment[] @relation("ClientAppointments")
   refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
   loyaltyAccounts LoyaltyAccount[]
   clientOf      BarbershopClient[]
   reviewsGiven  Review[]
@@ -71,10 +72,50 @@ model Barbershop {
   zipCode         String?
   primaryColor    String   @default("#D4AF37")
   secondaryColor  String   @default("#1a1a1a")
+  // App appearance customizer ("Aparência do app"): a curated, guard-railed
+  // theming layer the gestor personalizes with their brand.
+  themePreset     String?  // "midnight" | "graphite" | "neon" | "classic"
+  themeMode       String?  // "dark" | "light"
+  appTagline      String?  // subtitle shown on the app login
+  bgType          String?  // login background: "gradient" | "image" | "video"
+  bgVideo         String?  // background video URL (mp4)
+  bgDim           Int?     // background overlay darkness 0-80
+  bgBlur          Int?     // background blur in px 0-16
+  bgGradient      Boolean  @default(true) // gradient scrim over the background
+  bgEffect        String?  // animation: "none" | "zoom" | "pulse"
+  // Owner-set monthly revenue goal, powering the finance "meta & ponto de
+  // equilíbrio" cockpit. Null until the gestor sets one.
+  monthlyGoal     Float?
   instagram       String?
   whatsapp        String?
+  // PIX key that receives digital tips (gorjetas). Shown to the client to pay
+  // the barber directly; null until the gestor sets one.
+  pixKey          String?
+  // Free-text FAQ / house rules the gestor writes ("aceita pix?", "tem
+  // estacionamento?", "atende criança?"). Fed into the client chatbot's system
+  // prompt so it answers shop-specific questions instead of guessing.
+  faqText         String?
   isActive        Boolean  @default(true)
   plan            String   @default("FREE")
+  // Mercado Pago recurring subscription (preapproval) that pays for `plan`.
+  // Set when the gestor completes checkout; status mirrors MP
+  // (authorized/paused/cancelled). Null on the free tier.
+  mpPreapprovalId      String?
+  mpSubscriptionStatus String?
+  // How the barbershop receives its clients' membership payments. The gestor
+  // picks a provider ("MERCADOPAGO" | "ASAAS" | ...) and connects their own
+  // account; charges go straight to THEM (the platform never touches that
+  // money). Null until connected → subscriptions run in simulated mode.
+  paymentProvider      String?
+  paymentApiKey        String?
+  // Fiscal / NFS-e (nota fiscal de serviço). Provider-agnostic, same shape as
+  // payments: the gestor connects a fiscal integrator (Focus NFe, NFe.io) at
+  // deploy time. Null until connected → invoices run in simulated mode.
+  fiscalProvider       String? // "FOCUSNFE" | "NFEIO"
+  fiscalApiKey         String? // never returned by the API (stripped like paymentApiKey)
+  municipalServiceCode String? // código do serviço municipal / item da lista
+  taxRegime            String? // ex: "SIMPLES_NACIONAL"
+  issRate              Float?  // alíquota do ISS (%)
   pointsPerReal   Int      @default(10)
   onboardingDismissed Boolean @default(false)
   ownerId         String   @unique
@@ -92,6 +133,9 @@ model Barbershop {
   loyaltyAccounts LoyaltyAccount[]
   clients         BarbershopClient[]
   subscriptionPlans SubscriptionPlan[]
+  waitlist        WaitlistEntry[]
+  serviceInvoices ServiceInvoice[]
+  tips            Tip[]
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
   platformInvoices  PlatformInvoice[]
@@ -146,6 +190,7 @@ model Staff {
   availability  Availability[]
   timeOff       StaffTimeOff[]
   reviews       Review[]
+  tips          Tip[]
 }
 
 model Service {
@@ -178,6 +223,18 @@ model Appointment {
   clientName    String
   clientPhone   String
   clientEmail   String?
+  referencePhoto String? // "quero esse de novo": cut photo the client wants
+  // The "depois" of the antes/depois: a photo of the finished cut, taken by
+  // the barber on checkout. Feeds the client's Carteira de Cortes and the
+  // barber's auto-built portfolio.
+  resultPhoto    String?
+  // "Receita do corte" / ficha técnica — how this exact cut was executed, so
+  // the next visit can be replicated identically. Barber-set on checkout;
+  // the latest one for a client is pre-loaded next time.
+  recipeMachine  String? // máquina & pente nas laterais (ex: "1.5 lados, 2 meio")
+  recipeFinish   String? // acabamento / topo (tesoura, texturização)
+  recipeProducts String? // produtos usados na finalização (pomada, etc.)
+  recipeNotes    String? // observações livres da execução
   barbershopId  String
   barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   staffId       String
@@ -190,6 +247,26 @@ model Appointment {
   updatedAt     DateTime @updatedAt
 
   review        Review?
+  tip           Tip?
+}
+
+// A digital tip (gorjeta via PIX) a client leaves for the barber after a
+// completed appointment. The shop's own PIX key receives the money directly —
+// the platform only records the intent and lets the barber confirm receipt.
+model Tip {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  staffId       String
+  staff         Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  barbershopId  String
+  barbershop    Barbershop  @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  amount        Float
+  status        String      @default("PENDING") // PENDING | CONFIRMED
+  createdAt     DateTime    @default(now())
+
+  @@index([staffId])
+  @@index([barbershopId])
 }
 
 // One review per appointment, left by the client after it's COMPLETED.
@@ -305,6 +382,90 @@ model RefreshToken {
   @@index([userId])
 }
 
+// A nota fiscal de serviço (NFS-e) issued for an appointment/sale. Tracks the
+// lifecycle at the fiscal provider so the gestor can download the PDF/XML.
+model ServiceInvoice {
+  id            String     @id @default(cuid())
+  barbershopId  String
+  barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  appointmentId String?
+  providerRef   String? // id/reference at the fiscal provider
+  status        String     @default("PENDING") // PENDING | PROCESSING | AUTHORIZED | ERROR | CANCELLED
+  number        String? // nota number once authorized
+  pdfUrl        String?
+  xmlUrl        String?
+  amount        Float
+  clientName    String
+  clientDoc     String? // CPF/CNPJ do tomador
+  message       String? // status/error detail from the provider
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([barbershopId])
+}
+
+// A client's grooming preferences ("seu barbeiro te conhece") — filled once by
+// the client, shown to the barber on every appointment for a VIP-level, no-
+// surprises service. A differentiator vs. other barbershop apps.
+model ClientPreferences {
+  id        String   @id @default(cuid())
+  clientId  String   @unique
+  machine   String? // ex: "máquina 2 nas laterais"
+  products  String? // ex: "sem produto" / "pomada matte"
+  allergies String?
+  drink     String? // bebida favorita
+  chat      String? // preferência de conversa
+  notes     String?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+// A client's visual "cut passport" — photos of past haircuts so they can show
+// the barber "quero esse de novo" instead of trying to explain. Client-first,
+// a real differentiator vs. other barbershop apps.
+model CutPhoto {
+  id           String   @id @default(cuid())
+  clientId     String
+  barbershopId String?
+  imageUrl     String
+  note         String?
+  createdAt    DateTime @default(now())
+
+  @@index([clientId])
+}
+
+// Walk-in / no-slot clients waiting for an opening. The gestor works this
+// simple queue from the dashboard — add, notify (WhatsApp), and clear.
+model WaitlistEntry {
+  id           String     @id @default(cuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  clientId     String? // set when the client joined it themselves (Auto-avise)
+  clientName   String
+  clientPhone  String
+  note         String?
+  status       String     @default("WAITING") // WAITING | DONE
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId])
+  @@index([clientId])
+}
+
+// Single-use, short-lived tokens for the "forgot password" flow. Only the
+// SHA-256 hash of the token is stored (like RefreshToken), so a database leak
+// never exposes a usable reset link. `usedAt` makes a token one-shot.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
 // Marks a User as a client of a barbershop even before they have any
 // Appointment — lets a gestor pre-register a client (see /api/clients POST).
 // Clients who only ever booked as a guest have no row here; they're derived
@@ -382,7 +543,11 @@ model ClientSubscription {
   clientId      String?
   client        User?     @relation("ClientSubscriptions", fields: [clientId], references: [id])
   paymentMethod String    // PIX | CREDIT_CARD
-  status        String    @default("ACTIVE") // ACTIVE | PAST_DUE | CANCELLED
+  status        String    @default("ACTIVE") // PENDING | ACTIVE | PAST_DUE | CANCELLED
+  // Mercado Pago references (when the barbershop charges through MP): the Pix
+  // payment id and/or the recurring card preapproval id. Null in simulated mode.
+  mpPaymentId     String?
+  mpPreapprovalId String?
   startedAt     DateTime  @default(now())
   nextBillingAt DateTime
   cancelledAt   DateTime?

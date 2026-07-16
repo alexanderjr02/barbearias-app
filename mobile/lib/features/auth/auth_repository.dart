@@ -34,6 +34,13 @@ class AuthRepository {
     return Session.fromJson(data['user']);
   }
 
+  /// Requests a password-reset e-mail. The backend always responds 200 (it
+  /// never reveals whether the e-mail has an account), so this returns void
+  /// and the UI shows the same neutral message either way.
+  Future<void> requestPasswordReset(String email) async {
+    await ApiClient.instance.post('/auth/forgot-password', data: {'email': email});
+  }
+
   Future<Session> me() async {
     final data = await ApiClient.instance.get('/me');
     return Session.fromJson(data);

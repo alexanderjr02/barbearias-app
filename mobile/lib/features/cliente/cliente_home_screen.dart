@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
@@ -7,11 +8,11 @@ import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import 'client_repository.dart';
-import 'cliente_subscriptions_screen.dart';
 import 'new_appointment_screen.dart';
+import 'tip_screen.dart';
 import 'widgets/client_notifications_sheet.dart';
 
-const _activeStatuses = {'SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'};
+const _activeStatuses = {'SCHEDULED', 'CONFIRMED', 'ARRIVED', 'IN_PROGRESS'};
 
 class ClienteHomeScreen extends StatefulWidget {
   const ClienteHomeScreen({super.key});
@@ -117,6 +118,24 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
     return active.isEmpty ? null : active.first;
   }
 
+  // Auto-agenda: learns the client's haircut cadence from their history and
+  // suggests booking again when they're due. Returns null when there isn't
+  // enough history or it's not time yet.
+  ({int cadenceDays, int daysSince})? _autoSchedule(List<ClientAppointment> appointments) {
+    final now = DateTime.now();
+    final past = appointments.map(_dateTimeOf).whereType<DateTime>().where((d) => d.isBefore(now)).toList()..sort();
+    if (past.length < 2) return null;
+    final intervals = <int>[];
+    for (var i = 1; i < past.length; i++) {
+      intervals.add(past[i].difference(past[i - 1]).inDays);
+    }
+    final avg = intervals.reduce((a, b) => a + b) ~/ intervals.length;
+    if (avg < 5 || avg > 120) return null; // ignore noise / one-offs
+    final daysSince = now.difference(past.last).inDays;
+    if (daysSince < avg - 7) return null; // not due yet
+    return (cadenceDays: avg, daysSince: daysSince);
+  }
+
   String _countdownLabel(ClientAppointment apt) {
     final dt = _dateTimeOf(apt);
     if (dt == null) return '';
@@ -191,6 +210,13 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
       if (mounted) AppToast.error(context, e.message);
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _tip(ClientAppointment apt) async {
+    final sent = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => TipScreen(appointmentId: apt.id, barberName: apt.staffName)),
+    );
+    if (sent == true) _refresh();
   }
 
   Future<void> _rate(ClientAppointment apt) async {
@@ -292,19 +318,34 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
               final loyalty = snapshot.data?.loyalty ?? [];
               final next = _nextAppointment(appointments);
               final others = appointments.where((a) => a.id != next?.id).toList();
+              final suggestion = next == null ? _autoSchedule(appointments) : null;
 
               return CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [accent.withValues(alpha: 0.18), palette.bg],
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: session.brandCover != null
+                              ? Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.network(session.brandCover!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                                    DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withValues(alpha: 0.38), palette.bg]),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [accent.withValues(alpha: 0.18), palette.bg]),
+                                  ),
+                                ),
                         ),
-                      ),
+                        Container(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                       child: SafeArea(
                         bottom: false,
                         child: Row(
@@ -357,11 +398,51 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                         ),
                       ),
                     ),
+                      ],
+                    ),
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
+                        if (suggestion != null) ...[
+                          RiseIn(
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(18),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(18),
+                                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NewAppointmentScreen())),
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [accent.withValues(alpha: 0.22), accent.withValues(alpha: 0.06)]),
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(color: accent.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(width: 46, height: 46, decoration: BoxDecoration(color: accent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14)), child: Icon(Icons.event_repeat_rounded, color: accent)),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Hora do corte? ✂️', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                                            const SizedBox(height: 2),
+                                            Text('Você costuma cortar a cada ${(suggestion.cadenceDays / 7).round()} semana(s) — já faz ${suggestion.daysSince} dias.', style: TextStyle(color: palette.textSecondary, fontSize: 11.5)),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(Icons.chevron_right_rounded, color: accent),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+                        ],
                         if (next != null) ...[
                           RiseIn(child: _NextAppointmentCard(
                             apt: next,
@@ -371,63 +452,10 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                             dateLabel: _formatDate(next),
                             onCancel: () => _cancel(next),
                             onReschedule: () => _reschedule(next),
+                            onStatusChanged: _refresh,
                           )),
                           const SizedBox(height: 22),
                         ],
-                        RiseIn(
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(18),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(18),
-                              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientSubscriptionsScreen())),
-                              child: Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [accent.withValues(alpha: 0.18), accent.withValues(alpha: 0.04)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(color: accent.withValues(alpha: 0.28)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 46,
-                                      height: 46,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(colors: [accent, Color.lerp(accent, Colors.black, 0.35)!]),
-                                        borderRadius: BorderRadius.circular(14),
-                                        boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 4))],
-                                      ),
-                                      child: Icon(Icons.workspace_premium_rounded, color: contrastingTextColor(accent), size: 22),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text('Assinaturas', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
-                                              const SizedBox(width: 5),
-                                              Icon(Icons.auto_awesome_rounded, size: 13, color: accent),
-                                            ],
-                                          ),
-                                          Text('Planos recorrentes com benefícios exclusivos', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
-                                        ],
-                                      ),
-                                    ),
-                                    Icon(Icons.chevron_right_rounded, color: accent),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 22),
                         if (loyalty.isNotEmpty) ...[
                           Text('Meus pontos', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
                           const SizedBox(height: 12),
@@ -479,6 +507,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                                 palette: palette,
                                 dateLabel: _formatDate(entry.value),
                                 onRate: () => _rate(entry.value),
+                                onTip: () => _tip(entry.value),
                               ),
                             )),
                       ]),
@@ -514,6 +543,7 @@ class _NextAppointmentCard extends StatefulWidget {
   final String dateLabel;
   final VoidCallback onCancel;
   final VoidCallback onReschedule;
+  final VoidCallback onStatusChanged;
 
   const _NextAppointmentCard({
     required this.apt,
@@ -523,6 +553,7 @@ class _NextAppointmentCard extends StatefulWidget {
     required this.dateLabel,
     required this.onCancel,
     required this.onReschedule,
+    required this.onStatusChanged,
   });
 
   @override
@@ -531,15 +562,40 @@ class _NextAppointmentCard extends StatefulWidget {
 
 class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  final _repo = ClientRepository();
+  Timer? _pollTimer;
+  QueueInfo? _queue;
+
+  static const _pollable = {'SCHEDULED', 'CONFIRMED', 'ARRIVED', 'IN_PROGRESS'};
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    if (_pollable.contains(widget.apt.status)) {
+      _poll();
+      _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => _poll());
+    }
+  }
+
+  Future<void> _poll() async {
+    try {
+      final q = await _repo.queue(widget.apt.id);
+      if (!mounted) return;
+      setState(() => _queue = q);
+      // The barber moved us along (e.g. ARRIVED → IN_PROGRESS): pull the whole
+      // home again so every card reflects the new reality, live.
+      if (q.status != widget.apt.status) widget.onStatusChanged();
+      // Left the line (finished/cancelled) or it's no longer today → stop.
+      if (!q.active || !q.isToday) _pollTimer?.cancel();
+    } catch (_) {
+      // Transient; the next tick tries again.
+    }
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -547,6 +603,15 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
   @override
   Widget build(BuildContext context) {
     final palette = widget.palette;
+    final status = widget.apt.status;
+    final inProgress = status == 'IN_PROGRESS';
+    final arrived = status == 'ARRIVED';
+    final live = inProgress || arrived;
+    final badgeLabel = inProgress
+        ? '✂️ EM ATENDIMENTO AGORA'
+        : arrived
+            ? '✅ CHECK-IN FEITO · JÁ É SUA VEZ'
+            : 'PRÓXIMO · ${widget.countdown.toUpperCase()}';
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -571,8 +636,17 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: widget.accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(20)),
-                  child: Text('PRÓXIMO · ${widget.countdown.toUpperCase()}', style: TextStyle(color: widget.accent, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.4)),
+                  decoration: BoxDecoration(color: widget.accent.withValues(alpha: live ? 0.28 : 0.18), borderRadius: BorderRadius.circular(20)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (live) ...[
+                        Container(width: 6, height: 6, decoration: BoxDecoration(color: widget.accent, shape: BoxShape.circle)),
+                        const SizedBox(width: 6),
+                      ],
+                      Text(badgeLabel, style: TextStyle(color: widget.accent, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.4)),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -590,27 +664,63 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
                 Text('R\$ ${widget.apt.totalPrice.toStringAsFixed(2)}', style: TextStyle(color: palette.textFaint, fontSize: 13)),
               ],
             ),
+            if (_queue != null && _queue!.isToday && _queue!.active && !inProgress) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(color: widget.accent.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(12), border: Border.all(color: widget.accent.withValues(alpha: 0.25))),
+                child: Row(
+                  children: [
+                    Container(width: 7, height: 7, decoration: BoxDecoration(color: widget.accent, shape: BoxShape.circle)),
+                    const SizedBox(width: 8),
+                    Icon(Icons.groups_rounded, size: 15, color: widget.accent),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _queue!.ahead == 0
+                            ? 'Você é o próximo! 🔥'
+                            : '${_queue!.position}º na fila · ~${_queue!.etaMinutes} min de espera',
+                        style: TextStyle(color: widget.accent, fontWeight: FontWeight.w700, fontSize: 12.5),
+                      ),
+                    ),
+                    Text('ao vivo', style: TextStyle(color: widget.accent.withValues(alpha: 0.6), fontSize: 10, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: widget.onCancel,
-                    style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent)),
-                    child: const Text('Cancelar'),
-                  ),
+            if (live)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(color: widget.accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
+                child: Text(
+                  inProgress ? 'Aproveite o corte! ✂️' : 'Você já fez check-in. Aguarde ser chamado.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: widget.accent, fontWeight: FontWeight.w700, fontSize: 13),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: PulseButton(
-                    onPressed: widget.onReschedule,
-                    color: widget.accent,
-                    height: 40,
-                    child: Text('Remarcar', style: TextStyle(color: contrastingTextColor(widget.accent), fontWeight: FontWeight.bold, fontSize: 13.5)),
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: widget.onCancel,
+                      style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent)),
+                      child: const Text('Cancelar'),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: PulseButton(
+                      onPressed: widget.onReschedule,
+                      color: widget.accent,
+                      height: 40,
+                      child: Text('Remarcar', style: TextStyle(color: contrastingTextColor(widget.accent), fontWeight: FontWeight.bold, fontSize: 13.5)),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
@@ -706,8 +816,9 @@ class _HistoryTile extends StatelessWidget {
   final AppPalette palette;
   final String dateLabel;
   final VoidCallback onRate;
+  final VoidCallback onTip;
 
-  const _HistoryTile({required this.apt, required this.accent, required this.palette, required this.dateLabel, required this.onRate});
+  const _HistoryTile({required this.apt, required this.accent, required this.palette, required this.dateLabel, required this.onRate, required this.onTip});
 
   IconData _statusIcon(String status) {
     switch (status) {
@@ -767,22 +878,46 @@ class _HistoryTile extends StatelessWidget {
               if (apt.status == 'COMPLETED' && !apt.hasReview)
                 GestureDetector(
                   onTap: onRate,
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.star_border, size: 14, color: Colors.amber),
-                      SizedBox(width: 2),
-                      Text('Avaliar', style: TextStyle(color: Colors.amber, fontSize: 11)),
+                      Icon(Icons.star_border, size: 14, color: accent),
+                      const SizedBox(width: 2),
+                      Text('Avaliar', style: TextStyle(color: accent, fontSize: 11)),
                     ],
                   ),
                 )
               else if (apt.hasReview)
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.star, size: 13, color: Colors.amber),
-                    SizedBox(width: 2),
-                    Text('Avaliado', style: TextStyle(color: Colors.amber, fontSize: 11)),
+                    Icon(Icons.star, size: 13, color: accent),
+                    const SizedBox(width: 2),
+                    Text('Avaliado', style: TextStyle(color: accent, fontSize: 11)),
                   ],
                 ),
+              if (apt.status == 'COMPLETED') ...[
+                const SizedBox(height: 4),
+                if (apt.hasTip)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.favorite_rounded, size: 12, color: accent),
+                      const SizedBox(width: 2),
+                      Text('Gorjeta enviada', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+                    ],
+                  )
+                else
+                  GestureDetector(
+                    onTap: onTip,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.volunteer_activism_rounded, size: 14, color: accent),
+                        const SizedBox(width: 2),
+                        Text('Gorjeta', style: TextStyle(color: accent, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+              ],
             ],
           ),
         ],

@@ -16,48 +16,35 @@ const _weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const _swatches = [0xFFD4AF37, 0xFFF59E0B, 0xFFEF4444, 0xFF3B82F6, 0xFF10B981, 0xFF8B5CF6, 0xFFEC4899, 0xFF000000];
 
 const _planInfo = {
-  'FREE': ('Starter', 'R\$ 29/mês', Color(0xFF9CA3AF), '50 agend./mês · até 3 barbeiros'),
-  'PRO': ('Pro', 'R\$ 79/mês', Color(0xFFF59E0B), 'Agendamentos ilimitados · até 10 barbeiros'),
-  'ENTERPRISE': ('White Label', 'R\$ 299/mês + 3%', Color(0xFFA78BFA), 'Tudo ilimitado'),
+  'FREE': ('Essencial', 'R\$ 79/mês', Color(0xFF9CA3AF), 'Agendamentos ilimitados · até 3 barbeiros'),
+  'PRO': ('Pro', 'R\$ 149/mês', Color(0xFFF59E0B), 'Ilimitado · Copiloto com IA, financeiro e assinatura'),
+  'ENTERPRISE': ('White Label', 'R\$ 399/mês', Color(0xFFA78BFA), 'App próprio, NF-e e multi-unidade'),
 };
+
+const _proFeatures = [
+  'Agendamentos e barbeiros ilimitados',
+  'Financeiro completo (meta e comissões)',
+  'Relatórios avançados',
+  'Controle de estoque',
+  'Fidelidade (pontos/cashback)',
+  'Clube de assinatura',
+  'Chatbot com IA',
+  'Lembrete no WhatsApp',
+];
+
+const _enterpriseExtras = [
+  'App próprio com a sua marca',
+  'App instalável (link vira app)',
+  'Nota fiscal (NFS-e)',
+];
 
 const _featuresByPlan = {
   'FREE': <String>[],
-  'PRO': [
-    'Agendamentos ilimitados',
-    'Equipe com mais barbeiros',
-    'Relatórios avançados',
-    'Chatbot personalizável',
-    'WhatsApp Business',
-    'Financeiro completo',
-    'Controle de estoque',
-    'Marketing e campanhas',
-    'Comissão por barbeiro',
-  ],
-  'ENTERPRISE': [
-    'Agendamentos ilimitados',
-    'Equipe com mais barbeiros',
-    'Relatórios avançados',
-    'Chatbot personalizável',
-    'WhatsApp Business',
-    'Financeiro completo',
-    'Controle de estoque',
-    'Marketing e campanhas',
-    'Comissão por barbeiro',
-  ],
+  'PRO': _proFeatures,
+  'ENTERPRISE': [..._proFeatures, ..._enterpriseExtras],
 };
 
-const _allFeatureLabels = [
-  'Agendamentos ilimitados',
-  'Equipe com mais barbeiros',
-  'Relatórios avançados',
-  'Chatbot personalizável',
-  'WhatsApp Business',
-  'Financeiro completo',
-  'Controle de estoque',
-  'Marketing e campanhas',
-  'Comissão por barbeiro',
-];
+const _allFeatureLabels = [..._proFeatures, ..._enterpriseExtras];
 
 class GestorSettingsScreen extends StatefulWidget {
   const GestorSettingsScreen({super.key});
@@ -77,6 +64,8 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _instaCtrl = TextEditingController();
+  final _pixCtrl = TextEditingController();
+  final _faqCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   Color _color = const Color(0xFFD4AF37);
@@ -128,6 +117,8 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
     _instaCtrl.dispose();
+    _pixCtrl.dispose();
+    _faqCtrl.dispose();
     _cityCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
@@ -149,6 +140,8 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
       _phoneCtrl.text = p.phone ?? '';
       _emailCtrl.text = p.email ?? '';
       _instaCtrl.text = p.instagram ?? '';
+      _pixCtrl.text = p.pixKey ?? '';
+      _faqCtrl.text = p.faqText ?? '';
       _cityCtrl.text = p.city ?? '';
       _descCtrl.text = p.description ?? '';
       _color = _parseHex(p.primaryColor);
@@ -209,6 +202,8 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         phone: _phoneCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
         instagram: _instaCtrl.text.trim(),
+        pixKey: _pixCtrl.text.trim(),
+        faqText: _faqCtrl.text.trim(),
         city: _cityCtrl.text.trim(),
         description: _descCtrl.text.trim(),
         logo: _logo,
@@ -411,6 +406,10 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         CortixField(controller: _emailCtrl, keyboardType: TextInputType.emailAddress),
         const FieldLabel('Instagram'),
         CortixField(controller: _instaCtrl, hint: '@suabarbearia'),
+        const FieldLabel('Chave PIX (gorjetas)'),
+        CortixField(controller: _pixCtrl, hint: 'CPF, e-mail, telefone ou chave aleatória'),
+        const FieldLabel('Perguntas frequentes (o chatbot responde com isso)'),
+        CortixField(controller: _faqCtrl, maxLines: 4, hint: 'Ex: Aceita PIX e cartão. Tem estacionamento. Atende criança a partir de 3 anos.'),
         const FieldLabel('Cidade'),
         CortixField(controller: _cityCtrl),
         const FieldLabel('Descrição'),
@@ -588,7 +587,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
 
     final faqItems = (_chatbot['faqItems'] as List).cast<Map<String, dynamic>>();
     final whatsapp = (_chatbot['whatsapp'] as Map).cast<String, dynamic>();
-    final canWhatsapp = _featuresByPlan[_plan]!.contains('WhatsApp Business');
+    final canWhatsapp = _featuresByPlan[_plan]!.contains('Lembrete no WhatsApp');
 
     return StatefulBuilder(
       builder: (context, setTabState) => ListView(

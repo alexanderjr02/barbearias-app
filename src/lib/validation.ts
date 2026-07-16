@@ -59,6 +59,36 @@ export const cnpjSchema = z
   .transform((v) => (v ? v.replace(/\D/g, "") : v))
   .refine((v) => !v || v.length === 14, { message: "CNPJ inválido — deve ter 14 dígitos" });
 
+// Brazilian state — the two-letter UF code. Optional at signup, but must be
+// a real UF when present.
+const BR_UF = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
+  "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+] as const;
+
+export const optionalStateSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .optional()
+  .refine((v) => !v || (BR_UF as readonly string[]).includes(v), { message: "UF inválida" });
+
+// CEP — 8 digits when present.
+export const optionalCepSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v.replace(/\D/g, "") : v))
+  .refine((v) => !v || v.length === 8, { message: "CEP inválido — deve ter 8 dígitos" });
+
+// Instagram handle — stored without the leading "@".
+export const optionalInstagramSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v.replace(/^@+/, "").trim() : v))
+  .refine((v) => !v || /^[a-zA-Z0-9._]{1,30}$/.test(v), { message: "@ do Instagram inválido" });
+
 const MIN_CLIENT_AGE = 13;
 const MAX_AGE = 120;
 
@@ -109,6 +139,11 @@ export const registerOwnerSchema = z.object({
   barbershopName: nameSchema,
   barbershopSlug: slugSchema,
   city: z.string().trim().min(1, "Cidade é obrigatória"),
+  state: optionalStateSchema,
+  address: z.string().trim().max(160, "Endereço muito longo").optional(),
+  zipCode: optionalCepSchema,
+  whatsapp: optionalPhoneSchema,
+  instagram: optionalInstagramSchema,
   cnpj: cnpjSchema,
   plan: z.string().optional(),
 });
@@ -126,6 +161,17 @@ export const registerClientSchema = z.object({
 
 export const googleAuthSchema = z.object({
   idToken: z.string().min(20, "Token do Google ausente ou inválido"),
+});
+
+// POST /api/auth/forgot-password — request a reset link by e-mail.
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+// POST /api/auth/reset-password — set a new password using the emailed token.
+export const resetPasswordSchema = z.object({
+  token: z.string().min(20, "Token de redefinição inválido"),
+  password: passwordSchema,
 });
 
 // POST /api/clients — gestor pre-registering a client from the dashboard.

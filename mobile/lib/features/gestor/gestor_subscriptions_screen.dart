@@ -6,6 +6,7 @@ import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
+import 'widgets/payment_connect_card.dart';
 
 const _colorSwatches = ['#D4AF37', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#F97316'];
 const _cycleLabels = {'MONTHLY': 'mês', 'QUARTERLY': 'trimestre', 'ANNUAL': 'ano'};
@@ -446,6 +447,8 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
               children: [
+                const RiseIn(child: PaymentConnectCard()),
+                const SizedBox(height: 14),
                 RiseIn(
                   child: GridView.count(
                     crossAxisCount: 2,

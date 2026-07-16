@@ -3,13 +3,18 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../cliente/booking_repository.dart';
+import '../cliente/client_repository.dart';
 import 'chatbot_responses.dart';
 
 class _ChatMsg {
   final String text;
   final bool fromBot;
-  _ChatMsg(this.text, this.fromBot);
+  final String? imageUrl;
+  _ChatMsg(this.text, this.fromBot, {this.imageUrl});
 }
 
 /// Self-contained floating assistant bubble + overlay chat panel. Meant to
@@ -35,10 +40,25 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
   final _scrollController = ScrollController();
   late final AnimationController _pulseController;
 
+  final _clientRepo = ClientRepository();
+  final _bookingRepo = BookingRepository();
+  late final String _sessionId = 'mobile-${DateTime.now().millisecondsSinceEpoch}';
+  String? _barbershopId;
+
   @override
   void initState() {
     super.initState();
     _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
+    _resolveBarbershop();
+  }
+
+  Future<void> _resolveBarbershop() async {
+    try {
+      final shops = await _bookingRepo.myBarbershops();
+      if (mounted && shops.isNotEmpty) setState(() => _barbershopId = shops.first.id);
+    } catch (_) {
+      // Falls back to local canned replies if we can't resolve the shop.
+    }
   }
 
   @override
@@ -57,7 +77,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
     });
   }
 
-  void _send(String raw) {
+  Future<void> _send(String raw) async {
     final text = raw.trim();
     if (text.isEmpty) return;
     setState(() {
@@ -66,15 +86,59 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
       _typing = true;
     });
     _scrollToEnd();
-    final delayMs = 500 + Random().nextInt(500);
-    Future.delayed(Duration(milliseconds: delayMs), () {
+
+    String reply;
+    final shopId = _barbershopId;
+    if (shopId != null) {
+      // Hits the real backend assistant — AI-powered when the shop is Pro+ and
+      // an Anthropic key is set, otherwise the server's canned answers.
+      try {
+        reply = await _clientRepo.chatbotSend(message: text, sessionId: _sessionId, barbershopId: shopId);
+        if (reply.trim().isEmpty) reply = matchChatbotResponse(text) ?? chatbotDefaultResponse;
+      } catch (_) {
+        reply = matchChatbotResponse(text) ?? chatbotDefaultResponse;
+      }
+    } else {
+      await Future.delayed(Duration(milliseconds: 400 + Random().nextInt(400)));
+      reply = matchChatbotResponse(text) ?? chatbotDefaultResponse;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _typing = false;
+      _messages.add(_ChatMsg(reply, true));
+    });
+    _scrollToEnd();
+  }
+
+  /// Client sends a reference photo in the chat: it's saved to their Carteira
+  /// de Cortes so it becomes the reference the barber sees when they book.
+  Future<void> _sendPhoto() async {
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1400, imageQuality: 88);
+    if (file == null || !mounted) return;
+    setState(() => _typing = true);
+    _scrollToEnd();
+    try {
+      final url = await _clientRepo.uploadImage(file);
+      await _clientRepo.addCut(imageUrl: url, note: 'Referência enviada no chat');
       if (!mounted) return;
       setState(() {
+        _messages.add(_ChatMsg('', false, imageUrl: url));
         _typing = false;
-        _messages.add(_ChatMsg(matchChatbotResponse(text) ?? chatbotDefaultResponse, true));
+        _messages.add(_ChatMsg(
+          'Guardei sua referência na Carteira de Cortes! 📸 Na hora de agendar, é só escolher essa foto que o barbeiro vê exatamente o corte que você quer. Quer marcar um horário?',
+          true,
+        ));
       });
       _scrollToEnd();
-    });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _typing = false;
+          _messages.add(_ChatMsg('Não consegui enviar a foto agora. Tenta de novo?', true));
+        });
+      }
+    }
   }
 
   @override
@@ -230,7 +294,20 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                         bottomRight: Radius.circular(m.fromBot ? 14 : 4),
                       ),
                     ),
-                    child: Text(m.text, style: TextStyle(color: m.fromBot ? Colors.white : contrastingTextColor(accent), fontSize: 13, height: 1.35)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (m.imageUrl != null) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(resolveAssetUrl(m.imageUrl) ?? m.imageUrl!, width: 180, height: 180, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox()),
+                          ),
+                          if (m.text.isNotEmpty) const SizedBox(height: 6),
+                        ],
+                        if (m.text.isNotEmpty) Text(m.text, style: TextStyle(color: m.fromBot ? Colors.white : contrastingTextColor(accent), fontSize: 13, height: 1.35)),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -261,6 +338,16 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
             child: Row(
               children: [
+                GestureDetector(
+                  onTap: _typing ? null : _sendPhoto,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), shape: BoxShape.circle, border: Border.all(color: Colors.white12)),
+                    child: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white70, size: 20),
+                  ),
+                ),
                 Expanded(
                   child: TextField(
                     controller: _inputController,

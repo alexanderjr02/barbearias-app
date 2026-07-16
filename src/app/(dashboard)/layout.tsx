@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { NpsPrompt } from "@/components/layout/NpsPrompt";
-import { FloatingSupportWidget } from "@/components/layout/FloatingSupportWidget";
+import { FloatingCopilotWidget } from "@/components/layout/FloatingCopilotWidget";
 import { getSession } from "@/lib/auth";
 
 export default async function DashboardLayout({
@@ -26,7 +26,7 @@ export default async function DashboardLayout({
         <main className="flex-1 p-6 overflow-x-hidden">{children}</main>
       </div>
       <NpsPrompt />
-      <FloatingSupportWidget />
+      <FloatingCopilotWidget />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 /// A bottom-sheet form scaffold shared by every "create/edit X" flow in the
@@ -145,6 +146,7 @@ class CortixField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool obscureText;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CortixField({
     super.key,
@@ -153,6 +155,7 @@ class CortixField extends StatelessWidget {
     this.keyboardType,
     this.obscureText = false,
     this.maxLines = 1,
+    this.inputFormatters,
   });
 
   @override
@@ -163,6 +166,7 @@ class CortixField extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       maxLines: maxLines,
+      inputFormatters: inputFormatters,
       style: TextStyle(color: palette.textPrimary, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
@@ -172,6 +176,73 @@ class CortixField extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       ),
+    );
+  }
+}
+
+/// Formats a date as the "YYYY-MM-DD" key the API expects (matching native
+/// `<input type="date">` on the web), or null when no date was chosen.
+String? formatDobKey(DateTime? date) {
+  if (date == null) return null;
+  return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+}
+
+/// A tappable date field matching [CortixField], backed by a [ValueNotifier]
+/// so the parent form can read the chosen date without managing its own state.
+/// Used for the client's birthday in the gestor/barber "cadastrar cliente"
+/// flows (birthday marketing) and anywhere else a date is collected.
+class CortixDateField extends StatelessWidget {
+  final ValueNotifier<DateTime?> value;
+  final String hint;
+
+  const CortixDateField({super.key, required this.value, this.hint = 'Selecionar'});
+
+  Future<void> _pick(BuildContext context) async {
+    final now = DateTime.now();
+    final current = value.value;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current ?? DateTime(now.year - 20, now.month, now.day),
+      firstDate: DateTime(now.year - 120),
+      lastDate: now,
+      helpText: 'Data de nascimento',
+    );
+    if (picked != null) value.value = picked;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return ValueListenableBuilder<DateTime?>(
+      valueListenable: value,
+      builder: (context, date, _) {
+        final label = date == null
+            ? hint
+            : '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+        return InkWell(
+          onTap: () => _pick(context),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: palette.surfaceAlt,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.cake_outlined, size: 18, color: palette.textFaint),
+                const SizedBox(width: 10),
+                Text(
+                  label,
+                  style: TextStyle(color: date == null ? palette.textFaint : palette.textPrimary, fontSize: 14),
+                ),
+                const Spacer(),
+                Icon(Icons.calendar_today_outlined, size: 16, color: palette.textFaint),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

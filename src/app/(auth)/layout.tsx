@@ -1,55 +1,46 @@
 import Link from "next/link";
-import { Scissors } from "lucide-react";
+import { Scissors, ShieldCheck, Lock } from "lucide-react";
 
+// Auth format: a full-bleed real barbershop photo behind a centered glass
+// card. Shared by login, register, forgot/reset — one cohesive, premium
+// entrance instead of the old split marketing panel.
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-zinc-950 flex">
-      {/* Left side */}
-      <div className="flex-1 flex flex-col justify-center px-8 py-12 max-w-lg mx-auto w-full lg:max-w-none lg:mx-0 lg:px-16">
-        <Link href="/" className="inline-flex items-center gap-2 mb-12 group w-fit">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
-            <Scissors className="w-5 h-5 text-zinc-900" />
-          </div>
-          <span className="text-xl font-black text-white tracking-tight">
-            CORT<span className="text-amber-400">IX</span>
-          </span>
-        </Link>
-        {children}
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center px-4 py-10">
+      {/* Fixed background photo + darkening + amber glow */}
+      <div className="fixed inset-0 -z-10">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/landing/shop-interior.jpg" alt="" className="w-full h-full object-cover kenburns" />
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950/92 via-zinc-950/85 to-black/95" />
+        <div className="absolute -top-[15%] -right-[10%] w-[520px] h-[520px] bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-[15%] -left-[10%] w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Right side */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border-l border-zinc-800/50 items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/8 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-600/5 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="relative text-center max-w-sm">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-amber-500/30">
-            <Scissors className="w-10 h-10 text-zinc-900" />
-          </div>
-          <h2 className="text-3xl font-black text-white mb-3">
-            Bem-vindo ao CORTIX
-          </h2>
-          <p className="text-zinc-500 leading-relaxed text-sm">
-            Gestão completa para barbearias. Agendamento online, chatbot e controle financeiro em um só lugar.
-          </p>
+      <Link href="/" className="inline-flex items-center gap-2.5 mb-6 group">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-105 transition-transform">
+          <Scissors className="w-5 h-5 text-zinc-900" />
+        </div>
+        <span className="text-2xl font-black text-white tracking-tight font-display">
+          CORT<span className="text-amber-400">IX</span>
+        </span>
+      </Link>
 
-          <div className="mt-10 grid grid-cols-2 gap-3 text-left">
-            {[
-              { l: "Sem fidelidade", d: "Cancele quando quiser" },
-              { l: "No ar em minutos", d: "Sem suporte técnico" },
-              { l: "Dados protegidos", d: "SSL + LGPD" },
-              { l: "Suporte", d: "Em português" },
-            ].map((item) => (
-              <div key={item.l} className="bg-zinc-900/80 border border-zinc-800/80 rounded-2xl p-4 backdrop-blur-sm">
-                <p className="text-sm font-black text-amber-400">{item.l}</p>
-                <p className="text-xs text-zinc-600 mt-0.5">{item.d}</p>
-              </div>
-            ))}
-          </div>
+      <div className="auth-rise w-full max-w-md">
+        <div className="rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-xl shadow-2xl shadow-black/60 p-6 sm:p-8">
+          {children}
+        </div>
+        <div className="mt-5 flex items-center justify-center gap-4 text-[11px] text-zinc-400">
+          <span className="flex items-center gap-1.5">
+            <Lock className="w-3 h-3 text-emerald-400" /> Conexão segura
+          </span>
+          <span className="w-px h-3 bg-white/20" />
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3 h-3 text-emerald-400" /> Dados protegidos (LGPD)
+          </span>
         </div>
       </div>
     </div>

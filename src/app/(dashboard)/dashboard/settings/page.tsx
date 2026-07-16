@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Palette,
   Store,
   Clock,
   Bell,
@@ -27,6 +26,8 @@ interface BarbershopMe {
   phone: string | null;
   email: string | null;
   instagram: string | null;
+  pixKey: string | null;
+  faqText: string | null;
   city: string | null;
   description: string | null;
   primaryColor: string;
@@ -35,7 +36,6 @@ interface BarbershopMe {
 
 const tabs = [
   { id: "profile", label: "Barbearia", icon: Store },
-  { id: "appearance", label: "Aparência", icon: Palette },
   { id: "hours", label: "Horários", icon: Clock },
   { id: "notifications", label: "Notificações", icon: Bell },
   { id: "chatbot", label: "Chatbot", icon: MessageSquareText },
@@ -48,6 +48,7 @@ const PLAN_FEATURE_LABELS: { feature: Feature; label: string }[] = [
   { feature: "advanced_reports", label: "Relatórios avançados" },
   { feature: "chatbot_customization", label: "Chatbot personalizável" },
   { feature: "chatbot_whatsapp", label: "WhatsApp Business" },
+  { feature: "ai_copilot", label: "Copiloto com IA" },
   { feature: "financial_full", label: "Financeiro completo" },
   { feature: "inventory", label: "Controle de estoque" },
   { feature: "marketing", label: "Marketing e campanhas" },
@@ -110,7 +111,6 @@ export default function SettingsPage() {
   const { plan, can, setPlan, formatPrice, pricing } = usePlan();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("profile");
-  const [primaryColor, setPrimaryColor] = useState("#D4AF37");
   const [hours, setHours] = useState(defaultHours);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [chatbot, setChatbot] = useState<ChatbotConfig>(() => {
@@ -127,7 +127,6 @@ export default function SettingsPage() {
   const [chatbotSaved, setChatbotSaved] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [hoursSaved, setHoursSaved] = useState(false);
-  const [appearanceSaved, setAppearanceSaved] = useState(false);
 
   const { data: barbershop } = useQuery({
     queryKey: ["barbershop-me"],
@@ -139,7 +138,6 @@ export default function SettingsPage() {
   const [syncedBarbershop, setSyncedBarbershop] = useState<BarbershopMe | undefined>(undefined);
   if (barbershop && barbershop !== syncedBarbershop) {
     setSyncedBarbershop(barbershop);
-    setPrimaryColor(barbershop.primaryColor);
     if (barbershop.workingHours.length > 0) {
       setHours(
         days.map((day, i) => {
@@ -166,6 +164,8 @@ export default function SettingsPage() {
         phone: form.get("phone"),
         email: form.get("email"),
         instagram: form.get("instagram"),
+        pixKey: form.get("pixKey"),
+        faqText: form.get("faqText"),
         city: form.get("city"),
         description: form.get("description"),
       },
@@ -173,18 +173,6 @@ export default function SettingsPage() {
         onSuccess: () => {
           setProfileSaved(true);
           setTimeout(() => setProfileSaved(false), 1600);
-        },
-      }
-    );
-  };
-
-  const saveAppearance = () => {
-    updateBarbershop.mutate(
-      { primaryColor },
-      {
-        onSuccess: () => {
-          setAppearanceSaved(true);
-          setTimeout(() => setAppearanceSaved(false), 1600);
         },
       }
     );
@@ -290,6 +278,11 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Cidade</label>
                   <input name="city" type="text" defaultValue={barbershop?.city ?? ""} placeholder="São Paulo, SP" className={inputCls} />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Chave PIX (gorjetas)</label>
+                  <input name="pixKey" type="text" defaultValue={barbershop?.pixKey ?? ""} placeholder="CPF, e-mail, telefone ou chave aleatória" className={inputCls} />
+                  <p className="mt-1 text-xs text-zinc-500">Usada para o cliente enviar gorjeta ao barbeiro pelo app.</p>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">Descrição</label>
@@ -300,58 +293,26 @@ export default function SettingsPage() {
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+                  Perguntas frequentes (o chatbot responde com isso)
+                  <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">IA</span>
+                </label>
+                <textarea
+                  name="faqText"
+                  rows={4}
+                  defaultValue={barbershop?.faqText ?? ""}
+                  placeholder={"Ex:\n- Aceita PIX e cartão.\n- Tem estacionamento na porta.\n- Atende criança a partir de 3 anos.\n- Cancelamento até 2h antes."}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                />
+                <p className="mt-1 text-xs text-zinc-500">Escreva as dúvidas comuns e suas respostas. O assistente virtual usa isso pra responder os clientes.</p>
+              </div>
               <button type="submit" disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
                 {profileSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar alterações"}
               </button>
             </form>
           )}
 
-          {activeTab === "appearance" && (
-            <div className="space-y-6">
-              <h2 className="text-lg font-bold text-white">Personalização Visual</h2>
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-3">Cor principal</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-12 h-12 rounded-xl cursor-pointer border-0 bg-transparent"
-                  />
-                  <div className="flex gap-2">
-                    {["#D4AF37", "#F59E0B", "#EF4444", "#3B82F6", "#10B981", "#8B5CF6", "#EC4899", "#000000"].map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setPrimaryColor(color)}
-                        className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${primaryColor === color ? "border-white scale-110" : "border-transparent"}`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-3">Preview da página de agendamento</label>
-                <div className="rounded-xl overflow-hidden border border-zinc-700">
-                  <div className="h-12 flex items-center px-4 gap-3" style={{ backgroundColor: primaryColor }}>
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white">
-                      {(barbershop?.name ?? "").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "BJ"}
-                    </div>
-                    <span className="font-bold text-white">{barbershop?.name ?? "Sua barbearia"}</span>
-                  </div>
-                  <div className="bg-zinc-800 p-4 text-center">
-                    <p className="text-sm text-zinc-400">Sua página personalizada de agendamento</p>
-                    <button className="mt-2 px-4 py-2 text-sm font-bold rounded-lg text-black" style={{ backgroundColor: primaryColor }}>
-                      Agendar horário
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <button onClick={saveAppearance} disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
-                {appearanceSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar aparência"}
-              </button>
-            </div>
-          )}
 
           {activeTab === "hours" && (
             <div className="space-y-5">
