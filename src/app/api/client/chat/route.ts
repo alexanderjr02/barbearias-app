@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   const body = await request.json().catch(() => null);
-  const message: string = (body?.message ?? "").toString().trim();
+  const message: string = (body?.message ?? "").toString().trim().slice(0, 2000);
   const barbershopId: string = (body?.barbershopId ?? "").toString();
   if (!message || !barbershopId) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
 

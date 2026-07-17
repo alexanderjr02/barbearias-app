@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { getAnthropic } from "./anthropicClient";
 import { prisma } from "@/lib/db";
 import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, shopNow, OCCUPYING_STATUSES } from "@/lib/scheduling";
 import { appointmentLimitError } from "@/lib/planLimits";
@@ -211,7 +212,7 @@ function textFrom(content: Anthropic.ContentBlock[]): string {
  * `clientContext`, when provided (logged-in client), personalizes the bot so it
  * greets by name, remembers past visits/preferences and pre-fills bookings. */
 export async function runAssistant(barbershopId: string, history: ChatTurn[], clientContext?: string): Promise<string> {
-  const client = new Anthropic();
+  const client = getAnthropic();
 
   const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true, faqText: true } });
   const services: ServiceRow[] = await prisma.service.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true, duration: true, price: true } });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
 import Anthropic from "@anthropic-ai/sdk";
+import { getAnthropic } from "@/lib/chatbot/anthropicClient";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const client = new Anthropic();
+    const client = getAnthropic();
     const msg = await client.messages.create({
       model: process.env.CHATBOT_MODEL || "claude-opus-4-8",
       max_tokens: 500,

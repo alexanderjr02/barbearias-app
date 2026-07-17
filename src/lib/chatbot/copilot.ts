@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { getAnthropic } from "./anthropicClient";
 import { prisma } from "@/lib/db";
 import { startOfUtcMonth, startOfUtcDay, addUtcDays } from "@/lib/dateRange";
 import { assistantEnabled } from "./assistant";
@@ -21,6 +22,7 @@ import {
   diagnose,
   goalProgress,
 } from "@/lib/copilot/insights";
+import { revenueLeak, closeMonth, agendaGaps, simulateDecision, suggestSchedule, closeCashbox, reputationSummary } from "@/lib/copilot/analytics";
 
 const MODEL = process.env.CHATBOT_MODEL || "claude-opus-4-8";
 
@@ -177,8 +179,19 @@ function toolsFor(role: CopilotRole): Anthropic.Tool[] {
     { name: "set_goal", description: "Define a meta de faturamento do mês.", input_schema: { type: "object", properties: { amount: { type: "number" } }, required: ["amount"] } },
     { name: "set_automation", description: "Liga/desliga automações do auto-piloto. rule: 'confirm' (confirmar agendamentos), 'birthday' (msg de aniversário), 'winback' (chamar sumidos). Use enabled=false para desligar; para winback, days define há quantos dias.", input_schema: { type: "object", properties: { rule: { type: "string", enum: ["confirm", "birthday", "winback"] }, enabled: { type: "boolean" }, days: { type: "number" } }, required: ["rule"] } },
   ];
+  // "10 segundos que valem horas ou dias" — análises pesadas que substituem
+  // planilha, consultor e contador.
+  const gestorPower: Anthropic.Tool[] = [
+    { name: "get_revenue_leak", description: "AUDITORIA DE DINHEIRO PERDIDO: junta num relatório só onde o negócio está vazando R$ — clientes sumidos, no-shows do mês, horários vazios de hoje e estoque parado, com um total estimado. Use quando perguntarem 'onde estou perdendo dinheiro?', 'como faturar mais?' ou pra abrir os olhos do gestor.", input_schema: { type: "object", properties: {} } },
+    { name: "close_month", description: "FECHA O MÊS: fechamento financeiro completo — faturamento, comissão de CADA barbeiro, receitas/despesas lançadas, gorjetas, imposto (ISS) estimado e o LUCRO. Use para 'fecha meu mês', 'quanto lucrei', 'quanto pagar de comissão'. monthOffset=-1 para o mês passado.", input_schema: { type: "object", properties: { monthOffset: { type: "number", description: "0=mês atual, -1=mês passado" } } } },
+    { name: "get_agenda_gaps", description: "OTIMIZA A AGENDA: acha os buracos (tempo morto) entre atendimentos de cada barbeiro num dia e estima quanto isso custa. Use para 'otimiza minha agenda', 'onde tem tempo morto hoje'.", input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD (padrão hoje)" } } } },
+    { name: "simulate", description: "SIMULADOR DE DECISÃO ('e se...?'): projeta o impacto ANTES de arriscar. type 'price' com pct (e serviceName opcional) simula mudar preço em %; type 'hire' simula contratar mais 1 barbeiro. Use para 'e se eu subir 10%?', 'vale a pena contratar?'.", input_schema: { type: "object", properties: { type: { type: "string", enum: ["price", "hire"] }, pct: { type: "number" }, serviceName: { type: "string" } }, required: ["type"] } },
+    { name: "suggest_schedule", description: "MONTA A ESCALA DA SEMANA: recomenda quantos barbeiros por dia com base na demanda real dos últimos 90 dias. Use para 'monta a escala', 'como escalar a equipe'.", input_schema: { type: "object", properties: {} } },
+    { name: "close_cashbox", description: "FECHA O CAIXA DO DIA: bate os valores informados (dinheiro/cartão/pix) com o que os atendimentos concluídos hoje somam e aponta sobra/falta. Use quando o gestor disser quanto fechou (ex: 'fechei com 840 em dinheiro e 1200 no cartão').", input_schema: { type: "object", properties: { cash: { type: "number" }, card: { type: "number" }, pix: { type: "number" } } } },
+    { name: "get_reviews", description: "REPUTAÇÃO: nota média, distribuição de estrelas e as avaliações recentes com comentário. Use para 'como está minha reputação', 'me ajuda a responder as avaliações' — aí você redige a resposta de cada uma na voz da barbearia.", input_schema: { type: "object", properties: {} } },
+  ];
   if (role === "BARBER") return [...barberTools, ...clientTools, ...read.filter((t) => ["get_churned_clients"].includes(t.name))];
-  return [...read, ...clientTools, ...gestorActions, ...gestorAdmin, ...gestorOps, ...gestorSmart];
+  return [...read, ...clientTools, ...gestorActions, ...gestorAdmin, ...gestorOps, ...gestorSmart, ...gestorPower];
 }
 
 async function resolveShopService(barbershopId: string, name: string) {
@@ -526,6 +539,20 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       }
       return "Regra desconhecida. Use: confirm, birthday ou winback.";
     }
+    case "get_revenue_leak":
+      return JSON.stringify(await revenueLeak(barbershopId));
+    case "close_month":
+      return JSON.stringify(await closeMonth(barbershopId, typeof input.monthOffset === "number" ? input.monthOffset : 0));
+    case "get_agenda_gaps":
+      return JSON.stringify(await agendaGaps(barbershopId, input.dateKey ? String(input.dateKey) : undefined));
+    case "simulate":
+      return JSON.stringify(await simulateDecision(barbershopId, { type: String(input.type ?? ""), pct: typeof input.pct === "number" ? input.pct : undefined, serviceName: input.serviceName ? String(input.serviceName) : undefined }));
+    case "suggest_schedule":
+      return JSON.stringify(await suggestSchedule(barbershopId));
+    case "close_cashbox":
+      return JSON.stringify(await closeCashbox(barbershopId, { cash: typeof input.cash === "number" ? input.cash : undefined, card: typeof input.card === "number" ? input.card : undefined, pix: typeof input.pix === "number" ? input.pix : undefined }));
+    case "get_reviews":
+      return JSON.stringify(await reputationSummary(barbershopId));
     default:
       return "Ferramenta desconhecida.";
   }
@@ -551,7 +578,7 @@ export async function runCopilot(
   staffId: string | null,
   history: ChatTurn[],
 ): Promise<{ reply: string; actions: CopilotAction[] }> {
-  const client = new Anthropic();
+  const client = getAnthropic();
   const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
 
   const shopName = shop?.name ?? "a barbearia";
@@ -569,6 +596,15 @@ export async function runCopilot(
 - Estoque: repor/ajustar produto (restock_product).
 - Marketing: enviar promoção pros clientes (send_promo — todos ou os sumidos). Escreva um texto curto e chamativo você mesmo e confirme antes de disparar.
 - Inteligência: PREVER faltas de amanhã (get_no_show_risk) e clientes prestes a sumir (get_churn_risk); dias cheios/vazios (get_busy_days); DIAGNOSTICAR queda de faturamento e a causa (get_diagnosis); acompanhar a META do mês (get_goal_progress / set_goal).
+- Superpoderes (o que levaria horas ou dias, você faz em segundos):
+  • AUDITAR onde o dinheiro está vazando (get_revenue_leak) — sumidos, no-shows, horários vazios, estoque parado, com total em R$.
+  • FECHAR O MÊS (close_month) — faturamento, comissão de cada barbeiro, despesas, gorjetas, imposto e lucro.
+  • OTIMIZAR a agenda achando tempo morto (get_agenda_gaps).
+  • SIMULAR decisões antes de arriscar (simulate) — subir preço X%, contratar mais um barbeiro.
+  • MONTAR a escala da semana pela demanda real (suggest_schedule).
+  • FECHAR O CAIXA do dia batendo os valores (close_cashbox).
+  • REPUTAÇÃO: ver nota e avaliações (get_reviews) e REDIGIR a resposta de cada avaliação na voz da barbearia — agradeça as boas, e nas ruins peça desculpa, resolva e convide a voltar. Entregue o texto pronto pra copiar.
+  Quando o gestor pedir "por que caiu / como faturar mais / onde perco dinheiro", combine get_diagnosis + get_revenue_leak e entregue um PLANO curto de ação (o que fazer hoje, amanhã, esta semana) — e ofereça executar (tocar nas ações). Aja como consultor: número → causa → o que fazer.
 - Auto-piloto: ligar/desligar automações que rodam sozinhas (set_automation): confirmação de agendamentos, mensagem de aniversário e win-back de sumidos.
 - Sempre converta datas relativas ("amanhã", "sexta") para AAAA-MM-DD. Nunca invente horário — use check_availability. Confirme antes de qualquer ação que grava ("Confirmo: agendar João, Corte, com o Thalles, amanhã 14h?").`
       : "";
@@ -736,7 +772,7 @@ export async function copilotGreeting(
   if (!assistantEnabled()) return { greeting: fallback, aiPowered: false };
 
   try {
-    const client = new Anthropic();
+    const client = getAnthropic();
     const sys = `Você é o Copiloto da ${shopName}, consultor de negócios de barbearia (CRM, retenção, agenda, no-show). Escreva UMA saudação de abertura curta (2 a 3 frases), começando com "${g}", em português do Brasil, tom esperto e humano. Destaque o mais importante dos dados e, se houver problema, termine convidando a agir ("quer que eu ajude a resolver?"). Texto limpo, SEM markdown (sem **, sem listas). Responda só com a saudação.`;
     const msg = await client.messages.create({
       model: MODEL,
@@ -753,7 +789,7 @@ export async function copilotGreeting(
 
 export function copilotSuggestions(role: CopilotRole): string[] {
   if (role === "BARBER") return ["Quanto vou receber esse mês?", "Quem é meu próximo cliente?", "Meus clientes sumidos"];
-  return ["Quanto faturei essa semana?", "Quais clientes sumiram?", "Tenho horário vazio hoje?", "Como estão meus barbeiros?", "Tem produto acabando?"];
+  return ["Onde estou perdendo dinheiro?", "Fecha o meu mês", "Otimiza minha agenda de hoje", "E se eu subir os preços 10%?", "Monta a escala da semana"];
 }
 
 export function unavailableAiNote(): string {

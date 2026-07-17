@@ -41,6 +41,17 @@ const ICONS: Record<string, typeof TrendingUp> = {
   box: Package,
 };
 
+// One-tap shortcuts to the Copiloto's heaviest superpowers — the "10 segundos
+// que valem horas" commands, for gestores who'd rather tap than type.
+const POWER_CHIPS: { icon: string; label: string; prompt: string }[] = [
+  { icon: "💸", label: "Onde perco dinheiro", prompt: "Onde estou perdendo dinheiro? Me dá o plano." },
+  { icon: "🧮", label: "Fecha o mês", prompt: "Fecha o meu mês: faturamento, comissão de cada barbeiro e lucro." },
+  { icon: "🧩", label: "Otimiza a agenda", prompt: "Otimiza minha agenda de hoje: onde tem tempo morto?" },
+  { icon: "🔮", label: "E se subir 10%", prompt: "E se eu subir os preços em 10%? Simula o impacto." },
+  { icon: "📅", label: "Escala da semana", prompt: "Monta a escala da semana pela demanda real." },
+  { icon: "⭐", label: "Responder avaliações", prompt: "Como está minha reputação? Me ajuda a responder as avaliações." },
+];
+
 // The Copiloto — a business assistant surfaced as an always-reachable floating
 // chat, replacing the old support bubble (support now lives in the sidebar).
 // Shows the proactive daily briefing with one-tap actions plus a chat that
@@ -291,11 +302,23 @@ export function FloatingCopilotWidget() {
                   </div>
                 ) : (
                   <>
-                    <div className="mb-7 mt-6 flex flex-col items-center text-center">
+                    <div className="mb-6 mt-6 flex flex-col items-center text-center">
                       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/20">
                         <Sparkles className="h-7 w-7" />
                       </div>
                       <p className="text-lg font-semibold text-white">Como posso ajudar?</p>
+                    </div>
+                    {/* Atalhos dos superpoderes — 1 toque, pra quem não quer digitar */}
+                    <div className="mb-6 flex flex-wrap justify-center gap-2">
+                      {POWER_CHIPS.map((c) => (
+                        <button
+                          key={c.label}
+                          onClick={() => send(c.prompt)}
+                          className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-200"
+                        >
+                          {c.icon} {c.label}
+                        </button>
+                      ))}
                     </div>
                     {cards.length > 0 && (
                       <div className="space-y-2">

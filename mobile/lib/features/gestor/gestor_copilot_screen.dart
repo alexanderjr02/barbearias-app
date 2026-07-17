@@ -396,7 +396,14 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
     );
   }
 
-  static const _defaultSuggestions = ['Quanto faturei essa semana?', 'Quais clientes sumiram?', 'Tenho horário vazio hoje?'];
+  static const _defaultSuggestions = [
+    '💸 Onde estou perdendo dinheiro?',
+    '🧮 Fecha o meu mês',
+    '🧩 Otimiza minha agenda de hoje',
+    '🔮 E se eu subir os preços 10%?',
+    '📅 Monta a escala da semana',
+    '⭐ Me ajuda a responder as avaliações',
+  ];
 }
 
 class _BriefingCardTile extends StatelessWidget {

@@ -37,11 +37,14 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
-  const history: ChatTurn[] = Array.isArray(body?.messages)
-    ? body.messages.filter((m: unknown): m is ChatTurn => !!m && typeof (m as ChatTurn).content === "string" && ((m as ChatTurn).role === "user" || (m as ChatTurn).role === "assistant"))
-    : [];
+  // Hardening: keep only valid turns, cap each message length and the count so
+  // a malformed/huge payload can never break the request or blow up costs.
+  const history: ChatTurn[] = (Array.isArray(body?.messages) ? body.messages : [])
+    .filter((m: unknown): m is ChatTurn => !!m && typeof (m as ChatTurn).content === "string" && ((m as ChatTurn).role === "user" || (m as ChatTurn).role === "assistant"))
+    .slice(-24)
+    .map((m: ChatTurn) => ({ role: m.role, content: m.content.slice(0, 4000) }));
   const lastUser = [...history].reverse().find((m) => m.role === "user");
-  if (!lastUser) return NextResponse.json({ error: "Mensagem vazia" }, { status: 400 });
+  if (!lastUser || !lastUser.content.trim()) return NextResponse.json({ error: "Mensagem vazia" }, { status: 400 });
 
   let reply: string;
   let actions: CopilotAction[] = [];

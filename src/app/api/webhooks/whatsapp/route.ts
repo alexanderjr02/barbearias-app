@@ -83,11 +83,15 @@ export async function POST(request: NextRequest) {
         select: { content: true, role: true },
       });
       const history: ChatTurn[] = rows.map((r) => ({ role: r.role === "USER" ? "user" : "assistant", content: r.content }));
-      if (isGestor) {
-        const res = await runCopilot("GESTOR", barbershopId, null, history);
-        reply = res.reply + (res.actions.length ? `\n\n(Toque nas ações no painel/app: ${res.actions.map((a) => a.label).join(", ")})` : "");
-      } else {
-        reply = await runAssistant(barbershopId, history);
+      try {
+        if (isGestor) {
+          const res = await runCopilot("GESTOR", barbershopId, null, history);
+          reply = res.reply + (res.actions.length ? `\n\n(Toque nas ações no painel/app: ${res.actions.map((a) => a.label).join(", ")})` : "");
+        } else {
+          reply = await runAssistant(barbershopId, history);
+        }
+      } catch {
+        reply = "Tive um probleminha aqui agora. Pode repetir daqui a pouco? 🙏";
       }
     } else {
       reply = "Oi! 👋 Para agendar, ver serviços ou seus horários, baixe nosso app ou acesse nossa página de agendamento. Se precisar, é só escrever *atendente* que chamamos a equipe.";

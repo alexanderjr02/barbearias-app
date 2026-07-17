@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { getAnthropic } from "@/lib/chatbot/anthropicClient";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
   if (!occasion) return NextResponse.json({ error: "Descreva a ocasião ou objetivo." }, { status: 400 });
 
   try {
-    const client = new Anthropic();
+    const client = getAnthropic();
     const msg = await client.messages.create({
       model: process.env.CHATBOT_MODEL || "claude-opus-4-8",
       max_tokens: 500,
