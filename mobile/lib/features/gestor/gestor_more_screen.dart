@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../profile/profile_screen.dart';
+import 'gestor_autopilot_screen.dart';
 import 'gestor_finance_screen.dart';
 import 'gestor_inventory_screen.dart';
 import 'gestor_marketing_screen.dart';
@@ -26,6 +27,15 @@ class GestorMoreScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _MenuTile(
+            icon: Icons.auto_awesome_rounded,
+            label: 'Auto-piloto',
+            sub: 'Automações que rodam sozinhas (confirmar, aniversário, win-back)',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorAutopilotScreen())),
+          ),
+          const SizedBox(height: 10),
           _MenuTile(
             icon: Icons.hourglass_bottom_rounded,
             label: 'Fila de espera',

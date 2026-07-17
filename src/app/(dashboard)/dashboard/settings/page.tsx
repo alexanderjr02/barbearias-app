@@ -31,6 +31,9 @@ interface BarbershopMe {
   city: string | null;
   description: string | null;
   primaryColor: string;
+  autoConfirm?: boolean;
+  autoBirthday?: boolean;
+  autoWinbackDays?: number | null;
   workingHours: { dayOfWeek: number; isOpen: boolean; openTime: string; closeTime: string }[];
 }
 
@@ -39,6 +42,7 @@ const tabs = [
   { id: "hours", label: "Horários", icon: Clock },
   { id: "notifications", label: "Notificações", icon: Bell },
   { id: "chatbot", label: "Chatbot", icon: MessageSquareText },
+  { id: "autopilot", label: "Auto-piloto", icon: Sparkles },
   { id: "billing", label: "Plano", icon: CreditCard },
 ];
 
@@ -527,6 +531,50 @@ export default function SettingsPage() {
                   </button>
                 </>
               )}
+            </div>
+          )}
+
+          {activeTab === "autopilot" && (
+            <div className="space-y-4">
+              <div className="flex gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-200">
+                <Sparkles className="h-5 w-5 shrink-0" />
+                <p>Ligue e esqueça. Essas automações rodam sozinhas todo dia de manhã — reduzem falta e trazem cliente de volta sem você lembrar de nada.</p>
+              </div>
+              {[
+                { key: "autoConfirm" as const, title: "Confirmar agendamentos", desc: "Confirma sozinho os agendamentos do dia seguinte. Reduz no-show.", on: !!barbershop?.autoConfirm },
+                { key: "autoBirthday" as const, title: "Mensagem de aniversário", desc: "Parabeniza cada cliente no aniversário e convida pra um corte.", on: !!barbershop?.autoBirthday },
+              ].map((a) => (
+                <div key={a.key} className="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
+                  <div className="pr-4">
+                    <p className="text-sm font-semibold text-white">{a.title}</p>
+                    <p className="mt-0.5 text-xs text-zinc-400">{a.desc}</p>
+                  </div>
+                  <button onClick={() => updateBarbershop.mutate({ [a.key]: !a.on })} className={cn("relative h-6 w-11 shrink-0 rounded-full transition", a.on ? "bg-amber-500" : "bg-zinc-600")}>
+                    <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all", a.on ? "left-[22px]" : "left-0.5")} />
+                  </button>
+                </div>
+              ))}
+              <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="pr-4">
+                    <p className="text-sm font-semibold text-white">Chamar clientes sumidos (win-back)</p>
+                    <p className="mt-0.5 text-xs text-zinc-400">Mensagem carinhosa quando o cliente passa do tempo sem voltar.</p>
+                  </div>
+                  <button onClick={() => updateBarbershop.mutate({ autoWinbackDays: barbershop?.autoWinbackDays ? null : 45 })} className={cn("relative h-6 w-11 shrink-0 rounded-full transition", barbershop?.autoWinbackDays ? "bg-amber-500" : "bg-zinc-600")}>
+                    <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all", barbershop?.autoWinbackDays ? "left-[22px]" : "left-0.5")} />
+                  </button>
+                </div>
+                {barbershop?.autoWinbackDays ? (
+                  <div className="mt-3 flex gap-2">
+                    {[30, 45, 60].map((d) => (
+                      <button key={d} onClick={() => updateBarbershop.mutate({ autoWinbackDays: d })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-medium", barbershop?.autoWinbackDays === d ? "border-amber-500 bg-amber-500/10 text-amber-400" : "border-zinc-700 text-zinc-400 hover:border-zinc-600")}>
+                        {d} dias
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <p className="text-xs text-zinc-500">Você também liga/desliga isso conversando com o Copiloto (ex.: &quot;liga a confirmação automática&quot;).</p>
             </div>
           )}
 

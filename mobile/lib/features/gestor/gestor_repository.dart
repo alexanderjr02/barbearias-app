@@ -455,6 +455,9 @@ class BarbershopProfile {
   final String? coverImage;
   final String primaryColor;
   final String plan;
+  final bool autoConfirm;
+  final bool autoBirthday;
+  final int? autoWinbackDays;
   final List<WorkingHour> workingHours;
 
   BarbershopProfile({
@@ -472,6 +475,9 @@ class BarbershopProfile {
     required this.coverImage,
     required this.primaryColor,
     required this.plan,
+    this.autoConfirm = false,
+    this.autoBirthday = false,
+    this.autoWinbackDays,
     required this.workingHours,
   });
 
@@ -490,6 +496,9 @@ class BarbershopProfile {
         coverImage: json['coverImage'],
         primaryColor: json['primaryColor'] ?? '#D4AF37',
         plan: json['plan'] ?? 'FREE',
+        autoConfirm: json['autoConfirm'] == true,
+        autoBirthday: json['autoBirthday'] == true,
+        autoWinbackDays: json['autoWinbackDays'] as int?,
         workingHours: ((json['workingHours'] as List?) ?? []).map((e) => WorkingHour.fromJson(e)).toList(),
       );
 }
@@ -1371,6 +1380,14 @@ class GestorRepository {
 
   Future<void> updateBarbershopColor(String primaryColor) async {
     await ApiClient.instance.patch('/barbershop', data: {'primaryColor': primaryColor});
+  }
+
+  Future<void> updateAutomations({bool? autoConfirm, bool? autoBirthday, int? autoWinbackDays, bool clearWinback = false}) async {
+    await ApiClient.instance.patch('/barbershop', data: {
+      if (autoConfirm != null) 'autoConfirm': autoConfirm,
+      if (autoBirthday != null) 'autoBirthday': autoBirthday,
+      if (clearWinback) 'autoWinbackDays': null else if (autoWinbackDays != null) 'autoWinbackDays': autoWinbackDays,
+    });
   }
 
   Future<void> updateWorkingHours(List<WorkingHour> hours) async {

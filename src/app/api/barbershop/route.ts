@@ -118,6 +118,12 @@ export async function PATCH(request: NextRequest) {
     if (typeof body[nf] === "number" && body[nf] >= 0) data[nf] = body[nf];
   }
   if (typeof body.bgGradient === "boolean") data.bgGradient = body.bgGradient;
+  // Auto-piloto (automações).
+  if (typeof body.autoConfirm === "boolean") data.autoConfirm = body.autoConfirm;
+  if (typeof body.autoBirthday === "boolean") data.autoBirthday = body.autoBirthday;
+  if ("autoWinbackDays" in body) {
+    data.autoWinbackDays = typeof body.autoWinbackDays === "number" && body.autoWinbackDays > 0 ? Math.round(body.autoWinbackDays) : null;
+  }
 
   const previous = await prisma.barbershop.findUnique({ where: { id: session.barbershopId }, select: { plan: true } });
 
