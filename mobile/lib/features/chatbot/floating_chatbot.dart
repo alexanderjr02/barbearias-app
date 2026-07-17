@@ -68,6 +68,19 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
               ..clear()
               ..addAll(hist.map((h) => _ChatMsg(h.text, h.role != 'user')));
           });
+          return;
+        }
+      } catch (_) {}
+      // No history yet → the proactive opener: if the client is due for a cut,
+      // it already proposes the next slot ("agente que se antecipa").
+      try {
+        final opener = await _clientRepo.clientChatGreeting(id);
+        if (mounted && opener.greeting.trim().isNotEmpty) {
+          setState(() {
+            _messages
+              ..clear()
+              ..add(_ChatMsg(opener.greeting, true));
+          });
         }
       } catch (_) {}
     } catch (_) {
@@ -150,6 +163,37 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
         setState(() {
           _typing = false;
           _messages.add(_ChatMsg('Não consegui enviar a foto agora. Tenta de novo?', true));
+        });
+      }
+    }
+  }
+
+  /// Provador de corte: the client picks a selfie and the AI recommends the
+  /// cuts that suit their face shape/hair, choosing from the shop's real menu.
+  Future<void> _styleAdvisor() async {
+    final shopId = _barbershopId;
+    if (shopId == null) return;
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1200, imageQuality: 88);
+    if (file == null || !mounted) return;
+    setState(() => _typing = true);
+    _scrollToEnd();
+    try {
+      final url = await _clientRepo.uploadImage(file);
+      if (!mounted) return;
+      setState(() => _messages.add(_ChatMsg('', false, imageUrl: url)));
+      _scrollToEnd();
+      final rec = await _clientRepo.styleAdvisor(imageUrl: url, barbershopId: shopId);
+      if (!mounted) return;
+      setState(() {
+        _typing = false;
+        _messages.add(_ChatMsg(rec.trim().isEmpty ? 'Não consegui analisar agora. Tenta outra foto?' : rec, true));
+      });
+      _scrollToEnd();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _typing = false;
+          _messages.add(_ChatMsg('Não consegui analisar seu corte agora. Tenta de novo? 📸', true));
         });
       }
     }
@@ -342,17 +386,32 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                 height: 30,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: chatbotQuickReplies.length,
+                  itemCount: chatbotQuickReplies.length + 1,
                   separatorBuilder: (_, _) => const SizedBox(width: 6),
-                  itemBuilder: (context, i) => GestureDetector(
-                    onTap: () => _send(chatbotQuickReplies[i]),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white12)),
-                      alignment: Alignment.center,
-                      child: Text(chatbotQuickReplies[i], style: const TextStyle(color: Colors.white70, fontSize: 11.5)),
-                    ),
-                  ),
+                  itemBuilder: (context, i) {
+                    // First chip: the provador de corte (AI style advisor).
+                    if (i == 0) {
+                      return GestureDetector(
+                        onTap: _typing ? null : _styleAdvisor,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(color: accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(20), border: Border.all(color: accent.withValues(alpha: 0.5))),
+                          alignment: Alignment.center,
+                          child: Text('✂️ Meu corte ideal', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                        ),
+                      );
+                    }
+                    final label = chatbotQuickReplies[i - 1];
+                    return GestureDetector(
+                      onTap: () => _send(label),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white12)),
+                        alignment: Alignment.center,
+                        child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11.5)),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

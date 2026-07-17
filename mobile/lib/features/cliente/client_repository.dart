@@ -234,6 +234,21 @@ class ClientRepository {
     return (data as Map<String, dynamic>)['response'] as String? ?? '';
   }
 
+  /// The proactive opener — the "agente que se antecipa". When the client is
+  /// due for a cut it proposes the next slot (their usual). Empty string means
+  /// "no proactive nudge" (fall back to the canned welcome).
+  Future<({String greeting, bool proactive})> clientChatGreeting(String barbershopId) async {
+    final data = await ApiClient.instance.get('/client/chat/greeting', query: {'barbershopId': barbershopId}) as Map<String, dynamic>;
+    return (greeting: data['greeting'] as String? ?? '', proactive: data['proactive'] == true);
+  }
+
+  /// Provador de corte: sends a selfie URL, gets AI cut recommendations for the
+  /// client's face shape/hair. Empty string when unavailable.
+  Future<String> styleAdvisor({required String imageUrl, required String barbershopId}) async {
+    final data = await ApiClient.instance.post('/client/style-advisor', data: {'imageUrl': imageUrl, 'barbershopId': barbershopId}) as Map<String, dynamic>;
+    return data['recommendation'] as String? ?? '';
+  }
+
   Future<List<({String role, String text})>> clientChatHistory(String barbershopId) async {
     final data = await ApiClient.instance.get('/client/chat', query: {'barbershopId': barbershopId}) as Map<String, dynamic>;
     return ((data['messages'] as List?) ?? []).map((e) {

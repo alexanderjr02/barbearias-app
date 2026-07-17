@@ -52,20 +52,47 @@ async function nextClient(staffId: string) {
   const appt = await prisma.appointment.findFirst({
     where: { staffId, date: { gte: now }, status: { in: ["SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS"] } },
     orderBy: [{ date: "asc" }, { startTime: "asc" }],
-    select: { clientId: true, clientName: true, startTime: true, service: { select: { name: true } } },
+    select: { clientId: true, clientName: true, clientPhone: true, startTime: true, barbershopId: true, service: { select: { name: true } } },
   });
   if (!appt) return null;
   let prefs = null;
   let recipe = null;
+  let rating: number | null = null;
+  let visits = 0;
+  let pastNoShows = 0;
+  let birthdayInDays: number | null = null;
+  let upsell: string | null = null;
   if (appt.clientId) {
-    prefs = await prisma.clientPreferences.findUnique({ where: { clientId: appt.clientId } });
-    recipe = await prisma.appointment.findFirst({
-      where: { clientId: appt.clientId, OR: [{ recipeMachine: { not: null } }, { recipeFinish: { not: null } }, { recipeProducts: { not: null } }] },
-      orderBy: { date: "desc" },
-      select: { recipeMachine: true, recipeFinish: true, recipeProducts: true },
-    });
+    const [p, r, reviews, completedCount, noShowCount, user, comboSvc] = await Promise.all([
+      prisma.clientPreferences.findUnique({ where: { clientId: appt.clientId } }),
+      prisma.appointment.findFirst({
+        where: { clientId: appt.clientId, OR: [{ recipeMachine: { not: null } }, { recipeFinish: { not: null } }, { recipeProducts: { not: null } }] },
+        orderBy: { date: "desc" },
+        select: { recipeMachine: true, recipeFinish: true, recipeProducts: true },
+      }),
+      prisma.review.aggregate({ where: { clientId: appt.clientId, staff: { barbershopId: appt.barbershopId } }, _avg: { rating: true } }),
+      prisma.appointment.count({ where: { clientId: appt.clientId, barbershopId: appt.barbershopId, status: "COMPLETED" } }),
+      prisma.appointment.count({ where: { clientId: appt.clientId, barbershopId: appt.barbershopId, status: "NO_SHOW" } }),
+      prisma.user.findUnique({ where: { id: appt.clientId }, select: { dateOfBirth: true } }),
+      prisma.service.findFirst({ where: { barbershopId: appt.barbershopId, isActive: true, name: { contains: "barba" } }, select: { name: true } }),
+    ]);
+    prefs = p;
+    recipe = r;
+    rating = reviews._avg.rating;
+    visits = completedCount;
+    pastNoShows = noShowCount;
+    if (user?.dateOfBirth) {
+      const today = new Date();
+      const bd = new Date(Date.UTC(today.getUTCFullYear(), user.dateOfBirth.getUTCMonth(), user.dateOfBirth.getUTCDate()));
+      let diff = Math.round((bd.getTime() - startOfUtcDay(today).getTime()) / 86400000);
+      if (diff < 0) diff += 365;
+      if (diff <= 14) birthdayInDays = diff;
+    }
+    // Upsell: se o de sempre não inclui barba e existe um combo/barba, sugere.
+    const svcName = (appt.service?.name ?? "").toLowerCase();
+    if (comboSvc && !svcName.includes("barba")) upsell = `Ofereça o combo com ${comboSvc.name}.`;
   }
-  return { name: appt.clientName, time: appt.startTime, service: appt.service?.name, prefs, recipe };
+  return { name: appt.clientName, time: appt.startTime, service: appt.service?.name, prefs, recipe, rating, visits, pastNoShows, birthdayInDays, upsell };
 }
 
 // ---- Tools (AI mode) ----
@@ -109,7 +136,7 @@ function toolsFor(role: CopilotRole): Anthropic.Tool[] {
   ];
   const barberTools: Anthropic.Tool[] = [
     { name: "get_my_earnings", description: "Meus ganhos do mês: comissão, atendimentos, gorjetas.", input_schema: { type: "object", properties: {} } },
-    { name: "get_next_client", description: "Meu próximo cliente com preferências e a receita do último corte.", input_schema: { type: "object", properties: {} } },
+    { name: "get_next_client", description: "BRIEFING do meu próximo cliente pra eu me preparar: nome, horário, avaliação média, nº de visitas, faltas anteriores, aniversário próximo, preferências, a receita do último corte e uma sugestão de venda (upsell). Use quando pedirem 'briefing do próximo', 'quem é o próximo', 'me prepara pro próximo cliente'.", input_schema: { type: "object", properties: {} } },
   ];
   const clientTools: Anthropic.Tool[] = [
     {
@@ -584,7 +611,7 @@ export async function runCopilot(
   const shopName = shop?.name ?? "a barbearia";
   const persona =
     role === "BARBER"
-      ? `Você é o Copiloto pessoal do barbeiro na ${shopName}. Ajuda ele a ganhar mais e atender melhor: acompanha ganhos e comissão, prepara o próximo cliente (lembrando preferências e a "receita" do último corte) e aponta clientes que sumiram pra ele reconquistar.`
+      ? `Você é o Copiloto pessoal do barbeiro na ${shopName}. Ajuda ele a ganhar mais e atender melhor: acompanha ganhos e comissão, prepara o próximo cliente e aponta clientes que sumiram pra ele reconquistar. Quando ele pedir o BRIEFING do próximo cliente (get_next_client), entregue um resumo curto e falado (2 a 3 frases, como um sussurro no ouvido antes de o cliente sentar): nome e horário, avaliação/quantas visitas, o corte de sempre + a "receita" do último, e feche com 1 dica de atendimento (ex: aniversário próximo → parabenize; nunca faltou → elogie a presença; sugestão de upsell). Se tiver faltas, sugira confirmar.`
       : `Você é o Copiloto de gestão do dono da ${shopName}, dentro do sistema CORTIX. Você raciocina como um consultor sênior de negócios e CRM de barbearias: pensa em retenção, recorrência, ticket médio, ocupação da agenda, no-show, LTV do cliente, fidelização e fluxo de caixa.`;
 
   const adminNote =
@@ -681,8 +708,10 @@ export async function simulatedReply(role: CopilotRole, barbershopId: string, st
       if (!staffId) return "Não achei seu perfil de barbeiro.";
       const n = await nextClient(staffId);
       if (!n) return "Você não tem próximo cliente na agenda.";
-      const bits = [`Próximo: ${n.name} às ${n.time} (${n.service ?? "serviço"}).`];
-      if (n.recipe?.recipeMachine || n.recipe?.recipeFinish) bits.push(`Última receita: ${[n.recipe.recipeMachine, n.recipe.recipeFinish, n.recipe.recipeProducts].filter(Boolean).join(" · ")}.`);
+      const bits = [`Próximo: ${n.name} às ${n.time} (${n.service ?? "serviço"})${n.rating ? `, ⭐${n.rating.toFixed(1)}` : ""}${n.visits ? `, ${n.visits} visitas` : ""}.`];
+      if (n.recipe?.recipeMachine || n.recipe?.recipeFinish) bits.push(`Receita do último: ${[n.recipe.recipeMachine, n.recipe.recipeFinish, n.recipe.recipeProducts].filter(Boolean).join(" · ")}.`);
+      if (n.birthdayInDays != null) bits.push(n.birthdayInDays === 0 ? "É aniversário dele hoje — manda um parabéns! 🎉" : `Aniversário em ${n.birthdayInDays} dia(s).`);
+      if (n.upsell) bits.push(n.upsell);
       return bits.join(" ");
     }
     return "Sou seu copiloto. Pergunte: \"quanto vou receber esse mês?\" ou \"quem é meu próximo cliente?\".";
@@ -788,7 +817,7 @@ export async function copilotGreeting(
 }
 
 export function copilotSuggestions(role: CopilotRole): string[] {
-  if (role === "BARBER") return ["Quanto vou receber esse mês?", "Quem é meu próximo cliente?", "Meus clientes sumidos"];
+  if (role === "BARBER") return ["🎙️ Briefing do meu próximo cliente", "Quanto vou receber esse mês?", "Meus clientes sumidos"];
   return ["Onde estou perdendo dinheiro?", "Fecha o meu mês", "Otimiza minha agenda de hoje", "E se eu subir os preços 10%?", "Monta a escala da semana"];
 }
 

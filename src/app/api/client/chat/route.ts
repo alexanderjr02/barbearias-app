@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { planHasAI } from "@/lib/billing";
 import { runAssistant, assistantEnabled, type ChatTurn } from "@/lib/chatbot/assistant";
+import { rhythmContextLine } from "@/lib/copilot/clientAgent";
 
 // POST /api/client/chat { message, barbershopId } — the logged-in client's
 // personalized assistant. Unlike the anonymous /api/chatbot, it knows WHO the
@@ -46,7 +47,8 @@ export async function POST(request: NextRequest) {
     const prefLine = prefs
       ? [prefs.machine && `máquina/laterais: ${prefs.machine}`, prefs.products && `produtos: ${prefs.products}`, prefs.allergies && `alergias: ${prefs.allergies}`, prefs.drink && `bebida: ${prefs.drink}`, prefs.chat && `conversa: ${prefs.chat}`, prefs.notes && `obs: ${prefs.notes}`].filter(Boolean).join("; ")
       : "sem preferências cadastradas";
-    const context = `Nome: ${user?.name ?? "cliente"}.\nÚltimas visitas: ${visitLine}.\nPreferências: ${prefLine}.`;
+    const rhythmLine = await rhythmContextLine(barbershopId, clientId).catch(() => "");
+    const context = `Nome: ${user?.name ?? "cliente"}.\nÚltimas visitas: ${visitLine}.\nPreferências: ${prefLine}.${rhythmLine ? `\n${rhythmLine}` : ""}`;
 
     type Row = (typeof priorRows)[number];
     const history: ChatTurn[] = priorRows.map((r: Row) => ({ role: r.role === "USER" ? "user" : "assistant", content: r.content }));
