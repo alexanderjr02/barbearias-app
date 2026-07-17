@@ -455,6 +455,7 @@ class BarbershopProfile {
   final String? coverImage;
   final String primaryColor;
   final String plan;
+  final String autopilotLevel;
   final bool autoConfirm;
   final bool autoBirthday;
   final int? autoWinbackDays;
@@ -475,6 +476,7 @@ class BarbershopProfile {
     required this.coverImage,
     required this.primaryColor,
     required this.plan,
+    this.autopilotLevel = 'suggest',
     this.autoConfirm = false,
     this.autoBirthday = false,
     this.autoWinbackDays,
@@ -496,6 +498,7 @@ class BarbershopProfile {
         coverImage: json['coverImage'],
         primaryColor: json['primaryColor'] ?? '#D4AF37',
         plan: json['plan'] ?? 'FREE',
+        autopilotLevel: json['autopilotLevel'] as String? ?? 'suggest',
         autoConfirm: json['autoConfirm'] == true,
         autoBirthday: json['autoBirthday'] == true,
         autoWinbackDays: json['autoWinbackDays'] as int?,
@@ -1382,12 +1385,22 @@ class GestorRepository {
     await ApiClient.instance.patch('/barbershop', data: {'primaryColor': primaryColor});
   }
 
-  Future<void> updateAutomations({bool? autoConfirm, bool? autoBirthday, int? autoWinbackDays, bool clearWinback = false}) async {
+  Future<void> updateAutomations({String? autopilotLevel, bool? autoConfirm, bool? autoBirthday, int? autoWinbackDays, bool clearWinback = false}) async {
     await ApiClient.instance.patch('/barbershop', data: {
+      if (autopilotLevel != null) 'autopilotLevel': autopilotLevel,
       if (autoConfirm != null) 'autoConfirm': autoConfirm,
       if (autoBirthday != null) 'autoBirthday': autoBirthday,
       if (clearWinback) 'autoWinbackDays': null else if (autoWinbackDays != null) 'autoWinbackDays': autoWinbackDays,
     });
+  }
+
+  Future<({double recoveredTotal, int actionsThisMonth, List<({String action, String detail, double? recoveredValue, String createdAt})> feed})> autopilotFeed() async {
+    final data = await ApiClient.instance.get('/copilot/autopilot-feed') as Map<String, dynamic>;
+    final feed = ((data['feed'] as List?) ?? []).map((e) {
+      final m = e as Map<String, dynamic>;
+      return (action: m['action'] as String? ?? '', detail: m['detail'] as String? ?? '', recoveredValue: (m['recoveredValue'] as num?)?.toDouble(), createdAt: m['createdAt'] as String? ?? '');
+    }).toList();
+    return (recoveredTotal: (data['recoveredTotal'] as num?)?.toDouble() ?? 0, actionsThisMonth: data['actionsThisMonth'] as int? ?? 0, feed: feed);
   }
 
   Future<void> updateWorkingHours(List<WorkingHour> hours) async {

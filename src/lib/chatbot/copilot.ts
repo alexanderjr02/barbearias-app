@@ -5,6 +5,7 @@ import { assistantEnabled } from "./assistant";
 import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, shopNow, OCCUPYING_STATUSES } from "@/lib/scheduling";
 import { appointmentLimitError } from "@/lib/planLimits";
 import { notifyClient } from "@/lib/gestorNotifications";
+import { onSlotOpened } from "@/lib/copilot/autopilot";
 import {
   revenueSummary,
   churnedClients,
@@ -397,9 +398,12 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
     }
     case "cancel_appointment": {
       const id = String(input.appointmentId ?? "");
-      const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, startTime: true } });
+      const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, startTime: true, status: true, service: { select: { price: true } } } });
       if (!appt || appt.barbershopId !== barbershopId) return "Agendamento não encontrado.";
-      await prisma.appointment.update({ where: { id }, data: { status: "CANCELLED" } });
+      if (appt.status !== "CANCELLED") {
+        await prisma.appointment.update({ where: { id }, data: { status: "CANCELLED" } });
+        await onSlotOpened(barbershopId, { startTime: appt.startTime, price: appt.service?.price ?? null });
+      }
       return `Agendamento das ${appt.startTime} cancelado.`;
     }
     case "reschedule_appointment": {

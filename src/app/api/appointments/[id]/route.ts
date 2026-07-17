@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { awardPointsForAppointment } from "@/lib/loyalty";
 import { notifyBarbershop, notifyClient } from "@/lib/gestorNotifications";
+import { onSlotOpened } from "@/lib/copilot/autopilot";
 
 const VALID_STATUSES = ["SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"];
 
@@ -116,30 +117,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
   }
 
-  // Auto-avise: a slot just opened — ping every client waiting for this shop.
+  // Auto-piloto (tempo real 24/7): abriu um horário → preenche na hora (fila +
+  // clientes sumidos) e registra a receita recuperada.
   if (body.status === "CANCELLED" && appointment.status !== "CANCELLED") {
-    const waiting = await prisma.waitlistEntry.findMany({
-      where: { barbershopId: appointment.barbershopId, status: "WAITING", clientId: { not: null } },
-      select: { id: true, clientId: true },
-    });
-    if (waiting.length > 0) {
-      const shop = await prisma.barbershop.findUnique({ where: { id: appointment.barbershopId }, select: { name: true } });
-      await Promise.all(
-        waiting.map((w: { id: string; clientId: string | null }) =>
-          prisma.notification.create({
-            data: {
-              barbershopId: appointment.barbershopId,
-              clientId: w.clientId!,
-              type: "WAITLIST_SLOT_OPEN",
-              title: "Abriu um horário! ⏰",
-              body: `Vagou um horário em ${shop?.name ?? "sua barbearia"}. Corra, é por ordem de chegada!`,
-              link: "/appointments",
-            },
-          }),
-        ),
-      );
-      await prisma.waitlistEntry.updateMany({ where: { id: { in: waiting.map((w: { id: string }) => w.id) } }, data: { status: "DONE" } });
-    }
+    const svc = await prisma.service.findUnique({ where: { id: appointment.serviceId }, select: { price: true } });
+    await onSlotOpened(appointment.barbershopId, { startTime: appointment.startTime, price: svc?.price ?? appointment.totalPrice });
   }
 
   return NextResponse.json(updated);

@@ -86,10 +86,12 @@ model Barbershop {
   // Owner-set monthly revenue goal, powering the finance "meta & ponto de
   // equilíbrio" cockpit. Null until the gestor sets one.
   monthlyGoal     Float?
-  // Auto-piloto: automações que rodam sozinhas (cron), ligadas pelo gestor.
-  autoConfirm     Boolean  @default(false) // confirma agendamentos de amanhã
-  autoBirthday    Boolean  @default(false) // mensagem de aniversário
-  autoWinbackDays Int?     // win-back de clientes sumidos há N dias (null = off)
+  // Auto-piloto autônomo: nasce ligado no Pro+. autopilotLevel controla o
+  // quanto ele age sozinho: "off" | "suggest" (avisa/1 toque) | "auto" (faz).
+  autopilotLevel  String   @default("suggest")
+  autoConfirm     Boolean  @default(true)  // confirma agendamentos de amanhã
+  autoBirthday    Boolean  @default(true)  // mensagem de aniversário
+  autoWinbackDays Int?     @default(45)     // win-back de sumidos há N dias (null = off)
   instagram       String?
   whatsapp        String?
   // PIX key that receives digital tips (gorjetas). Shown to the client to pay
@@ -141,6 +143,7 @@ model Barbershop {
   serviceInvoices ServiceInvoice[]
   tips            Tip[]
   copilotMemories CopilotMemory[]
+  autopilotLogs   AutopilotLog[]
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
   platformInvoices  PlatformInvoice[]
@@ -296,6 +299,20 @@ model Review {
 // business ("subiu o degradê pra R$50 em 10/07", "foca nas terças") that the
 // AI records and reads back, so it acts like a consultant who remembers,
 // independent of the raw chat transcript (stored in ChatMessage).
+// Every autonomous action the auto-piloto takes — powers the "o que o Copiloto
+// fez por você" feed and the "receita recuperada" metric that sells the plan.
+model AutopilotLog {
+  id             String     @id @default(cuid())
+  barbershopId   String
+  barbershop     Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  action         String     // slot_filled | confirmed | birthday | winback | no_show
+  detail         String
+  recoveredValue Float?     // R$ estimado recuperado/protegido por essa ação
+  createdAt      DateTime   @default(now())
+
+  @@index([barbershopId])
+}
+
 model CopilotMemory {
   id           String     @id @default(cuid())
   barbershopId String

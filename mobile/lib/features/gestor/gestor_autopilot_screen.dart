@@ -17,9 +17,13 @@ class GestorAutopilotScreen extends StatefulWidget {
 class _GestorAutopilotScreenState extends State<GestorAutopilotScreen> {
   final _repository = GestorRepository();
   bool _loading = true;
+  String _level = 'suggest';
   bool _autoConfirm = false;
   bool _autoBirthday = false;
   int? _winbackDays;
+  double _recovered = 0;
+  int _actions = 0;
+  List<({String action, String detail, double? recoveredValue, String createdAt})> _feed = const [];
 
   static const _winbackOptions = [30, 45, 60];
 
@@ -34,13 +38,50 @@ class _GestorAutopilotScreenState extends State<GestorAutopilotScreen> {
       final p = await _repository.barbershop();
       if (!mounted) return;
       setState(() {
+        _level = p.autopilotLevel;
         _autoConfirm = p.autoConfirm;
         _autoBirthday = p.autoBirthday;
         _winbackDays = p.autoWinbackDays;
         _loading = false;
       });
+      _loadFeed();
     } catch (_) {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadFeed() async {
+    try {
+      final f = await _repository.autopilotFeed();
+      if (mounted) setState(() {
+        _recovered = f.recoveredTotal;
+        _actions = f.actionsThisMonth;
+        _feed = f.feed;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _setLevel(String level) async {
+    setState(() => _level = level);
+    try {
+      await _repository.updateAutomations(autopilotLevel: level);
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'Não foi possível salvar');
+    }
+  }
+
+  IconData _feedIcon(String action) {
+    switch (action) {
+      case 'slot_filled':
+        return Icons.event_available_rounded;
+      case 'confirmed':
+        return Icons.check_circle_rounded;
+      case 'birthday':
+        return Icons.cake_rounded;
+      case 'winback':
+        return Icons.person_off_rounded;
+      default:
+        return Icons.bolt_rounded;
     }
   }
 
@@ -80,6 +121,58 @@ class _GestorAutopilotScreenState extends State<GestorAutopilotScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
+                // ---- Nível de autonomia ----
+                Text('O quanto ele age sozinho', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15)),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    for (final opt in const [('off', 'Observar', 'só avisa'), ('suggest', 'Sugerir', '1 toque'), ('auto', 'Agir sozinho', 'faz e conta')])
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _setLevel(opt.$1),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                            decoration: BoxDecoration(
+                              color: _level == opt.$1 ? accent.withValues(alpha: 0.15) : palette.surface,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: _level == opt.$1 ? accent : palette.border, width: _level == opt.$1 ? 1.6 : 1),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(opt.$2, textAlign: TextAlign.center, style: TextStyle(color: _level == opt.$1 ? accent : palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 12.5)),
+                                const SizedBox(height: 2),
+                                Text(opt.$3, textAlign: TextAlign.center, style: TextStyle(color: palette.textFaint, fontSize: 10)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // ---- Receita recuperada ----
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [accent, accent.withValues(alpha: 0.65)]),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.25), blurRadius: 22, offset: const Offset(0, 10))],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Receita recuperada este mês', style: TextStyle(color: contrastingTextColor(accent).withValues(alpha: 0.8), fontWeight: FontWeight.w600, fontSize: 12.5)),
+                      const SizedBox(height: 4),
+                      Text('R\$ ${_recovered.toStringAsFixed(2)}', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.w900, fontSize: 28)),
+                      const SizedBox(height: 2),
+                      Text('$_actions ${_actions == 1 ? 'ação' : 'ações'} do Copiloto por você', style: TextStyle(color: contrastingTextColor(accent).withValues(alpha: 0.7), fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(color: accent.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: accent.withValues(alpha: 0.2))),
@@ -87,7 +180,7 @@ class _GestorAutopilotScreenState extends State<GestorAutopilotScreen> {
                     children: [
                       Icon(Icons.auto_awesome_rounded, color: accent, size: 20),
                       const SizedBox(width: 10),
-                      Expanded(child: Text('Ligue e esqueça. Essas automações rodam sozinhas todo dia de manhã — você não precisa lembrar de nada.', style: TextStyle(color: palette.textSecondary, fontSize: 12.5, height: 1.4))),
+                      Expanded(child: Text('Ligado e trabalhando 24h. Ele reage na hora (ex.: vagou horário → chama a fila) e roda as automações todo dia.', style: TextStyle(color: palette.textSecondary, fontSize: 12.5, height: 1.4))),
                     ],
                   ),
                 ),
@@ -159,8 +252,28 @@ class _GestorAutopilotScreenState extends State<GestorAutopilotScreen> {
                       ],
                     ),
                   ),
+                const SizedBox(height: 22),
+                Row(children: [Icon(Icons.history_rounded, size: 16, color: accent), const SizedBox(width: 6), Text('O que o Copiloto fez por você', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15))]),
+                const SizedBox(height: 10),
+                if (_feed.isEmpty)
+                  Text('Assim que ele agir (confirmar, chamar a fila, parabenizar…), aparece aqui.', style: TextStyle(color: palette.textFaint, fontSize: 12))
+                else
+                  ..._feed.map((e) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: palette.border)),
+                        child: Row(
+                          children: [
+                            Icon(_feedIcon(e.action), size: 18, color: accent),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text(e.detail, style: TextStyle(color: palette.textSecondary, fontSize: 12.5, height: 1.35))),
+                            if (e.recoveredValue != null && e.recoveredValue! > 0)
+                              Text('+R\$${e.recoveredValue!.toStringAsFixed(0)}', style: TextStyle(color: accent, fontWeight: FontWeight.w800, fontSize: 12.5)),
+                          ],
+                        ),
+                      )),
                 const SizedBox(height: 16),
-                Text('Você também pode ligar/desligar isso falando com o Copiloto (ex.: "liga a confirmação automática").', style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.4)),
+                Text('Você também liga/desliga isso falando com o Copiloto (ex.: "liga a confirmação automática" ou "agir sozinho").', style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.4)),
               ],
             ),
     );

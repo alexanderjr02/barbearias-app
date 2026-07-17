@@ -31,6 +31,7 @@ interface BarbershopMe {
   city: string | null;
   description: string | null;
   primaryColor: string;
+  autopilotLevel?: string;
   autoConfirm?: boolean;
   autoBirthday?: boolean;
   autoWinbackDays?: number | null;
@@ -131,6 +132,12 @@ export default function SettingsPage() {
   const [chatbotSaved, setChatbotSaved] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [hoursSaved, setHoursSaved] = useState(false);
+
+  const { data: autopilotFeed } = useQuery({
+    queryKey: ["autopilot-feed"],
+    queryFn: () => apiGet<{ recoveredTotal: number; actionsThisMonth: number; feed: { action: string; detail: string; recoveredValue: number | null; createdAt: string }[] }>("/api/copilot/autopilot-feed"),
+    enabled: activeTab === "autopilot",
+  });
 
   const { data: barbershop } = useQuery({
     queryKey: ["barbershop-me"],
@@ -536,9 +543,34 @@ export default function SettingsPage() {
 
           {activeTab === "autopilot" && (
             <div className="space-y-4">
+              <div>
+                <p className="mb-2 text-sm font-semibold text-white">O quanto ele age sozinho</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {(
+                    [
+                      ["off", "Observar", "só avisa"],
+                      ["suggest", "Sugerir", "1 toque"],
+                      ["auto", "Agir sozinho", "faz e conta"],
+                    ] as const
+                  ).map(([val, label, desc]) => {
+                    const on = (barbershop?.autopilotLevel ?? "suggest") === val;
+                    return (
+                      <button key={val} onClick={() => updateBarbershop.mutate({ autopilotLevel: val })} className={cn("rounded-xl border px-2 py-3 text-center transition", on ? "border-amber-500 bg-amber-500/10" : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600")}>
+                        <p className={cn("text-xs font-bold", on ? "text-amber-400" : "text-white")}>{label}</p>
+                        <p className="mt-0.5 text-[10px] text-zinc-500">{desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-400 p-5 text-black">
+                <p className="text-xs font-semibold opacity-80">Receita recuperada este mês</p>
+                <p className="text-3xl font-black">R$ {(autopilotFeed?.recoveredTotal ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-xs opacity-70">{autopilotFeed?.actionsThisMonth ?? 0} ações do Copiloto por você</p>
+              </div>
               <div className="flex gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-200">
                 <Sparkles className="h-5 w-5 shrink-0" />
-                <p>Ligue e esqueça. Essas automações rodam sozinhas todo dia de manhã — reduzem falta e trazem cliente de volta sem você lembrar de nada.</p>
+                <p>Ligado e trabalhando 24h — reage na hora (vagou horário → chama a fila) e roda as automações todo dia.</p>
               </div>
               {[
                 { key: "autoConfirm" as const, title: "Confirmar agendamentos", desc: "Confirma sozinho os agendamentos do dia seguinte. Reduz no-show.", on: !!barbershop?.autoConfirm },
@@ -574,7 +606,21 @@ export default function SettingsPage() {
                   </div>
                 ) : null}
               </div>
-              <p className="text-xs text-zinc-500">Você também liga/desliga isso conversando com o Copiloto (ex.: &quot;liga a confirmação automática&quot;).</p>
+              {autopilotFeed && autopilotFeed.feed.length > 0 && (
+                <div>
+                  <p className="mb-2 mt-2 text-sm font-semibold text-white">O que o Copiloto fez por você</p>
+                  <div className="space-y-2">
+                    {autopilotFeed.feed.map((f, i) => (
+                      <div key={i} className="flex items-center gap-3 rounded-xl border border-zinc-700 bg-zinc-800/50 p-3">
+                        <span className="text-amber-400">⚡</span>
+                        <p className="flex-1 text-xs text-zinc-300">{f.detail}</p>
+                        {f.recoveredValue ? <span className="text-xs font-bold text-amber-400">+R$ {f.recoveredValue.toFixed(0)}</span> : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-zinc-500">Você também liga/desliga isso conversando com o Copiloto (ex.: &quot;liga a confirmação automática&quot; ou &quot;agir sozinho&quot;).</p>
             </div>
           )}
 

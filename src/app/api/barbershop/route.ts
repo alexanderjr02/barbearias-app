@@ -119,6 +119,7 @@ export async function PATCH(request: NextRequest) {
   }
   if (typeof body.bgGradient === "boolean") data.bgGradient = body.bgGradient;
   // Auto-piloto (automações).
+  if (typeof body.autopilotLevel === "string" && ["off", "suggest", "auto"].includes(body.autopilotLevel)) data.autopilotLevel = body.autopilotLevel;
   if (typeof body.autoConfirm === "boolean") data.autoConfirm = body.autoConfirm;
   if (typeof body.autoBirthday === "boolean") data.autoBirthday = body.autoBirthday;
   if ("autoWinbackDays" in body) {
