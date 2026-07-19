@@ -16,9 +16,9 @@ const _weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const _swatches = [0xFFD4AF37, 0xFFF59E0B, 0xFFEF4444, 0xFF3B82F6, 0xFF10B981, 0xFF8B5CF6, 0xFFEC4899, 0xFF000000];
 
 const _planInfo = {
-  'FREE': ('Essencial', 'R\$ 79/mês', Color(0xFF9CA3AF), 'Agendamentos ilimitados · até 3 barbeiros'),
-  'PRO': ('Pro', 'R\$ 149/mês', Color(0xFFF59E0B), 'Ilimitado · Copiloto com IA, financeiro e assinatura'),
-  'ENTERPRISE': ('White Label', 'R\$ 399/mês', Color(0xFFA78BFA), 'App próprio, NF-e e multi-unidade'),
+  'FREE': ('Essencial', 'R\$ 50/mês', Color(0xFF9CA3AF), 'Agendamentos ilimitados · até 3 barbeiros'),
+  'PRO': ('Pro', 'R\$ 250/mês', Color(0xFFF59E0B), 'Ilimitado · Copiloto com IA, financeiro e assinatura'),
+  'ENTERPRISE': ('White Label', 'R\$ 897/mês', Color(0xFFA78BFA), 'App próprio, NF-e e multi-unidade'),
 };
 
 const _proFeatures = [
