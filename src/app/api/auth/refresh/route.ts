@@ -5,6 +5,7 @@ import { generateRefreshToken, hashToken } from "@/lib/refreshToken";
 import { isRole } from "@/lib/roles";
 import { setSessionCookies, clearSessionCookies } from "@/lib/sessionCookies";
 import { isSecureRequest } from "@/lib/requestIp";
+import { resolveActiveBarbershopId } from "@/lib/units";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     const tokenHash = hashToken(incomingToken);
     const stored = await prisma.refreshToken.findUnique({
       where: { tokenHash },
-      include: { user: { include: { barbershop: true, staffProfile: true } } },
+      include: { user: { include: { staffProfile: true } } },
     });
 
     if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
@@ -31,7 +32,11 @@ export async function POST(request: NextRequest) {
 
     const { user } = stored;
     const role = isRole(user.role) ? user.role : "CLIENT";
-    const barbershopId = user.barbershop?.id ?? user.staffProfile?.barbershopId ?? null;
+    // Preserva a unidade que o dono selecionou. Antes isto relia a barbearia
+    // do banco e devolvia sempre a primeira, o que jogaria o dono de volta pra
+    // unidade inicial a cada renovação de token (15 min).
+    const barbershopId =
+      (await resolveActiveBarbershopId(user.id, user.activeBarbershopId)) ?? user.staffProfile?.barbershopId ?? null;
     const session = { sub: user.id, role, name: user.name, email: user.email, barbershopId };
 
     const accessToken = await signAccessToken(session);

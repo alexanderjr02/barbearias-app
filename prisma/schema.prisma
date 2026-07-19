@@ -24,7 +24,13 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  barbershop    Barbershop? @relation("BarbershopOwner")
+  // Rede: um dono pode ter N unidades (era 1-para-1). A unidade "primária" é
+  // a mais antiga — ela carrega o preço-base do plano; as demais são extras.
+  barbershops   Barbershop[] @relation("BarbershopOwner")
+  // Unidade atualmente selecionada no painel. Precisa ser persistida (e não
+  // viver só no access token) porque o /auth/refresh reconstrói a sessão do
+  // zero a cada 15 min e senão jogaria o dono de volta pra primeira unidade.
+  activeBarbershopId String?
   staffProfile  Staff?
   appointments  Appointment[] @relation("ClientAppointments")
   refreshTokens RefreshToken[]
@@ -124,7 +130,8 @@ model Barbershop {
   issRate              Float?  // alíquota do ISS (%)
   pointsPerReal   Int      @default(10)
   onboardingDismissed Boolean @default(false)
-  ownerId         String   @unique
+  // Sem @unique: o mesmo dono pode ter várias unidades (rede).
+  ownerId         String
   owner           User     @relation("BarbershopOwner", fields: [ownerId], references: [id])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -152,6 +159,10 @@ model Barbershop {
   supportTickets    SupportTicket[]
   npsResponses      NpsResponse[]
   notifications     Notification[]
+
+  // O @unique de ownerId dava índice de graça; sem ele, listar as unidades de
+  // um dono viraria varredura de tabela.
+  @@index([ownerId])
 }
 
 // Gestor-facing notification feed — shared per barbershop (not per user),

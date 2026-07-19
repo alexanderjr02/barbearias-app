@@ -21,7 +21,9 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email },
-      include: { barbershop: true, staffProfile: { include: { barbershop: true } } },
+      // barbershops (plural) — um dono pode ter várias unidades; a atual é
+      // resolvida abaixo por resolveActiveBarbershopId.
+      include: { barbershops: { orderBy: { createdAt: "asc" } }, staffProfile: { include: { barbershop: true } } },
     });
 
     if (!user) {
@@ -42,7 +44,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Esta conta foi desativada" }, { status: 403 });
     }
 
-    const resolvedBarbershop = user.barbershop ?? user.staffProfile?.barbershop ?? null;
+    // Dono: entra na unidade que estava usando (ou na primária). Barbeiro:
+    // sempre a barbearia do seu perfil de staff.
+    type Shop = { id: string; isActive: boolean };
+    const ownedShops = (user.barbershops ?? []) as Shop[];
+    const activeOwned = ownedShops.find((s) => s.id === user.activeBarbershopId) ?? ownedShops[0] ?? null;
+    const resolvedBarbershop = activeOwned ?? user.staffProfile?.barbershop ?? null;
     if (resolvedBarbershop && !resolvedBarbershop.isActive) {
       return NextResponse.json({ error: "Esta barbearia está suspensa" }, { status: 403 });
     }

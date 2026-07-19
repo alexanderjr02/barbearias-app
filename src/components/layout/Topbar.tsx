@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Search, ChevronDown, Plus, X, Megaphone, Inbox, CalendarPlus, CalendarX, LifeBuoy } from "lucide-react";
+import { Bell, Search, Plus, X, Megaphone, Inbox, CalendarPlus, CalendarX, LifeBuoy } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
-import { usePlan, PLAN_INFO } from "@/context/PlanContext";
+
 import { NewAppointmentModal } from "@/components/dashboard/NewAppointmentModal";
 import { CommandPalette } from "@/components/layout/CommandPalette";
-import { getInitials, formatDateTime, cn } from "@/lib/utils";
+import { UnitSwitcher } from "@/components/layout/UnitSwitcher";
+import { formatDateTime, cn } from "@/lib/utils";
 
 interface BarbershopMe {
   name: string;
@@ -50,7 +51,7 @@ export function Topbar() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [bellTab, setBellTab] = useState<"avisos" | "notificacoes">("avisos");
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const { plan } = usePlan();
+
   const { data: barbershop } = useQuery({ queryKey: ["barbershop-me"], queryFn: () => apiGet<BarbershopMe>("/api/barbershop") });
   const { data: announcements } = useQuery({
     queryKey: ["active-announcements"],
@@ -205,16 +206,7 @@ export function Topbar() {
             )}
           </div>
 
-          <button className="flex items-center gap-2.5 h-9 pl-1 pr-3 rounded-xl hover:bg-zinc-900 transition-all border border-transparent hover:border-zinc-800">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-900 text-xs font-black flex-shrink-0">
-              {getInitials(name)}
-            </div>
-            <div className="hidden sm:block text-left">
-              <p className="text-xs font-semibold text-zinc-200 leading-none">{name}</p>
-              <p className="text-xs text-zinc-600 mt-0.5">Plano {PLAN_INFO[plan].label}</p>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-zinc-600 hidden sm:block" />
-          </button>
+          <UnitSwitcher shopName={name} />
         </div>
       </header>
     </>
