@@ -24,6 +24,8 @@ import {
   goalProgress,
 } from "@/lib/copilot/insights";
 import { revenueLeak, closeMonth, agendaGaps, simulateDecision, suggestSchedule, closeCashbox, reputationSummary } from "@/lib/copilot/analytics";
+import { networkOverview, networkMonthClose, networkLeak, compareUnits, networkStaffRanking, networkBusyDays } from "@/lib/copilot/network";
+import { countUnits } from "@/lib/units";
 
 const MODEL = process.env.CHATBOT_MODEL || "claude-opus-4-8";
 
@@ -98,7 +100,7 @@ async function nextClient(staffId: string) {
 
 // ---- Tools (AI mode) ----
 
-function toolsFor(role: CopilotRole): Anthropic.Tool[] {
+function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
   const read: Anthropic.Tool[] = [
     { name: "get_revenue", description: "Faturamento (hoje, últimos 7 dias vs semana anterior, mês, ticket médio).", input_schema: { type: "object", properties: {} } },
     { name: "get_churned_clients", description: "Clientes que sumiram (não voltam há X dias).", input_schema: { type: "object", properties: { days: { type: "number" } } } },
@@ -218,8 +220,18 @@ function toolsFor(role: CopilotRole): Anthropic.Tool[] {
     { name: "close_cashbox", description: "FECHA O CAIXA DO DIA: bate os valores informados (dinheiro/cartão/pix) com o que os atendimentos concluídos hoje somam e aponta sobra/falta. Use quando o gestor disser quanto fechou (ex: 'fechei com 840 em dinheiro e 1200 no cartão').", input_schema: { type: "object", properties: { cash: { type: "number" }, card: { type: "number" }, pix: { type: "number" } } } },
     { name: "get_reviews", description: "REPUTAÇÃO: nota média, distribuição de estrelas e as avaliações recentes com comentário. Use para 'como está minha reputação', 'me ajuda a responder as avaliações' — aí você redige a resposta de cada uma na voz da barbearia.", input_schema: { type: "object", properties: {} } },
   ];
+  // REDE — só entram quando o dono tem mais de uma unidade. Sem isso seriam
+  // ~1.500 tokens inúteis no prompt de toda barbearia de loja única.
+  const networkTools: Anthropic.Tool[] = [
+    { name: "get_network_overview", description: "PANORAMA DA REDE: todas as unidades lado a lado (faturamento do mês, atendimentos, ticket médio, faturamento POR BARBEIRO, horários vazios, sumidos) + totais, melhor/pior unidade e a mais/menos eficiente. Use para 'como estão minhas lojas', 'qual unidade vai melhor', 'resumo da rede'.", input_schema: { type: "object", properties: {} } },
+    { name: "compare_units", description: "COMPARA DUAS UNIDADES de verdade: faturamento, ticket médio, atendimentos e eficiência por barbeiro, com a diferença em %. Use para 'compara a Centro com a Zona Sul'.", input_schema: { type: "object", properties: { unitA: { type: "string" }, unitB: { type: "string" } }, required: ["unitA", "unitB"] } },
+    { name: "close_month_network", description: "FECHA O MÊS DA REDE INTEIRA: faturamento, despesas, comissões e lucro somados, e também por unidade. Use para 'fecha o mês das minhas lojas', 'quanto a rede lucrou'.", input_schema: { type: "object", properties: { monthOffset: { type: "number", description: "0=mês atual, -1=passado" } } } },
+    { name: "get_network_leak", description: "ONDE A REDE PERDE DINHEIRO, por unidade — diz em qual loja agir primeiro. Use para 'onde estou perdendo dinheiro na rede', 'qual loja está vazando'.", input_schema: { type: "object", properties: {} } },
+    { name: "get_network_staff_ranking", description: "RANKING DE BARBEIROS DA REDE INTEIRA, com a unidade de cada um. Use para 'quem é meu melhor barbeiro', 'meu melhor barbeiro está na loja certa?'.", input_schema: { type: "object", properties: {} } },
+    { name: "get_network_busy_days", description: "Dia mais cheio e mais vazio de CADA unidade (90 dias) — base pra remanejar equipe entre lojas.", input_schema: { type: "object", properties: {} } },
+  ];
   if (role === "BARBER") return [...barberTools, ...clientTools, ...read.filter((t) => ["get_churned_clients"].includes(t.name))];
-  return [...read, ...clientTools, ...gestorActions, ...gestorAdmin, ...gestorOps, ...gestorSmart, ...gestorPower];
+  return [...read, ...clientTools, ...gestorActions, ...gestorAdmin, ...gestorOps, ...gestorSmart, ...gestorPower, ...(hasNetwork ? networkTools : [])];
 }
 
 async function resolveShopService(barbershopId: string, name: string) {
@@ -305,7 +317,7 @@ async function loadMemoryBlock(barbershopId: string): Promise<string> {
   return `\n\nO QUE VOCÊ JÁ SABE SOBRE ESTE NEGÓCIO (memória de conversas e decisões anteriores — leve em conta quando for relevante, sem repetir de propósito):\n${mems.reverse().map((m) => `• ${m.content}`).join("\n")}`;
 }
 
-async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: string | null, name: string, input: Record<string, unknown>): Promise<string> {
+async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: string | null, name: string, input: Record<string, unknown>, ownerId: string | null = null): Promise<string> {
   switch (name) {
     case "get_revenue":
       return JSON.stringify(await revenueSummary(barbershopId));
@@ -581,6 +593,18 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       return JSON.stringify(await closeCashbox(barbershopId, { cash: typeof input.cash === "number" ? input.cash : undefined, card: typeof input.card === "number" ? input.card : undefined, pix: typeof input.pix === "number" ? input.pix : undefined }));
     case "get_reviews":
       return JSON.stringify(await reputationSummary(barbershopId));
+    case "get_network_overview":
+      return ownerId ? JSON.stringify(await networkOverview(ownerId)) : "Rede indisponível.";
+    case "compare_units":
+      return ownerId ? JSON.stringify(await compareUnits(ownerId, String(input.unitA ?? ""), String(input.unitB ?? ""))) : "Rede indisponível.";
+    case "close_month_network":
+      return ownerId ? JSON.stringify(await networkMonthClose(ownerId, typeof input.monthOffset === "number" ? input.monthOffset : 0)) : "Rede indisponível.";
+    case "get_network_leak":
+      return ownerId ? JSON.stringify(await networkLeak(ownerId)) : "Rede indisponível.";
+    case "get_network_staff_ranking":
+      return ownerId ? JSON.stringify(await networkStaffRanking(ownerId)) : "Rede indisponível.";
+    case "get_network_busy_days":
+      return ownerId ? JSON.stringify(await networkBusyDays(ownerId)) : "Rede indisponível.";
     default:
       return "Ferramenta desconhecida.";
   }
@@ -605,9 +629,15 @@ export async function runCopilot(
   barbershopId: string,
   staffId: string | null,
   history: ChatTurn[],
+  ownerId: string | null = null,
 ): Promise<{ reply: string; actions: CopilotAction[] }> {
   const client = getAnthropic();
   const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
+
+  // Rede: só quando o dono tem mais de uma unidade. Um MANAGER não recebe as
+  // ferramentas de rede (ele responde por uma loja, não pela rede).
+  const unitCount = ownerId ? await countUnits(ownerId) : 0;
+  const hasNetwork = unitCount > 1;
 
   const shopName = shop?.name ?? "a barbearia";
   const persona =
@@ -633,7 +663,15 @@ export async function runCopilot(
   • FECHAR O CAIXA do dia batendo os valores (close_cashbox).
   • REPUTAÇÃO: ver nota e avaliações (get_reviews) e REDIGIR a resposta de cada avaliação na voz da barbearia — agradeça as boas, e nas ruins peça desculpa, resolva e convide a voltar. Entregue o texto pronto pra copiar.
   Quando o gestor pedir "por que caiu / como faturar mais / onde perco dinheiro", combine get_diagnosis + get_revenue_leak e entregue um PLANO curto de ação (o que fazer hoje, amanhã, esta semana) — e ofereça executar (tocar nas ações). Aja como consultor: número → causa → o que fazer.
-- Auto-piloto: ligar/desligar automações que rodam sozinhas (set_automation): confirmação de agendamentos, mensagem de aniversário e win-back de sumidos.
+- Auto-piloto: ligar/desligar automações que rodam sozinhas (set_automation): confirmação de agendamentos, mensagem de aniversário e win-back de sumidos.${
+        hasNetwork
+          ? `
+- REDE (este gestor tem ${unitCount} unidades — pense como gestor de rede, não de loja):
+  • Panorama de todas as lojas (get_network_overview), comparar duas (compare_units), fechar o mês da rede (close_month_network), onde a rede vaza (get_network_leak), ranking de barbeiros da rede (get_network_staff_ranking), dias cheios por loja (get_network_busy_days).
+  • ATENÇÃO à diferença: as demais ferramentas veem só a unidade ATUAL (${shopName}). As de rede veem todas. Se a pergunta for sobre "minhas lojas/rede/todas", use as de rede; se for sobre "aqui/esta loja", use as normais.
+  • Compare pelo que importa: faturamento POR BARBEIRO revela mais que faturamento bruto — uma loja maior pode faturar mais e ser a menos eficiente. Diga sempre qual unidade agir primeiro.`
+          : ""
+      }
 - Sempre converta datas relativas ("amanhã", "sexta") para AAAA-MM-DD. Nunca invente horário — use check_availability. Confirme antes de qualquer ação que grava ("Confirmo: agendar João, Corte, com o Thalles, amanhã 14h?").`
       : "";
 
@@ -668,7 +706,7 @@ DADOS E AÇÕES
   const memoryBlock = await loadMemoryBlock(barbershopId);
   if (memoryBlock) systemBlocks.push({ type: "text", text: memoryBlock });
   const messages: Anthropic.MessageParam[] = history.slice(-16).map((m) => ({ role: m.role, content: m.content }));
-  const tools = toolsFor(role);
+  const tools = toolsFor(role, hasNetwork);
   const actions: CopilotAction[] = [];
   let usedIn = 0;
   let usedOut = 0;
@@ -697,7 +735,7 @@ DADOS E AÇÕES
           out = "Botão exibido pro usuário. Diga em 1 frase curta que é só tocar no botão abaixo pra executar.";
         } else {
           try {
-            out = await runCopilotTool(role, barbershopId, staffId, block.name, block.input as Record<string, unknown>);
+            out = await runCopilotTool(role, barbershopId, staffId, block.name, block.input as Record<string, unknown>, ownerId);
           } catch (e) {
             out = `Erro: ${e instanceof Error ? e.message : String(e)}`;
           }

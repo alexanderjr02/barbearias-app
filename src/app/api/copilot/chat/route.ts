@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
   let capNote: string | null = null;
   if (aiPowered) {
     try {
-      const res = await runCopilot(role, session.barbershopId, staffId, history);
+      // Só o OWNER enxerga a rede — um MANAGER responde pela loja dele.
+      const ownerId = session.role === "OWNER" ? session.sub : null;
+      const res = await runCopilot(role, session.barbershopId, staffId, history, ownerId);
       reply = res.reply;
       actions = res.actions;
     } catch {
