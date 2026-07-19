@@ -152,6 +152,7 @@ model Barbershop {
   copilotMemories CopilotMemory[]
   autopilotLogs   AutopilotLog[]
   aiUsage         AiUsage[]
+  copilotActions  CopilotAction[]
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
   platformInvoices  PlatformInvoice[]
@@ -345,6 +346,31 @@ model AiUsage {
   createdAt    DateTime   @default(now())
 
   @@index([barbershopId, createdAt])
+}
+
+// Rede de segurança da autonomia: toda ação do Copiloto que ESCREVE no banco
+// registra aqui como se desfaz. Sem isto, "a IA agenda, cancela, fecha agenda
+// e muda preço sozinha" é uma aposta — um erro dela não tem volta e o gestor
+// perde a confiança de deixá-la agir.
+//
+// Só entram ações realmente reversíveis. Disparo de promoção, por exemplo,
+// não entra: mensagem enviada não volta — esse caso pede confirmação ANTES,
+// não desfazer depois.
+model CopilotAction {
+  id           String     @id @default(cuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  // Quem mandou fazer — o desfazer é oferecido a quem executou.
+  userId       String
+  tool         String     // book_appointment | cancel_appointment | ...
+  description  String     // texto curto mostrado no botão ("Cancelamento de João, 14h")
+  // Tudo que o desfazer precisa para reverter (ids e valores anteriores).
+  undoData     String     // JSON
+  undoneAt     DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId, createdAt])
+  @@index([userId])
 }
 
 model CopilotMemory {

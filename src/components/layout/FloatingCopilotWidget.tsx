@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, X, Send, TrendingUp, UserX, CalendarCheck, CheckCircle2, Package, Loader2, Mic, SquarePen, History, Volume2, VolumeX } from "lucide-react";
+import { Sparkles, X, Send, TrendingUp, UserX, CalendarCheck, CheckCircle2, Package, Loader2, Mic, SquarePen, History, Volume2, VolumeX, Undo2 } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import { cn } from "@/lib/utils";
 
@@ -24,9 +24,12 @@ interface ChatMsg {
   content: string;
   actions?: CopilotAction[];
   done?: boolean;
+  undo?: { id: string; label: string };
+  undone?: boolean;
 }
 interface ChatResponse {
   reply: string;
+  undo?: { id: string; label: string };
   aiPowered: boolean;
   note: string;
   suggestions: string[];
@@ -131,7 +134,7 @@ export function FloatingCopilotWidget() {
       const cid = conversationId || `c${Date.now()}`;
       if (!conversationId) setConversationId(cid);
       const res = await apiPost<ChatResponse>("/api/copilot/chat", { messages: next, conversationId: cid });
-      setMessages((m) => [...m, { role: "assistant", content: res.reply, actions: res.actions }]);
+      setMessages((m) => [...m, { role: "assistant", content: res.reply, actions: res.actions, undo: res.undo }]);
       setNote(res.aiPowered ? null : res.note);
       if (speak && typeof window !== "undefined" && window.speechSynthesis) {
         const u = new SpeechSynthesisUtterance(res.reply);
@@ -169,6 +172,22 @@ export function FloatingCopilotWidget() {
       refetchBriefing();
     } catch {
       setActionMsg("Não foi possível executar.");
+    } finally {
+      setBusyAction(null);
+      scrollToEnd();
+    }
+  };
+
+  // Desfazer a última ação que o Copiloto executou. A confirmação aparece como
+  // uma nova mensagem dele, para o gestor ver o que voltou ao normal.
+  const undoAction = async (idx: number, undoId: string) => {
+    setBusyAction(undoId);
+    try {
+      const res = await apiPost<{ message: string }>("/api/copilot/undo", { id: undoId });
+      setMessages((m) => [...m.map((msg, i) => (i === idx ? { ...msg, undone: true } : msg)), { role: "assistant" as const, content: `Desfeito. ${res.message}` }]);
+      refetchBriefing();
+    } catch {
+      setMessages((m) => [...m, { role: "assistant" as const, content: "Não consegui desfazer — o prazo pode ter passado ou algo mudou depois." }]);
     } finally {
       setBusyAction(null);
       scrollToEnd();
@@ -369,6 +388,18 @@ export function FloatingCopilotWidget() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-100">{m.content}</div>
+                    {m.undo && !m.undone && (
+                      <button
+                        onClick={() => undoAction(i, m.undo!.id)}
+                        disabled={!!busyAction}
+                        className="mt-2 flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-zinc-400 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
+                        title={m.undo.label}
+                      >
+                        {busyAction === m.undo.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" />}
+                        Desfazer
+                      </button>
+                    )}
+                    {m.undone && <p className="mt-2 text-[11px] text-zinc-600">Ação desfeita.</p>}
                     {m.actions && !m.done && m.actions.length > 0 && (
                       <div className="mt-2.5 flex flex-wrap gap-2">
                         {m.actions.map((a) => (

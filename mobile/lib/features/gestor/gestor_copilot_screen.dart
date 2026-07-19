@@ -23,7 +23,10 @@ class _Msg {
   final String text;
   final List<CopilotAction> actions;
   bool actionsDone;
-  _Msg(this.role, this.text, {this.actions = const [], this.actionsDone = false});
+  /// Ação reversível executada nesta resposta — vira o botão "Desfazer".
+  final ({String id, String label})? undo;
+  bool undone;
+  _Msg(this.role, this.text, {this.actions = const [], this.actionsDone = false, this.undo, this.undone = false});
 }
 
 class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
@@ -150,6 +153,30 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
     }
   }
 
+  /// Desfaz a ação que esta resposta executou. A confirmação entra como nova
+  /// mensagem do Copiloto, para o gestor ver exatamente o que voltou.
+  Future<void> _undo(_Msg msg) async {
+    final undo = msg.undo;
+    if (undo == null) return;
+    setState(() => _runningAction = undo.id);
+    try {
+      final result = await _repository.copilotUndo(undo.id);
+      if (!mounted) return;
+      setState(() {
+        msg.undone = true;
+        _runningAction = null;
+        _messages.add(_Msg('assistant', 'Desfeito. $result'));
+      });
+      _loadBriefing();
+      _scrollToEnd();
+    } catch (_) {
+      if (mounted) {
+        AppToast.error(context, 'Não consegui desfazer — o prazo pode ter passado');
+        setState(() => _runningAction = null);
+      }
+    }
+  }
+
   Future<void> _send([String? preset]) async {
     final text = (preset ?? _input.text).trim();
     if (text.isEmpty || _sending) return;
@@ -164,7 +191,7 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
       final res = await _repository.copilotChat(history, conversationId: _conversationId);
       if (mounted) {
         setState(() {
-          _messages.add(_Msg('assistant', res.reply, actions: res.actions));
+          _messages.add(_Msg('assistant', res.reply, actions: res.actions, undo: res.undo));
           _suggestions = res.suggestions;
           _note = res.aiPowered ? null : res.note;
         });
@@ -323,6 +350,7 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
                       animate: e.value.role == 'assistant' && e.key == _messages.length - 1,
                       runningAction: _runningAction,
                       onAction: (a) => _runChatAction(e.value, a),
+                      onUndo: () => _undo(e.value),
                     )),
                 if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando seu resumo…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
               ],
@@ -473,7 +501,8 @@ class _Bubble extends StatelessWidget {
   final bool animate;
   final String? runningAction;
   final void Function(CopilotAction)? onAction;
-  const _Bubble({required this.msg, required this.palette, required this.accent, this.animate = false, this.runningAction, this.onAction});
+  final VoidCallback? onUndo;
+  const _Bubble({required this.msg, required this.palette, required this.accent, this.animate = false, this.runningAction, this.onAction, this.onUndo});
 
   @override
   Widget build(BuildContext context) {
@@ -502,6 +531,30 @@ class _Bubble extends StatelessWidget {
                 ? Text(msg.text, style: TextStyle(color: contrastingTextColor(accent), fontSize: 13.5, height: 1.4))
                 : TypewriterText(text: msg.text, animate: animate, style: TextStyle(color: palette.textPrimary, fontSize: 13.5, height: 1.4)),
           ),
+          // Saída de emergência da autonomia: aparece no mesmo lugar em que a
+          // ação aconteceu, não escondida num menu.
+          if (!isUser && msg.undo != null && !msg.undone)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: OutlinedButton.icon(
+                onPressed: runningAction != null ? null : onUndo,
+                icon: runningAction == msg.undo!.id
+                    ? SizedBox(width: 13, height: 13, child: CircularProgressIndicator(strokeWidth: 2, color: palette.textFaint))
+                    : Icon(Icons.undo_rounded, size: 15, color: palette.textSecondary),
+                label: Text('Desfazer', style: TextStyle(color: palette.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: palette.border),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+          if (!isUser && msg.undone)
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Text('Ação desfeita.', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+            ),
           if (showActions)
             Padding(
               padding: const EdgeInsets.only(top: 6),

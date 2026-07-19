@@ -1027,14 +1027,20 @@ class CopilotReply {
   final String note;
   final List<String> suggestions;
   final List<CopilotAction> actions;
+  /// Presente quando esta resposta executou algo reversível — vira o botão
+  /// "Desfazer" logo abaixo da mensagem.
+  final ({String id, String label})? undo;
 
-  CopilotReply({required this.reply, required this.aiPowered, required this.note, required this.suggestions, required this.actions});
+  CopilotReply({required this.reply, required this.aiPowered, required this.note, required this.suggestions, required this.actions, this.undo});
 
   factory CopilotReply.fromJson(Map<String, dynamic> j) => CopilotReply(
         reply: j['reply'] as String? ?? '',
         aiPowered: j['aiPowered'] == true,
         note: j['note'] as String? ?? '',
         suggestions: ((j['suggestions'] as List?) ?? []).map((e) => e as String).toList(),
+        undo: j['undo'] == null
+            ? null
+            : (id: (j['undo'] as Map<String, dynamic>)['id'] as String, label: (j['undo'] as Map<String, dynamic>)['label'] as String? ?? 'Desfazer'),
         actions: ((j['actions'] as List?) ?? []).map((e) => CopilotAction.fromJson(e as Map<String, dynamic>)).toList(),
       );
 }
@@ -1483,6 +1489,12 @@ class GestorRepository {
       return (action: m['action'] as String? ?? '', detail: m['detail'] as String? ?? '', recoveredValue: (m['recoveredValue'] as num?)?.toDouble(), createdAt: m['createdAt'] as String? ?? '');
     }).toList();
     return (recoveredTotal: (data['recoveredTotal'] as num?)?.toDouble() ?? 0, actionsThisMonth: data['actionsThisMonth'] as int? ?? 0, feed: feed);
+  }
+
+  /// Desfaz a última ação do Copiloto. Devolve a mensagem do que voltou.
+  Future<String> copilotUndo(String id) async {
+    final data = await ApiClient.instance.post('/copilot/undo', data: {'id': id}) as Map<String, dynamic>;
+    return data['message'] as String? ?? 'Desfeito.';
   }
 
   // ---- Rede de unidades ----

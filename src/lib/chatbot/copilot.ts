@@ -26,6 +26,7 @@ import {
 import { revenueLeak, closeMonth, agendaGaps, simulateDecision, suggestSchedule, closeCashbox, reputationSummary } from "@/lib/copilot/analytics";
 import { networkOverview, networkMonthClose, networkLeak, compareUnits, networkStaffRanking, networkBusyDays } from "@/lib/copilot/network";
 import { countUnits } from "@/lib/units";
+import { recordUndoable, latestUndoable } from "@/lib/copilot/undo";
 
 const MODEL = process.env.CHATBOT_MODEL || "claude-opus-4-8";
 
@@ -317,7 +318,7 @@ async function loadMemoryBlock(barbershopId: string): Promise<string> {
   return `\n\nO QUE VOCÊ JÁ SABE SOBRE ESTE NEGÓCIO (memória de conversas e decisões anteriores — leve em conta quando for relevante, sem repetir de propósito):\n${mems.reverse().map((m) => `• ${m.content}`).join("\n")}`;
 }
 
-async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: string | null, name: string, input: Record<string, unknown>, ownerId: string | null = null): Promise<string> {
+async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: string | null, name: string, input: Record<string, unknown>, ownerId: string | null = null, userId: string | null = null): Promise<string> {
   switch (name) {
     case "get_revenue":
       return JSON.stringify(await revenueSummary(barbershopId));
@@ -347,6 +348,9 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const price = Number(input.price);
       if (!name || !Number.isFinite(duration) || duration <= 0 || !Number.isFinite(price) || price < 0) return "Dados incompletos: preciso de nome, duração (min) e preço.";
       const created = await prisma.service.create({ data: { barbershopId, name, duration: Math.round(duration), price } });
+      // Literal em vez de `name`: aqui `name` é o nome do SERVIÇO (a variável
+      // local sombreia o nome da ferramenta).
+      if (userId) await recordUndoable(barbershopId, userId, "create_service", `Serviço criado: ${created.name}`, { kind: "service_created", serviceId: created.id });
       await rememberFact(barbershopId, `Serviço criado: ${created.name} (${created.duration}min, R$ ${created.price.toFixed(2)}).`, "action");
       return `Serviço criado: ${created.name}, ${created.duration}min, R$ ${created.price.toFixed(2)}.`;
     }
@@ -355,7 +359,9 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       if (!svc) return "Serviço não encontrado.";
       const price = Number(input.price);
       if (!Number.isFinite(price) || price < 0) return "Preço inválido.";
+      const before = await prisma.service.findUnique({ where: { id: svc.id }, select: { price: true } });
       await prisma.service.update({ where: { id: svc.id }, data: { price } });
+      if (userId && before) await recordUndoable(barbershopId, userId, name, `Preço de ${svc.name} para R$ ${price.toFixed(2)}`, { kind: "service_price", serviceId: svc.id, previousPrice: before.price });
       await rememberFact(barbershopId, `Preço de ${svc.name} alterado para R$ ${price.toFixed(2)}.`, "action");
       return `Preço de ${svc.name} atualizado para R$ ${price.toFixed(2)}.`;
     }
@@ -427,6 +433,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const appt = await prisma.appointment.create({
         data: { barbershopId, staffId: staff.id, serviceId: svc.id, date: new Date(dateKey), startTime: time, endTime, clientName: String(input.clientName ?? "").trim(), clientPhone: String(input.clientPhone ?? "").trim(), totalPrice: service?.price ?? 0, status: "SCHEDULED" },
       });
+      if (userId) await recordUndoable(barbershopId, userId, name, `Agendamento de ${appt.clientName} em ${dateKey} às ${time}`, { kind: "appointment_created", appointmentId: appt.id });
       return `Agendado! ${svc.name} com ${staff.name} em ${dateKey} às ${time}. Código: ${appt.id.slice(-6).toUpperCase()}.`;
     }
     case "find_appointments": {
@@ -451,17 +458,18 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
     }
     case "cancel_appointment": {
       const id = String(input.appointmentId ?? "");
-      const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, startTime: true, status: true, service: { select: { price: true } } } });
+      const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, startTime: true, status: true, clientName: true, service: { select: { price: true } } } });
       if (!appt || appt.barbershopId !== barbershopId) return "Agendamento não encontrado.";
       if (appt.status !== "CANCELLED") {
         await prisma.appointment.update({ where: { id }, data: { status: "CANCELLED" } });
+        if (userId) await recordUndoable(barbershopId, userId, name, `Cancelamento de ${appt.clientName}, ${appt.startTime}`, { kind: "appointment_status", appointmentId: id, previousStatus: appt.status });
         await onSlotOpened(barbershopId, { startTime: appt.startTime, price: appt.service?.price ?? null });
       }
       return `Agendamento das ${appt.startTime} cancelado.`;
     }
     case "reschedule_appointment": {
       const id = String(input.appointmentId ?? "");
-      const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, staffId: true, service: { select: { duration: true } } } });
+      const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, staffId: true, date: true, startTime: true, endTime: true, clientName: true, service: { select: { duration: true } } } });
       if (!appt || appt.barbershopId !== barbershopId) return "Agendamento não encontrado.";
       const dateKey = String(input.dateKey ?? "");
       const time = String(input.time ?? "");
@@ -470,6 +478,14 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const slotError = await validateRequestedSlot({ barbershopId, staffId: appt.staffId, dateKey, startTime: time, endTime });
       if (slotError) return `Não foi possível remarcar: ${slotError}`;
       await prisma.appointment.update({ where: { id }, data: { date: new Date(dateKey), startTime: time, endTime } });
+      if (userId)
+        await recordUndoable(barbershopId, userId, name, `Remarcação de ${appt.clientName} para ${dateKey} ${time}`, {
+          kind: "appointment_moved",
+          appointmentId: id,
+          previousDate: appt.date.toISOString(),
+          previousStart: appt.startTime,
+          previousEnd: appt.endTime,
+        });
       return `Remarcado para ${dateKey} às ${time}.`;
     }
     case "close_agenda": {
@@ -484,13 +500,20 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       } else {
         targets = await prisma.staff.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true } });
       }
+      // Só entram no desfazer as folgas que ESTE comando criou — se já existia
+      // folga marcada antes, desfazer não pode apagá-la.
+      const createdIds: string[] = [];
       for (const t of targets) {
-        await prisma.staffTimeOff.upsert({
+        const existing = await prisma.staffTimeOff.findUnique({ where: { staffId_date: { staffId: t.id, date: new Date(dateKey) } }, select: { id: true } });
+        const row = await prisma.staffTimeOff.upsert({
           where: { staffId_date: { staffId: t.id, date: new Date(dateKey) } },
           update: { reason: "Agenda fechada" },
           create: { staffId: t.id, date: new Date(dateKey), reason: "Agenda fechada" },
         });
+        if (!existing) createdIds.push(row.id);
       }
+      if (userId && createdIds.length)
+        await recordUndoable(barbershopId, userId, name, `Agenda fechada em ${dateKey}${staffName ? ` (${staffName})` : " (equipe toda)"}`, { kind: "timeoffs_created", ids: createdIds });
       await rememberFact(barbershopId, `Agenda fechada em ${dateKey}${staffName ? ` (${staffName})` : " (equipe toda)"}.`, "action");
       return `Agenda fechada em ${dateKey}${staffName ? ` para ${staffName}` : " para toda a equipe"}.`;
     }
@@ -503,7 +526,8 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const category = String(input.category ?? "").trim() || "Geral";
       const dk = String(input.dateKey ?? "");
       const date = /^\d{4}-\d{2}-\d{2}$/.test(dk) ? new Date(dk) : new Date(shopNow().dateKey);
-      await prisma.financialTransaction.create({ data: { barbershopId, type, category, description, amount, date } });
+      const tx = await prisma.financialTransaction.create({ data: { barbershopId, type, category, description, amount, date } });
+      if (userId) await recordUndoable(barbershopId, userId, name, `${type === "INCOME" ? "Receita" : "Despesa"}: ${description} R$ ${amount.toFixed(2)}`, { kind: "transaction_created", transactionId: tx.id });
       await rememberFact(barbershopId, `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description} R$ ${amount.toFixed(2)}.`, "action");
       return `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description} — R$ ${amount.toFixed(2)}.`;
     }
@@ -517,6 +541,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const mode = String(input.mode ?? "add");
       const newQty = mode === "set" ? Math.max(0, Math.round(qty)) : Math.max(0, p.quantity + Math.round(qty));
       await prisma.product.update({ where: { id: p.id }, data: { quantity: newQty } });
+      if (userId) await recordUndoable(barbershopId, userId, name, `Estoque de ${p.name}: ${p.quantity} -> ${newQty}`, { kind: "product_quantity", productId: p.id, previousQuantity: p.quantity });
       return `Estoque de ${p.name}: ${p.quantity} → ${newQty}.`;
     }
     case "send_promo": {
@@ -630,7 +655,8 @@ export async function runCopilot(
   staffId: string | null,
   history: ChatTurn[],
   ownerId: string | null = null,
-): Promise<{ reply: string; actions: CopilotAction[] }> {
+  userId: string | null = null,
+): Promise<{ reply: string; actions: CopilotAction[]; undo?: { id: string; label: string } }> {
   const client = getAnthropic();
   const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
 
@@ -722,7 +748,12 @@ DADOS E AÇÕES
     if (response.stop_reason !== "tool_use") {
       const reply = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim() || "Pode reformular?";
       await recordAiUsage(barbershopId, "copilot", MODEL, usedIn, usedOut, cacheWrite, cacheRead);
-      return { reply, actions };
+      // Se esta rodada gravou algo reversível, devolve o "Desfazer" junto da
+      // resposta — o gestor vê a saída de emergência no mesmo lugar em que a
+      // ação aconteceu, não escondida num menu.
+      const undoable = userId ? await latestUndoable(barbershopId, userId) : null;
+      const undo = undoable && Date.now() - undoable.createdAt.getTime() < 60_000 ? { id: undoable.id, label: `Desfazer: ${undoable.description}` } : undefined;
+      return { reply, actions, undo };
     }
     messages.push({ role: "assistant", content: response.content });
     const results: Anthropic.ToolResultBlockParam[] = [];
@@ -735,7 +766,7 @@ DADOS E AÇÕES
           out = "Botão exibido pro usuário. Diga em 1 frase curta que é só tocar no botão abaixo pra executar.";
         } else {
           try {
-            out = await runCopilotTool(role, barbershopId, staffId, block.name, block.input as Record<string, unknown>, ownerId);
+            out = await runCopilotTool(role, barbershopId, staffId, block.name, block.input as Record<string, unknown>, ownerId, userId);
           } catch (e) {
             out = `Erro: ${e instanceof Error ? e.message : String(e)}`;
           }

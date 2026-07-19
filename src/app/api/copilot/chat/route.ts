@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
 
   let reply: string;
   let actions: CopilotAction[] = [];
+  let undo: { id: string; label: string } | undefined;
   // Margin guardrail: over the plan's daily AI cap, serve the FREE simulated
   // responder instead of calling the model, so cost stays bounded.
   const quota = await aiQuota(session.barbershopId, shop?.plan);
@@ -58,9 +59,10 @@ export async function POST(request: NextRequest) {
     try {
       // Só o OWNER enxerga a rede — um MANAGER responde pela loja dele.
       const ownerId = session.role === "OWNER" ? session.sub : null;
-      const res = await runCopilot(role, session.barbershopId, staffId, history, ownerId);
+      const res = await runCopilot(role, session.barbershopId, staffId, history, ownerId, session.sub);
       reply = res.reply;
       actions = res.actions;
+      undo = res.undo;
     } catch {
       reply = await simulatedReply(role, session.barbershopId, staffId, lastUser.content);
     }
@@ -80,5 +82,5 @@ export async function POST(request: NextRequest) {
     // non-critical
   }
 
-  return NextResponse.json({ reply, actions, aiPowered, note: capNote ?? unavailableAiNote(), suggestions: copilotSuggestions(role) });
+  return NextResponse.json({ reply, actions, undo, aiPowered, note: capNote ?? unavailableAiNote(), suggestions: copilotSuggestions(role) });
 }
