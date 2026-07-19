@@ -22,6 +22,7 @@ export async function GET() {
     category: service.category,
     duration: service.duration,
     price: service.price,
+    cost: service.cost,
     isActive: service.isActive,
     appointmentsCount: service._count.appointments,
   }));
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
       image: typeof body.image === "string" ? body.image : undefined,
       duration: body.duration,
       price: body.price,
+      cost: typeof body.cost === "number" && body.cost >= 0 ? body.cost : 0,
       category: body.category || "HAIRCUT",
       barbershopId: session.barbershopId,
     },

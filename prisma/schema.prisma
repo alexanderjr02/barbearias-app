@@ -221,6 +221,12 @@ model Service {
   image         String?
   duration      Int
   price         Float
+  // Custo direto do serviço (produto gasto, lâmina, toalha...). Sem ele o
+  // sistema só sabia FATURAMENTO, nunca MARGEM — e um corte de R$50 que gasta
+  // R$8 de produto é um negócio diferente de um de R$50 que não gasta nada.
+  // É o que permite ao Copiloto dizer "seu serviço mais vendido é o menos
+  // lucrativo". Zero por padrão para não inventar número em base existente.
+  cost          Float    @default(0)
   category      String   @default("HAIRCUT")
   isActive      Boolean  @default(true)
   barbershopId  String

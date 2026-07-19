@@ -229,6 +229,67 @@ export async function suggestSchedule(barbershopId: string) {
 }
 
 /**
+ * "Qual serviço realmente dá lucro?" — margem por serviço, não faturamento.
+ *
+ * É a pergunta que o sistema não conseguia responder: sem o custo, o campeão
+ * de vendas parecia o campeão de lucro. Aqui entram volume, receita, custo
+ * direto, comissão paga e a margem que sobra de fato.
+ */
+export async function serviceMargins(barbershopId: string) {
+  const startMonth = startOfUtcMonth(new Date());
+  const appts = await prisma.appointment.findMany({
+    where: { barbershopId, status: "COMPLETED", date: { gte: startMonth } },
+    select: { totalPrice: true, serviceId: true, service: { select: { name: true, cost: true, duration: true } }, staff: { select: { commissionRate: true } } },
+  });
+  type A = { totalPrice: number; serviceId: string; service: { name: string; cost: number; duration: number } | null; staff: { commissionRate: number } | null };
+
+  const per = new Map<string, { name: string; count: number; revenue: number; cost: number; commission: number; minutes: number }>();
+  for (const a of appts as A[]) {
+    if (!a.service) continue;
+    const cur = per.get(a.serviceId) ?? { name: a.service.name, count: 0, revenue: 0, cost: 0, commission: 0, minutes: 0 };
+    cur.count += 1;
+    cur.revenue += a.totalPrice;
+    cur.cost += a.service.cost;
+    cur.commission += a.totalPrice * (a.staff?.commissionRate ?? 0);
+    cur.minutes += a.service.duration;
+    per.set(a.serviceId, cur);
+  }
+
+  const rows = [...per.values()].map((s) => {
+    const profit = s.revenue - s.cost - s.commission;
+    return {
+      name: s.name,
+      count: s.count,
+      revenue: Math.round(s.revenue),
+      cost: Math.round(s.cost),
+      commission: Math.round(s.commission),
+      profit: Math.round(profit),
+      marginPercent: s.revenue > 0 ? Math.round((profit / s.revenue) * 100) : 0,
+      // Lucro por hora de cadeira: um serviço de margem alta que ocupa a
+      // cadeira o dobro do tempo pode render menos que outro mais simples.
+      profitPerHour: s.minutes > 0 ? Math.round((profit / s.minutes) * 60) : 0,
+    };
+  });
+
+  const byProfit = [...rows].sort((a, b) => b.profit - a.profit);
+  const byVolume = [...rows].sort((a, b) => b.count - a.count);
+  const byHour = [...rows].sort((a, b) => b.profitPerHour - a.profitPerHour);
+  const costsFilled = rows.some((r) => r.cost > 0);
+
+  return {
+    services: byProfit,
+    mostProfitable: byProfit[0] ?? null,
+    mostSold: byVolume[0] ?? null,
+    bestPerHour: byHour[0] ?? null,
+    worstMargin: rows.length > 1 ? [...rows].sort((a, b) => a.marginPercent - b.marginPercent)[0] : null,
+    // Avisa quando ninguém preencheu custo — senão a margem parece ótima só
+    // porque o custo está zerado, e o gestor tomaria decisão com número falso.
+    costsFilled,
+    warning: costsFilled ? null : "Nenhum serviço tem custo cadastrado, então a margem está igual ao faturamento menos comissão. Preencha o custo em Serviços para o número ficar real.",
+  };
+}
+
+/**
  * "Responde as avaliações" — nota média, distribuição e as avaliações recentes
  * (com comentário) que valem uma resposta. O Copiloto usa isso pra redigir a
  * resposta de cada uma na voz da barbearia.

@@ -27,6 +27,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ...(typeof body.description === "string" && { description: body.description }),
       ...(typeof body.category === "string" && { category: body.category }),
       ...(typeof body.price === "number" && { price: body.price }),
+      ...(typeof body.cost === "number" && body.cost >= 0 && { cost: body.cost }),
       ...(typeof body.duration === "number" && { duration: body.duration }),
       ...((typeof body.image === "string" || body.image === null) && { image: body.image }),
     },

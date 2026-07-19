@@ -374,6 +374,9 @@ class GestorService {
   final String category;
   final int duration;
   final double price;
+  /// Custo direto (produto, lâmina). Sem ele o sistema só sabe faturamento,
+  /// nunca margem.
+  final double cost;
   final bool isActive;
   final int appointmentsCount;
 
@@ -385,6 +388,7 @@ class GestorService {
     required this.category,
     required this.duration,
     required this.price,
+    this.cost = 0,
     required this.isActive,
     required this.appointmentsCount,
   });
@@ -397,6 +401,7 @@ class GestorService {
         category: json['category'],
         duration: json['duration'] as int,
         price: (json['price'] as num).toDouble(),
+        cost: (json['cost'] as num?)?.toDouble() ?? 0,
         isActive: json['isActive'] == true,
         appointmentsCount: json['appointmentsCount'] as int? ?? 0,
       );
@@ -1360,6 +1365,7 @@ class GestorRepository {
     required String category,
     required int duration,
     required double price,
+    double cost = 0,
     String? image,
   }) async {
     await ApiClient.instance.post('/services', data: {
@@ -1368,6 +1374,7 @@ class GestorRepository {
       'category': category,
       'duration': duration,
       'price': price,
+      'cost': cost,
       'image': image,
     });
   }
@@ -1379,6 +1386,7 @@ class GestorRepository {
     String? category,
     int? duration,
     double? price,
+    double? cost,
     String? image,
     bool? isActive,
   }) async {
@@ -1388,6 +1396,7 @@ class GestorRepository {
       if (category != null) 'category': category,
       if (duration != null) 'duration': duration,
       if (price != null) 'price': price,
+      if (cost != null) 'cost': cost,
       if (image != null) 'image': image,
       if (isActive != null) 'isActive': isActive,
     });

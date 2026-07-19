@@ -23,7 +23,7 @@ import {
   diagnose,
   goalProgress,
 } from "@/lib/copilot/insights";
-import { revenueLeak, closeMonth, agendaGaps, simulateDecision, suggestSchedule, closeCashbox, reputationSummary } from "@/lib/copilot/analytics";
+import { revenueLeak, closeMonth, agendaGaps, simulateDecision, suggestSchedule, closeCashbox, reputationSummary, serviceMargins } from "@/lib/copilot/analytics";
 import { networkOverview, networkMonthClose, networkLeak, compareUnits, networkStaffRanking, networkBusyDays } from "@/lib/copilot/network";
 import { countUnits } from "@/lib/units";
 import { recordUndoable, latestUndoable } from "@/lib/copilot/undo";
@@ -219,6 +219,7 @@ function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
     { name: "simulate", description: "SIMULADOR DE DECISÃO ('e se...?'): projeta o impacto ANTES de arriscar. type 'price' com pct (e serviceName opcional) simula mudar preço em %; type 'hire' simula contratar mais 1 barbeiro. Use para 'e se eu subir 10%?', 'vale a pena contratar?'.", input_schema: { type: "object", properties: { type: { type: "string", enum: ["price", "hire"] }, pct: { type: "number" }, serviceName: { type: "string" } }, required: ["type"] } },
     { name: "suggest_schedule", description: "MONTA A ESCALA DA SEMANA: recomenda quantos barbeiros por dia com base na demanda real dos últimos 90 dias. Use para 'monta a escala', 'como escalar a equipe'.", input_schema: { type: "object", properties: {} } },
     { name: "close_cashbox", description: "FECHA O CAIXA DO DIA: bate os valores informados (dinheiro/cartão/pix) com o que os atendimentos concluídos hoje somam e aponta sobra/falta. Use quando o gestor disser quanto fechou (ex: 'fechei com 840 em dinheiro e 1200 no cartão').", input_schema: { type: "object", properties: { cash: { type: "number" }, card: { type: "number" }, pix: { type: "number" } } } },
+    { name: "get_service_margins", description: "MARGEM POR SERVIÇO (não faturamento): volume, receita, custo direto, comissão paga e o lucro que sobra de cada serviço, além do lucro por hora de cadeira. Use para 'qual serviço da mais lucro', 'meu carro-chefe compensa?', 'onde ganho mais por hora'. Se costsFilled for false, avise que o custo não está cadastrado antes de concluir.", input_schema: { type: "object", properties: {} } },
     { name: "get_reviews", description: "REPUTAÇÃO: nota média, distribuição de estrelas e as avaliações recentes com comentário. Use para 'como está minha reputação', 'me ajuda a responder as avaliações' — aí você redige a resposta de cada uma na voz da barbearia.", input_schema: { type: "object", properties: {} } },
   ];
   // REDE — só entram quando o dono tem mais de uma unidade. Sem isso seriam
@@ -622,6 +623,8 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       return JSON.stringify(await suggestSchedule(barbershopId));
     case "close_cashbox":
       return JSON.stringify(await closeCashbox(barbershopId, { cash: typeof input.cash === "number" ? input.cash : undefined, card: typeof input.card === "number" ? input.card : undefined, pix: typeof input.pix === "number" ? input.pix : undefined }));
+    case "get_service_margins":
+      return JSON.stringify(await serviceMargins(barbershopId));
     case "get_reviews":
       return JSON.stringify(await reputationSummary(barbershopId));
     case "get_network_overview":
