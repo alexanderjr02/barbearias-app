@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { planHasAI } from "@/lib/billing";
-import { notifyClient } from "@/lib/gestorNotifications";
+import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
 import { churnedClients, tomorrowAppointments } from "@/lib/copilot/insights";
 
 // POST /api/copilot/action { action } — executes one of the briefing's one-tap
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const withAccount = churned.filter((c) => c.clientId);
     const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
     for (const c of withAccount) {
-      await notifyClient(
+      await notifyClientMarketing(
         barbershopId,
         c.clientId!,
         "APPOINTMENT_CONFIRMED",

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { planHasAI } from "@/lib/billing";
-import { notifyClient } from "@/lib/gestorNotifications";
+import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
 import { churnedClients } from "./insights";
 
 // The autonomous auto-piloto: it's ON by default on Pro+ and reacts in
@@ -36,10 +36,13 @@ export async function onSlotOpened(barbershopId: string, freed: { startTime?: st
 
   // No one waiting? Offer it to a few clients who've gone quiet.
   if (reached === 0) {
+    // Puxar cliente sumido é MARKETING (ele não pediu para ser avisado), ao
+    // contrário da fila de espera acima, que é transacional — quem entrou na
+    // fila pediu exatamente esse aviso.
     const churned = (await churnedClients(barbershopId, 30, 10)).filter((c) => c.clientId).slice(0, 3);
     for (const c of churned) {
-      await notifyClient(barbershopId, c.clientId!, "APPOINTMENT_CONFIRMED", "Abriu um horário 💈", `Surgiu um horário${whenTxt} na ${shopName}. Que tal aproveitar pra dar aquele trato?`, "/appointments");
-      reached++;
+      const ok = await notifyClientMarketing(barbershopId, c.clientId!, "APPOINTMENT_CONFIRMED", "Abriu um horário 💈", `Surgiu um horário${whenTxt} na ${shopName}. Que tal aproveitar pra dar aquele trato?`, "/appointments");
+      if (ok) reached++;
     }
   }
 

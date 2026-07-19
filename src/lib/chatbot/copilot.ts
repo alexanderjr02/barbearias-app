@@ -5,7 +5,7 @@ import { startOfUtcMonth, startOfUtcDay, addUtcDays } from "@/lib/dateRange";
 import { assistantEnabled } from "./assistant";
 import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, shopNow, OCCUPYING_STATUSES } from "@/lib/scheduling";
 import { appointmentLimitError } from "@/lib/planLimits";
-import { notifyClient } from "@/lib/gestorNotifications";
+import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
 import { onSlotOpened } from "@/lib/copilot/autopilot";
 import { recordAiUsage } from "@/lib/ai/usage";
 import {
@@ -563,10 +563,16 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
         clientIds = [...set];
       }
       if (!clientIds.length) return "Nenhum cliente com conta pra receber a promoção.";
+      // Só quem autorizou. O número informado é o que REALMENTE recebeu — se
+      // eu reportasse o total encontrado, o gestor acharia que alcançou mais
+      // gente do que alcançou.
+      let sent = 0;
       for (const cid of clientIds) {
-        await notifyClient(barbershopId, cid, "APPOINTMENT_CONFIRMED", "Promoção 💈", message, "/appointments");
+        if (await notifyClientMarketing(barbershopId, cid, "APPOINTMENT_CONFIRMED", "Promoção 💈", message, "/appointments")) sent++;
       }
-      return `Promoção enviada pra ${clientIds.length} cliente(s)${segment === "churned" ? " sumido(s)" : ""}.`;
+      const blocked = clientIds.length - sent;
+      if (sent === 0) return `Ninguém recebeu: os ${clientIds.length} clientes encontrados não autorizaram receber promoção. O aceite é pedido no cadastro do cliente.`;
+      return `Promoção enviada pra ${sent} cliente(s)${segment === "churned" ? " sumido(s)" : ""}.${blocked > 0 ? ` ${blocked} não recebeu por não ter autorizado contato.` : ""}`;
     }
     case "get_no_show_risk":
       return JSON.stringify(await noShowRisk(barbershopId));

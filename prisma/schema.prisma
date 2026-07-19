@@ -578,9 +578,24 @@ model BarbershopClient {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   barbershopId  String
   barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  // LGPD: consentimento é POR BARBEARIA (o cliente aceita receber da barbearia
+  // A sem aceitar da B), por isso mora aqui e não no User. Nasce FALSE de
+  // propósito: opt-in silencioso não é consentimento. Sem isto o disparo de
+  // promoção era exposição legal — e, com o WhatsApp ligado, risco de a conta
+  // Meta ser bloqueada por denúncia de spam.
+  marketingConsent Boolean  @default(false)
+  consentAt        DateTime?
+  // De onde veio o cliente (Instagram, indicação, passou na frente...). Sem
+  // isso o gestor não sabe qual canal traz gente e queima verba no errado.
+  howFoundUs       String?
+  // Controle: permite bloquear quem falta demais sem apagar o histórico.
+  status           String   @default("ACTIVE") // ACTIVE | VIP | BLOCKED
+
   createdAt     DateTime @default(now())
 
   @@unique([userId, barbershopId])
+  @@index([barbershopId, marketingConsent])
 }
 
 // tier is derived from `points` (see src/lib/loyalty.ts TIER_THRESHOLDS) —
