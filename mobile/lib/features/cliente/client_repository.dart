@@ -90,13 +90,15 @@ class TipInfo {
 }
 
 class LoyaltyBalance {
+  final String barbershopId;
   final String barbershopName;
   final int points;
   final String tier;
 
-  LoyaltyBalance({required this.barbershopName, required this.points, required this.tier});
+  LoyaltyBalance({required this.barbershopId, required this.barbershopName, required this.points, required this.tier});
 
   factory LoyaltyBalance.fromJson(Map<String, dynamic> json) => LoyaltyBalance(
+        barbershopId: json['barbershopId'] as String? ?? '',
         barbershopName: json['barbershopName'],
         points: json['points'],
         tier: json['tier'],
@@ -136,6 +138,63 @@ class ClientPreferences {
   bool get isEmpty => [machine, products, allergies, drink, chat, notes].every((e) => e == null || e.isEmpty);
 }
 
+class LoyaltyReward {
+  final String id;
+  final String label;
+  final String source;
+  LoyaltyReward({required this.id, required this.label, required this.source});
+  factory LoyaltyReward.fromJson(Map<String, dynamic> j) =>
+      LoyaltyReward(id: j['id'] as String, label: j['label'] as String? ?? '', source: j['source'] as String? ?? '');
+}
+
+/// Carteira de fidelidade do cliente numa barbearia. Tudo aqui é ditado pela
+/// configuração do gestor — se ele desligou o cartão, stampEnabled vem false e
+/// a seção nem aparece.
+class LoyaltyStatus {
+  final bool pointsEnabled;
+  final int points;
+  final String tier;
+  final bool stampEnabled;
+  final int stamps;
+  final int stampGoal;
+  final String stampRewardLabel;
+  final int cardsCompleted;
+  final bool referralEnabled;
+  final String? referralCode;
+  final String referralReward;
+  final List<LoyaltyReward> rewards;
+
+  LoyaltyStatus({
+    required this.pointsEnabled,
+    required this.points,
+    required this.tier,
+    required this.stampEnabled,
+    required this.stamps,
+    required this.stampGoal,
+    required this.stampRewardLabel,
+    required this.cardsCompleted,
+    required this.referralEnabled,
+    this.referralCode,
+    required this.referralReward,
+    required this.rewards,
+  });
+
+  factory LoyaltyStatus.fromJson(Map<String, dynamic> j) => LoyaltyStatus(
+        pointsEnabled: j['pointsEnabled'] == true,
+        points: j['points'] as int? ?? 0,
+        tier: j['tier'] as String? ?? 'BRONZE',
+        stampEnabled: j['stampEnabled'] == true,
+        stamps: j['stamps'] as int? ?? 0,
+        stampGoal: j['stampGoal'] as int? ?? 0,
+        stampRewardLabel: j['stampRewardLabel'] as String? ?? '',
+        cardsCompleted: j['cardsCompleted'] as int? ?? 0,
+        referralEnabled: j['referralEnabled'] == true,
+        referralCode: j['referralCode'] as String?,
+        referralReward: j['referralReward'] as String? ?? '',
+        rewards: ((j['rewards'] as List?) ?? []).map((e) => LoyaltyReward.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+}
+
 class ClientRepository {
   Future<List<ClientAppointment>> myAppointments() async {
     final data = await ApiClient.instance.get('/client/appointments') as List;
@@ -162,6 +221,18 @@ class ClientRepository {
   Future<GestorNotificationsResult> notifications() async {
     final data = await ApiClient.instance.get('/client/notifications');
     return GestorNotificationsResult.fromJson(data as Map<String, dynamic>);
+  }
+
+  /// Carteira de fidelidade: selos, prêmios, pontos e código de indicação.
+  Future<LoyaltyStatus> loyaltyStatus(String barbershopId) async {
+    final data = await ApiClient.instance.get('/loyalty/me', query: {'barbershopId': barbershopId}) as Map<String, dynamic>;
+    return LoyaltyStatus.fromJson(data);
+  }
+
+  /// Aplica o código de um amigo. O prêmio só sai no 1º atendimento concluído.
+  Future<String> useReferralCode({required String barbershopId, required String code}) async {
+    final data = await ApiClient.instance.post('/loyalty/me', data: {'barbershopId': barbershopId, 'code': code}) as Map<String, dynamic>;
+    return data['message'] as String? ?? 'Código aplicado!';
   }
 
   Future<List<CutPhoto>> cuts() async {

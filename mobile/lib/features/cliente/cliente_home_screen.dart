@@ -8,6 +8,7 @@ import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import 'client_repository.dart';
+import 'loyalty_wallet_screen.dart';
 import 'new_appointment_screen.dart';
 import 'tip_screen.dart';
 import 'widgets/client_notifications_sheet.dart';
@@ -457,7 +458,13 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                           const SizedBox(height: 22),
                         ],
                         if (loyalty.isNotEmpty) ...[
-                          Text('Meus pontos', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                          Row(
+                            children: [
+                              Text('Minha fidelidade', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                              const SizedBox(width: 8),
+                              Icon(Icons.chevron_right_rounded, size: 18, color: palette.textSecondary),
+                            ],
+                          ),
                           const SizedBox(height: 12),
                           SizedBox(
                             height: 148,
@@ -471,14 +478,26 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                                 final progress = range.$2 == null ? 1.0 : ((l.points - range.$1) / (range.$2! - range.$1)).clamp(0.0, 1.0);
                                 return RiseIn(
                                   delay: Duration(milliseconds: 60 * index),
-                                  child: _LoyaltyRing(
-                                    barbershopName: l.barbershopName,
-                                    points: l.points,
-                                    tierLabel: _tierLabel(l.tier),
-                                    color: _tierColor(l.tier),
-                                    progress: progress,
-                                    nextTier: range.$3,
-                                    palette: palette,
+                                  // O anel é só o resumo; a carteira completa
+                                  // (selos, prêmios, indicação) abre no toque.
+                                  child: GestureDetector(
+                                    onTap: l.barbershopId.isEmpty
+                                        ? null
+                                        : () => Navigator.of(context).push(MaterialPageRoute(
+                                              builder: (_) => LoyaltyWalletScreen(
+                                                barbershopId: l.barbershopId,
+                                                barbershopName: l.barbershopName,
+                                              ),
+                                            )),
+                                    child: _LoyaltyRing(
+                                      barbershopName: l.barbershopName,
+                                      points: l.points,
+                                      tierLabel: _tierLabel(l.tier),
+                                      color: _tierColor(l.tier),
+                                      progress: progress,
+                                      nextTier: range.$3,
+                                      palette: palette,
+                                    ),
                                   ),
                                 );
                               },

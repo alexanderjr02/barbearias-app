@@ -10,19 +10,43 @@ export async function GET() {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const accounts = await prisma.loyaltyAccount.findMany({
-    where: { userId: session.sub },
-    include: { barbershop: { select: { name: true, slug: true } } },
-    orderBy: { points: "desc" },
-  });
+  const [accounts, links] = await Promise.all([
+    prisma.loyaltyAccount.findMany({
+      where: { userId: session.sub },
+      include: { barbershop: { select: { name: true, slug: true } } },
+      orderBy: { points: "desc" },
+    }),
+    // Barbearias onde o cliente já é cliente mas ainda não tem conta de pontos.
+    // Sem isto, quem só usa cartão de selos (pontos desligados pelo gestor)
+    // nunca teria por onde abrir a carteira de fidelidade.
+    prisma.barbershopClient.findMany({
+      where: { userId: session.sub, status: { not: "BLOCKED" } },
+      include: { barbershop: { select: { name: true, slug: true } } },
+    }),
+  ]);
 
   type AccountRow = (typeof accounts)[number];
-  return NextResponse.json(
-    accounts.map((a: AccountRow) => ({
-      barbershopName: a.barbershop.name,
-      barbershopSlug: a.barbershop.slug,
-      points: a.points,
-      tier: a.tier,
-    }))
-  );
+  type LinkRow = (typeof links)[number];
+
+  const rows = accounts.map((a: AccountRow) => ({
+    barbershopId: a.barbershopId,
+    barbershopName: a.barbershop.name,
+    barbershopSlug: a.barbershop.slug,
+    points: a.points,
+    tier: a.tier,
+  }));
+
+  const seen = new Set(rows.map((r: { barbershopId: string }) => r.barbershopId));
+  for (const l of links as LinkRow[]) {
+    if (seen.has(l.barbershopId)) continue;
+    rows.push({
+      barbershopId: l.barbershopId,
+      barbershopName: l.barbershop.name,
+      barbershopSlug: l.barbershop.slug,
+      points: 0,
+      tier: "BRONZE",
+    });
+  }
+
+  return NextResponse.json(rows);
 }
