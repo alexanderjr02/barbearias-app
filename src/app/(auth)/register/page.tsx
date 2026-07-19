@@ -130,9 +130,9 @@ function RegisterForm() {
   }, [barbershopSlug, step]);
 
   const planOptions = [
-    { value: "starter", label: "Essencial", price: "R$ 79/mês", description: "Agenda, gorjeta e fidelidade — até 3 barbeiros" },
-    { value: "pro", label: "Pro", price: "R$ 149/mês", description: "Copiloto com IA, financeiro e assinatura" },
-    { value: "white-label", label: "White Label", price: "R$ 399/mês", description: "App próprio com a sua marca" },
+    { value: "starter", label: "Essencial", price: "R$ 50/mês", description: "Agenda, gorjeta e fidelidade — até 3 barbeiros" },
+    { value: "pro", label: "Pro", price: "R$ 250/mês", description: "Copiloto com IA, financeiro e assinatura" },
+    { value: "white-label", label: "White Label", price: "R$ 350/mês", description: "App próprio com a sua marca" },
   ];
 
   const goToStep2 = async () => {

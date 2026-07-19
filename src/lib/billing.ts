@@ -12,9 +12,9 @@ export type PlanPricing = {
 // Falls back to these if a PlatformSetting row hasn't been seeded yet — keeps
 // the app from crashing on a fresh DB before `npm run db:seed` has run.
 const DEFAULT_PRICING: Record<PlatformPlan, PlanPricing> = {
-  FREE: { price: 79, appointmentsLimit: null, staffLimit: 3 },
-  PRO: { price: 149, appointmentsLimit: null, staffLimit: 10 },
-  ENTERPRISE: { price: 399, appointmentsLimit: null, staffLimit: null },
+  FREE: { price: 50, appointmentsLimit: null, staffLimit: 3 },
+  PRO: { price: 250, appointmentsLimit: null, staffLimit: 10 },
+  ENTERPRISE: { price: 350, appointmentsLimit: null, staffLimit: null },
 };
 
 // Tiers that unlock the AI Copiloto (business assistant) + AI-powered client

@@ -49,7 +49,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["plano", "upgrade", "pro", "premium", "assinar"],
-    answer: "Você está no **plano Starter**.\n\nUpgrade para o **Pro (R$ 79/mês)** e desbloqueie:\n✅ Customização de cores e logo\n✅ Chatbot com IA básica\n✅ Análises detalhadas\n✅ Fidelização avançada\n✅ Até 10 barbeiros\n✅ Suporte prioritário\n\nClique em **Fazer upgrade** no menu lateral para assinar com 14 dias grátis!",
+    answer: "Você está no **plano Essencial**.\n\nUpgrade para o **Pro (R$ 250/mês)** e desbloqueie:\n✅ Copiloto com IA (fecha o mês, acha onde você perde dinheiro)\n✅ Financeiro completo, metas e comissões\n✅ Controle de estoque\n✅ Fidelização e clube de assinatura\n✅ Até 10 barbeiros\n✅ Suporte prioritário\n\nClique em **Fazer upgrade** no menu lateral para assinar com 14 dias grátis!",
   },
   {
     keywords: ["estoque", "produto", "compras"],

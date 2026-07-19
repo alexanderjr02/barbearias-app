@@ -71,7 +71,7 @@ const features = [
 const plans = [
   {
     name: "Starter",
-    price: "R$ 29",
+    price: "R$ 50",
     period: "/mês",
     description: "Pra começar a organizar hoje",
     color: "border-zinc-700",
@@ -90,7 +90,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "R$ 79",
+    price: "R$ 250",
     period: "/mês",
     description: "Pra barbearia que quer crescer",
     color: "border-amber-500",
@@ -113,8 +113,8 @@ const plans = [
   },
   {
     name: "White Label",
-    price: "R$ 299",
-    period: "/mês + 3%",
+    price: "R$ 350",
+    period: "/mês",
     description: "Pra rede e marca própria",
     color: "border-fuchsia-500",
     features: [
@@ -474,7 +474,7 @@ export default function HomePage() {
               { q: "Meus clientes precisam baixar app?", a: "Não. O agendamento é pelo navegador, no celular ou computador. Funciona como PWA e pode ser adicionado à tela inicial." },
               { q: "Consigo deixar com a cara da minha barbearia?", a: "Sim! Coloque sua logo, escolha as cores e crie um link personalizado com a identidade visual da sua barbearia." },
               { q: "O lembrete funciona no WhatsApp?", a: "Sim, nos planos Pro e White Label a confirmação e o lembrete de agendamento saem pelo WhatsApp." },
-              { q: "Como é o teste grátis?", a: "O Starter começa em R$ 29/mês. Pro e White Label têm 14 dias grátis, sem cartão de crédito." },
+              { q: "Como é o teste grátis?", a: "O Essencial começa em R$ 50/mês. Pro e White Label têm 14 dias grátis, sem cartão de crédito." },
             ].map((faq, i) => (
               <Reveal key={i} delay={(i % 2) * 80}>
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-all">
