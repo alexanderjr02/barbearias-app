@@ -7,6 +7,7 @@ import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, sho
 import { appointmentLimitError } from "@/lib/planLimits";
 import { notifyClient } from "@/lib/gestorNotifications";
 import { onSlotOpened } from "@/lib/copilot/autopilot";
+import { recordAiUsage } from "@/lib/ai/usage";
 import {
   revenueSummary,
   churnedClients,
@@ -655,15 +656,34 @@ DADOS E AÇÕES
 - Use as ferramentas para números reais — nunca invente. Se faltar dado, diga o que precisa.
 - Para avisos em massa (confirmar amanhã, chamar sumidos, avisar fila), NÃO execute no chat: oriente a tocar no botão da ação no painel.${adminNote}`;
 
-  const fullSystem = system + (await loadMemoryBlock(barbershopId));
+  // MARGEM: o prompt + as ferramentas somam ~14 mil tokens IGUAIS em toda
+  // pergunta. Um cache_control no bloco estável faz a API cobrar ~10% deles
+  // nas leituras seguintes (a ordem de render é tools -> system, então este
+  // breakpoint cacheia as ferramentas junto). A memória fica DEPOIS do
+  // breakpoint, de propósito: ela muda quando o gestor salva um fato, e assim
+  // não invalida o cache do bloco grande.
+  const systemBlocks: Anthropic.TextBlockParam[] = [
+    { type: "text", text: system, cache_control: { type: "ephemeral" } },
+  ];
+  const memoryBlock = await loadMemoryBlock(barbershopId);
+  if (memoryBlock) systemBlocks.push({ type: "text", text: memoryBlock });
   const messages: Anthropic.MessageParam[] = history.slice(-16).map((m) => ({ role: m.role, content: m.content }));
   const tools = toolsFor(role);
   const actions: CopilotAction[] = [];
+  let usedIn = 0;
+  let usedOut = 0;
+  let cacheWrite = 0;
+  let cacheRead = 0;
 
   for (let i = 0; i < 6; i++) {
-    const response = await client.messages.create({ model: MODEL, max_tokens: 1024, system: fullSystem, tools, messages });
+    const response = await client.messages.create({ model: MODEL, max_tokens: 1024, system: systemBlocks, tools, messages });
+    usedIn += response.usage?.input_tokens ?? 0;
+    usedOut += response.usage?.output_tokens ?? 0;
+    cacheWrite += response.usage?.cache_creation_input_tokens ?? 0;
+    cacheRead += response.usage?.cache_read_input_tokens ?? 0;
     if (response.stop_reason !== "tool_use") {
       const reply = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim() || "Pode reformular?";
+      await recordAiUsage(barbershopId, "copilot", MODEL, usedIn, usedOut, cacheWrite, cacheRead);
       return { reply, actions };
     }
     messages.push({ role: "assistant", content: response.content });
@@ -687,6 +707,7 @@ DADOS E AÇÕES
     }
     messages.push({ role: "user", content: results });
   }
+  await recordAiUsage(barbershopId, "copilot", MODEL, usedIn, usedOut, cacheWrite, cacheRead);
   return { reply: "Não consegui concluir agora. Pode tentar de novo?", actions };
 }
 
@@ -810,6 +831,7 @@ export async function copilotGreeting(
       messages: [{ role: "user", content: `Dados de hoje: ${facts}` }],
     });
     const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join(" ").trim();
+    await recordAiUsage(barbershopId, "copilot", MODEL, msg.usage?.input_tokens ?? 0, msg.usage?.output_tokens ?? 0);
     return { greeting: text || fallback, aiPowered: true };
   } catch {
     return { greeting: fallback, aiPowered: false };

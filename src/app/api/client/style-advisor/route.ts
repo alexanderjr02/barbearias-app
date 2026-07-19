@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { planHasAI } from "@/lib/billing";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
 import { getAnthropic } from "@/lib/chatbot/anthropicClient";
+import { recordAiUsage } from "@/lib/ai/usage";
 import Anthropic from "@anthropic-ai/sdk";
 import { readFile } from "fs/promises";
 import path from "path";
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       ],
     });
     const recommendation = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
+    await recordAiUsage(barbershopId, "style", MODEL, msg.usage?.input_tokens ?? 0, msg.usage?.output_tokens ?? 0);
     return NextResponse.json({ available: true, recommendation: recommendation || "Não consegui analisar agora." });
   } catch (e) {
     return NextResponse.json({ available: true, recommendation: `Não consegui analisar agora. ${e instanceof Error ? e.message : ""}`.trim() });

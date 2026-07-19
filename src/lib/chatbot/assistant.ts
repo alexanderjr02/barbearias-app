@@ -3,10 +3,12 @@ import { getAnthropic } from "./anthropicClient";
 import { prisma } from "@/lib/db";
 import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, shopNow, OCCUPYING_STATUSES } from "@/lib/scheduling";
 import { appointmentLimitError } from "@/lib/planLimits";
+import { recordAiUsage } from "@/lib/ai/usage";
 
-// Model is overridable so the shop owner can trade cost for latency (e.g. set
-// CHATBOT_MODEL=claude-haiku-4-5). Defaults to the most capable model.
-const MODEL = process.env.CHATBOT_MODEL || "claude-opus-4-8";
+// The client-facing assistant is HIGH VOLUME and LOW STAKES (book/answer), so
+// it defaults to a cheaper model to protect margin. Override with ASSISTANT_MODEL,
+// then CHATBOT_MODEL, else Haiku. The gestor Copiloto (paid "wow") stays on Opus.
+const MODEL = process.env.ASSISTANT_MODEL || process.env.CHATBOT_MODEL || "claude-haiku-4-5";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
@@ -246,6 +248,8 @@ Regras:
 - Respostas curtas, no máximo alguns parágrafos.`;
 
   const messages: Anthropic.MessageParam[] = history.slice(-20).map((m) => ({ role: m.role, content: m.content }));
+  let usedIn = 0;
+  let usedOut = 0;
 
   for (let i = 0; i < 6; i++) {
     const response = await client.messages.create({
@@ -255,8 +259,11 @@ Regras:
       tools,
       messages,
     });
+    usedIn += response.usage?.input_tokens ?? 0;
+    usedOut += response.usage?.output_tokens ?? 0;
 
     if (response.stop_reason !== "tool_use") {
+      await recordAiUsage(barbershopId, "assistant", MODEL, usedIn, usedOut);
       return textFrom(response.content) || "Desculpe, pode reformular?";
     }
 
@@ -276,5 +283,6 @@ Regras:
     messages.push({ role: "user", content: toolResults });
   }
 
+  await recordAiUsage(barbershopId, "assistant", MODEL, usedIn, usedOut);
   return "Desculpe, não consegui concluir agora. Pode tentar novamente?";
 }

@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
 import { planHasAI } from "@/lib/billing";
 import { runCopilot, simulatedReply, copilotSuggestions, unavailableAiNote, type CopilotRole, type ChatTurn, type CopilotAction } from "@/lib/chatbot/copilot";
+import { aiQuota } from "@/lib/ai/usage";
 
 // POST /api/copilot/chat { messages: [{role, content}] } — the business copilot
 // for the gestor/barber. Uses the AI loop when a key is configured, otherwise
@@ -48,7 +49,11 @@ export async function POST(request: NextRequest) {
 
   let reply: string;
   let actions: CopilotAction[] = [];
-  const aiPowered = assistantEnabled();
+  // Margin guardrail: over the plan's daily AI cap, serve the FREE simulated
+  // responder instead of calling the model, so cost stays bounded.
+  const quota = await aiQuota(session.barbershopId, shop?.plan);
+  const aiPowered = assistantEnabled() && quota.allowed;
+  let capNote: string | null = null;
   if (aiPowered) {
     try {
       const res = await runCopilot(role, session.barbershopId, staffId, history);
@@ -59,6 +64,7 @@ export async function POST(request: NextRequest) {
     }
   } else {
     reply = await simulatedReply(role, session.barbershopId, staffId, lastUser.content);
+    if (assistantEnabled() && !quota.allowed) capNote = "Limite diário de IA atingido — respostas no modo rápido até amanhã.";
   }
 
   // Persist this turn so the conversation survives closing/reopening AND can be
@@ -72,5 +78,5 @@ export async function POST(request: NextRequest) {
     // non-critical
   }
 
-  return NextResponse.json({ reply, actions, aiPowered, note: unavailableAiNote(), suggestions: copilotSuggestions(role) });
+  return NextResponse.json({ reply, actions, aiPowered, note: capNote ?? unavailableAiNote(), suggestions: copilotSuggestions(role) });
 }

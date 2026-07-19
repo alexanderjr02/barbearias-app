@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { planHasAI } from "@/lib/billing";
 import { runAssistant, assistantEnabled, type ChatTurn } from "@/lib/chatbot/assistant";
 import { rhythmContextLine } from "@/lib/copilot/clientAgent";
+import { aiQuota } from "@/lib/ai/usage";
 
 // POST /api/client/chat { message, barbershopId } — the logged-in client's
 // personalized assistant. Unlike the anonymous /api/chatbot, it knows WHO the
@@ -39,7 +40,8 @@ export async function POST(request: NextRequest) {
   ]);
 
   let reply: string;
-  if (assistantEnabled() && planHasAI(shop?.plan)) {
+  const quota = await aiQuota(barbershopId, shop?.plan);
+  if (assistantEnabled() && planHasAI(shop?.plan) && quota.allowed) {
     type Visit = (typeof visits)[number];
     const visitLine = visits.length
       ? visits.map((v: Visit) => `${v.service?.name ?? "serviço"} com ${v.staff?.name ?? "barbeiro"} em ${v.date.toISOString().slice(0, 10)}`).join("; ")

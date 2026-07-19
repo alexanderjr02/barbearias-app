@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getAnthropic } from "@/lib/chatbot/anthropicClient";
+import { recordAiUsage } from "@/lib/ai/usage";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
       ],
     });
     const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
+    await recordAiUsage(session.barbershopId, "marketing", process.env.CHATBOT_MODEL || "claude-opus-4-8", msg.usage?.input_tokens ?? 0, msg.usage?.output_tokens ?? 0);
     return NextResponse.json({ available: true, text });
   } catch (e) {
     return NextResponse.json({ available: true, text: `Não consegui gerar agora. ${e instanceof Error ? e.message : ""}`.trim() });

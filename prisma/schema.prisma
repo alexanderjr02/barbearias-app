@@ -144,6 +144,7 @@ model Barbershop {
   tips            Tip[]
   copilotMemories CopilotMemory[]
   autopilotLogs   AutopilotLog[]
+  aiUsage         AiUsage[]
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
   platformInvoices  PlatformInvoice[]
@@ -311,6 +312,28 @@ model AutopilotLog {
   createdAt      DateTime   @default(now())
 
   @@index([barbershopId])
+}
+
+// Per-call AI usage/cost meter — the margin guardrail. Every model call the
+// Copiloto/assistant/vision makes writes one row here with token counts and an
+// estimated cost, so the platform can see spend per shop, cap heavy users by
+// plan (see src/lib/ai/usage.ts) and never get surprised by an AI bill.
+model AiUsage {
+  id           String     @id @default(cuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  feature      String     // copilot | assistant | client_greeting | style | marketing | reference
+  model        String
+  inputTokens  Int        @default(0)
+  outputTokens Int        @default(0)
+  // Prompt caching: writes cost 1.25x input, reads only ~0.1x. Tracking both
+  // shows the cache hit rate — the single biggest lever on AI margin.
+  cacheWriteTokens Int    @default(0)
+  cacheReadTokens  Int    @default(0)
+  costCents    Int        @default(0) // estimated cost in R$ cents
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId, createdAt])
 }
 
 model CopilotMemory {

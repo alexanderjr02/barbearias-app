@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
 import Anthropic from "@anthropic-ai/sdk";
 import { getAnthropic } from "@/lib/chatbot/anthropicClient";
+import { recordAiUsage } from "@/lib/ai/usage";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
       .map((b) => b.text)
       .join("\n")
       .trim();
+    if (session.barbershopId) await recordAiUsage(session.barbershopId, "reference", process.env.CHATBOT_MODEL || "claude-opus-4-8", msg.usage?.input_tokens ?? 0, msg.usage?.output_tokens ?? 0);
     return NextResponse.json({ available: true, description: description || "Sem descrição." });
   } catch (e) {
     return NextResponse.json({ available: true, description: `Não consegui analisar agora. ${e instanceof Error ? e.message : ""}`.trim() });

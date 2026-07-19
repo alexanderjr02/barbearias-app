@@ -3,6 +3,7 @@ import { startOfUtcDay, addUtcDays } from "@/lib/dateRange";
 import { buildDaySlots, shopNow, timeToMinutes } from "@/lib/scheduling";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
 import { getAnthropic } from "@/lib/chatbot/anthropicClient";
+import { recordAiUsage } from "@/lib/ai/usage";
 import Anthropic from "@anthropic-ai/sdk";
 
 const MODEL = process.env.CHATBOT_MODEL || "claude-opus-4-8";
@@ -132,6 +133,7 @@ export async function clientProactiveOpener(barbershopId: string, clientId: stri
     const sys = `Você é o assistente pessoal de estilo de uma barbearia, falando com um cliente por chat. Escreva UMA mensagem de abertura curta (1 a 2 frases), calorosa e natural em português do Brasil, começando por "Oi${hi}" ou "Opa${hi}". Se houver um horário sugerido, proponha ele de forma concreta e termine perguntando se quer que marque. Texto limpo, SEM markdown. No máximo 1 emoji. Responda só com a mensagem.`;
     const msg = await client.messages.create({ model: MODEL, max_tokens: 160, system: sys, messages: [{ role: "user", content: facts }] });
     const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join(" ").trim();
+    await recordAiUsage(barbershopId, "client_greeting", MODEL, msg.usage?.input_tokens ?? 0, msg.usage?.output_tokens ?? 0);
     return { greeting: text || fallback, proactive: !!suggestion, suggestion };
   } catch {
     return { greeting: fallback, proactive: !!suggestion, suggestion };
