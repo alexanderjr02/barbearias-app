@@ -24,7 +24,10 @@ export async function GET() {
     prisma.loyaltyAccount.findMany({ where: { barbershopId: session.barbershopId } }),
     prisma.barbershopClient.findMany({
       where: { barbershopId: session.barbershopId },
-      include: { user: { select: { id: true, name: true, email: true, phone: true, avatar: true } } },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true, avatar: true, cpf: true, neighborhood: true, profession: true, instagram: true } },
+        preferredStaff: { select: { id: true, name: true } },
+      },
     }),
     // Active/past-due memberships at this barbershop — surfaced to whoever's
     // looking at the client list (gestor on the web, barber on the app) so
@@ -52,6 +55,25 @@ export async function GET() {
     ? await prisma.user.findMany({ where: { id: { in: linkedClientIds } }, select: { id: true, avatar: true } })
     : [];
   const avatarByUserId = new Map(linkedUsers.map((u: (typeof linkedUsers)[number]) => [u.id, u.avatar]));
+
+  type RegisteredRow = (typeof registeredClients)[number];
+  // Ficha do cliente nesta barbearia. Vale tanto para quem foi pré-cadastrado
+  // quanto para quem só apareceu via agendamento — por isso é lookup por
+  // userId e não algo montado só no laço dos pré-cadastrados.
+  const profileByUserId = new Map<string, ReturnType<typeof profileOf>>(
+    registeredClients.map((rc: RegisteredRow) => [rc.userId, profileOf(rc)])
+  );
+  function profileOf(rc: RegisteredRow) {
+    return {
+      cpf: rc.user.cpf,
+      neighborhood: rc.user.neighborhood,
+      profession: rc.user.profession,
+      instagram: rc.user.instagram,
+      howFoundUs: rc.howFoundUs,
+      status: rc.status,
+      preferredStaff: rc.preferredStaff ? { id: rc.preferredStaff.id, name: rc.preferredStaff.name } : null,
+    };
+  }
 
   type Group = {
     key: string;
@@ -123,6 +145,7 @@ export async function GET() {
       hasAccount: !!g.clientId,
       avatar: g.clientId ? avatarByUserId.get(g.clientId) ?? null : null,
       subscription: g.clientId ? subscriptionByClientId.get(g.clientId) ?? null : null,
+      profile: g.clientId ? profileByUserId.get(g.clientId) ?? null : null,
     };
   });
 
@@ -144,6 +167,7 @@ export async function GET() {
       hasAccount: true,
       avatar: rc.user.avatar,
       subscription: subscriptionByClientId.get(rc.userId) ?? null,
+      profile: profileOf(rc),
     });
   }
 
@@ -166,7 +190,16 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: firstFieldError(parsed.error) }, { status: 400 });
   }
-  const { name, email, password, phone, dateOfBirth } = parsed.data;
+  const { name, email, password, phone, dateOfBirth, cpf, neighborhood, profession, instagram, howFoundUs, preferredStaffId } = parsed.data;
+
+  // Barbeiro preferido tem que ser desta barbearia — senão o gestor apontaria
+  // o cliente para alguém de outra unidade sem querer.
+  if (preferredStaffId) {
+    const staff = await prisma.staff.findUnique({ where: { id: preferredStaffId }, select: { barbershopId: true } });
+    if (!staff || staff.barbershopId !== session.barbershopId) {
+      return NextResponse.json({ error: "Barbeiro preferido inválido" }, { status: 400 });
+    }
+  }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
 
@@ -178,6 +211,10 @@ export async function POST(request: NextRequest) {
           email,
           phone: phone || undefined,
           dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+          cpf,
+          neighborhood: neighborhood || undefined,
+          profession: profession || undefined,
+          instagram: instagram || undefined,
           password: await bcrypt.hash(password, 10),
           role: "CLIENT",
         },
@@ -191,7 +228,12 @@ export async function POST(request: NextRequest) {
   }
 
   await prisma.barbershopClient.create({
-    data: { userId: user.id, barbershopId: session.barbershopId },
+    data: {
+      userId: user.id,
+      barbershopId: session.barbershopId,
+      howFoundUs: howFoundUs || undefined,
+      preferredStaffId: preferredStaffId || undefined,
+    },
   });
 
   return NextResponse.json({ id: user.id, name: user.name, email: user.email }, { status: 201 });

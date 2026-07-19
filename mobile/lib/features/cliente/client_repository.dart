@@ -77,8 +77,11 @@ class TipInfo {
   final String? pixKey;
   final bool hasTip;
   final double? amount;
+  /// True quando a chave é do próprio barbeiro — muda o rótulo mostrado, pra
+  /// o cliente saber que o dinheiro não passa pelo caixa.
+  final bool pixGoesToBarber;
 
-  TipInfo({required this.shopName, required this.barberName, this.pixKey, required this.hasTip, this.amount});
+  TipInfo({required this.shopName, required this.barberName, this.pixKey, required this.hasTip, this.amount, this.pixGoesToBarber = false});
 
   factory TipInfo.fromJson(Map<String, dynamic> j) => TipInfo(
         shopName: j['shopName'] as String? ?? '',
@@ -86,6 +89,7 @@ class TipInfo {
         pixKey: j['pixKey'] as String?,
         hasTip: j['hasTip'] == true,
         amount: (j['amount'] as num?)?.toDouble(),
+        pixGoesToBarber: j['pixGoesToBarber'] == true,
       );
 }
 

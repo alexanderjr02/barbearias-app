@@ -106,6 +106,14 @@ export default function ClientsPage() {
   const queryClient = useQueryClient();
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: () => apiGet<ApiClient[]>("/api/clients") });
 
+  // Só para o select de barbeiro preferido — carrega junto com o modal aberto.
+  const { data: staffList = [] } = useQuery({
+    queryKey: ["staff"],
+    queryFn: () => apiGet<{ id: string; name: string; isActive: boolean }[]>("/api/staff"),
+    enabled: modalOpen,
+    select: (rows) => rows.filter((s) => s.isActive),
+  });
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["clients"] });
 
   const updateAvatar = useMutation({
@@ -131,6 +139,12 @@ export default function ClientsPage() {
       phone: form.get("phone") || undefined,
       dateOfBirth: form.get("dateOfBirth") || undefined,
       password: form.get("password"),
+      cpf: form.get("cpf") || undefined,
+      neighborhood: form.get("neighborhood") || undefined,
+      profession: form.get("profession") || undefined,
+      instagram: form.get("instagram") || undefined,
+      howFoundUs: form.get("howFoundUs") || undefined,
+      preferredStaffId: form.get("preferredStaffId") || undefined,
     });
   };
 
@@ -203,6 +217,54 @@ export default function ClientsPage() {
           <Gift className="w-3 h-3 text-amber-400" />
           A data de nascimento habilita felicitações e campanhas de aniversário automáticas.
         </p>
+
+        <div className="pt-3 border-t border-zinc-800 space-y-3">
+          <p className="text-xs text-zinc-500">
+            Ficha do cliente — tudo opcional. Quanto mais preenchido, melhor o Copiloto entende quem é ele.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>CPF</label>
+              <input name="cpf" inputMode="numeric" autoComplete="off" className={fieldCls} placeholder="000.000.000-00" />
+            </div>
+            <div>
+              <label className={labelCls}>Bairro</label>
+              <input name="neighborhood" autoComplete="off" className={fieldCls} placeholder="Ex: Centro" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Profissão</label>
+              <input name="profession" autoComplete="off" className={fieldCls} placeholder="Ex: Motorista" />
+            </div>
+            <div>
+              <label className={labelCls}>Instagram</label>
+              <input name="instagram" autoComplete="off" className={fieldCls} placeholder="@perfil" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Como conheceu</label>
+              <select name="howFoundUs" defaultValue="" className={fieldCls}>
+                <option value="">Não informado</option>
+                <option value="INDICACAO">Indicação de amigo</option>
+                <option value="INSTAGRAM">Instagram</option>
+                <option value="GOOGLE">Google / Maps</option>
+                <option value="PASSOU_NA_FRENTE">Passou na frente</option>
+                <option value="OUTRO">Outro</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Barbeiro preferido</label>
+              <select name="preferredStaffId" defaultValue="" className={fieldCls}>
+                <option value="">Sem preferência</option>
+                {staffList.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
         <div>
           <label className={labelCls}>Senha inicial</label>
           <input

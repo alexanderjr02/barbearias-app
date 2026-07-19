@@ -18,6 +18,14 @@ model User {
   phone         String?
   avatar        String?
   dateOfBirth   DateTime?
+  // Cadastro completo do cliente. Não é burocracia: CPF identifica na nota
+  // fiscal, bairro diz de onde vem o movimento (e onde vale anunciar),
+  // profissão e Instagram dão o gancho da conversa e do marketing.
+  // Tudo opcional — cadastro travado por campo obrigatório espanta cliente.
+  cpf           String?
+  neighborhood  String?
+  profession    String?
+  instagram     String?
   // Set once, on first Google sign-in — links this account to that Google
   // identity for all future logins (find-by-googleId before find-by-email).
   googleId      String?  @unique
@@ -229,6 +237,16 @@ model Staff {
   bio           String?
   avatar        String?
   commissionRate Float   @default(0.40)
+  // Dados trabalhistas do barbeiro. Sem vínculo/admissão o gestor não sabe
+  // quem é CLT e quem é parceiro — e é isso que decide encargo, férias e
+  // como a comissão é paga.
+  cpf           String?
+  employmentType String? // "CLT" | "PJ" | "AUTONOMO" | "PARCEIRO"
+  hireDate      DateTime?
+  // PIX do próprio barbeiro. A gorjeta ia toda pra chave da barbearia, ou
+  // seja, o dono tinha que repassar na mão. Com isto o cliente paga direto
+  // a quem cortou (cai pra chave da loja se o barbeiro não tiver a dele).
+  pixKey        String?
   isActive      Boolean  @default(true)
   userId        String?  @unique
   user          User?    @relation(fields: [userId], references: [id])
@@ -242,6 +260,7 @@ model Staff {
   timeOff       StaffTimeOff[]
   reviews       Review[]
   tips          Tip[]
+  preferredBy   BarbershopClient[] @relation("PreferredClients")
 }
 
 model Service {
@@ -627,6 +646,11 @@ model BarbershopClient {
   howFoundUs       String?
   // Controle: permite bloquear quem falta demais sem apagar o histórico.
   status           String   @default("ACTIVE") // ACTIVE | VIP | BLOCKED
+  // Barbeiro preferido — mora aqui e não no User porque a preferência é por
+  // barbearia. É retenção pura: o cliente volta pela PESSOA, não pela loja,
+  // então o agendamento já sugere ele e o Copiloto sabe quem chamar.
+  preferredStaffId String?
+  preferredStaff   Staff?   @relation("PreferredClients", fields: [preferredStaffId], references: [id], onDelete: SetNull)
 
   createdAt     DateTime @default(now())
 

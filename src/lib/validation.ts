@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidCpf, onlyDigits } from "./br";
 
 // Accepts formatted ("(11) 99999-9999") or plain-digit Brazilian phone
 // numbers — landline (10 digits) or mobile (11 digits), area code required.
@@ -88,6 +89,19 @@ export const optionalInstagramSchema = z
   .optional()
   .transform((v) => (v ? v.replace(/^@+/, "").trim() : v))
   .refine((v) => !v || /^[a-zA-Z0-9._]{1,30}$/.test(v), { message: "@ do Instagram inválido" });
+
+/** Vínculo do barbeiro com a barbearia — decide encargo e forma de pagamento. */
+export const EMPLOYMENT_TYPES = ["CLT", "PJ", "AUTONOMO", "PARCEIRO"] as const;
+
+/**
+ * CPF opcional, mas se vier tem que ser real. Guardamos só os dígitos para a
+ * busca não depender de quem digitou com ponto e quem digitou sem.
+ */
+export const cpfSchema = z
+  .string()
+  .optional()
+  .transform((v) => (v && v.trim() ? onlyDigits(v) : undefined))
+  .refine((v) => v === undefined || isValidCpf(v), { message: "CPF inválido" });
 
 const MIN_CLIENT_AGE = 13;
 const MAX_AGE = 120;
@@ -181,6 +195,12 @@ export const clientCreateSchema = z.object({
   password: passwordSchema,
   phone: optionalPhoneSchema,
   dateOfBirth: optionalDateOfBirthSchema,
+  cpf: cpfSchema,
+  neighborhood: z.string().trim().max(80).optional(),
+  profession: z.string().trim().max(80).optional(),
+  instagram: optionalInstagramSchema,
+  howFoundUs: z.string().trim().max(60).optional(),
+  preferredStaffId: z.string().optional(),
 });
 
 // POST /api/staff — email/password are optional (profile-only staff has
@@ -193,6 +213,10 @@ export const staffCreateSchema = z.object({
   commissionRate: z.number().min(0).max(1).optional(),
   email: emailSchema.optional(),
   password: passwordSchema.optional(),
+  cpf: cpfSchema,
+  employmentType: z.enum(EMPLOYMENT_TYPES).optional(),
+  hireDate: z.string().optional(),
+  pixKey: z.string().max(140).optional(),
 });
 
 export function firstFieldError(error: z.ZodError): string {

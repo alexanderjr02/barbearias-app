@@ -15,14 +15,17 @@ export async function GET(request: NextRequest) {
 
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    include: { barbershop: { select: { name: true, pixKey: true } }, staff: { select: { name: true } }, tip: true },
+    include: { barbershop: { select: { name: true, pixKey: true } }, staff: { select: { name: true, pixKey: true } }, tip: true },
   });
   if (!appt || appt.clientId !== session.sub) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
   return NextResponse.json({
     shopName: appt.barbershop.name,
     barberName: appt.staff.name,
-    pixKey: appt.barbershop.pixKey,
+    // Gorjeta é do barbeiro: se ele tem chave própria, o dinheiro vai direto
+    // pra ele. A chave da loja fica só como reserva, pro dono repassar depois.
+    pixKey: appt.staff.pixKey || appt.barbershop.pixKey,
+    pixGoesToBarber: !!appt.staff.pixKey,
     hasTip: !!appt.tip,
     amount: appt.tip?.amount ?? null,
   });

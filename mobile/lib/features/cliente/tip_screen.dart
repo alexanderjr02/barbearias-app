@@ -125,7 +125,7 @@ class _TipScreenState extends State<TipScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Chave PIX da barbearia', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+                            Text(info.pixGoesToBarber ? 'Chave PIX de ${widget.barberName}' : 'Chave PIX da barbearia', style: TextStyle(color: palette.textFaint, fontSize: 11)),
                             Text(info.pixKey!, style: TextStyle(color: palette.textPrimary, fontSize: 13.5, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
                           ],
                         ),
