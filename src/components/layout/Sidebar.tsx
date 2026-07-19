@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Calendar, Users, UserCheck, Scissors,
   TrendingUp, Package, Megaphone, Settings, LogOut,
-  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy, Hourglass, Star, FileText, Palette,
+  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy, Hourglass, Star, FileText, Palette, Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -19,6 +19,7 @@ const navItems = [
   { label: "Clientes", href: "/dashboard/clients", icon: Users },
   { label: "Avaliações", href: "/dashboard/reviews", icon: Star },
   { label: "Equipe", href: "/dashboard/staff", icon: UserCheck },
+  { label: "Unidades", href: "/dashboard/units", icon: Building2 },
   { label: "Serviços", href: "/dashboard/services", icon: Scissors },
   { label: "Financeiro", href: "/dashboard/finance", icon: TrendingUp },
   { label: "Nota Fiscal", href: "/dashboard/fiscal", icon: FileText },

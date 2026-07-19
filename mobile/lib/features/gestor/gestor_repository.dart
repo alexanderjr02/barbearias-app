@@ -2,6 +2,7 @@ import 'package:dio/dio.dart' as dio;
 import 'package:image_picker/image_picker.dart';
 import '../../core/api/api_client.dart';
 import '../../core/models/notification_models.dart';
+import '../../core/storage/token_storage.dart';
 
 export '../../core/models/notification_models.dart';
 
@@ -1038,6 +1039,87 @@ class CopilotReply {
       );
 }
 
+class NetworkUnit {
+  final String id;
+  final String name;
+  final String? city;
+  final bool isPrimary;
+  final bool isCurrent;
+  final double monthRevenue;
+  final int appointments;
+  final double avgTicket;
+  final double? weekDeltaPercent;
+  final int staffCount;
+  final int emptySlotsToday;
+  final double revenuePerBarber;
+
+  NetworkUnit({
+    required this.id,
+    required this.name,
+    this.city,
+    required this.isPrimary,
+    required this.isCurrent,
+    required this.monthRevenue,
+    required this.appointments,
+    required this.avgTicket,
+    this.weekDeltaPercent,
+    required this.staffCount,
+    required this.emptySlotsToday,
+    required this.revenuePerBarber,
+  });
+
+  factory NetworkUnit.fromJson(Map<String, dynamic> j) => NetworkUnit(
+        id: j['id'] as String,
+        name: j['name'] as String? ?? '',
+        city: j['city'] as String?,
+        isPrimary: j['isPrimary'] == true,
+        isCurrent: j['isCurrent'] == true,
+        monthRevenue: (j['monthRevenue'] as num?)?.toDouble() ?? 0,
+        appointments: j['appointments'] as int? ?? 0,
+        avgTicket: (j['avgTicket'] as num?)?.toDouble() ?? 0,
+        weekDeltaPercent: (j['weekDeltaPercent'] as num?)?.toDouble(),
+        staffCount: j['staffCount'] as int? ?? 0,
+        emptySlotsToday: j['emptySlotsToday'] as int? ?? 0,
+        revenuePerBarber: (j['revenuePerBarber'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+class NetworkOverview {
+  final double totalRevenue;
+  final int totalAppointments;
+  final double avgTicket;
+  final int unitCount;
+  final String? best;
+  final String? mostEfficient;
+  final String? leastEfficient;
+  final List<NetworkUnit> units;
+
+  NetworkOverview({
+    required this.totalRevenue,
+    required this.totalAppointments,
+    required this.avgTicket,
+    required this.unitCount,
+    this.best,
+    this.mostEfficient,
+    this.leastEfficient,
+    required this.units,
+  });
+
+  factory NetworkOverview.fromJson(Map<String, dynamic> j) {
+    final t = (j['totals'] as Map<String, dynamic>?) ?? {};
+    return NetworkOverview(
+      totalRevenue: (t['totalRevenue'] as num?)?.toDouble() ?? 0,
+      totalAppointments: t['totalAppointments'] as int? ?? 0,
+      avgTicket: (t['avgTicket'] as num?)?.toDouble() ?? 0,
+      unitCount: t['unitCount'] as int? ?? 0,
+      best: j['best'] as String?,
+      mostEfficient: j['mostEfficient'] as String?,
+      leastEfficient: j['leastEfficient'] as String?,
+      units: ((j['units'] as List?) ?? []).map((e) => NetworkUnit.fromJson(e as Map<String, dynamic>)).toList(),
+    );
+  }
+}
+
 class GestorRepository {
   Future<MeLite> me() async {
     final data = await ApiClient.instance.get('/me');
@@ -1401,6 +1483,33 @@ class GestorRepository {
       return (action: m['action'] as String? ?? '', detail: m['detail'] as String? ?? '', recoveredValue: (m['recoveredValue'] as num?)?.toDouble(), createdAt: m['createdAt'] as String? ?? '');
     }).toList();
     return (recoveredTotal: (data['recoveredTotal'] as num?)?.toDouble() ?? 0, actionsThisMonth: data['actionsThisMonth'] as int? ?? 0, feed: feed);
+  }
+
+  // ---- Rede de unidades ----
+
+  /// Panorama da rede: totais + desempenho de cada unidade lado a lado.
+  Future<NetworkOverview> unitsOverview() async {
+    final data = await ApiClient.instance.get('/units/overview') as Map<String, dynamic>;
+    return NetworkOverview.fromJson(data);
+  }
+
+  /// Troca a unidade que o app está vendo. O backend devolve um access token
+  /// novo (o app autentica por Bearer, não por cookie), então ele PRECISA ser
+  /// salvo — senão as próximas chamadas continuariam na unidade antiga.
+  Future<void> switchUnit(String barbershopId) async {
+    final data = await ApiClient.instance.post('/units/switch', data: {'barbershopId': barbershopId}) as Map<String, dynamic>;
+    final token = data['accessToken'] as String?;
+    if (token != null) {
+      final refresh = await TokenStorage.instance.refreshToken;
+      await TokenStorage.instance.save(accessToken: token, refreshToken: refresh ?? '');
+    }
+  }
+
+  Future<void> createUnit({required String name, String? city}) async {
+    await ApiClient.instance.post('/units', data: {
+      'name': name,
+      if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
+    });
   }
 
   Future<void> updateWorkingHours(List<WorkingHour> hours) async {

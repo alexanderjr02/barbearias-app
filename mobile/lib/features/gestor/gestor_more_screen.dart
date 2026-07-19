@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../profile/profile_screen.dart';
 import 'gestor_autopilot_screen.dart';
+import 'gestor_units_screen.dart';
 import 'gestor_finance_screen.dart';
 import 'gestor_inventory_screen.dart';
 import 'gestor_marketing_screen.dart';
@@ -34,6 +35,15 @@ class GestorMoreScreen extends StatelessWidget {
             palette: palette,
             accent: accent,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorAutopilotScreen())),
+          ),
+          const SizedBox(height: 10),
+          _MenuTile(
+            icon: Icons.store_mall_directory_rounded,
+            label: 'Unidades',
+            sub: 'Compare suas lojas e troque de unidade',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorUnitsScreen())),
           ),
           const SizedBox(height: 10),
           _MenuTile(

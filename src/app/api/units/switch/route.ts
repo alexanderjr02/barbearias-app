@@ -31,7 +31,10 @@ export async function POST(request: NextRequest) {
   await prisma.user.update({ where: { id: session.sub }, data: { activeBarbershopId: unit.id } });
 
   const accessToken = await signAccessToken({ ...session, barbershopId: unit.id });
-  const response = NextResponse.json({ unit: { id: unit.id, name: unit.name } });
+  // O token vai no corpo TAMBÉM porque o app mobile autentica por
+  // `Authorization: Bearer` e não enxerga o cookie — sem isto a troca de
+  // unidade funcionaria no web e falharia silenciosamente no celular.
+  const response = NextResponse.json({ unit: { id: unit.id, name: unit.name }, accessToken });
   response.cookies.set(ACCESS_COOKIE, accessToken, {
     httpOnly: true,
     sameSite: "lax",
