@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { BookingWizard, type Shop } from "./BookingWizard";
+import { InstallAppPrompt } from "@/components/pwa/InstallAppPrompt";
 
 // Always reflect the barbershop's current services/staff/hours.
 export const dynamic = "force-dynamic";
@@ -63,5 +64,12 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const shop = await getShop(slug);
   if (!shop) notFound();
-  return <BookingWizard shop={shop} />;
+  return (
+    <>
+      <BookingWizard shop={shop} />
+      {/* Sem este convite o app com a marca da barbearia praticamente não é
+          instalado no iPhone, onde o processo é manual e escondido. */}
+      <InstallAppPrompt shopName={shop.name} color={shop.primaryColor} slug={shop.slug} />
+    </>
+  );
 }
