@@ -27,7 +27,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     manifest: `/booking/${slug}/manifest.webmanifest`,
     // Nome que o iOS usa quando o cliente adiciona à tela de início.
     appleWebApp: { capable: true, title: shop.name, statusBarStyle: "black-translucent" },
-    ...(shop.logo ? { icons: { icon: shop.logo, apple: shop.logo, shortcut: shop.logo } } : {}),
+    // Sem logo, o ícone gerado com a marca dela — nunca o do CORTIX.
+    icons: shop.logo
+      ? { icon: shop.logo, apple: shop.logo, shortcut: shop.logo }
+      : { icon: `/booking/${slug}/icon.svg`, apple: `/booking/${slug}/icon.svg`, shortcut: `/booking/${slug}/icon.svg` },
     openGraph: {
       title,
       description: shop.description || `Agende seu horário na ${shop.name}.`,

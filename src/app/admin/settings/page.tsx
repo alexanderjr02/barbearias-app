@@ -6,6 +6,7 @@ import { Settings, Check, Zap, Crown, Save, ShieldCheck, ShieldOff, Copy, Smile,
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { apiGet, apiPatch, apiPost, apiDelete } from "@/lib/apiClient";
 import { cn, formatDateTime } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 type Plan = "FREE" | "PRO" | "ENTERPRISE";
 type Pricing = { price: number; appointmentsLimit: number | null; staffLimit: number | null };
@@ -327,6 +328,81 @@ function BackupSection() {
   );
 }
 
+// Preços de rede: quanto custa cada unidade além da matriz e a taxa de
+// implantação. Antes só existiam como variável de ambiente, o que obrigava a
+// um deploy para mudar um número que é decisão comercial.
+function NetworkPricingSection() {
+  const queryClient = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ["admin-network-pricing"],
+    queryFn: () => apiGet<{ extraUnitPrice: number; setupFee: number }>("/api/admin/settings/network-pricing"),
+  });
+  const [extra, setExtra] = useState<number | null>(null);
+  const [setup, setSetup] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const extraValue = extra ?? data?.extraUnitPrice ?? 0;
+  const setupValue = setup ?? data?.setupFee ?? 0;
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await apiPatch("/api/admin/settings/network-pricing", { extraUnitPrice: extraValue, setupFee: setupValue });
+      queryClient.invalidateQueries({ queryKey: ["admin-network-pricing"] });
+      toast.success("Preços de rede atualizados");
+    } catch {
+      toast.error("Não foi possível salvar");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+      <div>
+        <h3 className="text-sm font-bold text-white">Rede (multi-unidade)</h3>
+        <p className="text-xs text-zinc-500 mt-0.5">
+          A matriz paga o preço do plano; cada unidade adicional é cobrada pelo valor abaixo.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs font-semibold text-zinc-400">Unidade adicional (R$/mês)</label>
+          <input
+            type="number"
+            min={0}
+            value={extraValue}
+            onChange={(e) => setExtra(Number(e.target.value))}
+            className="mt-1 w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-purple-500/50"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-zinc-400">Taxa de implantação (uma vez)</label>
+          <input
+            type="number"
+            min={0}
+            value={setupValue}
+            onChange={(e) => setSetup(Number(e.target.value))}
+            className="mt-1 w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-purple-500/50"
+          />
+          <p className="text-[11px] text-zinc-600 mt-1">
+            {setupValue > 0
+              ? "Gera uma fatura na primeira entrada no White Label."
+              : "Em 0, nenhuma fatura de implantação é gerada."}
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={save}
+        disabled={saving}
+        className="h-9 px-4 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+      >
+        {saving ? "Salvando…" : "Salvar preços de rede"}
+      </button>
+    </div>
+  );
+}
+
 export default function AdminSettingsPage() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"planos" | "seguranca" | "nps" | "backup">("planos");
@@ -387,6 +463,7 @@ export default function AdminSettingsPage() {
           <p className="text-xs text-zinc-600">
             Alterar um preço aqui atualiza imediatamente o que os gestores veem no checkout de upgrade e na tela de Configurações do painel deles.
           </p>
+          <NetworkPricingSection />
         </>
       )}
 

@@ -24,17 +24,19 @@ export async function GET(_request: Request, ctx: { params: Promise<{ slug: stri
   const isWhiteLabel = shop.plan === "ENTERPRISE";
   const start = `/booking/${slug}`;
 
-  // Se a barbearia subiu um logo, ele vira o ícone do app. Sem logo, cai nos
-  // ícones padrão — que carregam a marca CORTIX, então isso é sinalizado ao
-  // gestor White Label na tela de Aparência (ver TODO abaixo).
+  // Se a barbearia subiu um logo, ele vira o ícone do app. Sem logo, usamos um
+  // ícone GERADO com as iniciais e a cor dela — nunca os ícones padrão, que
+  // têm a marca CORTIX e apareceriam justamente para o cliente White Label que
+  // ainda não subiu logo.
+  const generated = { src: `/booking/${slug}/icon.svg`, sizes: "any", type: "image/svg+xml" };
   const icons = shop.logo
     ? [
         { src: shop.logo, sizes: "any", purpose: "any" },
         { src: shop.logo, sizes: "any", purpose: "maskable" },
       ]
     : [
-        { src: "/icons/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-        { src: "/icons/icon-maskable.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
+        { ...generated, purpose: "any" },
+        { ...generated, purpose: "maskable" },
       ];
 
   const manifest = {
