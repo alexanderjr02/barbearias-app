@@ -13,6 +13,8 @@ async function getShop(slug: string): Promise<Shop | null> {
       id: true,
       name: true,
       slug: true,
+      // Usado para decidir se a marca CORTIX aparece (White Label = não).
+      plan: true,
       description: true,
       phone: true,
       whatsapp: true,
@@ -46,9 +48,13 @@ async function getShop(slug: string): Promise<Shop | null> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const shop = await getShop(slug);
-  if (!shop) return { title: "Barbearia não encontrada · CORTIX" };
+  if (!shop) return { title: "Barbearia não encontrada" };
+  // No White Label a nossa marca não aparece em lugar nenhum — nem na aba do
+  // navegador, nem no nome do app instalado. Nos demais planos, mantemos a
+  // assinatura do CORTIX.
+  const isWhiteLabel = shop.plan === "ENTERPRISE";
   return {
-    title: `Agende na ${shop.name} · CORTIX`,
+    title: isWhiteLabel ? `Agende na ${shop.name}` : `Agende na ${shop.name} · CORTIX`,
     description: shop.description ?? `Agende seu horário na ${shop.name} online, em segundos.`,
   };
 }

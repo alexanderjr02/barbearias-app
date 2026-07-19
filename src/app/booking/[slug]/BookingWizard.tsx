@@ -22,6 +22,9 @@ export interface Shop {
   id: string;
   name: string;
   slug: string;
+  // Decide se a marca CORTIX aparece na página e no app instalado
+  // (ENTERPRISE = White Label, sem a nossa marca).
+  plan: string;
   description: string | null;
   phone: string | null;
   whatsapp: string | null;
