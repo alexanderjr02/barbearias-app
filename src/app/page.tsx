@@ -120,7 +120,7 @@ const plans = [
     features: [
       "Tudo do Pro",
       "App próprio com a sua marca (logo, cores e fundo)",
-      "No ar hoje — o cliente instala pelo link, sem esperar aprovação de loja",
+      "Sem taxa de implantação — no ar hoje, o cliente instala pelo link",
       "Painel da rede: compare suas unidades lado a lado",
       "Copiloto de rede: sabe qual loja está puxando o faturamento pra baixo",
       "Multi-unidade / rede — R$ 149 por unidade adicional",

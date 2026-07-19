@@ -18,7 +18,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["preço", "valor", "quanto", "custa", "plano", "planos", "mensalidade", "assinatura"],
-    answer: "Temos 3 planos:\n\n**Essencial** — R$ 50/mês\n• Agenda online 24/7 • Cadastro de clientes • Fila de espera • Caixa do dia • Até 3 barbeiros\n\n**Pro** — R$ 250/mês\n• Tudo do Essencial • Copiloto com IA • Financeiro completo e comissões • Estoque • Fidelidade • Clube de assinatura • Até 10 barbeiros\n\n**White Label** — R$ 897/mês\n• Tudo do Pro • App instalável com a SUA marca • Painel e Copiloto de rede • Nota fiscal automática • Barbeiros ilimitados • Atendimento dedicado\n• Rede: + R$ 149 por unidade adicional\n\nOs planos Pro e White Label têm **14 dias de teste grátis** (sem cartão de crédito). Quer saber mais sobre algum deles?",
+    answer: "Temos 3 planos:\n\n**Essencial** — R$ 50/mês\n• Agenda online 24/7 • Cadastro de clientes • Fila de espera • Caixa do dia • Até 3 barbeiros\n\n**Pro** — R$ 250/mês\n• Tudo do Essencial • Copiloto com IA • Financeiro completo e comissões • Estoque • Fidelidade • Clube de assinatura • Até 10 barbeiros\n\n**White Label** — R$ 897/mês\n• Tudo do Pro • App instalável com a SUA marca • Painel e Copiloto de rede • Nota fiscal automática • Barbeiros ilimitados • Atendimento dedicado\n• Rede: + R$ 149 por unidade adicional\n• **Sem taxa de implantação** — no ar no mesmo dia\n\nOs planos Pro e White Label têm **14 dias de teste grátis** (sem cartão de crédito). Quer saber mais sobre algum deles?",
   },
   {
     keywords: ["diferença", "comparar", "comparação", "qual escolher", "melhor plano", "qual plano"],

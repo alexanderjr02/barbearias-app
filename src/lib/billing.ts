@@ -27,9 +27,16 @@ export function planHasAI(plan: string | null | undefined): boolean {
 // seria faturada pelo preço do plano inteiro — uma rede de 3 lojas pagaria
 // 3x R$897 em vez de R$897 + 2x R$149.
 export const EXTRA_UNIT_PRICE = Number(process.env.EXTRA_UNIT_PRICE) || 149;
-// Implantação/publicação do app com a marca do cliente — cobrada uma única
-// vez, quando a barbearia entra no White Label.
-export const WHITE_LABEL_SETUP_FEE = Number(process.env.WHITE_LABEL_SETUP_FEE) || 1497;
+// Taxa de implantação do White Label. ZERADA de propósito: ela existia para
+// pagar a publicação nas lojas (contas Apple/Google + o trabalho de submeter e
+// encarar a revisão), e o produto decidiu ficar no PWA — o cliente instala
+// pelo link, no mesmo dia, sem loja. Sem esse custo, "sem taxa de implantação"
+// virou argumento de venda contra quem cobra setup.
+//
+// A mecânica de cobrança continua aqui e volta a funcionar sozinha se um dia
+// isso mudar: basta definir WHITE_LABEL_SETUP_FEE. Em 0, nenhuma fatura de
+// implantação é gerada (ver recordPlanChangeInvoice).
+export const WHITE_LABEL_SETUP_FEE = Number(process.env.WHITE_LABEL_SETUP_FEE) || 0;
 
 /**
  * Marca, para cada barbearia, se ela é a primária do seu dono (a mais antiga).
