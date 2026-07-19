@@ -31,14 +31,18 @@ export function UnitSwitcher({ shopName }: { shopName: string }) {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
 
-  const { data, refetch } = useQuery({
+  const { data, refetch, isError, isLoading } = useQuery({
     queryKey: ["units"],
     queryFn: () => apiGet<UnitsResponse>("/api/units"),
-    retry: false,
+    retry: 1,
   });
 
   const units = data?.units ?? [];
-  const isNetwork = units.length > 1 || data?.canAddUnit;
+  // Só some de vez quando a resposta CONFIRMOU que é loja única. Em erro o
+  // seletor continua clicável e mostra o problema — antes ele caía no botão
+  // estático, que é visualmente idêntico ao antigo, e uma falha de API ficava
+  // indistinguível de "nada mudou".
+  const isNetwork = isError || units.length > 1 || !!data?.canAddUnit;
 
   const switchTo = async (unit: Unit) => {
     if (unit.isCurrent) return setOpen(false);
@@ -106,6 +110,15 @@ export function UnitSwitcher({ shopName }: { shopName: string }) {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-11 w-72 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden">
             <p className="px-4 pt-3 pb-2 text-[10px] font-bold uppercase tracking-wide text-zinc-500">Suas unidades</p>
+            {isError && (
+              <div className="px-4 pb-3">
+                <p className="text-xs text-red-400">Não consegui carregar suas unidades.</p>
+                <button onClick={() => refetch()} className="mt-1.5 text-xs text-amber-400 hover:underline">
+                  Tentar de novo
+                </button>
+              </div>
+            )}
+            {isLoading && <p className="px-4 pb-3 text-xs text-zinc-500">Carregando…</p>}
             <div className="max-h-64 overflow-y-auto">
               {units.map((u) => (
                 <button
