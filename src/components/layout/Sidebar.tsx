@@ -32,7 +32,7 @@ const navItems = [
 
 const UPSELL_PITCH: Record<"FREE" | "PRO", { badge: string; text: string; target: "PRO" | "ENTERPRISE" }> = {
   FREE: { badge: "Pro", text: "Relatórios, estoque, fidelização e mais barbeiros.", target: "PRO" },
-  PRO: { badge: "White Label", text: "App com a sua marca, publicável nas lojas.", target: "ENTERPRISE" },
+  PRO: { badge: "White Label", text: "App com a sua marca, instalável direto do link.", target: "ENTERPRISE" },
 };
 
 export function Sidebar() {
