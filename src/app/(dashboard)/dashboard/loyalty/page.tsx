@@ -470,6 +470,12 @@ function Section({ icon: Icon, title, hint, enabled, onToggle, children }: {
   );
 }
 
+/**
+ * O switch é o gesto mais repetido desta tela — vale o capricho. Três coisas
+ * que separam ele de um checkbox estilizado: a trilha acende com brilho
+ * próprio quando liga, o botão estica no meio do caminho (o "squish" que dá
+ * peso físico ao movimento) e a curva é elástica, não linear.
+ */
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -478,14 +484,39 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200",
-        checked ? "bg-amber-500" : "bg-zinc-700"
+        "group relative h-7 w-[52px] flex-shrink-0 rounded-full outline-none",
+        "transition-all duration-300 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
+        "focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900",
+        checked
+          ? "bg-gradient-to-r from-amber-500 to-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.5),0_2px_12px_-1px_rgba(245,158,11,0.55)]"
+          : "bg-zinc-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]"
       )}
     >
-      <span className={cn(
-        "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200",
-        checked ? "translate-x-[22px]" : "translate-x-0.5"
-      )} />
+      {/* Ícones dentro da trilha: dão leitura instantânea do estado sem
+          depender só da posição do botão (e de enxergar bem a cor). */}
+      <Check
+        className={cn(
+          "pointer-events-none absolute left-[9px] top-1/2 h-3 w-3 -translate-y-1/2 text-zinc-900/70 transition-all duration-200",
+          checked ? "scale-100 opacity-100 delay-100" : "scale-50 opacity-0"
+        )}
+        strokeWidth={3.5}
+      />
+      <span
+        className={cn(
+          "pointer-events-none absolute right-[11px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-[1.5px] border-zinc-600 transition-all duration-200",
+          checked ? "scale-50 opacity-0" : "scale-100 opacity-100 delay-100"
+        )}
+      />
+      <span
+        className={cn(
+          "absolute top-1/2 h-[22px] -translate-y-1/2 rounded-full bg-white",
+          "shadow-[0_1px_3px_rgba(0,0,0,0.4)]",
+          "transition-all duration-300 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
+          // largura maior no active = o botão "estica" enquanto desliza
+          "w-[22px] group-active:w-[27px]",
+          checked ? "left-[26px] group-active:left-[21px]" : "left-1"
+        )}
+      />
     </button>
   );
 }

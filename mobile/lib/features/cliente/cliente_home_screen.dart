@@ -8,6 +8,8 @@ import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import 'client_repository.dart';
+import 'client_preferences_screen.dart';
+import 'cut_wallet_screen.dart';
 import 'loyalty_wallet_screen.dart';
 import 'new_appointment_screen.dart';
 import 'tip_screen.dart';
@@ -355,10 +357,18 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('${_greeting()},', style: TextStyle(color: palette.textSecondary, fontSize: 14)),
+                                  Text('${_greeting()},',
+                                      style: TextStyle(color: palette.textSecondary, fontSize: 13, letterSpacing: 0.2)),
+                                  const SizedBox(height: 1),
                                   Text(
                                     firstName,
-                                    style: TextStyle(color: palette.textPrimary, fontSize: 24, fontWeight: FontWeight.w800),
+                                    style: TextStyle(
+                                      color: palette.textPrimary,
+                                      fontSize: 27,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.6,
+                                      height: 1.1,
+                                    ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
@@ -406,6 +416,21 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
+                        // Atalhos: o que o cliente mais quer fazer, a um toque.
+                        // Sem isto tudo mora atrás de scroll ou de aba, e a
+                        // carteira/preferências viravam recurso que ninguém acha.
+                        _QuickActions(
+                          palette: palette,
+                          accent: accent,
+                          loyalty: loyalty,
+                          onBook: () async {
+                            final booked = await Navigator.of(context).push<bool>(
+                              MaterialPageRoute(builder: (_) => const NewAppointmentScreen()),
+                            );
+                            if (booked == true) _refresh();
+                          },
+                        ),
+                        const SizedBox(height: 22),
                         if (suggestion != null) ...[
                           RiseIn(
                             child: Material(
@@ -458,12 +483,11 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                           const SizedBox(height: 22),
                         ],
                         if (loyalty.isNotEmpty) ...[
-                          Row(
-                            children: [
-                              Text('Minha fidelidade', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
-                              const SizedBox(width: 8),
-                              Icon(Icons.chevron_right_rounded, size: 18, color: palette.textSecondary),
-                            ],
+                          _SectionTitle(
+                            label: 'Minha fidelidade',
+                            palette: palette,
+                            accent: accent,
+                            trailing: 'ver carteira',
                           ),
                           const SizedBox(height: 12),
                           SizedBox(
@@ -505,18 +529,24 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                           ),
                           const SizedBox(height: 22),
                         ],
-                        Text(next != null ? 'Outros agendamentos' : 'Meus agendamentos',
-                            style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                        _SectionTitle(
+                          label: next != null ? 'Outros agendamentos' : 'Meus agendamentos',
+                          count: others.length,
+                          palette: palette,
+                          accent: accent,
+                        ),
                         const SizedBox(height: 12),
                         if (others.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 24),
-                            child: Center(
-                              child: Text(
-                                next != null ? 'Nenhum outro agendamento.' : 'Você ainda não tem agendamentos.',
-                                style: TextStyle(color: palette.textFaint),
-                              ),
-                            ),
+                          _EmptyAppointments(
+                            palette: palette,
+                            accent: accent,
+                            hasNext: next != null,
+                            onBook: () async {
+                              final booked = await Navigator.of(context).push<bool>(
+                                MaterialPageRoute(builder: (_) => const NewAppointmentScreen()),
+                              );
+                              if (booked == true) _refresh();
+                            },
                           ),
                         ...others.asMap().entries.map((entry) => RiseIn(
                               delay: Duration(milliseconds: 40 * entry.key),
@@ -549,6 +579,245 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
           );
           if (booked == true) _refresh();
         },
+      ),
+    );
+  }
+}
+
+/// Faixa de atalhos sob o cabeçalho. Cada app grande tem a sua (Nubank,
+/// Revolut, iFood) pelo mesmo motivo: as 4 coisas que a pessoa realmente faz
+/// não podem exigir navegação.
+class _QuickActions extends StatelessWidget {
+  final AppPalette palette;
+  final Color accent;
+  final List<LoyaltyBalance> loyalty;
+  final VoidCallback onBook;
+
+  const _QuickActions({required this.palette, required this.accent, required this.loyalty, required this.onBook});
+
+  @override
+  Widget build(BuildContext context) {
+    // A carteira precisa de uma barbearia; sem vínculo o atalho não leva a
+    // lugar nenhum, então ele simplesmente não aparece.
+    final wallet = loyalty.where((l) => l.barbershopId.isNotEmpty).firstOrNull;
+
+    final actions = <({IconData icon, String label, VoidCallback? onTap})>[
+      (icon: Icons.add_rounded, label: 'Agendar', onTap: onBook),
+      if (wallet != null)
+        (
+          icon: Icons.card_giftcard_rounded,
+          label: 'Fidelidade',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => LoyaltyWalletScreen(
+                  barbershopId: wallet.barbershopId,
+                  barbershopName: wallet.barbershopName,
+                ),
+              )),
+        ),
+      (
+        icon: Icons.photo_library_rounded,
+        label: 'Meus cortes',
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CutWalletScreen())),
+      ),
+      (
+        icon: Icons.tune_rounded,
+        label: 'Preferências',
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientPreferencesScreen())),
+      ),
+    ];
+
+    return Row(
+      children: [
+        for (var i = 0; i < actions.length; i++) ...[
+          if (i > 0) const SizedBox(width: 10),
+          Expanded(
+            child: _QuickAction(
+              icon: actions[i].icon,
+              label: actions[i].label,
+              onTap: actions[i].onTap,
+              palette: palette,
+              accent: accent,
+              // O primeiro é a ação principal — ganha peso visual em vez de
+              // ficar indistinguível dos outros três.
+              primary: i == 0,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final AppPalette palette;
+  final Color accent;
+  final bool primary;
+
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.palette,
+    required this.accent,
+    this.primary = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: primary ? accent.withValues(alpha: 0.14) : palette.surface,
+            border: Border.all(
+              color: primary ? accent.withValues(alpha: 0.35) : palette.textFaint.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 21, color: primary ? accent : palette.textSecondary),
+              const SizedBox(height: 7),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: primary ? accent : palette.textSecondary,
+                  fontSize: 10.5,
+                  fontWeight: primary ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Cabeçalho de seção padronizado — antes cada um era um Text solto com estilo
+/// próprio, o que fazia a página parecer montada em pedaços.
+class _SectionTitle extends StatelessWidget {
+  final String label;
+  final int? count;
+  final String? trailing;
+  final AppPalette palette;
+  final Color accent;
+
+  const _SectionTitle({
+    required this.label,
+    required this.palette,
+    required this.accent,
+    this.count,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(label,
+            style: TextStyle(
+              color: palette.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 16.5,
+              letterSpacing: -0.3,
+            )),
+        if (count != null && count! > 0) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: palette.surface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text('$count',
+                style: TextStyle(color: palette.textSecondary, fontSize: 11, fontWeight: FontWeight.w700)),
+          ),
+        ],
+        const Spacer(),
+        if (trailing != null)
+          Row(
+            children: [
+              Text(trailing!, style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(width: 2),
+              Icon(Icons.chevron_right_rounded, size: 16, color: accent),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+/// Estado vazio de verdade, com saída. Antes era uma frase cinza centralizada —
+/// que informa, mas deixa a pessoa parada sem saber o que fazer.
+class _EmptyAppointments extends StatelessWidget {
+  final AppPalette palette;
+  final Color accent;
+  final bool hasNext;
+  final VoidCallback onBook;
+
+  const _EmptyAppointments({required this.palette, required this.accent, required this.hasNext, required this.onBook});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 34, horizontal: 22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: palette.surface.withValues(alpha: 0.45),
+        border: Border.all(color: palette.textFaint.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accent.withValues(alpha: 0.10),
+            ),
+            child: Icon(hasNext ? Icons.event_available_rounded : Icons.content_cut_rounded,
+                color: accent.withValues(alpha: 0.8), size: 25),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            hasNext ? 'Só esse por enquanto' : 'Seu primeiro corte começa aqui',
+            style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 14.5),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            hasNext
+                ? 'Quando marcar mais horários, eles aparecem nesta lista.'
+                : 'Escolha o serviço, o barbeiro e o horário — leva menos de um minuto.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.45),
+          ),
+          if (!hasNext) ...[
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onBook,
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Agendar agora'),
+              style: FilledButton.styleFrom(
+                backgroundColor: accent,
+                foregroundColor: contrastingTextColor(accent),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
