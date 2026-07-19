@@ -60,6 +60,10 @@ model User {
   announcementDismissals AnnouncementDismissal[]
   npsResponses     NpsResponse[]
   clientNotifications Notification[] @relation("ClientNotifications")
+  stampCards       StampCard[]
+  loyaltyRewards   LoyaltyReward[]
+  referralsMade    Referral[] @relation("ReferralsMade")
+  referralsReceived Referral[] @relation("ReferralsReceived")
 }
 
 model Barbershop {
@@ -128,7 +132,30 @@ model Barbershop {
   municipalServiceCode String? // código do serviço municipal / item da lista
   taxRegime            String? // ex: "SIMPLES_NACIONAL"
   issRate              Float?  // alíquota do ISS (%)
+  // ---- Fidelidade, toda configurável pelo gestor ----
+  // Pontos: quanto vale cada real e onde ficam as faixas. As faixas eram
+  // constantes no código (501/1501), então toda barbearia era obrigada a usar
+  // o mesmo programa — agora cada uma calibra o seu.
   pointsPerReal   Int      @default(10)
+  loyaltyEnabled  Boolean  @default(true)
+  silverThreshold Int      @default(501)
+  goldThreshold   Int      @default(1501)
+  silverDiscount  Float    @default(0.05)
+  goldDiscount    Float    @default(0.10)
+
+  // Cartão de selos ("a cada N cortes, 1 grátis") — o clássico de barbearia
+  // que hoje se perde no papel. Desligado por padrão: é o gestor que decide
+  // se quer, quantos selos e qual o prêmio.
+  stampEnabled     Boolean @default(false)
+  stampGoal        Int     @default(10)
+  stampRewardLabel String  @default("1 corte grátis")
+
+  // Indicação (member-get-member): o crescimento mais barato que existe —
+  // cada cliente vira vendedor. Os dois lados premiados, texto livre porque
+  // cada barbearia oferece uma coisa.
+  referralEnabled        Boolean @default(false)
+  referralReferrerReward String  @default("R$ 10 de desconto")
+  referralFriendReward   String  @default("R$ 10 de desconto")
   onboardingDismissed Boolean @default(false)
   // Sem @unique: o mesmo dono pode ter várias unidades (rede).
   ownerId         String
@@ -153,6 +180,9 @@ model Barbershop {
   autopilotLogs   AutopilotLog[]
   aiUsage         AiUsage[]
   copilotActions  CopilotAction[]
+  stampCards      StampCard[]
+  loyaltyRewards  LoyaltyReward[]
+  referrals       Referral[]
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
   platformInvoices  PlatformInvoice[]
@@ -604,8 +634,63 @@ model BarbershopClient {
   @@index([barbershopId, marketingConsent])
 }
 
-// tier is derived from `points` (see src/lib/loyalty.ts TIER_THRESHOLDS) —
-// stored redundantly so it can be queried/sorted without recomputing.
+// Cartão de selos por cliente/barbearia. `stamps` zera a cada prêmio ganho;
+// `completedCount` guarda quantas cartelas ele já fechou — é o número que
+// mostra fidelidade de verdade.
+model StampCard {
+  id             String     @id @default(cuid())
+  userId         String
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershopId   String
+  barbershop     Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  stamps         Int        @default(0)
+  completedCount Int        @default(0)
+  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime   @default(now())
+
+  @@unique([userId, barbershopId])
+}
+
+// Prêmio conquistado e ainda não usado. Existe como registro próprio (em vez
+// de só um contador) para o gestor poder ver, validar e baixar no balcão.
+model LoyaltyReward {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  source       String     // STAMP_CARD | REFERRAL_REFERRER | REFERRAL_FRIEND
+  label        String     // "1 corte grátis" — texto que o gestor configurou
+  status       String     @default("AVAILABLE") // AVAILABLE | USED
+  usedAt       DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId, status])
+  @@index([userId])
+}
+
+// Indicação. O código nasce com quem indica; o amigo entra usando ele, e o
+// prêmio só sai quando o amigo REALMENTE aparece (1º atendimento concluído) —
+// senão bastaria cadastrar amigos falsos para ganhar prêmio.
+model Referral {
+  id           String     @id @default(cuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  referrerId   String
+  referrer     User       @relation("ReferralsMade", fields: [referrerId], references: [id], onDelete: Cascade)
+  code         String
+  friendId     String?
+  friend       User?      @relation("ReferralsReceived", fields: [friendId], references: [id], onDelete: SetNull)
+  status       String     @default("PENDING") // PENDING | COMPLETED
+  completedAt  DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@unique([barbershopId, code])
+  @@index([friendId])
+}
+
+// tier is derived from `points` (see src/lib/loyalty.ts) — stored redundantly
+// so it can be queried/sorted without recomputing.
 model LoyaltyAccount {
   id            String   @id @default(cuid())
   userId        String

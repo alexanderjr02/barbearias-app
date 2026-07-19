@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { awardPointsForAppointment } from "@/lib/loyalty";
+import { runLoyaltyOnCompletion } from "@/lib/loyalty";
 import { notifyBarbershop, notifyClient } from "@/lib/gestorNotifications";
 import { onSlotOpened } from "@/lib/copilot/autopilot";
 
@@ -79,7 +79,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   if (body.status === "COMPLETED" && appointment.status !== "COMPLETED") {
-    await awardPointsForAppointment(id);
+    await runLoyaltyOnCompletion(id);
   }
 
   if (isOwnClientCancelling) {
