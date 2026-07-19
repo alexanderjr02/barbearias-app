@@ -44,7 +44,10 @@ export function estimateCostCents(model: string, inTok: number, outTok: number, 
 // A typical gestor asks a handful of questions a day and never sees the cap.
 // FREE has no AI at all.
 export function dailyCap(plan: string | null | undefined): number {
-  if (plan === "ENTERPRISE") return Number(process.env.AI_DAILY_CAP_ENTERPRISE) || 120;
+  // 80/dia no White Label (R$897) => pior caso ~R$390/mês de IA, 44% da
+  // mensalidade. Com o teto antigo de 120 o pior caso batia R$587 — mais que
+  // o preço de então (R$350), ou seja, prejuízo garantido no limite.
+  if (plan === "ENTERPRISE") return Number(process.env.AI_DAILY_CAP_ENTERPRISE) || 80;
   if (plan === "PRO") return Number(process.env.AI_DAILY_CAP_PRO) || 40;
   return 0;
 }

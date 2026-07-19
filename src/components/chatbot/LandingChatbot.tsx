@@ -18,11 +18,11 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["preço", "valor", "quanto", "custa", "plano", "planos", "mensalidade", "assinatura"],
-    answer: "Temos 3 planos:\n\n**Essencial** — R$ 50/mês\n• Agenda online 24/7 • Cadastro de clientes • Fila de espera • Caixa do dia • Até 3 barbeiros\n\n**Pro** — R$ 250/mês\n• Tudo do Essencial • Copiloto com IA • Financeiro completo e comissões • Estoque • Fidelidade • Clube de assinatura • Até 10 barbeiros\n\n**White Label** — R$ 350/mês\n• Tudo do Pro • App próprio com a sua marca • Nota fiscal automática • Multi-unidade • Barbeiros ilimitados\n\nOs planos Pro e White Label têm **14 dias de teste grátis** (sem cartão de crédito). Quer saber mais sobre algum deles?",
+    answer: "Temos 3 planos:\n\n**Essencial** — R$ 50/mês\n• Agenda online 24/7 • Cadastro de clientes • Fila de espera • Caixa do dia • Até 3 barbeiros\n\n**Pro** — R$ 250/mês\n• Tudo do Essencial • Copiloto com IA • Financeiro completo e comissões • Estoque • Fidelidade • Clube de assinatura • Até 10 barbeiros\n\n**White Label** — R$ 897/mês\n• Tudo do Pro • App próprio com a sua marca • Nota fiscal automática • Barbeiros ilimitados • Atendimento dedicado\n• Rede: + R$ 149 por unidade adicional\n• Implantação e publicação do app: R$ 1.497 (uma única vez)\n\nOs planos Pro e White Label têm **14 dias de teste grátis** (sem cartão de crédito). Quer saber mais sobre algum deles?",
   },
   {
     keywords: ["diferença", "comparar", "comparação", "qual escolher", "melhor plano", "qual plano"],
-    answer: "Depende do tamanho da sua operação:\n\n**Essencial (R$ 50/mês)** — você trabalha sozinho ou com até 3 barbeiros e quer sair da agenda de papel/WhatsApp.\n\n**Pro (R$ 250/mês)** — sua equipe tem até 10 barbeiros e você quer o Copiloto com IA, financeiro completo, fidelização e assinatura.\n\n**White Label (R$ 350/mês)** — você quer um app próprio com a sua marca, nota fiscal automática e sem limite de equipe.\n\nQuer que eu te ajude a decidir com base no tamanho da sua barbearia?",
+    answer: "Depende do tamanho da sua operação:\n\n**Essencial (R$ 50/mês)** — você trabalha sozinho ou com até 3 barbeiros e quer sair da agenda de papel/WhatsApp.\n\n**Pro (R$ 250/mês)** — sua equipe tem até 10 barbeiros e você quer o Copiloto com IA, financeiro completo, fidelização e assinatura.\n\n**White Label (R$ 897/mês)** — você quer um app próprio com a sua marca, nota fiscal automática e sem limite de equipe.\n\nQuer que eu te ajude a decidir com base no tamanho da sua barbearia?",
   },
   {
     keywords: ["funcionalidade", "recurso", "o que faz", "features", "o que tem", "inclui", "sistema faz"],
@@ -74,7 +74,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["múltiplas", "unidades", "franquia", "rede", "várias"],
-    answer: "Para redes de barbearia, o plano **White Label** (R$ 350/mês) foi feito para isso:\n\n🏪 App própria com domínio customizado\n🌐 Branding 100% personalizado\n👔 Sem marca do CORTIX no app\n👥 Barbeiros ilimitados\n\nFale com nossa equipe comercial: **vendas@cortix.app**",
+    answer: "Para redes de barbearia, o plano **White Label** (R$ 897/mês + R$ 149 por unidade) foi feito para isso:\n\n🏪 App própria com domínio customizado\n🌐 Branding 100% personalizado\n👔 Sem marca do CORTIX no app\n👥 Barbeiros ilimitados\n\nFale com nossa equipe comercial: **vendas@cortix.app**",
   },
   {
     keywords: ["quanto tempo", "implanta", "implementar", "migrar", "trocar de sistema", "demora"],

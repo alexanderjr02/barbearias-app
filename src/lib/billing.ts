@@ -14,7 +14,7 @@ export type PlanPricing = {
 const DEFAULT_PRICING: Record<PlatformPlan, PlanPricing> = {
   FREE: { price: 50, appointmentsLimit: null, staffLimit: 3 },
   PRO: { price: 250, appointmentsLimit: null, staffLimit: 10 },
-  ENTERPRISE: { price: 350, appointmentsLimit: null, staffLimit: null },
+  ENTERPRISE: { price: 897, appointmentsLimit: null, staffLimit: null },
 };
 
 // Tiers that unlock the AI Copiloto (business assistant) + AI-powered client
