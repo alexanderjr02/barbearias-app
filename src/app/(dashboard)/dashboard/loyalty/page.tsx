@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Gift, Stamp, Users2, Star, Check, Loader2, Sparkles, Scissors } from "lucide-react";
+import { Gift, Stamp, Users2, Star, Check, Loader2, Sparkles, Scissors, Crown, ChevronRight, Copy } from "lucide-react";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -42,6 +42,10 @@ export default function LoyaltyPage() {
   const [tab, setTab] = useState<"programa" | "premios">("programa");
   const [cfg, setCfg] = useState<Config | null>(null);
   const [saving, setSaving] = useState(false);
+  // Quantos selos mostrar na prévia. É só encenação visual, mas deixa o gestor
+  // ver a cartela meio cheia em vez de sempre vazia — que é como ela passa a
+  // maior parte da vida do cliente.
+  const [previewStamps, setPreviewStamps] = useState(3);
 
   const { data } = useQuery({ queryKey: ["loyalty-config"], queryFn: () => apiGet<Config>("/api/loyalty/config") });
   const { data: rewardsData } = useQuery({
@@ -82,170 +86,386 @@ export default function LoyaltyPage() {
   };
 
   if (!cfg) {
-    return <div className="flex items-center justify-center py-24 text-zinc-500"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Carregando…</div>;
+    return (
+      <div className="space-y-6">
+        <PageHeader icon={Gift} title="Fidelidade" subtitle="Carregando o programa da sua barbearia…" accent="amber" />
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="space-y-4">
+            {[0, 1, 2].map((i) => <div key={i} className="h-40 rounded-2xl bg-zinc-900/60 border border-zinc-800/60 animate-pulse" />)}
+          </div>
+          <div className="hidden xl:block h-[640px] rounded-[2.5rem] bg-zinc-900/60 border border-zinc-800/60 animate-pulse" />
+        </div>
+      </div>
+    );
   }
+
+  const activeCount = [cfg.stampEnabled, cfg.referralEnabled, cfg.loyaltyEnabled].filter(Boolean).length;
 
   return (
     <div className="space-y-6">
       <PageHeader
         icon={Gift}
         title="Fidelidade"
-        subtitle="Desenhe o programa da sua barbearia — pontos, cartão de selos e indicação"
+        subtitle="Desenhe o programa da sua barbearia — e veja na hora o que o cliente vê"
         accent="amber"
       />
 
-      <div className="flex gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit">
-        {([["programa", "Programa"], ["premios", `Prêmios a entregar${rewards.length ? ` · ${rewards.length}` : ""}`]] as const).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={cn(
-              "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all",
-              tab === id ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:text-zinc-300"
-            )}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Barra de status: o que está no ar agora, em números reais. */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard
+          icon={Sparkles}
+          value={`${activeCount} de 3`}
+          label="mecanismos ativos"
+          tone={activeCount === 0 ? "off" : "amber"}
+        />
+        <StatCard
+          icon={Gift}
+          value={String(rewards.length)}
+          label={rewards.length === 1 ? "prêmio esperando entrega" : "prêmios esperando entrega"}
+          tone={rewards.length > 0 ? "emerald" : "off"}
+          onClick={rewards.length > 0 ? () => setTab("premios") : undefined}
+        />
+        <StatCard
+          icon={Stamp}
+          value={cfg.stampEnabled ? `${cfg.stampGoal} cortes` : "—"}
+          label={cfg.stampEnabled ? "para ganhar o prêmio" : "cartela desligada"}
+          tone={cfg.stampEnabled ? "amber" : "off"}
+        />
       </div>
 
+      <SegmentedTabs
+        tab={tab}
+        onChange={setTab}
+        pendingCount={rewards.length}
+      />
+
       {tab === "programa" ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {/* ---- Cartão de selos ---- */}
-          <Section
-            icon={Stamp}
-            title="Cartão de selos"
-            hint="O clássico da barbearia: a cada N cortes, um prêmio."
-            enabled={cfg.stampEnabled}
-            onToggle={(v) => save({ stampEnabled: v })}
-          >
-            {/* Prévia ao vivo: o gestor vê o que o cliente vai ver */}
-            <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-amber-400/80 mb-3">Prévia do que o cliente vê</p>
-              <StampPreview goal={cfg.stampGoal} filled={Math.min(3, cfg.stampGoal)} />
-              <p className="text-xs text-zinc-400 mt-3">
-                Ao completar, ganha: <span className="text-amber-300 font-semibold">{cfg.stampRewardLabel || "—"}</span>
-              </p>
-            </div>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px] items-start">
+          {/* ---------------- Controles ---------------- */}
+          <div className="space-y-4">
+            <Section
+              icon={Stamp}
+              title="Cartão de selos"
+              hint="O clássico da barbearia: a cada N cortes, um prêmio. Some do papel e vai pro bolso do cliente."
+              enabled={cfg.stampEnabled}
+              onToggle={(v) => save({ stampEnabled: v })}
+            >
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="Cortes para fechar a cartela">
+                  <NumberInput value={cfg.stampGoal} min={2} max={30} onCommit={(v) => save({ stampGoal: v })} suffix="cortes" />
+                </Field>
+                <Field label="Prêmio ao completar">
+                  <TextInput value={cfg.stampRewardLabel} placeholder="1 corte grátis" onCommit={(v) => save({ stampRewardLabel: v })} />
+                </Field>
+              </div>
+              <SliderRow
+                label="Ver prévia com"
+                value={previewStamps}
+                max={cfg.stampGoal}
+                onChange={setPreviewStamps}
+              />
+            </Section>
 
-            <Field label="Cortes para completar">
-              <NumberInput value={cfg.stampGoal} min={1} max={30} onCommit={(v) => save({ stampGoal: v })} />
-            </Field>
-            <Field label="Prêmio">
-              <TextInput value={cfg.stampRewardLabel} placeholder="Ex: 1 corte grátis" onCommit={(v) => save({ stampRewardLabel: v })} />
-            </Field>
-          </Section>
+            <Section
+              icon={Users2}
+              title="Indicação"
+              hint="O crescimento mais barato que existe — cada cliente vira vendedor. Os dois lados ganham."
+              enabled={cfg.referralEnabled}
+              onToggle={(v) => save({ referralEnabled: v })}
+            >
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="Quem indicou ganha">
+                  <TextInput value={cfg.referralReferrerReward} placeholder="R$ 10 de desconto" onCommit={(v) => save({ referralReferrerReward: v })} />
+                </Field>
+                <Field label="O amigo ganha">
+                  <TextInput value={cfg.referralFriendReward} placeholder="R$ 10 no 1º corte" onCommit={(v) => save({ referralFriendReward: v })} />
+                </Field>
+              </div>
+              <Note>
+                O prêmio só cai quando o amigo <strong className="text-zinc-300">conclui o primeiro corte</strong> — ninguém ganha por cadastro fantasma.
+              </Note>
+            </Section>
 
-          {/* ---- Indicação ---- */}
-          <Section
-            icon={Users2}
-            title="Indicação"
-            hint="Cada cliente vira vendedor. O prêmio só sai quando o amigo aparece de verdade."
-            enabled={cfg.referralEnabled}
-            onToggle={(v) => save({ referralEnabled: v })}
-          >
-            <Field label="Quem indica ganha">
-              <TextInput value={cfg.referralReferrerReward} placeholder="Ex: R$ 15 de desconto" onCommit={(v) => save({ referralReferrerReward: v })} />
-            </Field>
-            <Field label="O amigo ganha">
-              <TextInput value={cfg.referralFriendReward} placeholder="Ex: R$ 10 no 1º corte" onCommit={(v) => save({ referralFriendReward: v })} />
-            </Field>
-            <p className="text-[11px] text-zinc-600 leading-relaxed">
-              Quem já é cliente da casa não vale como indicação — assim o programa traz gente nova em vez de virar desconto pra base atual.
-            </p>
-          </Section>
+            <Section
+              icon={Crown}
+              title="Pontos e faixas"
+              hint="Cada real gasto vira ponto. As faixas dão status — e status é o que traz o cliente de volta."
+              enabled={cfg.loyaltyEnabled}
+              onToggle={(v) => save({ loyaltyEnabled: v })}
+            >
+              <Field label="Pontos por R$ 1 gasto">
+                <NumberInput value={cfg.pointsPerReal} min={1} max={100} onCommit={(v) => save({ pointsPerReal: v })} suffix="pts" />
+              </Field>
 
-          {/* ---- Pontos ---- */}
-          <Section
-            icon={Star}
-            title="Pontos e faixas"
-            hint="Quanto cada real vale e onde ficam Prata e Ouro."
-            enabled={cfg.loyaltyEnabled}
-            onToggle={(v) => save({ loyaltyEnabled: v })}
-            className="lg:col-span-2"
-          >
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Pontos por R$ 1">
-                <NumberInput value={cfg.pointsPerReal} min={0} max={100} onCommit={(v) => save({ pointsPerReal: v })} />
-              </Field>
-              <Field label="Prata a partir de">
-                <NumberInput value={cfg.silverThreshold} min={1} max={99999} onCommit={(v) => save({ silverThreshold: v })} suffix="pts" />
-              </Field>
-              <Field label="Ouro a partir de">
-                <NumberInput value={cfg.goldThreshold} min={1} max={99999} onCommit={(v) => save({ goldThreshold: v })} suffix="pts" />
-              </Field>
-            </div>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Tier label="Bronze" color="text-zinc-400 bg-zinc-800" from={0} to={cfg.silverThreshold - 1} />
-              <Tier label="Prata" color="text-slate-200 bg-slate-600/30" from={cfg.silverThreshold} to={cfg.goldThreshold - 1} />
-              <Tier label="Ouro" color="text-amber-300 bg-amber-500/15" from={cfg.goldThreshold} />
-            </div>
-          </Section>
+              <div className="mt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2.5">Faixas</p>
+                <TierLadder cfg={cfg} />
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4 mt-4">
+                <Field label="Prata começa em">
+                  <NumberInput value={cfg.silverThreshold} min={1} max={100000} onCommit={(v) => save({ silverThreshold: v })} suffix="pts" />
+                </Field>
+                <Field label="Ouro começa em">
+                  <NumberInput value={cfg.goldThreshold} min={cfg.silverThreshold + 1} max={999999} onCommit={(v) => save({ goldThreshold: v })} suffix="pts" />
+                </Field>
+              </div>
+
+              <Note>
+                Com {cfg.pointsPerReal} pts por real, um corte de R$ 50 rende{" "}
+                <strong className="text-amber-300">{cfg.pointsPerReal * 50} pontos</strong> — a faixa Prata chega em{" "}
+                <strong className="text-zinc-300">
+                  {Math.max(1, Math.ceil(cfg.silverThreshold / (cfg.pointsPerReal * 50)))} cortes
+                </strong>.
+              </Note>
+            </Section>
+          </div>
+
+          {/* ---------------- Prévia viva ---------------- */}
+          <div className="xl:sticky xl:top-6">
+            <PhonePreview cfg={cfg} stamps={previewStamps} saving={saving} />
+          </div>
         </div>
       ) : (
-        <div className="space-y-3">
-          {rewards.length === 0 ? (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 py-16 text-center">
-              <Gift className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-              <p className="text-sm text-zinc-400">Nenhum prêmio esperando</p>
-              <p className="text-xs text-zinc-600 mt-1">Quando um cliente completar a cartela ou trouxer um amigo, aparece aqui.</p>
-            </div>
-          ) : (
-            rewards.map((r) => (
-              <div key={r.id} className="flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-4 hover:border-zinc-700 transition-colors">
-                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/15">
-                  <Gift className="w-5 h-5 text-amber-400" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-white truncate">{r.clientName}</p>
-                  <p className="text-xs text-amber-300">{r.label}</p>
-                  <p className="text-[11px] text-zinc-600 mt-0.5">
-                    {SOURCE_LABEL[r.source] ?? r.source} · {formatDateTime(r.createdAt)}
-                    {r.clientPhone ? ` · ${r.clientPhone}` : ""}
-                  </p>
-                </div>
-                <button
-                  onClick={() => redeem(r)}
-                  className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500 hover:text-zinc-900 transition-all flex-shrink-0"
-                >
-                  <Check className="w-3.5 h-3.5" /> Entregar
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {saving && (
-        <p className="text-[11px] text-zinc-600 flex items-center gap-1.5">
-          <Loader2 className="w-3 h-3 animate-spin" /> salvando…
-        </p>
+        <RewardsQueue rewards={rewards} onRedeem={redeem} />
       )}
     </div>
   );
 }
 
-/* ---------- peças de UI ---------- */
+/* ============================ Prévia ============================ */
 
-function Section({ icon: Icon, title, hint, enabled, onToggle, children, className }: {
-  icon: typeof Gift; title: string; hint: string; enabled: boolean;
-  onToggle: (v: boolean) => void; children: React.ReactNode; className?: string;
+/**
+ * O coração da tela. Configurar fidelidade às cegas é o que faz o gestor
+ * desistir no meio — aqui ele vê exatamente a tela do cliente mudando
+ * enquanto mexe, então a decisão deixa de ser abstrata.
+ */
+function PhonePreview({ cfg, stamps, saving }: { cfg: Config; stamps: number; saving: boolean }) {
+  const filled = Math.min(stamps, cfg.stampGoal);
+  const remaining = Math.max(0, cfg.stampGoal - filled);
+  const nothingOn = !cfg.stampEnabled && !cfg.referralEnabled && !cfg.loyaltyEnabled;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prévia — o app do cliente</p>
+        <span className={cn("flex items-center gap-1.5 text-[11px] transition-opacity", saving ? "text-amber-400 opacity-100" : "text-emerald-400 opacity-70")}>
+          {saving ? <><Loader2 className="w-3 h-3 animate-spin" /> salvando</> : <><Check className="w-3 h-3" /> salvo</>}
+        </span>
+      </div>
+
+      {/* Moldura do aparelho */}
+      <div className="relative mx-auto w-full max-w-[340px] rounded-[2.25rem] bg-zinc-800 p-2 shadow-2xl shadow-black/60 ring-1 ring-white/5">
+        <div className="absolute left-1/2 top-3.5 z-20 h-5 w-24 -translate-x-1/2 rounded-full bg-zinc-950" />
+        <div className="relative overflow-hidden rounded-[1.75rem] bg-[#0B0713] min-h-[560px]">
+          {/* brilho de fundo, o mesmo clima do app */}
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-amber-500/20 blur-3xl" />
+
+          <div className="relative px-4 pb-6 pt-11">
+            <p className="text-center text-[13px] font-semibold text-white/90">Minha carteira</p>
+
+            {nothingOn ? (
+              <div className="mt-24 px-6 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5">
+                  <Gift className="h-6 w-6 text-zinc-600" />
+                </div>
+                <p className="mt-4 text-sm font-semibold text-zinc-400">Nada aparece aqui</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-zinc-600">
+                  Com tudo desligado, o cliente abre a carteira e encontra uma tela vazia. Ligue ao menos um mecanismo.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 space-y-3.5">
+                {/* Cartela */}
+                {cfg.stampEnabled && (
+                  <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/12 to-transparent p-4">
+                    <div className="flex items-baseline justify-between">
+                      <p className="text-[13px] font-bold text-white">Cartão de selos</p>
+                      <p className="text-[11px] text-amber-300/90">{filled}/{cfg.stampGoal}</p>
+                    </div>
+                    <div className="mt-3.5 flex flex-wrap gap-2">
+                      {Array.from({ length: cfg.stampGoal }).map((_, i) => {
+                        const isLast = i === cfg.stampGoal - 1;
+                        const done = i < filled;
+                        return (
+                          <div
+                            key={i}
+                            className={cn(
+                              "flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold transition-all",
+                              done
+                                ? "bg-gradient-to-br from-amber-300 to-amber-500 text-zinc-900 shadow-lg shadow-amber-500/25"
+                                : isLast
+                                  ? "border-2 border-dashed border-amber-400/50 text-amber-400/60"
+                                  : "border-2 border-dashed border-white/12 text-transparent"
+                            )}
+                          >
+                            {isLast && !done ? <Gift className="h-3.5 w-3.5" /> : done ? <Scissors className="h-3.5 w-3.5" /> : "•"}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-3.5 text-[11px] text-zinc-400">
+                      {remaining === 0 ? (
+                        <span className="font-semibold text-amber-300">Cartela completa! Prêmio liberado 🎉</span>
+                      ) : (
+                        <>Faltam <span className="font-semibold text-white">{remaining}</span> {remaining === 1 ? "corte" : "cortes"} para ganhar{" "}
+                          <span className="font-semibold text-amber-300">{cfg.stampRewardLabel || "seu prêmio"}</span></>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {/* Pontos */}
+                {cfg.loyaltyEnabled && (
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] text-zinc-500">Seus pontos</p>
+                        <p className="mt-0.5 text-2xl font-black tracking-tight text-white">{cfg.pointsPerReal * 50}</p>
+                      </div>
+                      <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold text-amber-300">
+                        {cfg.pointsPerReal * 50 >= cfg.goldThreshold ? "OURO" : cfg.pointsPerReal * 50 >= cfg.silverThreshold ? "PRATA" : "BRONZE"}
+                      </span>
+                    </div>
+                    <ProgressToNextTier cfg={cfg} points={cfg.pointsPerReal * 50} />
+                  </div>
+                )}
+
+                {/* Indicação */}
+                {cfg.referralEnabled && (
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-4">
+                    <p className="text-[13px] font-bold text-white">Indique um amigo</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
+                      Você ganha <span className="text-amber-300">{cfg.referralReferrerReward || "—"}</span> e ele ganha{" "}
+                      <span className="text-amber-300">{cfg.referralFriendReward || "—"}</span>.
+                    </p>
+                    <div className="mt-3 flex items-center justify-between rounded-xl border border-dashed border-white/15 bg-black/30 px-3.5 py-2.5">
+                      <span className="font-mono text-lg font-black tracking-[0.2em] text-white">XAN308</span>
+                      <Copy className="h-3.5 w-3.5 text-zinc-500" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressToNextTier({ cfg, points }: { cfg: Config; points: number }) {
+  const isGold = points >= cfg.goldThreshold;
+  if (isGold) return <p className="mt-3 text-[11px] text-amber-300">Faixa máxima alcançada.</p>;
+
+  const target = points >= cfg.silverThreshold ? cfg.goldThreshold : cfg.silverThreshold;
+  const floor = points >= cfg.silverThreshold ? cfg.silverThreshold : 0;
+  const label = points >= cfg.silverThreshold ? "Ouro" : "Prata";
+  const pct = Math.max(0, Math.min(100, ((points - floor) / Math.max(1, target - floor)) * 100));
+
+  return (
+    <div className="mt-3">
+      <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-300 transition-all duration-500" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="mt-2 text-[11px] text-zinc-500">
+        Faltam <span className="font-semibold text-zinc-300">{Math.max(0, target - points)}</span> pontos para {label}
+      </p>
+    </div>
+  );
+}
+
+/* ============================ Peças ============================ */
+
+function StatCard({ icon: Icon, value, label, tone, onClick }: {
+  icon: React.ElementType; value: string; label: string; tone: "amber" | "emerald" | "off"; onClick?: () => void;
+}) {
+  const tones = {
+    amber: "border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent text-amber-400",
+    emerald: "border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent text-emerald-400",
+    off: "border-zinc-800 bg-zinc-900/40 text-zinc-600",
+  }[tone];
+
+  const Tag = onClick ? "button" : "div";
+  return (
+    <Tag
+      onClick={onClick}
+      className={cn("group flex items-center gap-3.5 rounded-2xl border p-4 text-left transition-all", tones, onClick && "hover:scale-[1.01] cursor-pointer")}
+    >
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/5">
+        <Icon className="h-4.5 w-4.5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-lg font-black leading-none tracking-tight text-white">{value}</p>
+        <p className="mt-1 truncate text-[11px] text-zinc-500">{label}</p>
+      </div>
+      {onClick && <ChevronRight className="ml-auto h-4 w-4 flex-shrink-0 text-zinc-600 transition-transform group-hover:translate-x-0.5" />}
+    </Tag>
+  );
+}
+
+function SegmentedTabs({ tab, onChange, pendingCount }: {
+  tab: "programa" | "premios"; onChange: (t: "programa" | "premios") => void; pendingCount: number;
 }) {
   return (
-    <div className={cn("rounded-2xl border bg-zinc-900 p-5 transition-colors", enabled ? "border-zinc-700" : "border-zinc-800", className)}>
-      <div className="flex items-start gap-3">
-        <div className={cn("flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-colors", enabled ? "bg-amber-500/15" : "bg-zinc-800")}>
-          <Icon className={cn("w-[18px] h-[18px]", enabled ? "text-amber-400" : "text-zinc-600")} />
+    <div className="relative flex w-fit gap-1 rounded-xl border border-zinc-800 bg-zinc-900/70 p-1">
+      {([["programa", "Programa"], ["premios", "Prêmios a entregar"]] as const).map(([id, label]) => (
+        <button
+          key={id}
+          onClick={() => onChange(id)}
+          className={cn(
+            "relative flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all",
+            tab === id ? "bg-zinc-100 text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+          )}
+        >
+          {label}
+          {id === "premios" && pendingCount > 0 && (
+            <span className={cn(
+              "flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1 text-[10px] font-black",
+              tab === id ? "bg-zinc-900 text-white" : "bg-emerald-500 text-zinc-900"
+            )}>
+              {pendingCount}
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Section({ icon: Icon, title, hint, enabled, onToggle, children }: {
+  icon: React.ElementType; title: string; hint: string; enabled: boolean;
+  onToggle: (v: boolean) => void; children: React.ReactNode;
+}) {
+  return (
+    <div className={cn(
+      "overflow-hidden rounded-2xl border transition-all duration-300",
+      enabled ? "border-zinc-700/70 bg-zinc-900/70" : "border-zinc-800/60 bg-zinc-900/30"
+    )}>
+      <div className="flex items-start gap-3.5 p-5">
+        <div className={cn(
+          "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-colors",
+          enabled ? "bg-amber-500/15 text-amber-400" : "bg-zinc-800/60 text-zinc-600"
+        )}>
+          <Icon className="h-4.5 w-4.5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-bold text-white">{title}</h3>
-          <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{hint}</p>
+          <h3 className={cn("text-sm font-bold transition-colors", enabled ? "text-white" : "text-zinc-500")}>{title}</h3>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-500">{hint}</p>
         </div>
         <Toggle checked={enabled} onChange={onToggle} />
       </div>
-      {/* Some por completo quando desligado — configuração de algo inativo só
-          polui a tela e confunde. */}
-      {enabled && <div className="mt-5 space-y-4">{children}</div>}
+
+      {/* Colapsa quando desligado: esconder controle que não faz nada é o que
+          separa uma tela limpa de uma tela cheia de campo morto. */}
+      <div className={cn(
+        "grid transition-all duration-300 ease-out",
+        enabled ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+      )}>
+        <div className="overflow-hidden">
+          <div className="border-t border-zinc-800/60 p-5">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -253,12 +473,19 @@ function Section({ icon: Icon, title, hint, enabled, onToggle, children, classNa
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
-      onClick={() => onChange(!checked)}
+      type="button"
       role="switch"
       aria-checked={checked}
-      className={cn("relative h-6 w-11 flex-shrink-0 rounded-full transition-colors", checked ? "bg-amber-500" : "bg-zinc-700")}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200",
+        checked ? "bg-amber-500" : "bg-zinc-700"
+      )}
     >
-      <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform", checked ? "translate-x-[22px]" : "translate-x-0.5")} />
+      <span className={cn(
+        "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200",
+        checked ? "translate-x-[22px]" : "translate-x-0.5"
+      )} />
     </button>
   );
 }
@@ -266,77 +493,158 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-1.5">{label}</label>
+      <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-zinc-500">{label}</label>
       {children}
     </div>
   );
 }
 
-/** Salva ao sair do campo, não a cada tecla — senão cada dígito viraria uma
- * requisição e um estado intermediário inválido. */
-function NumberInput({ value, min, max, onCommit, suffix }: { value: number; min: number; max: number; onCommit: (v: number) => void; suffix?: string }) {
-  const [local, setLocal] = useState(String(value));
-  useEffect(() => setLocal(String(value)), [value]);
+function Note({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative">
+    <p className="mt-4 rounded-xl border border-zinc-800/80 bg-zinc-950/50 px-3.5 py-3 text-[11px] leading-relaxed text-zinc-500">
+      {children}
+    </p>
+  );
+}
+
+function SliderRow({ label, value, max, onChange }: { label: string; value: number; max: number; onChange: (v: number) => void }) {
+  return (
+    <div className="mt-4 flex items-center gap-3 rounded-xl border border-zinc-800/80 bg-zinc-950/50 px-3.5 py-3">
+      <span className="flex-shrink-0 text-[11px] text-zinc-500">{label}</span>
+      <input
+        type="range"
+        min={0}
+        max={max}
+        value={Math.min(value, max)}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-700 accent-amber-500"
+      />
+      <span className="w-16 flex-shrink-0 text-right text-[11px] font-semibold text-amber-300">
+        {Math.min(value, max)} {Math.min(value, max) === 1 ? "selo" : "selos"}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Inputs commitam no blur (e no Enter), nunca a cada tecla: por tecla dispara
+ * um PATCH por dígito e ainda grava estados intermediários inválidos — digitar
+ * "10" passaria por "1".
+ */
+function NumberInput({ value, min, max, onCommit, suffix }: {
+  value: number; min: number; max: number; onCommit: (v: number) => void; suffix?: string;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => { setDraft(String(value)); }, [value]);
+
+  const commit = () => {
+    const n = Number(draft);
+    if (!Number.isFinite(n) || n < min || n > max) { setDraft(String(value)); return; }
+    if (n !== value) onCommit(n);
+  };
+
+  return (
+    <div className="group relative">
       <input
         type="number"
+        value={draft}
         min={min}
         max={max}
-        value={local}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={() => {
-          const n = Number(local);
-          if (Number.isFinite(n) && n >= min && n <= max && n !== value) onCommit(n);
-          else setLocal(String(value));
-        }}
-        className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition-colors"
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+        className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/80 px-3.5 py-2.5 pr-16 text-sm font-semibold text-white outline-none transition-colors focus:border-amber-500/60 focus:ring-2 focus:ring-amber-500/15"
       />
-      {suffix && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-600 pointer-events-none">{suffix}</span>}
+      {suffix && <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-zinc-600">{suffix}</span>}
     </div>
   );
 }
 
 function TextInput({ value, placeholder, onCommit }: { value: string; placeholder: string; onCommit: (v: string) => void }) {
-  const [local, setLocal] = useState(value);
-  useEffect(() => setLocal(value), [value]);
+  const [draft, setDraft] = useState(value);
+  useEffect(() => { setDraft(value); }, [value]);
+
   return (
     <input
-      value={local}
+      value={draft}
       placeholder={placeholder}
-      onChange={(e) => setLocal(e.target.value)}
-      onBlur={() => { if (local.trim() && local !== value) onCommit(local.trim()); else setLocal(value); }}
-      className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => { if (draft !== value) onCommit(draft); }}
+      onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+      className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/80 px-3.5 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-amber-500/60 focus:ring-2 focus:ring-amber-500/15"
     />
   );
 }
 
-function Tier({ label, color, from, to }: { label: string; color: string; from: number; to?: number }) {
+function TierLadder({ cfg }: { cfg: Config }) {
+  const tiers = [
+    { label: "Bronze", from: 0, to: cfg.silverThreshold - 1, color: "from-orange-700/40 to-orange-900/20 border-orange-700/40 text-orange-300", discount: 0 },
+    { label: "Prata", from: cfg.silverThreshold, to: cfg.goldThreshold - 1, color: "from-slate-400/25 to-slate-600/10 border-slate-400/30 text-slate-200", discount: cfg.silverDiscount },
+    { label: "Ouro", from: cfg.goldThreshold, to: undefined, color: "from-amber-400/25 to-amber-600/10 border-amber-400/35 text-amber-200", discount: cfg.goldDiscount },
+  ];
+
   return (
-    <span className={cn("rounded-lg px-2.5 py-1 text-[11px] font-semibold", color)}>
-      {label} · {from}{to !== undefined ? `–${to}` : "+"} pts
-    </span>
+    <div className="flex gap-2">
+      {tiers.map((t, i) => (
+        <div key={t.label} className={cn("flex-1 rounded-xl border bg-gradient-to-br p-3", t.color)}>
+          <div className="flex items-center gap-1.5">
+            {i === 2 && <Crown className="h-3 w-3" />}
+            {i === 1 && <Star className="h-3 w-3" />}
+            <span className="text-[11px] font-bold">{t.label}</span>
+          </div>
+          <p className="mt-1.5 text-[10px] leading-tight opacity-70">
+            {t.to === undefined ? `${t.from.toLocaleString("pt-BR")}+ pts` : `${t.from.toLocaleString("pt-BR")}–${t.to.toLocaleString("pt-BR")}`}
+          </p>
+          {t.discount > 0 && (
+            <p className="mt-1 text-[10px] font-semibold">{Math.round(t.discount * 100)}% off</p>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 
-/** A prévia é o que vende a ideia: o gestor vê o cartão do jeito que o cliente
- * vai ver, e entende na hora o que está configurando. */
-function StampPreview({ goal, filled }: { goal: number; filled: number }) {
-  const shown = Math.min(goal, 12);
+function RewardsQueue({ rewards, onRedeem }: { rewards: Reward[]; onRedeem: (r: Reward) => void }) {
+  if (rewards.length === 0) {
+    return (
+      <div className="rounded-2xl border border-zinc-800/60 bg-zinc-900/30 px-6 py-20 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800/50">
+          <Gift className="h-7 w-7 text-zinc-600" />
+        </div>
+        <p className="mt-5 text-sm font-semibold text-zinc-300">Nenhum prêmio esperando</p>
+        <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-zinc-600">
+          Quando um cliente fechar a cartela ou trouxer um amigo, o prêmio aparece aqui para você entregar no balcão.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {Array.from({ length: shown }).map((_, i) => (
+    <div className="space-y-2.5">
+      {rewards.map((r) => (
         <div
-          key={i}
-          className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all",
-            i < filled ? "border-amber-400 bg-amber-400 text-zinc-900" : "border-dashed border-zinc-700 text-zinc-700"
-          )}
+          key={r.id}
+          className="group flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 transition-colors hover:border-emerald-500/30"
         >
-          {i === goal - 1 && goal <= 12 ? <Sparkles className="w-3.5 h-3.5" /> : <Scissors className="w-3.5 h-3.5" />}
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-transparent text-emerald-400">
+            <Gift className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-white">{r.clientName}</p>
+            <p className="truncate text-xs font-medium text-amber-300">{r.label}</p>
+            <p className="mt-0.5 text-[11px] text-zinc-600">
+              {SOURCE_LABEL[r.source] ?? r.source} · {formatDateTime(r.createdAt)}
+              {r.clientPhone ? ` · ${r.clientPhone}` : ""}
+            </p>
+          </div>
+          <button
+            onClick={() => onRedeem(r)}
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-zinc-900 transition-colors hover:bg-emerald-400"
+          >
+            <Check className="h-3.5 w-3.5" /> Entregar
+          </button>
         </div>
       ))}
-      {goal > 12 && <span className="self-center text-xs text-zinc-600">+{goal - 12}</span>}
     </div>
   );
 }
