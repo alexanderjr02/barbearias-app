@@ -649,7 +649,7 @@ model PlatformInvoice {
   previousPlan String?   // set only on PLAN_CHANGE — powers MRR movement (expansion/contraction) reporting
   amount       Float
   status       String    @default("PENDING") // PENDING | PAID | FAILED | REFUNDED
-  reason       String    // PLAN_CHANGE | RENEWAL
+  reason       String    // PLAN_CHANGE | RENEWAL | SETUP (taxa de implantação, uma vez)
   periodStart  DateTime
   periodEnd    DateTime
   paidAt       DateTime?

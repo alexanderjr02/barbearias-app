@@ -1,3 +1,4 @@
+import { DEFAULT_PLAN_PRICING } from "../src/lib/planPricingDefaults";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -49,11 +50,9 @@ async function main() {
   // Plan pricing/limits, editable later from /admin/settings — matches the
   // prices already shown in PlanContext.tsx (FREE/"Starter" is R$29, not
   // actually free) so nothing changes for existing gestors on first deploy.
-  const planPricingDefaults: Record<string, { price: number; appointmentsLimit: number | null; staffLimit: number | null }> = {
-    FREE: { price: 29, appointmentsLimit: 50, staffLimit: 3 },
-    PRO: { price: 79, appointmentsLimit: null, staffLimit: 10 },
-    ENTERPRISE: { price: 299, appointmentsLimit: null, staffLimit: null },
-  };
+  // Importado de src/lib/planPricingDefaults.ts — a semente tinha uma tabela
+  // própria (29/79/299) que ficou congelada em preços de duas tabelas atrás.
+  const planPricingDefaults = DEFAULT_PLAN_PRICING;
   for (const [plan, pricing] of Object.entries(planPricingDefaults)) {
     await prisma.platformSetting.upsert({
       where: { key: `plan_pricing:${plan}` },
