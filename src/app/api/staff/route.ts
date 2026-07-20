@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { staffCreateSchema, firstFieldError } from "@/lib/validation";
+import { staffLimitError } from "@/lib/planLimits";
 
 export async function GET() {
   const session = await requireBarbershopSession();
@@ -36,6 +37,10 @@ export async function GET() {
       specialties: member.specialties,
       avatar: member.avatar,
       commissionRate: member.commissionRate,
+      cpf: member.cpf,
+      employmentType: member.employmentType,
+      hireDate: member.hireDate,
+      pixKey: member.pixKey,
       isActive: member.isActive,
       appointmentsCount: member.appointments.length,
       revenue,
@@ -62,7 +67,13 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: firstFieldError(parsed.error) }, { status: 400 });
   }
-  const { name, role, specialties, avatar, commissionRate, email, password } = parsed.data;
+  const { name, role, specialties, avatar, commissionRate, email, password, cpf, employmentType, hireDate, pixKey } = parsed.data;
+
+  // Plan limit — block adding a barber beyond what the plan allows.
+  const limitError = await staffLimitError(session.barbershopId);
+  if (limitError) {
+    return NextResponse.json({ error: limitError, upgradeRequired: true }, { status: 403 });
+  }
 
   // Optionally create a login for this barber (Role.BARBER) so they can use
   // the mobile app. Without email/password, the Staff row is profile-only.
@@ -90,6 +101,10 @@ export async function POST(request: NextRequest) {
       specialties,
       avatar,
       commissionRate: commissionRate ?? 0.4,
+      cpf,
+      employmentType,
+      hireDate: hireDate ? new Date(hireDate) : undefined,
+      pixKey,
       barbershopId: session.barbershopId,
       userId,
     },

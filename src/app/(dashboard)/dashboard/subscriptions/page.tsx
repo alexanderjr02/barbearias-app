@@ -12,6 +12,7 @@ import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal"
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { usePlan } from "@/context/PlanContext";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
+import { PaymentConnect } from "@/components/billing/PaymentConnect";
 
 interface Visit {
   date: string;
@@ -292,6 +293,8 @@ export default function SubscriptionsPage() {
           </button>
         }
       />
+
+      <PaymentConnect />
 
       {/* Stat row */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

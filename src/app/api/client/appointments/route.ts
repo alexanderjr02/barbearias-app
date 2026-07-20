@@ -21,6 +21,7 @@ export async function GET() {
       staff: true,
       barbershop: { select: { name: true, slug: true } },
       review: { select: { id: true } },
+      tip: { select: { id: true } },
     },
     orderBy: { date: "desc" },
     take: 50,
@@ -28,6 +29,6 @@ export async function GET() {
 
   type AppointmentRow = (typeof appointments)[number];
   return NextResponse.json(
-    appointments.map((a: AppointmentRow) => ({ ...a, hasReview: !!a.review, review: undefined }))
+    appointments.map((a: AppointmentRow) => ({ ...a, hasReview: !!a.review, hasTip: !!a.tip, review: undefined, tip: undefined }))
   );
 }

@@ -33,9 +33,9 @@ O que falta hoje não é "fazer o sistema funcionar" — é **conectar peças de
 
 O mesmo aplicativo reconhece quem está logado e mostra a tela certa:
 
-- **Dono/gerente**: praticamente tudo que existe no painel do computador, incluindo os gráficos, dentro do bolso.
-- **Barbeiro**: agenda do dia em formato de calendário, cadastro rápido de cliente novo, lista dos próprios clientes e visão de quanto já ganhou de comissão.
-- **Cliente final**: agenda um horário escolhendo o barbeiro (com foto) e o serviço, acompanha o histórico de agendamentos e vê seus pontos de fidelidade.
+- **Dono/gerente**: praticamente tudo que existe no painel do computador, incluindo os gráficos, dentro do bolso — mais o **Copiloto** (assistente de negócio) num botão fixo.
+- **Barbeiro**: agenda do dia com **check-in ao vivo** (chegou → em atendimento → concluído), finalização do corte com **foto do resultado + "receita" do corte** (como foi feito, pra repetir igual na próxima), foto de referência e preferências do cliente na hora do atendimento, ganhos/comissão + **gorjetas**, e um **Copiloto pessoal** (quanto vai receber, próximo cliente, quem sumiu).
+- **Cliente final**: agenda escolhendo barbeiro e serviço, guarda seus cortes numa **Carteira de Cortes**, vê a **fila ao vivo** (sua posição e a espera estimada), dá **gorjeta via PIX**, avalia o atendimento e conversa com o assistente (podendo mandar **foto de referência**).
 
 O app já se adapta à identidade visual de cada barbearia (cores, logo, banner) e já funciona em português, incluindo o calendário de escolha de data.
 
@@ -43,13 +43,22 @@ O app já se adapta à identidade visual de cada barbearia (cores, logo, banner)
 
 Qualquer pessoa, sem precisar de conta, consegue: escolher o serviço → escolher o barbeiro → escolher data e horário (só aparecem horários realmente livres) → informar nome e WhatsApp → confirmar. Isso já está no ar e gravando de verdade no banco de dados da barbearia.
 
-### 2.4 Chatbot
+### 2.4 Assistente virtual e Copiloto (IA)
 
-Existe um assistente virtual flutuante que responde perguntas comuns (horário de funcionamento, serviços, preços, como agendar) automaticamente. Hoje ele reconhece **palavras-chave**, não conversa livremente — está descrito no que falta abaixo.
+Há duas frentes de inteligência, ambas **prontas e esperando só a chave da IA** ser ligada (com a chave, elas passam a conversar livremente; sem ela, respondem com respostas prontas — nada quebra):
 
-### 2.5 Planos de assinatura (Starter / Pro / White Label)
+- **Assistente do cliente**: agenda, remarca, cancela e consulta horários de verdade, entra na fila de espera e responde pelas perguntas frequentes que o dono cadastrar. Já aceita **foto de referência** no chat.
+- **Copiloto do dono e do barbeiro**: um assistente de negócio que, de manhã, já mostra o resumo do dia (clientes que sumiram, horários vazios, agendamentos a confirmar, estoque baixo) com **ações de um toque**, e responde perguntas como "quanto faturei essa semana?" — além de **cadastrar serviço, mudar preço e dar folga por conversa**.
 
-A estrutura de planos já existe e já diferencia quantos barbeiros e agendamentos cada plano permite. A troca de plano em si já funciona no sistema.
+### 2.5 Gorjeta, fila ao vivo e antes/depois
+
+- **Gorjeta via PIX**: no fim do atendimento o cliente pode deixar uma gorjeta pela chave PIX da barbearia; o barbeiro vê o total nos Ganhos.
+- **Fila ao vivo**: o cliente acompanha em tempo real sua posição na fila e o tempo estimado de espera.
+- **Antes/depois automático**: a foto do resultado do corte vai direto pra Carteira de Cortes do cliente e vira o portfólio do barbeiro.
+
+### 2.6 Planos de assinatura (Essencial / Pro / White Label)
+
+Três planos — **Essencial R$ 79**, **Pro R$ 149** e **White Label R$ 399** — com a **IA (Copiloto e chatbot inteligente) exclusiva do Pro pra cima**. Os preços e limites são editáveis no painel administrativo. A troca de plano já funciona; a cobrança automática ainda não (ver abaixo).
 
 ---
 
@@ -59,23 +68,22 @@ Organizado por impacto — o que trava a venda primeiro aparece no topo.
 
 | # | O que falta | Por que importa | Tamanho do esforço |
 |---|---|---|---|
-| 1 | **Cobrança automática (gateway de pagamento)** | Hoje a troca de plano é manual, no próprio sistema — não existe cartão de crédito, boleto ou Pix cobrando de verdade. Sem isso, não dá para vender assinatura sem alguém trocar o plano manualmente para cada cliente. | Médio–Alto |
-| 2 | **Diferença real entre os planos Pro e White Label** | Hoje os dois planos liberam exatamente as mesmas funções — só o Starter é mais limitado. Antes de cobrar preços diferentes, os planos pagos precisam ter benefícios diferentes de verdade. | Baixo |
-| 3 | **Envio real de mensagens (WhatsApp/SMS/e-mail)** | A tela de Marketing já existe (campanhas, lembretes, aniversariantes), mas hoje ela não dispara mensagem de verdade — é preciso contratar e ligar um provedor de envio (ex.: WhatsApp Business API, um serviço de SMS ou e-mail). | Médio |
-| 4 | **Chatbot com inteligência artificial** | Hoje o chatbot só reconhece frases parecidas com um roteiro fixo. Ligar a uma IA de verdade (mesmo modelo usado em assistentes modernos) faria ele responder qualquer pergunta do cliente com base nos dados reais da barbearia. | Médio |
-| 5 | **Publicação do app nas lojas (Google Play / App Store)** | O app já funciona em Android, iPhone e navegador, mas ainda não está publicado nas lojas — hoje só roda em modo de teste/instalação manual. Publicar exige conta de desenvolvedor nas duas lojas e passar pela revisão de cada uma. | Médio |
-| 6 | **Identidade visual própria por cliente grande (White Label)** | Para clientes do plano mais caro, a promessa é o app parecer "deles" (nome, ícone, cores próprias). Hoje a barbearia já personaliza cor/logo dentro do app, mas um app com nome e ícone próprios na loja é um projeto à parte por cliente. | Alto (por cliente) |
-| 7 | **Segurança para ambiente de produção** | O sistema hoje libera acesso de forma mais aberta entre partes internas (pensado para desenvolvimento). Antes de colocar dados reais de clientes pagantes, essa liberação precisa ser restringida ao necessário. | Baixo–Médio |
-| 8 | **Banco de dados de produção** | Hoje os dados ficam num arquivo local de banco de dados, adequado para testes. Para operar com clientes reais ao mesmo tempo, o banco precisa migrar para um serviço de banco de dados hospedado (a troca é simples, pois o sistema já foi construído pensando nisso). | Baixo–Médio |
-| 9 | **Previsão de demanda / relatórios avançados com IA** | Recurso do plano White Label mencionado no projeto original (ex.: prever os dias de maior movimento). Depende de a barbearia já ter uso real acumulado — só faz sentido depois que houver clientes usando o sistema por um tempo. | Alto |
-| 10 | **Marketplace entre barbearias** | Ideia de longo prazo do projeto original, sem relação direta com a operação de uma barbearia individual. Não é bloqueio para vender o produto atual. | Alto |
+| 1 | **Ligar a chave da IA** | O Copiloto e o chatbot inteligente já estão **construídos** — falta só colar a chave da Anthropic (`ANTHROPIC_API_KEY`) para eles saírem do modo "respostas prontas" e passarem a conversar de verdade. É uma conexão, não um desenvolvimento. | Baixo |
+| 2 | **Cobrança automática (gateway de pagamento)** | Hoje a troca de plano é manual — não existe cartão/boleto/Pix cobrando a mensalidade sozinho. Sem isso, não dá para vender assinatura em escala. (A estrutura de Mercado Pago já existe no código.) | Médio–Alto |
+| 3 | **Teste grátis de 14 dias** | Combinado como isca de venda, mas ainda não implementado (exige controlar quando o teste começa/termina e o que acontece ao expirar). | Baixo–Médio |
+| 4 | **Conectar o WhatsApp oficial** | O envio de mensagens **e** o robô de atendimento 24h no WhatsApp já estão prontos no código; falta criar/verificar a conta no WhatsApp Business (Meta) e colar as credenciais. | Médio (burocracia da Meta) |
+| 5 | **Voz/áudio no chat** | Falar em vez de digitar. Diferente do resto, precisa contratar um serviço de transcrição de voz à parte — não é só "ligar uma chave". | Médio |
+| 6 | **Publicação do app nas lojas (Google Play / App Store)** | O app já funciona em Android, iPhone e navegador, mas ainda não está publicado. Publicar exige conta de desenvolvedor nas duas lojas e passar pela revisão de cada uma. | Médio |
+| 7 | **Identidade visual própria por cliente grande (White Label)** | Para o plano mais caro, a promessa é o app parecer "deles" (nome, ícone próprios na loja). A personalização de cor/logo dentro do app já existe; um app publicado com marca própria é um projeto à parte por cliente. | Alto (por cliente) |
+| 8 | **Segurança e banco para produção** | Restringir acessos internos ao necessário e migrar o banco (hoje um arquivo local, ótimo para testes) para um serviço hospedado. A troca é simples, pois o sistema já foi construído pensando nisso. | Baixo–Médio |
 
 ### Como ler esta lista
 
-- Os itens **1 a 4** são o que normalmente separa "sistema funcionando" de "produto vendável em escala" — nenhum deles exige refazer o que já existe, são conexões novas.
-- Os itens **5 e 6** só importam no momento de efetivamente distribuir o app para o público final ou fechar um cliente grande.
-- Os itens **7 e 8** são etapas de preparação para produção, feitas uma vez só, geralmente pouco antes do lançamento.
-- Os itens **9 e 10** são diferenciais de longo prazo, não pré-requisitos de lançamento.
+- O item **1** é praticamente um botão a ligar — a IA já está feita.
+- Os itens **2 a 4** são o que separa "sistema completo" de "produto cobrando sozinho e atendendo no WhatsApp" — são conexões/burocracias, não reescrita.
+- Os itens **5 a 8** só importam mais perto do lançamento ao público ou de fechar um cliente grande.
+
+> A ideia antiga de "marketplace entre barbearias" foi **removida** do produto — não fazia sentido para a operação de uma barbearia individual.
 
 ---
 

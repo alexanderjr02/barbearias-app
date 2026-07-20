@@ -22,6 +22,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   final _passwordController = TextEditingController();
   DateTime? _dateOfBirth;
   bool _obscure = true;
+  String _password = '';
+  // Brand accent (set from the theme at build time so the white-label brand
+  // color reaches the borderless helpers too).
+  Color _accent = const Color(0xFFF59E0B);
 
   @override
   void dispose() {
@@ -81,10 +85,12 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   @override
   Widget build(BuildContext context) {
     final sessionProvider = context.watch<SessionProvider>();
+    _accent = Theme.of(context).colorScheme.primary;
+    final accentLight = Color.lerp(_accent, Colors.white, 0.22) ?? _accent;
 
     return Scaffold(
       body: AuroraBackground(
-        accent: const Color(0xFFF59E0B),
+        accent: _accent,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -192,6 +198,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                               controller: _passwordController,
                               obscureText: _obscure,
                               style: const TextStyle(color: Colors.white),
+                              onChanged: (v) => setState(() => _password = v),
                               decoration: _inputDecoration('Senha', Icons.lock_outline_rounded).copyWith(
                                 suffixIcon: IconButton(
                                   icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: Colors.white38, size: 20),
@@ -204,6 +211,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                 return null;
                               },
                             ),
+                            if (_password.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              _PasswordStrength(password: _password),
+                            ],
                             if (sessionProvider.error != null) ...[
                               const SizedBox(height: 12),
                               Text(sessionProvider.error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
@@ -211,7 +222,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                             const SizedBox(height: 22),
                             PulseButton(
                               onPressed: sessionProvider.isBusy ? null : () => _submit(sessionProvider),
-                              gradient: const LinearGradient(colors: [Color(0xFFFBBF24), Color(0xFFF59E0B)]),
+                              gradient: LinearGradient(colors: [accentLight, _accent]),
                               child: sessionProvider.isBusy
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                                   : const Text('Criar minha conta', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),
@@ -238,7 +249,80 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
         fillColor: Colors.white.withValues(alpha: 0.05),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white12)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFF59E0B))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: _accent, width: 1.5)),
         errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.redAccent)),
       );
+}
+
+/// Live password strength meter — three segments that fill and shift color
+/// as the password gains length and character variety, mirroring the web
+/// signup so the two surfaces feel like one product.
+class _PasswordStrength extends StatelessWidget {
+  final String password;
+  const _PasswordStrength({required this.password});
+
+  int get _score {
+    var s = 0;
+    if (password.length >= 8) s++;
+    if (password.length >= 12) s++;
+    if (RegExp(r'[a-z]').hasMatch(password) && RegExp(r'[A-Z]').hasMatch(password)) s++;
+    if (RegExp(r'[0-9]').hasMatch(password) && RegExp(r'[^a-zA-Z0-9]').hasMatch(password)) s++;
+    return s;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final score = _score;
+    const labels = ['Muito fraca', 'Fraca', 'Razoável', 'Forte'];
+    const colors = [
+      Color(0xFFEF4444),
+      Color(0xFFF97316),
+      Color(0xFFEAB308),
+      Color(0xFF10B981),
+    ];
+    final level = score.clamp(0, 3);
+    final barColor = colors[level];
+
+    Widget rule(String label, bool ok) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(ok ? Icons.check_circle_rounded : Icons.circle_outlined, size: 13, color: ok ? const Color(0xFF10B981) : Colors.white24),
+            const SizedBox(width: 4),
+            Text(label, style: TextStyle(fontSize: 11, color: ok ? const Color(0xFF10B981) : Colors.white38)),
+          ],
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            for (var i = 0; i < 3; i++)
+              Expanded(
+                child: Container(
+                  height: 4,
+                  margin: EdgeInsets.only(right: i < 2 ? 5 : 0),
+                  decoration: BoxDecoration(
+                    color: i <= level ? barColor : Colors.white12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            const SizedBox(width: 8),
+            Text(labels[level], style: TextStyle(fontSize: 10.5, color: barColor, fontWeight: FontWeight.w600)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 4,
+          children: [
+            rule('8+ caracteres', password.length >= 8),
+            rule('Uma letra', RegExp(r'[a-zA-Z]').hasMatch(password)),
+            rule('Um número', RegExp(r'[0-9]').hasMatch(password)),
+          ],
+        ),
+      ],
+    );
+  }
 }

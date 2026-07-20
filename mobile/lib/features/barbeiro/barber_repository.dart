@@ -1,27 +1,87 @@
+import 'package:dio/dio.dart' as dio;
+import 'package:image_picker/image_picker.dart';
 import '../../core/api/api_client.dart';
 import '../../core/models/notification_models.dart';
 
 export '../../core/models/notification_models.dart';
 
+/// The "receita do corte" (ficha técnica) — how a cut was executed, so it can
+/// be reproduced identically on the next visit.
+class CutRecipe {
+  final String? machine;
+  final String? finish;
+  final String? products;
+  final String? notes;
+  final String? date;
+
+  CutRecipe({this.machine, this.finish, this.products, this.notes, this.date});
+
+  bool get isEmpty => [machine, finish, products, notes].every((e) => e == null || e.isEmpty);
+
+  factory CutRecipe.fromJson(Map<String, dynamic> j) => CutRecipe(
+        machine: j['recipeMachine'] as String?,
+        finish: j['recipeFinish'] as String?,
+        products: j['recipeProducts'] as String?,
+        notes: j['recipeNotes'] as String?,
+        date: j['date'] as String?,
+      );
+}
+
+class BarberTipEntry {
+  final String id;
+  final double amount;
+  final String status;
+  final String clientName;
+
+  BarberTipEntry({required this.id, required this.amount, required this.status, required this.clientName});
+
+  factory BarberTipEntry.fromJson(Map<String, dynamic> j) => BarberTipEntry(
+        id: j['id'] as String,
+        amount: (j['amount'] as num).toDouble(),
+        status: j['status'] as String,
+        clientName: j['clientName'] as String? ?? 'Cliente',
+      );
+}
+
+class BarberTips {
+  final double total;
+  final int count;
+  final List<BarberTipEntry> tips;
+
+  BarberTips({required this.total, required this.count, required this.tips});
+
+  factory BarberTips.fromJson(Map<String, dynamic> j) => BarberTips(
+        total: (j['total'] as num?)?.toDouble() ?? 0,
+        count: j['count'] as int? ?? 0,
+        tips: ((j['tips'] as List?) ?? []).map((e) => BarberTipEntry.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+}
+
 class BarberAppointment {
   final String id;
   final String clientName;
   final String clientPhone;
+  final String? clientId;
   final String date;
   final String startTime;
   final String status;
   final double totalPrice;
   final String serviceName;
+  final String? referencePhoto;
+  final String? resultPhoto;
 
   BarberAppointment({
     required this.id,
     required this.clientName,
     required this.clientPhone,
+    this.clientId,
     required this.date,
     required this.startTime,
     required this.status,
     required this.totalPrice,
     required this.serviceName,
+    this.referencePhoto,
+    this.resultPhoto,
   });
 
   factory BarberAppointment.fromJson(Map<String, dynamic> json) =>
@@ -29,11 +89,14 @@ class BarberAppointment {
         id: json['id'],
         clientName: json['clientName'],
         clientPhone: json['clientPhone'],
+        clientId: json['client']?['id'] as String? ?? json['clientId'] as String?,
         date: json['date'],
         startTime: json['startTime'],
         status: json['status'],
         totalPrice: (json['totalPrice'] as num).toDouble(),
         serviceName: json['service']['name'],
+        referencePhoto: json['referencePhoto'] as String?,
+        resultPhoto: json['resultPhoto'] as String?,
       );
 }
 
@@ -257,11 +320,12 @@ class BarberRepository {
     return data.map((e) => BarberAppointment.fromJson(e)).toList();
   }
 
-  Future<void> createClient({required String name, required String email, String? phone, required String password}) async {
+  Future<void> createClient({required String name, required String email, String? phone, required String password, String? dateOfBirth}) async {
     await ApiClient.instance.post('/clients', data: {
       'name': name,
       'email': email,
       if (phone != null && phone.isNotEmpty) 'phone': phone,
+      if (dateOfBirth != null && dateOfBirth.isNotEmpty) 'dateOfBirth': dateOfBirth,
       'password': password,
     });
   }
@@ -271,6 +335,55 @@ class BarberRepository {
       '/appointments/$appointmentId',
       data: {'status': status},
     );
+  }
+
+  /// Completes an appointment while recording the "depois" photo and the cut
+  /// recipe (ficha técnica) in one shot. The result photo also auto-lands in
+  /// the client's Carteira de Cortes (handled server-side).
+  Future<void> finalizeAppointment(
+    String appointmentId, {
+    String? resultPhoto,
+    String? machine,
+    String? finish,
+    String? products,
+    String? notes,
+    bool complete = true,
+  }) async {
+    await ApiClient.instance.patch('/appointments/$appointmentId', data: {
+      if (complete) 'status': 'COMPLETED',
+      if (resultPhoto != null) 'resultPhoto': resultPhoto,
+      'recipeMachine': machine ?? '',
+      'recipeFinish': finish ?? '',
+      'recipeProducts': products ?? '',
+      'recipeNotes': notes ?? '',
+    });
+  }
+
+  /// The most recent recipe recorded for a client, to pre-fill the next cut.
+  Future<CutRecipe?> lastRecipe(String clientId) async {
+    final data = await ApiClient.instance.get('/barber/last-recipe', query: {'clientId': clientId});
+    if (data == null) return null;
+    return CutRecipe.fromJson(data as Map<String, dynamic>);
+  }
+
+  /// Asks the AI to describe a reference photo in technical barber terms.
+  /// Returns null when the AI assistant isn't configured on the server.
+  Future<String?> analyzeReference(String imageUrl) async {
+    final data = await ApiClient.instance.post('/barber/analyze-reference', data: {'imageUrl': imageUrl}) as Map<String, dynamic>;
+    if (data['available'] != true) return null;
+    return data['description'] as String?;
+  }
+
+  Future<BarberTips> myTips() async {
+    final data = await ApiClient.instance.get('/barber/tips');
+    return BarberTips.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<String> uploadImage(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final formData = dio.FormData.fromMap({'file': dio.MultipartFile.fromBytes(bytes, filename: file.name)});
+    final result = await ApiClient.instance.post('/upload', data: formData);
+    return result['url'] as String;
   }
 
   Future<BarberStats> myStats() async {

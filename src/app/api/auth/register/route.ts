@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: firstFieldError(parsed.error) }, { status: 400 });
   }
-  const { name, email, password, phone, barbershopName, barbershopSlug, city, cnpj, plan } = parsed.data;
+  const { name, email, password, phone, barbershopName, barbershopSlug, city, state, address, zipCode, whatsapp, instagram, cnpj, plan } = parsed.data;
 
   try {
     const [existingUser, existingShop] = await Promise.all([
@@ -53,6 +53,11 @@ export async function POST(request: NextRequest) {
           name: barbershopName,
           slug: barbershopSlug,
           city,
+          state: state || null,
+          address: address || null,
+          zipCode: zipCode || null,
+          whatsapp: whatsapp || null,
+          instagram: instagram || null,
           cnpj,
           ownerId: user.id,
           plan: PLAN_BY_FORM_VALUE[plan ?? ""] ?? "FREE",

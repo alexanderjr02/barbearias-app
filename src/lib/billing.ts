@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { DEFAULT_PLAN_PRICING } from "./planPricingDefaults";
 
 export const PLANS = ["FREE", "PRO", "ENTERPRISE"] as const;
 export type PlatformPlan = (typeof PLANS)[number];
@@ -11,11 +12,79 @@ export type PlanPricing = {
 
 // Falls back to these if a PlatformSetting row hasn't been seeded yet — keeps
 // the app from crashing on a fresh DB before `npm run db:seed` has run.
-const DEFAULT_PRICING: Record<PlatformPlan, PlanPricing> = {
-  FREE: { price: 29, appointmentsLimit: 50, staffLimit: 3 },
-  PRO: { price: 79, appointmentsLimit: null, staffLimit: 10 },
-  ENTERPRISE: { price: 299, appointmentsLimit: null, staffLimit: null },
-};
+// Compartilhado com prisma/seed.ts para os dois nunca divergirem.
+const DEFAULT_PRICING: Record<PlatformPlan, PlanPricing> = DEFAULT_PLAN_PRICING;
+
+// Tiers that unlock the AI Copiloto (business assistant) + AI-powered client
+// chatbot. Gating this to the paid-up tiers protects margin, since every AI
+// turn costs an Anthropic API call.
+export function planHasAI(plan: string | null | undefined): boolean {
+  return plan === "PRO" || plan === "ENTERPRISE";
+}
+
+// Preços da REDE. A unidade primária (a mais antiga de cada dono) paga o plano
+// cheio; as demais entram como unidade adicional. Sem isto, cada unidade nova
+// seria faturada pelo preço do plano inteiro — uma rede de 3 lojas pagaria
+// 3x R$897 em vez de R$897 + 2x R$149.
+export const EXTRA_UNIT_PRICE = Number(process.env.EXTRA_UNIT_PRICE) || 149;
+
+// Taxa de implantação do White Label. ZERADA de propósito: ela existia para
+// pagar a publicação nas lojas (contas Apple/Google + o trabalho de submeter e
+// encarar a revisão), e o produto decidiu ficar no PWA — o cliente instala
+// pelo link, no mesmo dia, sem loja. Sem esse custo, "sem taxa de implantação"
+// virou argumento de venda contra quem cobra setup.
+//
+// A mecânica de cobrança continua no lugar: basta o admin definir um valor em
+// /admin/settings (ou a env) que a fatura volta a ser gerada. Em 0, nenhuma.
+export const WHITE_LABEL_SETUP_FEE = Number(process.env.WHITE_LABEL_SETUP_FEE) || 0;
+
+export interface NetworkPricing {
+  extraUnitPrice: number;
+  setupFee: number;
+}
+
+// Igual ao preço de plano, estes ficam em PlatformSetting para o admin poder
+// editar em /admin/settings sem deploy. As constantes acima são só o padrão
+// de uma base nova.
+export async function getNetworkPricing(): Promise<NetworkPricing> {
+  const rows = await prisma.platformSetting.findMany({
+    where: { key: { in: ["network_pricing:extra_unit", "network_pricing:setup_fee"] } },
+  });
+  const result: NetworkPricing = { extraUnitPrice: EXTRA_UNIT_PRICE, setupFee: WHITE_LABEL_SETUP_FEE };
+  for (const row of rows as { key: string; value: string }[]) {
+    const n = Number(row.value);
+    if (!Number.isFinite(n) || n < 0) continue; // valor corrompido não derruba o faturamento
+    if (row.key === "network_pricing:extra_unit") result.extraUnitPrice = n;
+    if (row.key === "network_pricing:setup_fee") result.setupFee = n;
+  }
+  return result;
+}
+/**
+ * Marca, para cada barbearia, se ela é a primária do seu dono (a mais antiga).
+ * Feito em lote justamente porque as rotinas de faturamento percorrem todas as
+ * barbearias — uma consulta por loja viraria N+1.
+ */
+export function markPrimaries<T extends { id: string; ownerId: string; createdAt: Date }>(shops: T[]): Map<string, boolean> {
+  const oldestByOwner = new Map<string, T>();
+  for (const s of shops) {
+    const cur = oldestByOwner.get(s.ownerId);
+    if (!cur || s.createdAt < cur.createdAt) oldestByOwner.set(s.ownerId, s);
+  }
+  const isPrimary = new Map<string, boolean>();
+  for (const s of shops) isPrimary.set(s.id, oldestByOwner.get(s.ownerId)?.id === s.id);
+  return isPrimary;
+}
+
+/** Quanto esta barbearia custa por mês, considerando se é matriz ou unidade extra. */
+export function monthlyPriceFor(
+  pricing: Record<PlatformPlan, PlanPricing>,
+  plan: string,
+  isPrimary: boolean,
+  extraUnitPrice: number = EXTRA_UNIT_PRICE,
+): number {
+  const p = PLANS.includes(plan as PlatformPlan) ? (plan as PlatformPlan) : "FREE";
+  return isPrimary ? pricing[p].price : extraUnitPrice;
+}
 
 const RENEWAL_PERIOD_DAYS = 30;
 // Bounds how many overdue renewal cycles get backfilled in a single call —
@@ -54,16 +123,24 @@ export async function recordPlanChangeInvoice(
 ) {
   if (newPlan === previousPlan) return;
 
-  const pricing = await getPlanPricing();
+  const [pricing, net] = await Promise.all([getPlanPricing(), getNetworkPricing()]);
   const now = new Date();
   const periodEnd = new Date(now.getTime() + RENEWAL_PERIOD_DAYS * 24 * 60 * 60 * 1000);
+
+  // Se esta barbearia não é a matriz do dono, ela é unidade adicional e paga a
+  // tarifa por unidade, não o plano cheio.
+  const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { ownerId: true } });
+  const siblings = shop
+    ? ((await prisma.barbershop.findMany({ where: { ownerId: shop.ownerId }, select: { id: true, ownerId: true, createdAt: true } })) as { id: string; ownerId: string; createdAt: Date }[])
+    : [];
+  const isPrimary = siblings.length ? (markPrimaries(siblings).get(barbershopId) ?? true) : true;
 
   await prisma.platformInvoice.create({
     data: {
       barbershopId,
       plan: newPlan,
       previousPlan,
-      amount: pricing[newPlan].price,
+      amount: monthlyPriceFor(pricing, newPlan, isPrimary, net.extraUnitPrice),
       status: "PAID",
       reason: "PLAN_CHANGE",
       periodStart: now,
@@ -78,6 +155,27 @@ export async function recordPlanChangeInvoice(
       create: { barbershopId, status: "REQUESTED" },
       update: {},
     });
+
+    // Taxa de implantação: uma única vez por barbearia, na PRIMEIRA entrada no
+    // White Label. Quem sai e volta não paga de novo — por isso a checagem por
+    // fatura existente em vez de simplesmente cobrar toda vez.
+    const alreadyCharged = await prisma.platformInvoice.findFirst({
+      where: { barbershopId, reason: "SETUP" },
+      select: { id: true },
+    });
+    if (!alreadyCharged && isPrimary && net.setupFee > 0) {
+      await prisma.platformInvoice.create({
+        data: {
+          barbershopId,
+          plan: newPlan,
+          amount: net.setupFee,
+          status: "PENDING",
+          reason: "SETUP",
+          periodStart: now,
+          periodEnd: now,
+        },
+      });
+    }
   }
 }
 
@@ -87,13 +185,15 @@ export async function recordPlanChangeInvoice(
 // per period (guarded by periodEnd/periodStart continuity), and renewal
 // status is tied to the shop's real isActive flag instead of randomness.
 export async function ensureMonthlyRenewals(): Promise<number> {
-  const [barbershops, pricing] = await Promise.all([
+  const [barbershops, pricing, net] = await Promise.all([
     prisma.barbershop.findMany({
-      select: { id: true, plan: true, isActive: true, createdAt: true },
+      select: { id: true, plan: true, isActive: true, createdAt: true, ownerId: true },
     }),
     getPlanPricing(),
+    getNetworkPricing(),
   ]);
 
+  const isPrimary = markPrimaries(barbershops as { id: string; ownerId: string; createdAt: Date }[]);
   const now = new Date();
   let created = 0;
 
@@ -116,7 +216,7 @@ export async function ensureMonthlyRenewals(): Promise<number> {
         data: {
           barbershopId: shop.id,
           plan,
-          amount: pricing[plan].price,
+          amount: monthlyPriceFor(pricing, plan, isPrimary.get(shop.id) ?? true, net.extraUnitPrice),
           status,
           reason: "RENEWAL",
           periodStart,
@@ -143,11 +243,17 @@ function planPriceOf(pricing: Record<PlatformPlan, PlanPricing>, plan: string): 
 // and the forecast/churn functions below so they can never silently drift
 // from each other.
 export async function getCurrentMrr(): Promise<number> {
-  const [shops, pricing] = await Promise.all([
-    prisma.barbershop.findMany({ where: { isActive: true }, select: { plan: true } }),
+  const [shops, pricing, net] = await Promise.all([
+    prisma.barbershop.findMany({ where: { isActive: true }, select: { id: true, plan: true, ownerId: true, createdAt: true } }),
     getPlanPricing(),
+    getNetworkPricing(),
   ]);
-  return shops.reduce((sum: number, s: { plan: string }) => sum + planPriceOf(pricing, s.plan), 0);
+  // Conta unidade extra pelo preço de unidade extra — senão o MRR ficaria
+  // inflado e toda a previsão/churn em cima dele viria errada.
+  type S = { id: string; plan: string; ownerId: string; createdAt: Date };
+  const list = shops as S[];
+  const isPrimary = markPrimaries(list);
+  return list.reduce((sum: number, s: S) => sum + monthlyPriceFor(pricing, s.plan, isPrimary.get(s.id) ?? true, net.extraUnitPrice), 0);
 }
 
 export interface MrrMovementPoint {

@@ -17,6 +17,7 @@ interface ApiService {
   category: string;
   duration: number;
   price: number;
+  cost?: number;
   isActive: boolean;
   appointmentsCount: number;
 }
@@ -94,6 +95,7 @@ export default function ServicesPage() {
       category: form.get("category"),
       duration: Number(form.get("duration")),
       price: Number(form.get("price")),
+      cost: Number(form.get("cost") ?? 0),
       image,
     };
     if (editing) {
@@ -144,9 +146,17 @@ export default function ServicesPage() {
             <input name="duration" type="number" min={5} required defaultValue={editing?.duration ?? 30} className={fieldCls} />
           </div>
         </div>
-        <div>
-          <label className={labelCls}>Preço (R$)</label>
-          <input name="price" type="number" min={0} step="0.01" required defaultValue={editing?.price ?? 0} className={fieldCls} />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Preço (R$)</label>
+            <input name="price" type="number" min={0} step="0.01" required defaultValue={editing?.price ?? 0} className={fieldCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Custo (R$)</label>
+            <input name="cost" type="number" min={0} step="0.01" defaultValue={editing?.cost ?? 0} className={fieldCls} />
+            {/* Sem custo, o sistema só sabe faturamento — nunca lucro. */}
+            <p className="text-[11px] text-zinc-600 mt-1">Produto gasto, lâmina, toalha. Destrava a margem real.</p>
+          </div>
         </div>
       </FormModal>
 

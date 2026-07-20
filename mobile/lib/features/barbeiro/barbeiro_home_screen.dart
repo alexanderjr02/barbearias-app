@@ -10,6 +10,7 @@ import '../auth/session_provider.dart';
 import '../gestor/brand_controller.dart';
 import 'barber_repository.dart';
 import 'client_ranking_screen.dart';
+import 'finalize_appointment_screen.dart';
 
 const _upcomingStatuses = {'SCHEDULED', 'CONFIRMED'};
 
@@ -105,6 +106,19 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
         AppToast.error(context, e.message);
       }
     }
+  }
+
+  Future<void> _finalize(BarberAppointment apt) async {
+    final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
+      builder: (_) => FinalizeAppointmentScreen(
+        appointmentId: apt.id,
+        clientId: apt.clientId,
+        clientName: apt.clientName,
+        referencePhoto: apt.referencePhoto,
+        existingResultPhoto: apt.resultPhoto,
+      ),
+    ));
+    if (done == true) _refresh();
   }
 
   Color _statusColor(String status) {
@@ -379,7 +393,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
                             statusColor: _statusColor(next.status),
                             onTap: () => _showClientHistory(next),
                             onNoShow: () => _setStatus(next, 'NO_SHOW'),
-                            onComplete: () => _setStatus(next, 'COMPLETED'),
+                            onComplete: () => _finalize(next),
                           ),
                         ),
                     ]),

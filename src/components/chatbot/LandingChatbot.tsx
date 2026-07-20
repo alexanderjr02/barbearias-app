@@ -18,11 +18,11 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["preço", "valor", "quanto", "custa", "plano", "planos", "mensalidade", "assinatura"],
-    answer: "Temos 3 planos:\n\n**Starter** — R$ 29/mês\n• Dashboard básico • Agendamentos simples • Chatbot genérico • Até 3 barbeiros\n\n**Pro** — R$ 79/mês\n• Tudo do Starter • Cores/logo • Chatbot com IA • Análises detalhadas • Fidelização avançada • Até 10 barbeiros\n\n**White Label** — R$ 299/mês + 3% do faturamento\n• Tudo do Pro • App própria com domínio customizado • Branding 100% personalizado • Barbeiros ilimitados\n\nOs planos Pro e White Label têm **14 dias de teste grátis** (sem cartão de crédito). Quer saber mais sobre algum deles?",
+    answer: "Temos 3 planos:\n\n**Essencial** — R$ 50/mês\n• Agenda online 24/7 • Cadastro de clientes • Fila de espera • Caixa do dia • Até 3 barbeiros\n\n**Pro** — R$ 250/mês\n• Tudo do Essencial • Copiloto com IA • Financeiro completo e comissões • Estoque • Fidelidade • Clube de assinatura • Até 10 barbeiros\n\n**White Label** — R$ 897/mês\n• Tudo do Pro • App instalável com a SUA marca • Painel e Copiloto de rede • Nota fiscal automática • Barbeiros ilimitados • Atendimento dedicado\n• Rede: + R$ 149 por unidade adicional\n• **Sem taxa de implantação** — no ar no mesmo dia\n\nOs planos Pro e White Label têm **14 dias de teste grátis** (sem cartão de crédito). Quer saber mais sobre algum deles?",
   },
   {
     keywords: ["diferença", "comparar", "comparação", "qual escolher", "melhor plano", "qual plano"],
-    answer: "Depende do tamanho da sua operação:\n\n**Starter (R$ 29/mês)** — você trabalha sozinho ou com até 3 barbeiros e quer sair da agenda de papel/WhatsApp.\n\n**Pro (R$ 79/mês)** — sua equipe tem até 10 barbeiros e você quer relatórios, fidelização de clientes e a marca da sua barbearia no app.\n\n**White Label (R$ 299/mês + 3%)** — você quer um app próprio, publicável nas lojas, com a sua marca e sem limite de equipe.\n\nQuer que eu te ajude a decidir com base no tamanho da sua barbearia?",
+    answer: "Depende do tamanho da sua operação:\n\n**Essencial (R$ 50/mês)** — você trabalha sozinho ou com até 3 barbeiros e quer sair da agenda de papel/WhatsApp.\n\n**Pro (R$ 250/mês)** — sua equipe tem até 10 barbeiros e você quer o Copiloto com IA, financeiro completo, fidelização e assinatura.\n\n**White Label (R$ 897/mês)** — você quer um app próprio com a sua marca, nota fiscal automática e sem limite de equipe.\n\nQuer que eu te ajude a decidir com base no tamanho da sua barbearia?",
   },
   {
     keywords: ["funcionalidade", "recurso", "o que faz", "features", "o que tem", "inclui", "sistema faz"],
@@ -30,7 +30,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["app", "aplicativo", "celular", "download", "baixar"],
-    answer: "Sim! Além do painel web para o gestor, o barbeiro tem um app próprio com:\n\n📅 Agenda do dia\n💰 Ganhos — receita, comissão e ticket médio do mês\n⭐ Avaliações recebidas dos clientes\n👤 Histórico de cada cliente ao tocar no agendamento\n\nE o cliente tem um app para:\n\n📖 Ver histórico de agendamentos e o saldo de pontos\n🔁 Cancelar ou remarcar um horário\n⭐ Avaliar o atendimento depois de concluído\n\nO app com a marca 100% personalizada da sua barbearia (para publicar nas lojas) é exclusivo do plano **White Label**.",
+    answer: "Sim! Além do painel web para o gestor, o barbeiro tem um app próprio com:\n\n📅 Agenda do dia\n💰 Ganhos — receita, comissão e ticket médio do mês\n⭐ Avaliações recebidas dos clientes\n👤 Histórico de cada cliente ao tocar no agendamento\n\nE o cliente tem um app para:\n\n📖 Ver histórico de agendamentos e o saldo de pontos\n🔁 Cancelar ou remarcar um horário\n⭐ Avaliar o atendimento depois de concluído\n\nO app com a marca 100% personalizada da sua barbearia — que o cliente instala na tela do celular pelo seu link, sem passar por loja de aplicativo — é exclusivo do plano **White Label**.",
   },
   {
     keywords: ["avaliação", "avaliações", "nota", "review", "reviews", "estrela", "estrelas"],
@@ -54,7 +54,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["teste", "grátis", "free", "trial", "experimentar", "começar", "cadastro", "cadastrar"],
-    answer: "Você pode começar agora mesmo:\n\n**Plano Starter** — R$ 29/mês, sem contrato de fidelidade.\n**Planos Pro e White Label** — 14 dias de teste grátis, sem cartão de crédito.\n\n👉 Clique em **Começar grátis** no topo da página para criar sua conta em menos de 2 minutos.\n\nPrecisa de ajuda durante o cadastro?",
+    answer: "Você pode começar agora mesmo:\n\n**Plano Essencial** — R$ 50/mês, sem contrato de fidelidade.\n**Planos Pro e White Label** — 14 dias de teste grátis, sem cartão de crédito.\n\n👉 Clique em **Começar grátis** no topo da página para criar sua conta em menos de 2 minutos.\n\nPrecisa de ajuda durante o cadastro?",
   },
   {
     keywords: ["cancelar", "fidelidade", "contrato", "multa"],
@@ -74,7 +74,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["múltiplas", "unidades", "franquia", "rede", "várias"],
-    answer: "Para redes de barbearia, o plano **White Label** (R$ 299/mês + 3%) foi feito para isso:\n\n🏪 App própria com domínio customizado\n🌐 Branding 100% personalizado\n👔 Sem marca do CORTIX no app\n👥 Barbeiros ilimitados\n\nFale com nossa equipe comercial: **vendas@cortix.app**",
+    answer: "Para redes de barbearia, o plano **White Label** (R$ 897/mês + R$ 149 por unidade) foi feito para isso:\n\n🏪 App instalável com a marca da sua rede — o cliente adiciona na tela do celular\n📊 Painel da rede: compare suas lojas lado a lado\n🤖 Copiloto que responde \"qual unidade está puxando o faturamento pra baixo?\"\n👔 Sem marca do CORTIX em lugar nenhum\n👥 Barbeiros e unidades ilimitados\n\nFale com nossa equipe comercial: **vendas@cortix.app**",
   },
   {
     keywords: ["quanto tempo", "implanta", "implementar", "migrar", "trocar de sistema", "demora"],

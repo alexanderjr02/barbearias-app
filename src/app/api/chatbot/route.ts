@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { runAssistant, assistantEnabled, type ChatTurn } from "@/lib/chatbot/assistant";
+import { planHasAI } from "@/lib/billing";
 
 function getBotResponse(message: string): string {
   const lower = message.toLowerCase();
@@ -44,8 +46,30 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Generate bot response
-    const botResponse = getBotResponse(message);
+    // Generate bot response — a real AI assistant (with tool use: booking,
+    // rescheduling, availability) when an Anthropic key is configured, else the
+    // simple canned answers below.
+    // The AI assistant is a paid feature (Pro+). On the Essencial tier the bot
+    // falls back to the canned answers, even if a key is configured.
+    const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { plan: true } });
+    let botResponse: string;
+    if (assistantEnabled() && planHasAI(shop?.plan)) {
+      try {
+        const rows: { content: string; role: string }[] = await prisma.chatMessage.findMany({
+          where: { sessionId, barbershopId },
+          orderBy: { createdAt: "asc" },
+          take: 30,
+          select: { content: true, role: true },
+        });
+        const history: ChatTurn[] = rows.map((r) => ({ role: r.role === "USER" ? "user" : "assistant", content: r.content }));
+        botResponse = await runAssistant(barbershopId, history);
+      } catch (err) {
+        console.error("[chatbot] assistant failed, using fallback:", err);
+        botResponse = getBotResponse(message);
+      }
+    } else {
+      botResponse = getBotResponse(message);
+    }
 
     // Store bot response
     await prisma.chatMessage.create({

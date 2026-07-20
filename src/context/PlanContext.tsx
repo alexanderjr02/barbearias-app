@@ -12,6 +12,7 @@ export type Feature =
   | "advanced_reports"
   | "chatbot_customization"
   | "chatbot_whatsapp"
+  | "ai_copilot"
   | "marketing"
   | "inventory"
   | "financial_full"
@@ -27,6 +28,7 @@ export const FEATURES_BY_PLAN: Record<Plan, Feature[]> = {
     "advanced_reports",
     "chatbot_customization",
     "chatbot_whatsapp",
+    "ai_copilot",
     "marketing",
     "inventory",
     "financial_full",
@@ -39,6 +41,7 @@ export const FEATURES_BY_PLAN: Record<Plan, Feature[]> = {
     "advanced_reports",
     "chatbot_customization",
     "chatbot_whatsapp",
+    "ai_copilot",
     "marketing",
     "inventory",
     "financial_full",
@@ -61,12 +64,12 @@ export const PLAN_INFO: Record<
   }
 > = {
   FREE: {
-    label: "Starter",
+    label: "Essencial",
     color: "text-zinc-400",
     bg: "bg-zinc-800",
     badgeBg: "bg-zinc-700 text-zinc-300",
-    price: "R$ 29/mês",
-    appointmentsLimit: 50,
+    price: "R$ 50/mês",
+    appointmentsLimit: Infinity,
     staffLimit: 3,
   },
   PRO: {
@@ -74,7 +77,7 @@ export const PLAN_INFO: Record<
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     badgeBg: "bg-amber-500/20 text-amber-400",
-    price: "R$ 79/mês",
+    price: "R$ 250/mês",
     appointmentsLimit: Infinity,
     staffLimit: 10,
   },
@@ -83,7 +86,7 @@ export const PLAN_INFO: Record<
     color: "text-purple-400",
     bg: "bg-purple-500/10",
     badgeBg: "bg-purple-500/20 text-purple-400",
-    price: "R$ 299/mês + 3%",
+    price: "R$ 897/mês",
     appointmentsLimit: Infinity,
     staffLimit: Infinity,
   },
@@ -156,8 +159,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     (p: Plan) => {
       const live = pricing?.[p];
       if (!live) return PLAN_INFO[p].price;
-      const formatted = `R$ ${live.price.toLocaleString("pt-BR")}/mês`;
-      return p === "ENTERPRISE" ? `${formatted} + 3%` : formatted;
+      return `R$ ${live.price.toLocaleString("pt-BR")}/mês`;
     },
     [pricing]
   );

@@ -174,6 +174,10 @@ class BookingRepository {
     return DaySlots.fromJson(data);
   }
 
+  Future<void> joinWaitlist(String barbershopId) async {
+    await ApiClient.instance.post('/client/waitlist', data: {'barbershopId': barbershopId});
+  }
+
   Future<void> createAppointment({
     required String barbershopId,
     required String staffId,
@@ -184,6 +188,7 @@ class BookingRepository {
     required String clientName,
     required String clientPhone,
     required double totalPrice,
+    String? referencePhoto,
   }) {
     return ApiClient.instance.post('/appointments', data: {
       'barbershopId': barbershopId,
@@ -195,6 +200,7 @@ class BookingRepository {
       'clientName': clientName,
       'clientPhone': clientPhone,
       'totalPrice': totalPrice,
+      if (referencePhoto != null && referencePhoto.isNotEmpty) 'referencePhoto': referencePhoto,
     });
   }
 }

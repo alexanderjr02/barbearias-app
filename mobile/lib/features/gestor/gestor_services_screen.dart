@@ -39,6 +39,7 @@ class _GestorServicesScreenState extends State<GestorServicesScreen> {
     final descCtrl = TextEditingController(text: editing?.description ?? '');
     final durationCtrl = TextEditingController(text: (editing?.duration ?? 30).toString());
     final priceCtrl = TextEditingController(text: (editing?.price ?? 0).toStringAsFixed(2));
+    final costCtrl = TextEditingController(text: (editing?.cost ?? 0).toStringAsFixed(2));
     String category = editing?.category ?? 'HAIRCUT';
     String? image = editing?.image;
 
@@ -49,6 +50,7 @@ class _GestorServicesScreenState extends State<GestorServicesScreen> {
       onSubmit: () async {
         final duration = int.tryParse(durationCtrl.text) ?? 30;
         final price = double.tryParse(priceCtrl.text.replaceAll(',', '.')) ?? 0;
+        final cost = double.tryParse(costCtrl.text.replaceAll(',', '.')) ?? 0;
         if (nameCtrl.text.trim().isEmpty) throw Exception('Informe o nome do serviço.');
         if (editing != null) {
           await _repository.updateService(
@@ -58,6 +60,7 @@ class _GestorServicesScreenState extends State<GestorServicesScreen> {
             category: category,
             duration: duration,
             price: price,
+            cost: cost,
             image: image,
           );
         } else {
@@ -67,6 +70,7 @@ class _GestorServicesScreenState extends State<GestorServicesScreen> {
             category: category,
             duration: duration,
             price: price,
+            cost: cost,
             image: image,
           );
         }

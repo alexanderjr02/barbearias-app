@@ -188,14 +188,17 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: palette.surface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, setSheetState) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        builder: (sheetContext, setSheetState) => SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               Center(
                 child: Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: palette.border, borderRadius: BorderRadius.circular(2))),
               ),
@@ -249,8 +252,10 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
                     ),
                   ),
                 );
-              }),
-            ],
+                  }),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -301,7 +306,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
   /// (activity ring showing busy vs. free share of the day) and as a tab.
   Widget _barberTabStrip(AppPalette palette, Color accent) {
     if (_loadingSchedule && _daySchedule.isEmpty) {
-      return const SizedBox(height: 92, child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))));
+      return const SizedBox(height: 108, child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))));
     }
     final orderedIds = _staffList.map((s) => s.id).toList();
     final dayApts = _eventsFor(_selectedDay);
@@ -333,7 +338,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
         : cards.reduce((a, b) => a.revenue >= b.revenue ? a : b).member.id;
 
     return SizedBox(
-      height: 92,
+      height: 108,
       child: ListView(
         controller: _tabScrollController,
         scrollDirection: Axis.horizontal,
@@ -350,7 +355,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
               duration: const Duration(milliseconds: 200),
               width: 78,
               margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
               decoration: BoxDecoration(
                 color: selected ? accent.withValues(alpha: 0.14) : palette.surfaceAlt,
                 borderRadius: BorderRadius.circular(14),

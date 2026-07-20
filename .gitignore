@@ -58,3 +58,4 @@ next-env.d.ts
 
 # disposable SQLite db created by the integration tests (tests/setup/globalSetup.ts)
 /tests/test.db
+mobile/build/

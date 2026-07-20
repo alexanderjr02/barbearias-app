@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, AlertTriangle, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { apiGet, apiPost } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PhotoUpload } from "@/components/dashboard/PhotoUpload";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -26,7 +27,24 @@ export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [image, setImage] = useState<string | null>(null);
+  const [selling, setSelling] = useState<ApiProduct | null>(null);
+  const [sellQty, setSellQty] = useState(1);
   const queryClient = useQueryClient();
+
+  const sellProduct = useMutation({
+    mutationFn: ({ id, quantity, paymentMethod }: { id: string; quantity: number; paymentMethod: string }) =>
+      apiPost(`/api/products/${id}/sell`, { quantity, paymentMethod }),
+    onSuccess: () => {
+      // Invalida o financeiro junto: a venda virou receita lá, e deixar a
+      // outra tela com número velho é como o gestor perde a confiança no
+      // sistema — ele confere, não bate, e volta pra planilha.
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["finance-transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["finance-overview"] });
+      toast.success("Venda registrada e lançada no financeiro");
+      setSelling(null);
+    },
+  });
 
   const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: () => apiGet<ApiProduct[]>("/api/products") });
 
@@ -61,6 +79,17 @@ export default function InventoryPage() {
       (p.brand ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (p.category ?? "").toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleSell = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selling) return;
+    const form = new FormData(e.currentTarget);
+    sellProduct.mutate({
+      id: selling.id,
+      quantity: Number(form.get("sellQuantity")),
+      paymentMethod: String(form.get("sellPayment") || "DINHEIRO"),
+    });
+  };
 
   const lowStock = products.filter((p) => p.quantity <= p.minQuantity);
   const totalValue = products.reduce((a, p) => a + (p.costPrice ?? 0) * p.quantity, 0);
@@ -118,6 +147,61 @@ export default function InventoryPage() {
             <input name="minQuantity" type="number" min={0} defaultValue={5} className={fieldCls} />
           </div>
         </div>
+      </FormModal>
+
+      <FormModal
+        open={!!selling}
+        onClose={() => setSelling(null)}
+        title={selling ? `Vender ${selling.name}` : "Vender"}
+        onSubmit={handleSell}
+        isPending={sellProduct.isPending}
+        error={sellProduct.error?.message}
+        submitLabel="Registrar venda"
+      >
+        {selling && (
+          <>
+            <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/60 px-3.5 py-3">
+              <span className="text-xs text-zinc-500">Em estoque</span>
+              <span className="text-sm font-bold text-white">
+                {selling.quantity} {selling.quantity === 1 ? "unidade" : "unidades"}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>Quantidade</label>
+                <input
+                  name="sellQuantity"
+                  type="number"
+                  min={1}
+                  max={selling.quantity}
+                  defaultValue={1}
+                  required
+                  className={fieldCls}
+                  onChange={(e) => setSellQty(Number(e.target.value) || 1)}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Pagamento</label>
+                <select name="sellPayment" defaultValue="DINHEIRO" className={fieldCls}>
+                  <option value="DINHEIRO">Dinheiro</option>
+                  <option value="PIX">PIX</option>
+                  <option value="CARTAO">Cartão</option>
+                </select>
+              </div>
+            </div>
+            {/* O total aparece antes de confirmar: é o número que o gestor vai
+                cobrar do cliente na hora, e conferir depois no financeiro. */}
+            <div className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3.5 py-3">
+              <span className="text-xs text-zinc-400">Total a cobrar</span>
+              <span className="text-lg font-black text-emerald-400">
+                {formatCurrency(selling.price * Math.min(Math.max(sellQty, 1), selling.quantity))}
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-zinc-600">
+              Baixa o estoque e lança a receita no Financeiro na mesma ação.
+            </p>
+          </>
+        )}
       </FormModal>
 
       <PageHeader
@@ -187,6 +271,7 @@ export default function InventoryPage() {
                 <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3">Preço</th>
                 <th className="text-center text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3">Estoque</th>
                 <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-6 py-3 hidden sm:table-cell">Valor Total</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
@@ -227,6 +312,15 @@ export default function InventoryPage() {
                     </td>
                     <td className="px-6 py-4 text-right hidden sm:table-cell">
                       <p className="text-sm font-medium text-white">{formatCurrency((product.costPrice ?? 0) * product.quantity)}</p>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <button
+                        onClick={() => { setSellQty(1); setSelling(product); }}
+                        disabled={product.quantity < 1}
+                        className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-bold text-zinc-300 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-zinc-700 disabled:hover:bg-transparent disabled:hover:text-zinc-300"
+                      >
+                        Vender
+                      </button>
                     </td>
                   </tr>
                 );

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Calendar, Users, UserCheck, Scissors,
   TrendingUp, Package, Megaphone, Settings, LogOut,
-  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy,
+  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy, Hourglass, Star, FileText, Palette, Building2, Gift, Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -15,19 +15,26 @@ import { UpgradeModal } from "@/components/billing/UpgradeModal";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Agendamentos", href: "/dashboard/appointments", icon: Calendar },
+  { label: "Fila de espera", href: "/dashboard/waitlist", icon: Hourglass },
   { label: "Clientes", href: "/dashboard/clients", icon: Users },
+  { label: "Avaliações", href: "/dashboard/reviews", icon: Star },
   { label: "Equipe", href: "/dashboard/staff", icon: UserCheck },
+  { label: "Unidades", href: "/dashboard/units", icon: Building2 },
+  { label: "Fidelidade", href: "/dashboard/loyalty", icon: Gift },
   { label: "Serviços", href: "/dashboard/services", icon: Scissors },
   { label: "Financeiro", href: "/dashboard/finance", icon: TrendingUp },
+  { label: "Nota Fiscal", href: "/dashboard/fiscal", icon: FileText },
   { label: "Estoque", href: "/dashboard/inventory", icon: Package },
   { label: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
+  { label: "Divulgação", href: "/dashboard/convite", icon: Share2 },
+  { label: "Aparência do app", href: "/dashboard/appearance", icon: Palette },
   { label: "Assinaturas", href: "/dashboard/subscriptions", icon: Repeat },
   { label: "Suporte", href: "/dashboard/support", icon: LifeBuoy },
 ];
 
 const UPSELL_PITCH: Record<"FREE" | "PRO", { badge: string; text: string; target: "PRO" | "ENTERPRISE" }> = {
   FREE: { badge: "Pro", text: "Relatórios, estoque, fidelização e mais barbeiros.", target: "PRO" },
-  PRO: { badge: "White Label", text: "App com a sua marca, publicável nas lojas.", target: "ENTERPRISE" },
+  PRO: { badge: "White Label", text: "App com a sua marca, instalável direto do link.", target: "ENTERPRISE" },
 };
 
 export function Sidebar() {

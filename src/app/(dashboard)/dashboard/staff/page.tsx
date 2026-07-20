@@ -17,6 +17,10 @@ interface ApiStaff {
   specialties: string | null;
   avatar: string | null;
   commissionRate: number;
+  cpf: string | null;
+  employmentType: string | null;
+  hireDate: string | null;
+  pixKey: string | null;
   isActive: boolean;
   appointmentsCount: number;
   revenue: number;
@@ -120,12 +124,20 @@ export default function StaffPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
+    const blank = editing ? null : undefined;
     const data: Record<string, unknown> = {
       name: form.get("name"),
       role: form.get("role") || "BARBER",
       specialties: form.get("specialties") || null,
       commissionRate: Number(form.get("commissionRate")) / 100,
       avatar,
+      // Campo vazio: no PATCH vira null ("apaguei isso"), no POST vira
+      // undefined — o schema de criação é .optional(), não .nullable(), e
+      // mandar null ali derruba a validação inteira.
+      cpf: form.get("cpf") || blank,
+      employmentType: form.get("employmentType") || blank,
+      hireDate: form.get("hireDate") || blank,
+      pixKey: form.get("pixKey") || blank,
     };
     if (editing) {
       data.isActive = form.get("isActiveSelect") === "true";
@@ -179,6 +191,37 @@ export default function StaffPage() {
         <div>
           <label className={labelCls}>Comissão (%)</label>
           <input name="commissionRate" type="number" min={0} max={100} defaultValue={editing ? Math.round(editing.commissionRate * 100) : 40} className={fieldCls} />
+        </div>
+
+        <div className="pt-2 border-t border-zinc-800 space-y-3">
+          <p className="text-xs text-zinc-500">Dados trabalhistas — tudo opcional, preencha o que fizer sentido.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Vínculo</label>
+              <select name="employmentType" defaultValue={editing?.employmentType ?? ""} className={fieldCls}>
+                <option value="">Não informado</option>
+                <option value="CLT">CLT</option>
+                <option value="PJ">PJ</option>
+                <option value="AUTONOMO">Autônomo</option>
+                <option value="PARCEIRO">Parceiro / cadeira</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Admissão</label>
+              <input name="hireDate" type="date" defaultValue={editing?.hireDate ? editing.hireDate.slice(0, 10) : ""} className={fieldCls} />
+            </div>
+          </div>
+          <div>
+            <label className={labelCls}>CPF</label>
+            <input name="cpf" inputMode="numeric" defaultValue={editing?.cpf ?? ""} className={fieldCls} placeholder="000.000.000-00" />
+          </div>
+          <div>
+            <label className={labelCls}>Chave PIX do barbeiro</label>
+            <input name="pixKey" defaultValue={editing?.pixKey ?? ""} className={fieldCls} placeholder="CPF, celular, e-mail ou aleatória" />
+            <p className="text-xs text-zinc-500 mt-1.5">
+              A gorjeta do cliente cai direto nessa chave. Sem ela, vai para a chave da barbearia e você repassa na mão.
+            </p>
+          </div>
         </div>
         {editing && (
           <div>

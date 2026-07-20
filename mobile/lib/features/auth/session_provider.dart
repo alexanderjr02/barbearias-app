@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api/api_client.dart';
+import '../../core/brand/brand_slug.dart';
 import '../../core/storage/token_storage.dart';
 import '../profile/profile_repository.dart';
 import 'auth_repository.dart';
@@ -21,7 +23,12 @@ class SessionProvider extends ChangeNotifier {
   /// callers should fall back to the default brand color.
   Color? brandColor;
 
+  /// The barbershop's cover image (absolute URL), shown as the home banner.
+  /// Only set when the brand uses an image background.
+  String? brandCover;
+
   Future<void> restore() async {
+    loadBrandFromSlug(); // white-label: theme login/register before auth
     try {
       final token = await TokenStorage.instance.accessToken.timeout(
         const Duration(seconds: 5),
@@ -116,12 +123,13 @@ class SessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> updateProfile({String? name, String? phone, String? avatar}) async {
+  Future<bool> updateProfile({String? name, String? phone, String? avatar, String? dateOfBirth}) async {
     try {
-      final data = await _profileRepository.updateProfile(name: name, phone: phone, avatar: avatar);
+      final data = await _profileRepository.updateProfile(name: name, phone: phone, avatar: avatar, dateOfBirth: dateOfBirth);
       session = session?.copyWith(
         name: data['name'] as String?,
         phone: data['phone'] as String?,
+        dateOfBirth: data['dateOfBirth'] as String?,
         avatar: data['avatar'] as String?,
       );
       notifyListeners();
@@ -129,6 +137,32 @@ class SessionProvider extends ChangeNotifier {
     } catch (_) {
       return false;
     }
+  }
+
+  /// White-label: carrega cor, capa e logo da barbearia antes do login, para
+  /// login e cadastro já aparecerem com a marca dela.
+  Future<void> loadBrandFromSlug() async {
+    final slug = await resolveBrandSlug();
+    if (slug == null || slug.isEmpty) return;
+    try {
+      final data = await ApiClient.instance.get('/barbershop', query: {'slug': slug}) as Map<String, dynamic>?;
+      final hex = data?['primaryColor'] as String?;
+      final parsed = hex == null ? null : _parseHexColor(hex);
+      if (parsed != null) brandColor = parsed;
+      final bgType = data?['bgType'] as String?;
+      final cover = data?['coverImage'] as String?;
+      brandCover = (bgType == 'image' && cover != null && cover.isNotEmpty) ? _absUrl(cover) : null;
+      notifyListeners();
+    } catch (_) {
+      // keep the default brand on failure
+    }
+  }
+
+  String _absUrl(String url) {
+    if (url.startsWith('http')) return url;
+    const base = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    final origin = base.contains('/api') ? base.substring(0, base.indexOf('/api')) : base;
+    return '$origin$url';
   }
 
   Future<void> _loadBrandColor() async {

@@ -1,9 +1,19 @@
+import { DEFAULT_PLAN_PRICING } from "../src/lib/planPricingDefaults";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const adapter = new PrismaLibSql({ url: "file:./dev.db" });
+// Respeita DATABASE_URL. Estava fixo em "file:./dev.db", o que fazia o seed
+// ignorar o banco do ambiente: no container ele tentava criar um arquivo em
+// /app (sem permissão de escrita) e falhava, mas o script terminava dizendo
+// "concluído" — o deploy subia com o banco vazio e ninguém conseguia logar.
+const url = process.env.DATABASE_URL ?? "file:./dev.db";
+const isRemote = url.startsWith("libsql://") || url.startsWith("https://");
+const adapter = new PrismaLibSql({
+  url,
+  ...(isRemote && { authToken: process.env.DATABASE_AUTH_TOKEN }),
+});
 const prisma = new PrismaClient({ adapter });
 
 // Seed script for development
@@ -49,11 +59,9 @@ async function main() {
   // Plan pricing/limits, editable later from /admin/settings — matches the
   // prices already shown in PlanContext.tsx (FREE/"Starter" is R$29, not
   // actually free) so nothing changes for existing gestors on first deploy.
-  const planPricingDefaults: Record<string, { price: number; appointmentsLimit: number | null; staffLimit: number | null }> = {
-    FREE: { price: 29, appointmentsLimit: 50, staffLimit: 3 },
-    PRO: { price: 79, appointmentsLimit: null, staffLimit: 10 },
-    ENTERPRISE: { price: 299, appointmentsLimit: null, staffLimit: null },
-  };
+  // Importado de src/lib/planPricingDefaults.ts — a semente tinha uma tabela
+  // própria (29/79/299) que ficou congelada em preços de duas tabelas atrás.
+  const planPricingDefaults = DEFAULT_PLAN_PRICING;
   for (const [plan, pricing] of Object.entries(planPricingDefaults)) {
     await prisma.platformSetting.upsert({
       where: { key: `plan_pricing:${plan}` },
@@ -200,6 +208,63 @@ async function main() {
       where: { barbershopId_dayOfWeek: { barbershopId: enterpriseShop.id, dayOfWeek: day } },
       update: {},
       create: { dayOfWeek: day, openTime: "08:00", closeTime: day === 6 ? "18:00" : "21:00", isOpen: true, barbershopId: enterpriseShop.id },
+    });
+  }
+
+  // --- Public demo barbershop (slug "demo") — this is the one the landing
+  // page's "Ver demonstração" button opens, so it must always look polished:
+  // a full menu of services, several barbers and a real cover photo. ---
+  const demoOwner = await prisma.user.upsert({
+    where: { email: "demo.publico@cortix.app" },
+    update: {},
+    create: { name: "Rafael Demo", email: "demo.publico@cortix.app", password: hashedPassword, role: "OWNER", phone: "(11) 98888-0000" },
+  });
+  const demoShop = await prisma.barbershop.upsert({
+    where: { slug: "demo" },
+    update: {},
+    create: {
+      name: "Barbearia Vanguarda",
+      slug: "demo",
+      description: "A barbearia mais estilosa da cidade. Corte, barba e navalha com hora marcada.",
+      coverImage: "/landing/shop-interior.jpg",
+      phone: "(11) 98888-0000",
+      whatsapp: "(11) 98888-0000",
+      instagram: "barbeariavanguarda",
+      address: "Rua Augusta, 1500 — São Paulo, SP",
+      city: "São Paulo",
+      state: "SP",
+      primaryColor: "#D4AF37",
+      plan: "PRO",
+      ownerId: demoOwner.id,
+    },
+  });
+  const demoServiceCount = await prisma.service.count({ where: { barbershopId: demoShop.id } });
+  if (demoServiceCount === 0) {
+    await prisma.service.createMany({
+      data: [
+        { name: "Corte Degradê", description: "Degradê moderno com acabamento na navalha", duration: 45, price: 45, category: "HAIRCUT", barbershopId: demoShop.id },
+        { name: "Corte + Barba", description: "O combo mais pedido da casa", duration: 60, price: 70, category: "COMBO", barbershopId: demoShop.id },
+        { name: "Barba na Navalha", description: "Toalha quente, navalha e finalização", duration: 30, price: 35, category: "BEARD", barbershopId: demoShop.id },
+        { name: "Corte Social", description: "Clássico, limpo e elegante", duration: 30, price: 40, category: "HAIRCUT", barbershopId: demoShop.id },
+        { name: "Pezinho / Acabamento", description: "Manutenção rápida entre cortes", duration: 15, price: 15, category: "HAIRCUT", barbershopId: demoShop.id },
+      ],
+    });
+  }
+  const demoStaffCount = await prisma.staff.count({ where: { barbershopId: demoShop.id } });
+  if (demoStaffCount === 0) {
+    await prisma.staff.createMany({
+      data: [
+        { name: "Rafael Andrade", role: "BARBER", specialties: "Degradê, Navalhado", commissionRate: 0.45, barbershopId: demoShop.id },
+        { name: "Bruno Costa", role: "BARBER", specialties: "Barba, Clássico", commissionRate: 0.4, barbershopId: demoShop.id },
+        { name: "Diego Martins", role: "BARBER", specialties: "Freestyle, Coloração", commissionRate: 0.4, barbershopId: demoShop.id },
+      ],
+    });
+  }
+  for (let day = 0; day <= 6; day++) {
+    await prisma.workingHour.upsert({
+      where: { barbershopId_dayOfWeek: { barbershopId: demoShop.id, dayOfWeek: day } },
+      update: {},
+      create: { dayOfWeek: day, openTime: "09:00", closeTime: day === 6 ? "18:00" : "20:00", isOpen: day !== 0, barbershopId: demoShop.id },
     });
   }
 

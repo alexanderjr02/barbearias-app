@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
+import 'widgets/finance_cards.dart';
 
 const _categoryPalette = [
   Color(0xFFF59E0B),
@@ -135,6 +136,11 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
+                const RiseIn(child: FinanceCockpitCard()),
+                const SizedBox(height: 12),
+                const RiseIn(delay: Duration(milliseconds: 60), child: DailyCashCard()),
+                const SizedBox(height: 8),
+                Divider(color: palette.border, height: 24),
                 RiseIn(
                   child: Row(
                     children: [

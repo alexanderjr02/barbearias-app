@@ -1,17 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/br_phone_formatter.dart';
+import '../../core/widgets/cortix_date_picker.dart';
 import '../auth/session_provider.dart';
 import 'booking_repository.dart';
+import 'client_repository.dart';
 
 class NewAppointmentScreen extends StatefulWidget {
-  const NewAppointmentScreen({super.key});
+  const NewAppointmentScreen({super.key, this.referencePhoto});
+
+  /// Pre-attached cut photo when the client came from "quero esse de novo".
+  final String? referencePhoto;
 
   @override
   State<NewAppointmentScreen> createState() => _NewAppointmentScreenState();
@@ -44,10 +50,13 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   bool _loadingSlots = false;
   bool _submitting = false;
   String? _error;
+  String? _reference;
+  final _clientRepo = ClientRepository();
 
   @override
   void initState() {
     super.initState();
+    _reference = widget.referencePhoto;
     _loadBarbershops();
     _phoneFocus.addListener(() {
       if (!_phoneFocus.hasFocus && !_phoneTouched) setState(() => _phoneTouched = true);
@@ -172,19 +181,22 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showCortixDatePicker(
       context: context,
-      initialDate: now,
+      initialDate: _selectedDate ?? now,
       firstDate: now,
       lastDate: now.add(const Duration(days: 60)),
+      title: 'Escolha o dia',
     );
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-        _selectedTime = null;
-      });
-      _loadSlots();
-    }
+    if (picked != null) _selectDate(picked);
+  }
+
+  void _selectDate(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+      _selectedTime = null; // o horário escolhido não vale para outro dia
+    });
+    _loadSlots();
   }
 
   bool get _canSubmit =>
@@ -194,6 +206,75 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
       _selectedDate != null &&
       _selectedTime != null &&
       _phoneController.text.trim().length >= 8;
+
+  Future<void> _joinWaitlist() async {
+    final shop = _selectedShop;
+    if (shop == null) return;
+    try {
+      await _repository.joinWaitlist(shop.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(behavior: SnackBarBehavior.floating, content: Text('Você entrou na fila! Avisamos se abrir um horário. 🔔')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(behavior: SnackBarBehavior.floating, content: Text('Não foi possível entrar na fila.')));
+      }
+    }
+  }
+
+  Future<void> _uploadReference() async {
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1400, imageQuality: 88);
+    if (file == null || !mounted) return;
+    try {
+      final url = await _clientRepo.uploadImage(file);
+      if (mounted) setState(() => _reference = url);
+    } catch (_) {}
+  }
+
+  Future<void> _pickFromWallet() async {
+    List<CutPhoto> cuts;
+    try {
+      cuts = await _clientRepo.cuts();
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    if (cuts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sua Carteira de Cortes está vazia.')));
+      return;
+    }
+    final palette = AppPalette.of(context);
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: palette.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Escolha da sua Carteira', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15)),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              children: [
+                for (final c in cuts)
+                  GestureDetector(
+                    onTap: () => Navigator.of(sheetContext).pop(c.imageUrl),
+                    child: ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(resolveAssetUrl(c.imageUrl) ?? c.imageUrl, fit: BoxFit.cover)),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null && mounted) setState(() => _reference = picked);
+  }
 
   Future<void> _submit() async {
     final sessionProvider = context.read<SessionProvider>();
@@ -215,6 +296,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
         clientName: session.name,
         clientPhone: phone,
         totalPrice: _selectedService!.price,
+        referencePhoto: _reference,
       );
       // Remember the number for next time — only when it's new or changed,
       // and never lets a save failure block the booking that already went
@@ -252,7 +334,18 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
 
     return Scaffold(
       backgroundColor: palette.bg,
-      appBar: AppBar(backgroundColor: palette.bg, title: const Text('Novo agendamento')),
+      appBar: AppBar(
+        backgroundColor: palette.bg,
+        title: const Text('Novo agendamento'),
+        actions: [
+          if (_selectedShop != null)
+            IconButton(
+              tooltip: 'Avise-me se abrir horário',
+              onPressed: _joinWaitlist,
+              icon: const Icon(Icons.notifications_active_outlined),
+            ),
+        ],
+      ),
       body: _loadingShops
           ? const Center(child: CircularProgressIndicator())
           : _barbershops.isEmpty
@@ -324,10 +417,16 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                         ),
                         const SizedBox(height: 20),
                       ],
-                      Text('Escolha o profissional', style: labelStyle),
-                      const SizedBox(height: 10),
+                      _StepLabel(
+                        step: 1,
+                        label: 'Escolha o profissional',
+                        done: _selectedStaff != null,
+                        palette: palette,
+                        accent: accent,
+                      ),
+                      const SizedBox(height: 12),
                       SizedBox(
-                        height: 144,
+                        height: 140,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: _detail!.staff.length,
@@ -355,8 +454,14 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                           child: Text('Escolha um profissional para ver os serviços disponíveis.', style: TextStyle(color: palette.textFaint, fontSize: 12.5)),
                         )
                       else ...[
-                        Text('Serviços com ${_selectedStaff!.name.split(' ').first}', style: labelStyle),
-                        const SizedBox(height: 10),
+                        _StepLabel(
+                          step: 2,
+                          label: 'Serviços com ${_selectedStaff!.name.split(' ').first}',
+                          done: _selectedService != null,
+                          palette: palette,
+                          accent: accent,
+                        ),
+                        const SizedBox(height: 12),
                         ..._detail!.services.asMap().entries.map((entry) {
                           final s = entry.value;
                           final selected = _selectedService?.id == s.id;
@@ -373,39 +478,48 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                         }),
                       ],
                       const SizedBox(height: 12),
-                      Text('Data', style: labelStyle),
-                      const SizedBox(height: 10),
-                      GestureDetector(
-                        onTap: _pickDate,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(12)),
+                      _StepLabel(
+                        step: 3,
+                        label: 'Data',
+                        done: _selectedDate != null,
+                        palette: palette,
+                        accent: accent,
+                        trailing: GestureDetector(
+                          onTap: _pickDate,
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today_outlined, size: 18, color: palette.textSecondary),
-                              const SizedBox(width: 10),
-                              Text(
-                                _selectedDate == null
-                                    ? 'Escolher data'
-                                    : '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}',
-                                style: TextStyle(color: _selectedDate == null ? palette.textFaint : palette.textPrimary, fontWeight: FontWeight.w600),
-                              ),
+                              Icon(Icons.calendar_month_rounded, size: 14, color: accent),
+                              const SizedBox(width: 4),
+                              Text('outra data',
+                                  style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w700)),
                             ],
                           ),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      // Tira de dias no lugar do botão "Escolher data": abrir um
+                      // calendário modal para marcar "amanhã" é atrito puro, e é
+                      // amanhã ou depois que quase todo agendamento cai.
+                      _DayStrip(
+                        selected: _selectedDate,
+                        accent: accent,
+                        palette: palette,
+                        onSelect: _selectDate,
+                      ),
                       if (_selectedDate != null) ...[
                         const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Horário', style: labelStyle),
-                            if (_daySlots?.isOpen == true && _daySlots?.openTime != null)
-                              Text('${_daySlots!.openTime} às ${_daySlots!.closeTime}', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
-                          ],
+                        _StepLabel(
+                          step: 4,
+                          label: 'Horário',
+                          done: _selectedTime != null,
+                          palette: palette,
+                          accent: accent,
+                          trailing: _daySlots?.isOpen == true && _daySlots?.openTime != null
+                              ? Text('${_daySlots!.openTime} às ${_daySlots!.closeTime}',
+                                  style: TextStyle(color: palette.textFaint, fontSize: 11.5))
+                              : null,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         Builder(builder: (context) {
                           if (_selectedStaff == null || _selectedService == null) {
                             return Text('Escolha um profissional e um serviço para ver os horários.', style: TextStyle(color: palette.textFaint));
@@ -532,6 +646,33 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                           ),
                         ],
                       ],
+                      const SizedBox(height: 18),
+                      Row(children: [
+                        Icon(Icons.auto_awesome_rounded, size: 15, color: accent),
+                        const SizedBox(width: 6),
+                        Text('Foto de referência (opcional)', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 13.5)),
+                      ]),
+                      const SizedBox(height: 4),
+                      Text('Mostre ao barbeiro o corte que você quer.', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                      const SizedBox(height: 10),
+                      if (_reference != null)
+                        Stack(children: [
+                          ClipRRect(borderRadius: BorderRadius.circular(14), child: Image.network(resolveAssetUrl(_reference) ?? _reference!, height: 150, width: double.infinity, fit: BoxFit.cover)),
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: GestureDetector(
+                              onTap: () => setState(() => _reference = null),
+                              child: Container(padding: const EdgeInsets.all(4), decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle), child: const Icon(Icons.close, color: Colors.white, size: 16)),
+                            ),
+                          ),
+                        ])
+                      else
+                        Row(children: [
+                          Expanded(child: OutlinedButton.icon(onPressed: _uploadReference, icon: const Icon(Icons.upload_rounded, size: 18), label: const Text('Enviar foto'), style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)))),
+                          const SizedBox(width: 10),
+                          Expanded(child: OutlinedButton.icon(onPressed: _pickFromWallet, icon: const Icon(Icons.content_cut_rounded, size: 18), label: const Text('Da Carteira'), style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)))),
+                        ]),
                       if (_error != null) ...[
                         const SizedBox(height: 12),
                         Text(_error!, style: const TextStyle(color: Colors.redAccent)),
@@ -557,6 +698,157 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
 /// A "barber card" — photo, first name, specialties tag — used for the
 /// professional-picking step of the booking flow instead of a plain text
 /// chip, so the client sees who they're actually booking with.
+/// Etapa numerada, que vira um "check" quando resolvida.
+///
+/// Agendar é uma sequência (quem → o quê → quando), mas a tela mostrava só
+/// quatro títulos soltos do mesmo tamanho. Numerar e marcar o que já foi
+/// feito é o que transforma uma lista de campos num progresso visível — o
+/// padrão de todo fluxo de reserva bom.
+class _StepLabel extends StatelessWidget {
+  final int step;
+  final String label;
+  final bool done;
+  final AppPalette palette;
+  final Color accent;
+  final Widget? trailing;
+
+  const _StepLabel({
+    required this.step,
+    required this.label,
+    required this.done,
+    required this.palette,
+    required this.accent,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 240),
+          width: 22,
+          height: 22,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: done ? accent : accent.withValues(alpha: 0.14),
+            border: done ? null : Border.all(color: accent.withValues(alpha: 0.35)),
+          ),
+          child: done
+              ? Icon(Icons.check_rounded, size: 13, color: contrastingTextColor(accent))
+              : Text('$step',
+                  style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.w900)),
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: palette.textPrimary,
+              fontSize: 15.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ),
+        ?trailing,
+      ],
+    );
+  }
+}
+
+/// Tira horizontal com os próximos dias.
+///
+/// O calendário modal continua existindo ("outra data"), mas escondido atrás
+/// de um toque: a esmagadora maioria dos agendamentos é para hoje, amanhã ou
+/// essa semana, e para esses o dia certo já está na tela.
+class _DayStrip extends StatelessWidget {
+  final DateTime? selected;
+  final Color accent;
+  final AppPalette palette;
+  final ValueChanged<DateTime> onSelect;
+
+  const _DayStrip({
+    required this.selected,
+    required this.accent,
+    required this.palette,
+    required this.onSelect,
+  });
+
+  static const _weekdays = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+  static const _days = 14;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    return SizedBox(
+      height: 74,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _days,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final date = today.add(Duration(days: i));
+          final isSelected = selected != null &&
+              selected!.year == date.year &&
+              selected!.month == date.month &&
+              selected!.day == date.day;
+
+          return GestureDetector(
+            onTap: () => onSelect(date),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 56,
+              decoration: BoxDecoration(
+                color: isSelected ? accent : palette.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? accent : palette.textFaint.withValues(alpha: 0.14),
+                ),
+                boxShadow: isSelected
+                    ? [BoxShadow(color: accent.withValues(alpha: 0.3), blurRadius: 14, offset: const Offset(0, 6))]
+                    : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    i == 0 ? 'HOJE' : _weekdays[date.weekday - 1],
+                    style: TextStyle(
+                      color: isSelected
+                          ? contrastingTextColor(accent).withValues(alpha: 0.8)
+                          : palette.textFaint,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    date.day.toString().padLeft(2, '0'),
+                    style: TextStyle(
+                      color: isSelected ? contrastingTextColor(accent) : palette.textPrimary,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                      height: 1,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _BarberCard extends StatelessWidget {
   final StaffOption staff;
   final bool selected;
@@ -580,53 +872,98 @@ class _BarberCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: 104,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        width: 92,
+        padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
         decoration: BoxDecoration(
-          color: palette.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: selected ? accent : Colors.transparent, width: 2),
-          boxShadow: selected ? [BoxShadow(color: accent.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 8))] : null,
+          gradient: selected
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [accent.withValues(alpha: 0.22), palette.surface],
+                )
+              : null,
+          color: selected ? null : palette.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? accent : palette.textFaint.withValues(alpha: 0.12),
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: selected
+              ? [BoxShadow(color: accent.withValues(alpha: 0.28), blurRadius: 18, offset: const Offset(0, 8))]
+              : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
               alignment: Alignment.center,
+              clipBehavior: Clip.none,
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: palette.surfaceAlt,
-                  backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                  child: avatarUrl == null ? Text(initials(staff.name), style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold, fontSize: 15)) : null,
+                // A foto é o que o cliente realmente usa para escolher — ela
+                // ganha anel da cor da marca quando selecionada, do mesmo jeito
+                // que a logo da barbearia aparece no topo.
+                Container(
+                  padding: const EdgeInsets.all(2.5),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: selected
+                          ? [accent, accent.withValues(alpha: 0.4)]
+                          : [palette.textFaint.withValues(alpha: 0.22), palette.textFaint.withValues(alpha: 0.08)],
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundColor: palette.surfaceAlt,
+                    backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                    child: avatarUrl == null
+                        ? Text(initials(staff.name),
+                            style: TextStyle(
+                                color: selected ? accent : palette.textSecondary,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16))
+                        : null,
+                  ),
                 ),
                 if (selected)
                   Positioned(
-                    bottom: -2,
-                    right: -2,
+                    bottom: -1,
+                    right: 4,
                     child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(color: accent, shape: BoxShape.circle, border: Border.all(color: palette.surface, width: 2)),
-                      child: Icon(Icons.check, size: 11, color: contrastingTextColor(accent)),
+                      padding: const EdgeInsets.all(3.5),
+                      decoration: BoxDecoration(
+                        color: accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: palette.surface, width: 2.5),
+                      ),
+                      child: Icon(Icons.check_rounded, size: 11, color: contrastingTextColor(accent)),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 7),
             Text(
               staff.name.split(' ').first,
-              style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 12.5),
+              style: TextStyle(
+                color: selected ? accent : palette.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 12.5,
+                letterSpacing: -0.2,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             if (staff.specialties != null && staff.specialties!.trim().isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.only(top: 3),
                 child: Text(
                   staff.specialties!,
-                  style: TextStyle(color: palette.textFaint, fontSize: 10),
-                  maxLines: 1,
+                  style: TextStyle(color: palette.textFaint, fontSize: 9.5, height: 1.2),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                 ),

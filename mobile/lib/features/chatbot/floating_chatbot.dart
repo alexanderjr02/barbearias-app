@@ -1,15 +1,23 @@
 import 'dart:async';
+import '../../core/widgets/cortix_bottom_nav.dart';
 import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/typewriter_text.dart';
+import '../../core/widgets/voice_input_button.dart';
+import '../cliente/booking_repository.dart';
+import '../cliente/client_repository.dart';
 import 'chatbot_responses.dart';
 
 class _ChatMsg {
   final String text;
   final bool fromBot;
-  _ChatMsg(this.text, this.fromBot);
+  final String? imageUrl;
+  _ChatMsg(this.text, this.fromBot, {this.imageUrl});
 }
 
 /// Self-contained floating assistant bubble + overlay chat panel. Meant to
@@ -24,7 +32,9 @@ class FloatingChatbot extends StatefulWidget {
 }
 
 class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderStateMixin {
-  static const double _navClearance = 92;
+  // Vem da barra, não de um número chutado: quando ela muda de altura, o
+  // balão acompanha sozinho em vez de encostar nela.
+  static const double _navClearance = kNavClearance;
 
   bool _open = false;
   bool _typing = false;
@@ -35,10 +45,50 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
   final _scrollController = ScrollController();
   late final AnimationController _pulseController;
 
+  final _clientRepo = ClientRepository();
+  final _bookingRepo = BookingRepository();
+  String? _barbershopId;
+
   @override
   void initState() {
     super.initState();
     _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
+    _resolveBarbershop();
+  }
+
+  Future<void> _resolveBarbershop() async {
+    try {
+      final shops = await _bookingRepo.myBarbershops();
+      if (!mounted || shops.isEmpty) return;
+      final id = shops.first.id;
+      setState(() => _barbershopId = id);
+      // Pick up the conversation where it left off (persisted per client).
+      try {
+        final hist = await _clientRepo.clientChatHistory(id);
+        if (mounted && hist.isNotEmpty) {
+          setState(() {
+            _messages
+              ..clear()
+              ..addAll(hist.map((h) => _ChatMsg(h.text, h.role != 'user')));
+          });
+          return;
+        }
+      } catch (_) {}
+      // No history yet → the proactive opener: if the client is due for a cut,
+      // it already proposes the next slot ("agente que se antecipa").
+      try {
+        final opener = await _clientRepo.clientChatGreeting(id);
+        if (mounted && opener.greeting.trim().isNotEmpty) {
+          setState(() {
+            _messages
+              ..clear()
+              ..add(_ChatMsg(opener.greeting, true));
+          });
+        }
+      } catch (_) {}
+    } catch (_) {
+      // Falls back to local canned replies if we can't resolve the shop.
+    }
   }
 
   @override
@@ -57,7 +107,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
     });
   }
 
-  void _send(String raw) {
+  Future<void> _send(String raw) async {
     final text = raw.trim();
     if (text.isEmpty) return;
     setState(() {
@@ -66,15 +116,90 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
       _typing = true;
     });
     _scrollToEnd();
-    final delayMs = 500 + Random().nextInt(500);
-    Future.delayed(Duration(milliseconds: delayMs), () {
+
+    String reply;
+    final shopId = _barbershopId;
+    if (shopId != null) {
+      // Personalized assistant for the logged-in client — knows who they are,
+      // remembers the conversation. AI when the shop is Pro+ with a key set.
+      try {
+        reply = await _clientRepo.clientChatSend(message: text, barbershopId: shopId);
+        if (reply.trim().isEmpty) reply = matchChatbotResponse(text) ?? chatbotDefaultResponse;
+      } catch (_) {
+        reply = matchChatbotResponse(text) ?? chatbotDefaultResponse;
+      }
+    } else {
+      await Future.delayed(Duration(milliseconds: 400 + Random().nextInt(400)));
+      reply = matchChatbotResponse(text) ?? chatbotDefaultResponse;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _typing = false;
+      _messages.add(_ChatMsg(reply, true));
+    });
+    _scrollToEnd();
+  }
+
+  /// Client sends a reference photo in the chat: it's saved to their Carteira
+  /// de Cortes so it becomes the reference the barber sees when they book.
+  Future<void> _sendPhoto() async {
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1400, imageQuality: 88);
+    if (file == null || !mounted) return;
+    setState(() => _typing = true);
+    _scrollToEnd();
+    try {
+      final url = await _clientRepo.uploadImage(file);
+      await _clientRepo.addCut(imageUrl: url, note: 'Referência enviada no chat');
+      if (!mounted) return;
+      setState(() {
+        _messages.add(_ChatMsg('', false, imageUrl: url));
+        _typing = false;
+        _messages.add(_ChatMsg(
+          'Guardei sua referência na Carteira de Cortes! 📸 Na hora de agendar, é só escolher essa foto que o barbeiro vê exatamente o corte que você quer. Quer marcar um horário?',
+          true,
+        ));
+      });
+      _scrollToEnd();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _typing = false;
+          _messages.add(_ChatMsg('Não consegui enviar a foto agora. Tenta de novo?', true));
+        });
+      }
+    }
+  }
+
+  /// Provador de corte: the client picks a selfie and the AI recommends the
+  /// cuts that suit their face shape/hair, choosing from the shop's real menu.
+  Future<void> _styleAdvisor() async {
+    final shopId = _barbershopId;
+    if (shopId == null) return;
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1200, imageQuality: 88);
+    if (file == null || !mounted) return;
+    setState(() => _typing = true);
+    _scrollToEnd();
+    try {
+      final url = await _clientRepo.uploadImage(file);
+      if (!mounted) return;
+      setState(() => _messages.add(_ChatMsg('', false, imageUrl: url)));
+      _scrollToEnd();
+      final rec = await _clientRepo.styleAdvisor(imageUrl: url, barbershopId: shopId);
       if (!mounted) return;
       setState(() {
         _typing = false;
-        _messages.add(_ChatMsg(matchChatbotResponse(text) ?? chatbotDefaultResponse, true));
+        _messages.add(_ChatMsg(rec.trim().isEmpty ? 'Não consegui analisar agora. Tenta outra foto?' : rec, true));
       });
       _scrollToEnd();
-    });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _typing = false;
+          _messages.add(_ChatMsg('Não consegui analisar seu corte agora. Tenta de novo? 📸', true));
+        });
+      }
+    }
   }
 
   @override
@@ -216,6 +341,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                 if (index >= _messages.length) return _typingBubble();
                 final m = _messages[index];
                 return Align(
+                  key: ValueKey(index),
                   alignment: m.fromBot ? Alignment.centerLeft : Alignment.centerRight,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
@@ -230,7 +356,27 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                         bottomRight: Radius.circular(m.fromBot ? 14 : 4),
                       ),
                     ),
-                    child: Text(m.text, style: TextStyle(color: m.fromBot ? Colors.white : contrastingTextColor(accent), fontSize: 13, height: 1.35)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (m.imageUrl != null) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(resolveAssetUrl(m.imageUrl) ?? m.imageUrl!, width: 180, height: 180, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox()),
+                          ),
+                          if (m.text.isNotEmpty) const SizedBox(height: 6),
+                        ],
+                        if (m.text.isNotEmpty)
+                          m.fromBot
+                              ? TypewriterText(
+                                  text: m.text,
+                                  animate: index == _messages.length - 1,
+                                  style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.35),
+                                )
+                              : Text(m.text, style: TextStyle(color: contrastingTextColor(accent), fontSize: 13, height: 1.35)),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -243,17 +389,32 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                 height: 30,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: chatbotQuickReplies.length,
+                  itemCount: chatbotQuickReplies.length + 1,
                   separatorBuilder: (_, _) => const SizedBox(width: 6),
-                  itemBuilder: (context, i) => GestureDetector(
-                    onTap: () => _send(chatbotQuickReplies[i]),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white12)),
-                      alignment: Alignment.center,
-                      child: Text(chatbotQuickReplies[i], style: const TextStyle(color: Colors.white70, fontSize: 11.5)),
-                    ),
-                  ),
+                  itemBuilder: (context, i) {
+                    // First chip: the provador de corte (AI style advisor).
+                    if (i == 0) {
+                      return GestureDetector(
+                        onTap: _typing ? null : _styleAdvisor,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(color: accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(20), border: Border.all(color: accent.withValues(alpha: 0.5))),
+                          alignment: Alignment.center,
+                          child: Text('✂️ Meu corte ideal', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                        ),
+                      );
+                    }
+                    final label = chatbotQuickReplies[i - 1];
+                    return GestureDetector(
+                      onTap: () => _send(label),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white12)),
+                        alignment: Alignment.center,
+                        child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11.5)),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -261,6 +422,16 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
             child: Row(
               children: [
+                GestureDetector(
+                  onTap: _typing ? null : _sendPhoto,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), shape: BoxShape.circle, border: Border.all(color: Colors.white12)),
+                    child: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white70, size: 20),
+                  ),
+                ),
                 Expanded(
                   child: TextField(
                     controller: _inputController,
@@ -276,7 +447,8 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                VoiceInputButton(controller: _inputController, color: Colors.white70),
+                const SizedBox(width: 4),
                 GestureDetector(
                   onTap: () => _send(_inputController.text),
                   child: Container(

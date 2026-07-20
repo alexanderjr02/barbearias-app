@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, Sparkles, Check } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { redirectTo } from "@/lib/utils";
 
@@ -152,7 +152,11 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-md">
-      <h1 className="text-3xl font-black text-white mb-1">Entrar na conta</h1>
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-4 rounded-full bg-amber-500/10 border border-amber-500/20">
+        <Sparkles className="w-3 h-3 text-amber-400" />
+        <span className="text-[11px] font-semibold text-amber-400">Painel do gestor</span>
+      </div>
+      <h1 className="text-3xl font-black text-white mb-1 font-display">Bem-vindo de volta</h1>
       <p className="text-zinc-500 text-sm mb-1">
         É dono de barbearia e não tem conta?{" "}
         <Link href="/register" className="text-amber-400 hover:text-amber-300 font-medium transition-colors">
@@ -187,6 +191,7 @@ export default function LoginPage() {
           <input
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
@@ -202,6 +207,7 @@ export default function LoginPage() {
             <input
               type={showPassword ? "text" : "password"}
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -219,10 +225,17 @@ export default function LoginPage() {
               )}
             </button>
           </div>
-          <div className="flex justify-end mt-2">
-            <a href="#" className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
+          <div className="flex items-center justify-between mt-2.5">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" defaultChecked className="peer sr-only" />
+              <span className="w-4 h-4 rounded border border-zinc-700 bg-zinc-900 flex items-center justify-center peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-colors">
+                <Check className="w-3 h-3 text-zinc-900 opacity-0 peer-checked:opacity-100" strokeWidth={3} />
+              </span>
+              <span className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">Manter conectado</span>
+            </label>
+            <Link href="/forgot-password" className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
               Esqueceu a senha?
-            </a>
+            </Link>
           </div>
         </div>
 

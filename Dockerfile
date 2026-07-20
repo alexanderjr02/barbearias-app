@@ -18,6 +18,9 @@ RUN npx prisma generate
 # be present *here*, not just in the running container's environment.
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=""
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+# Liga o output standalone (ver next.config.ts). Fora do Docker ele fica
+# desligado, porque a Vercel monta o deploy do jeito dela.
+ENV DOCKER_BUILD=1
 RUN npm run build
 
 # --- Runtime image ---
@@ -45,6 +48,14 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# scripts/ carrega o is-db-empty.js que o entrypoint usa para decidir o seed.
+# Sem esta linha o container morre no boot chamando um arquivo inexistente.
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+# O seed importa a tabela de preços de src/lib/planPricingDefaults — o
+# standalone não carrega src/, então esse arquivo vai junto. Copiar src/
+# inteiro incharia a imagem à toa.
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/planPricingDefaults.ts ./src/lib/planPricingDefaults.ts
 
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh && chown nextjs:nodejs ./docker-entrypoint.sh

@@ -1,4 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
@@ -24,22 +27,6 @@ String _formatDate(String iso) {
   } catch (_) {
     return iso;
   }
-}
-
-bool _luhnValid(String digits) {
-  if (digits.length < 13) return false;
-  var sum = 0;
-  var isEven = false;
-  for (var i = digits.length - 1; i >= 0; i--) {
-    var d = int.parse(digits[i]);
-    if (isEven) {
-      d *= 2;
-      if (d > 9) d -= 9;
-    }
-    sum += d;
-    isEven = !isEven;
-  }
-  return sum % 10 == 0;
 }
 
 /// Entry point: a client may have booked at more than one barbershop, so this
@@ -228,7 +215,7 @@ class _BarbershopPlansBodyState extends State<_BarbershopPlansBody> {
           }
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
             children: [
               if (active != null) ...[
                 RiseIn(child: _MembershipCard(shopName: widget.shop.name, sub: active)),
@@ -327,35 +314,76 @@ class _SubscribeSheet extends StatefulWidget {
 
 class _SubscribeSheetState extends State<_SubscribeSheet> {
   String _method = 'PIX';
-  String _step = 'method'; // method | card | success
+  String _step = 'method'; // method | pix | cardlink | success
   bool _busy = false;
   String? _error;
+  Map<String, dynamic>? _pix; // { qrCode, qrCodeBase64 }
+  String? _cardLink;
+  String? _subscriptionId;
+  Timer? _pollTimer;
+  final _cpfCtrl = TextEditingController();
 
-  final _nameCtrl = TextEditingController();
-  final _numberCtrl = TextEditingController();
-  final _expiryCtrl = TextEditingController();
-  final _cvvCtrl = TextEditingController();
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _cpfCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _confirm() async {
-    if (_method == 'CREDIT_CARD') {
-      final digits = _numberCtrl.text.replaceAll(RegExp(r'\D'), '');
-      if (_nameCtrl.text.trim().isEmpty || !_luhnValid(digits) || _expiryCtrl.text.length < 5 || _cvvCtrl.text.length < 3) {
-        setState(() => _error = 'Confira os dados do cartão.');
-        return;
-      }
-    }
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      await widget.repository.subscribe(planId: widget.plan.id, paymentMethod: _method);
-      if (mounted) setState(() => _step = 'success');
+      final res = await widget.repository.subscribe(planId: widget.plan.id, paymentMethod: _method, cpfCnpj: _cpfCtrl.text.trim());
+      if (!mounted) return;
+      _subscriptionId = res['subscriptionId'] as String?;
+      setState(() {
+        if (res['pix'] is Map) {
+          _pix = (res['pix'] as Map).cast<String, dynamic>();
+          _step = 'pix';
+        } else if (res['initPoint'] is String) {
+          _cardLink = res['initPoint'] as String;
+          _step = 'cardlink';
+        } else {
+          _step = 'success'; // simulated
+        }
+      });
+      // Real charge → poll until the provider confirms, so the app shows "Pago!"
+      // on its own, without waiting on the webhook.
+      if (_subscriptionId != null && (_step == 'pix' || _step == 'cardlink')) _startPolling();
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (timer) async {
+      final id = _subscriptionId;
+      if (id == null) return;
+      try {
+        final status = await widget.repository.checkPaymentStatus(id);
+        if (!mounted) return;
+        if (status == 'ACTIVE') {
+          timer.cancel();
+          setState(() => _step = 'success');
+        } else if (status == 'CANCELLED') {
+          timer.cancel();
+          setState(() => _error = 'O pagamento não foi concluído. Tente novamente.');
+        }
+      } catch (_) {
+        // transient — keep polling
+      }
+    });
+  }
+
+  void _copy(String text, String label) {
+    Clipboard.setData(ClipboardData(text: text));
+    AppToast.success(context, '$label copiado');
   }
 
   @override
@@ -376,8 +404,8 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: palette.border, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 16),
             if (_step != 'success') ...[
-              Text(_step == 'method' ? 'Assinar ${widget.plan.name}' : 'Dados do cartão', style: TextStyle(color: palette.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
-              Text('R\$${widget.plan.price.toStringAsFixed(2)}/${_cycleLabels[widget.plan.billingCycle]} · pagamento simulado', style: TextStyle(color: palette.textFaint, fontSize: 12)),
+              Text('Assinar ${widget.plan.name}', style: TextStyle(color: palette.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
+              Text('R\$${widget.plan.price.toStringAsFixed(2)}/${_cycleLabels[widget.plan.billingCycle]}', style: TextStyle(color: palette.textFaint, fontSize: 12)),
               const SizedBox(height: 18),
             ],
             if (_step == 'method') ...[
@@ -388,53 +416,16 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
                   Expanded(child: _PaymentOptionTile(icon: Icons.credit_card_rounded, label: 'Cartão', selected: _method == 'CREDIT_CARD', color: color, onTap: () => setState(() => _method = 'CREDIT_CARD'))),
                 ],
               ),
-              if (_method == 'PIX') ...[
-                const SizedBox(height: 20),
-                Center(
-                  child: Container(
-                    width: 160,
-                    height: 160,
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                    child: Icon(Icons.qr_code_2_rounded, size: 120, color: Colors.black.withValues(alpha: 0.85)),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Center(child: Text('QR code ilustrativo — sem cobrança real', style: TextStyle(color: palette.textFaint, fontSize: 11.5))),
-              ],
-              const SizedBox(height: 20),
-              if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5))),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _busy
-                      ? null
-                      : () {
-                          if (_method == 'CREDIT_CARD') {
-                            setState(() => _step = 'card');
-                          } else {
-                            _confirm();
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(backgroundColor: accent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                  child: _busy
-                      ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: contrastingTextColor(accent)))
-                      : Text(_method == 'PIX' ? 'Confirmar assinatura' : 'Continuar', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
-                ),
+              const SizedBox(height: 12),
+              Text(
+                _method == 'PIX'
+                    ? 'Você recebe um QR Code Pix para pagar agora.'
+                    : 'Cobrança mensal automática no cartão — cancele quando quiser.',
+                style: TextStyle(color: palette.textFaint, fontSize: 12),
               ),
-            ] else if (_step == 'card') ...[
-              const FieldLabel('Nome no cartão'),
-              CortixField(controller: _nameCtrl, hint: 'NOME COMPLETO'),
-              const FieldLabel('Número do cartão'),
-              CortixField(controller: _numberCtrl, hint: '0000 0000 0000 0000', keyboardType: TextInputType.number),
-              Row(
-                children: [
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const FieldLabel('Validade'), CortixField(controller: _expiryCtrl, hint: 'MM/AA')])),
-                  const SizedBox(width: 12),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const FieldLabel('CVV'), CortixField(controller: _cvvCtrl, hint: '•••', keyboardType: TextInputType.number)])),
-                ],
-              ),
-              const SizedBox(height: 14),
+              const FieldLabel('CPF (para o pagamento)'),
+              CortixField(controller: _cpfCtrl, hint: '000.000.000-00', keyboardType: TextInputType.number),
+              const SizedBox(height: 18),
               if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5))),
               SizedBox(
                 width: double.infinity,
@@ -444,7 +435,79 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
                   style: ElevatedButton.styleFrom(backgroundColor: accent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                   child: _busy
                       ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: contrastingTextColor(accent)))
-                      : Text('Assinar por R\$${widget.plan.price.toStringAsFixed(2)}', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
+                      : Text(_method == 'PIX' ? 'Gerar Pix' : 'Continuar', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ] else if (_step == 'pix') ...[
+              if ((_pix?['qrCodeBase64'] as String?)?.isNotEmpty == true)
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: Image.memory(base64Decode(_pix!['qrCodeBase64'] as String), width: 180, height: 180, gaplessPlayback: true),
+                  ),
+                ),
+              const SizedBox(height: 14),
+              Text('Pix copia e cola', style: TextStyle(color: palette.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: () => _copy((_pix?['qrCode'] as String?) ?? '', 'Código Pix'),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(12)),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text((_pix?['qrCode'] as String?) ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: palette.textFaint, fontSize: 11.5))),
+                      const SizedBox(width: 8),
+                      Icon(Icons.copy_rounded, size: 18, color: accent),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('Aguardando o pagamento. Assim que cair, sua assinatura ativa automaticamente.', style: TextStyle(color: palette.textFaint, fontSize: 11.5))),
+                ],
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(backgroundColor: accent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  child: Text('Já paguei / Concluir', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ] else if (_step == 'cardlink') ...[
+              const SizedBox(height: 4),
+              Text('Abra o link abaixo no navegador para cadastrar seu cartão. A cobrança será mensal e automática.', style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => _copy(_cardLink ?? '', 'Link de pagamento'),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(12)),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(_cardLink ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: accent, fontSize: 12))),
+                      const SizedBox(width: 8),
+                      Icon(Icons.copy_rounded, size: 18, color: accent),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(backgroundColor: accent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  child: Text('Concluir', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
                 ),
               ),
             ] else ...[

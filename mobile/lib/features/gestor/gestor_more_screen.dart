@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../profile/profile_screen.dart';
+import 'gestor_autopilot_screen.dart';
+import 'gestor_loyalty_screen.dart';
+import 'gestor_units_screen.dart';
 import 'gestor_finance_screen.dart';
 import 'gestor_inventory_screen.dart';
 import 'gestor_marketing_screen.dart';
@@ -8,7 +11,9 @@ import 'gestor_reports_screen.dart';
 import 'gestor_services_screen.dart';
 import 'gestor_settings_screen.dart';
 import 'gestor_subscriptions_screen.dart';
+import 'gestor_reviews_screen.dart';
 import 'gestor_support_screen.dart';
+import 'gestor_waitlist_screen.dart';
 
 class GestorMoreScreen extends StatelessWidget {
   const GestorMoreScreen({super.key});
@@ -24,6 +29,51 @@ class GestorMoreScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _MenuTile(
+            icon: Icons.auto_awesome_rounded,
+            label: 'Auto-piloto',
+            sub: 'Automações que rodam sozinhas (confirmar, aniversário, win-back)',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorAutopilotScreen())),
+          ),
+          const SizedBox(height: 10),
+          _MenuTile(
+            icon: Icons.card_giftcard_rounded,
+            label: 'Fidelidade',
+            sub: 'Cartão de selos, indicação e pontos — com prévia do que o cliente vê',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorLoyaltyScreen())),
+          ),
+          const SizedBox(height: 10),
+          _MenuTile(
+            icon: Icons.store_mall_directory_rounded,
+            label: 'Unidades',
+            sub: 'Compare suas lojas e troque de unidade',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorUnitsScreen())),
+          ),
+          const SizedBox(height: 10),
+          _MenuTile(
+            icon: Icons.hourglass_bottom_rounded,
+            label: 'Fila de espera',
+            sub: 'Clientes aguardando um horário',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorWaitlistScreen())),
+          ),
+          const SizedBox(height: 10),
+          _MenuTile(
+            icon: Icons.star_rounded,
+            label: 'Avaliações',
+            sub: 'Nota e comentários dos clientes',
+            palette: palette,
+            accent: accent,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorReviewsScreen())),
+          ),
+          const SizedBox(height: 10),
           _MenuTile(
             icon: Icons.bar_chart_rounded,
             label: 'Relatórios',

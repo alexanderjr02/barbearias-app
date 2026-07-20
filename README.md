@@ -4,7 +4,7 @@
 
 ### Sistema de Gestão Completo para Barbearias Modernas
 
-**Painel web + app mobile • Agendamento online • Fidelidade • Chatbot • Gestão financeira • Multi-tenant SaaS**
+**Painel web + app mobile • Agendamento online • Copiloto com IA • Fidelidade • Gorjeta via PIX • Fila ao vivo • Multi-tenant SaaS**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
@@ -40,23 +40,49 @@ Para uma explicação não técnica, pensada para apresentar a clientes/investid
 | **Financeiro** | Receitas x despesas com lançamentos manuais e gráfico por semana/mês |
 | **Estoque** | Produtos com alerta automático de estoque baixo |
 | **Fidelidade** | Pontos por real gasto, níveis (Bronze/Prata/Ouro) e extrato de pontos por cliente |
-| **Marketing** | Campanhas e automações (tela pronta; disparo real ainda não integrado — ver roadmap) |
-| **Configurações** | Marca (logo/cores/banner), horários de funcionamento e plano da conta |
+| **Marketing** | Campanhas e automações (+ redator de marketing com IA no Copiloto) |
+| **Copiloto com IA** | Assistente de negócio: resumo diário proativo (sumidos, horários vazios, confirmar amanhã, estoque) com ações de 1 toque + chat que responde sobre o negócio em português (faturamento, clientes, equipe) e **administra por conversa** (cadastrar serviço, mudar preço, dar folga). Botão flutuante fixo no painel |
+| **Configurações** | Marca (logo/cores/banner), horários, chave PIX (gorjetas), FAQ do chatbot e plano da conta |
+
+### ✨ Diferenciais (o que nenhum concorrente tem junto)
+
+- **Copiloto com IA** para gestor e barbeiro (assistente de negócio, não só bot de agendamento).
+- **Antes/Depois automático**: barbeiro fotografa o resultado ao concluir → vai pra Carteira de Cortes do cliente + vira portfólio.
+- **Receita do corte (ficha técnica)**: como o corte foi feito, pré-carregada na próxima visita — corte idêntico toda vez.
+- **Fila ao vivo**: cliente vê posição na fila + espera estimada, atualizando sozinho; check-in ao vivo (chegou → em atendimento).
+- **Gorjeta digital via PIX**: cliente dá gorjeta pelo app; barbeiro vê nos Ganhos.
+- **Carteira de Cortes** do cliente + **foto de referência** no chat ("quero esse corte").
+- **IA que lê a foto de referência** e descreve tecnicamente pro barbeiro reproduzir.
 
 ### App mobile (Flutter — Android/iOS/Web), um app para os 3 papéis
 
-- **Gestor**: tudo que existe no painel web, incluindo dashboard com gráficos, agenda em calendário, clientes, equipe, serviços, estoque, financeiro, marketing e configurações.
-- **Barbeiro**: início com resumo do dia, agenda em calendário, cadastro e lista de clientes, ganhos/comissão.
-- **Cliente**: agendamento com seleção de barbeiro (foto + especialidade) e serviço em formato de cards, histórico de agendamentos e pontos de fidelidade.
-- Tema claro/escuro, marca da barbearia (logo/banner/cor) refletida em tempo real, localização em pt-BR.
+- **Gestor**: tudo que existe no painel web + **Copiloto com IA** (botão flutuante) com resumo diário e chat de negócio.
+- **Barbeiro**: início com resumo do dia, agenda com **check-in ao vivo** e **finalização com foto do resultado + receita do corte**, referência + preferências do cliente no atendimento, ganhos/comissão + **gorjetas**, e **Copiloto pessoal** (ganhos, próximo cliente, sumidos).
+- **Cliente**: agendamento com seleção de barbeiro e serviço em cards, **Carteira de Cortes**, **fila ao vivo** com posição/espera, **gorjeta via PIX**, avaliação e chatbot com **envio de foto de referência**.
+- Tema claro/escuro, marca da barbearia (logo/banner/cor) refletida em tempo real, navegação moderna com barra flutuante, localização em pt-BR.
 
 ### Página pública de agendamento (`/booking/[slug]`)
 
 Fluxo em 5 passos para o cliente final, sem precisar de conta: escolher serviço → escolher barbeiro → escolher data/horário (apenas horários realmente livres) → informar nome e WhatsApp → confirmar.
 
-### Chatbot
+### Chatbot & Copiloto com IA
 
-Widget flutuante nas páginas públicas e no painel, hoje com respostas automáticas por palavra-chave (horário, serviços, preços, como agendar). Upgrade para IA generativa está no roadmap (veja abaixo).
+O sistema tem **duas camadas de IA**, ambas movidas pelo Claude (Anthropic) e ativadas ao definir `ANTHROPIC_API_KEY`. **Sem a chave, tudo continua funcionando** em modo simulado/respostas prontas — a chave só liga a conversa livre.
+
+- **Bot do cliente** (widget flutuante no app e nas páginas públicas): agenda, remarca, cancela e consulta horários **reais** via tool-use, entra na fila de espera, faz upsell e responde pelo **FAQ da barbearia**. Aceita **foto de referência** no chat (vai pra Carteira de Cortes).
+- **Copiloto do gestor/barbeiro** (assistente de negócio): resumo proativo + ações de 1 toque, chat sobre os dados reais do negócio e administração por conversa. Ver `src/lib/chatbot/copilot.ts` e `src/lib/copilot/insights.ts`.
+
+A IA é um recurso **Pro+** (ver Planos). O modelo é configurável via `CHATBOT_MODEL` (padrão `claude-opus-4-8`).
+
+### Integrações
+
+| Integração | Estado |
+|---|---|
+| **PIX (gorjetas)** | Chave PIX da barbearia mostrada ao cliente pra dar gorjeta; registrada e exibida nos Ganhos do barbeiro |
+| **WhatsApp Cloud API** | Envio (confirmações) **e** webhook de entrada — bot 24/7 que responde com a mesma IA + handoff pra humano (`/api/webhooks/whatsapp`). Requer credenciais da Meta |
+| **Relatório semanal** | Cron (`/api/cron/weekly-report`) que envia o resumo da semana por notificação + e-mail. Agendado no `render.yaml` |
+| **Mercado Pago** | Estrutura de cobrança de assinatura (ver `src/lib/mercadopago.ts`) |
+| **NF-e / NFS-e** | Estrutura pronta (provider-agnóstica) para nota fiscal de serviço |
 
 ---
 
@@ -132,8 +158,11 @@ cortix/
 │   │   └── api/v1/             # API versionada (painel web + app Flutter), envelope {data,error}
 │   │
 │   ├── components/             # Layout, dashboard, chatbot, billing, UI base
+│   │   └── layout/FloatingCopilotWidget.tsx # Copiloto flutuante do painel web
 │   ├── context/                # PlanContext (plano/features da conta)
-│   ├── lib/                    # auth.ts, db.ts, loyalty.ts, api/relay.ts, etc.
+│   ├── lib/                    # auth.ts, db.ts, loyalty.ts, billing.ts, whatsapp.ts, mailer.ts...
+│   │   ├── chatbot/            # assistant.ts (bot do cliente) + copilot.ts (gestor/barbeiro)
+│   │   └── copilot/            # insights.ts (inteligência de negócio, sem IA)
 │   └── proxy.ts                # Substitui o middleware.ts do Next.js "clássico" — protege
 │                                 rotas por papel e aplica CORS em /api/v1 e /uploads
 ```
@@ -146,16 +175,24 @@ cortix/
 User (dono, barbeiro ou cliente — diferenciado por `role`)
   └── Barbershop ──┬── Staff (barbeiros)
                     ├── Service (serviços)
-                    ├── Appointment (agendamentos) ── Review (avaliação pós-atendimento)
+                    ├── Appointment (agendamentos) ──┬── Review (avaliação pós-atendimento)
+                    │     • referencePhoto / resultPhoto (antes/depois)   └── Tip (gorjeta via PIX)
+                    │     • recipeMachine/Finish/Products/Notes (receita do corte)
                     ├── Product (estoque)
                     ├── FinancialTransaction (lançamentos financeiros)
                     ├── WorkingHour (horário de funcionamento)
-                    ├── BarbershopClient (vínculo cliente ↔ barbearia, mesmo sem agendamento ainda)
+                    ├── BarbershopClient (vínculo cliente ↔ barbearia)
+                    ├── WaitlistEntry (fila de espera / Auto-avise)
+                    ├── SubscriptionPlan (clube de assinatura) / ServiceInvoice (NF-e)
                     ├── LoyaltyAccount (pontos/nível) ── PointsTransaction (extrato)
-                    └── ChatMessage (histórico do chatbot)
+                    └── ChatMessage (histórico do chatbot / WhatsApp)
 
+CutPhoto (Carteira de Cortes) ── User (cliente)
+ClientPreferences (ficha do cliente) ── User (cliente)
 RefreshToken (sessão) ── User
 ```
+
+Campos de IA/negócio recentes no `Barbershop`: `pixKey` (gorjetas), `faqText` (FAQ do chatbot), `plan` (gate de IA via `planHasAI`).
 
 Cada barbearia tem um `slug` único (ex.: `barbearia-do-joao`) que vira a URL pública de agendamento.
 
@@ -218,6 +255,20 @@ JWT_SECRET="sua-chave-secreta-aqui"
 # Login com Google (opcional) — veja a seção "Login com Google" abaixo.
 GOOGLE_CLIENT_ID=""
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=""
+
+# IA — liga o Copiloto e o chatbot com IA (Claude/Anthropic). Sem ela, tudo
+# roda em modo simulado/respostas prontas. Recurso Pro+.
+ANTHROPIC_API_KEY=""
+# CHATBOT_MODEL="claude-opus-4-8"   # opcional (ex.: claude-haiku-4-5 p/ baratear)
+
+# WhatsApp Cloud API — envio + webhook do bot 24/7 (opcional; requer conta Meta)
+WHATSAPP_TOKEN=""
+WHATSAPP_PHONE_NUMBER_ID=""
+WHATSAPP_VERIFY_TOKEN=""     # a mesma string digitada no painel da Meta
+WHATSAPP_BARBERSHOP_ID=""    # id da barbearia dona do número
+
+# Relatório semanal automático (cron) — /api/cron/weekly-report?secret=...
+CRON_SECRET=""
 ```
 
 Veja `.env.example` para o modelo mínimo.
@@ -283,13 +334,13 @@ e rode `docker compose up -d --build` de novo (só o `mobile-web` precisa rebuil
 
 ## 💰 Planos do sistema
 
-| Plano | Preço | Barbeiros | Agendamentos |
-|---|---|---|---|
-| **Starter** | R$ 29/mês | Até 3 | 50/mês |
-| **Pro** | R$ 79/mês | Até 10 | Ilimitado |
-| **White Label** | R$ 299/mês + 3% | Ilimitado | Ilimitado |
+| Plano | Preço | Barbeiros | Agendamentos | IA (Copiloto/chatbot) |
+|---|---|---|---|---|
+| **Essencial** | R$ 79/mês | Até 3 | Ilimitado | ❌ |
+| **Pro** | R$ 149/mês | Até 10 | Ilimitado | ✅ |
+| **White Label** | R$ 399/mês | Ilimitado | Ilimitado | ✅ |
 
-O plano fica salvo em `Barbershop.plan` e controla o que a conta pode acessar (`src/context/PlanContext.tsx`). **Não há cobrança automática ainda** — troca de plano hoje é manual, sem gateway de pagamento (veja o roadmap em [docs/apresentacao-cliente.md](docs/apresentacao-cliente.md)).
+O plano fica salvo em `Barbershop.plan` e controla o que a conta pode acessar (`src/context/PlanContext.tsx`). Os preços/limites vivem no banco (`PlatformSetting`, editáveis em `/admin/settings`), com fallback em `src/lib/billing.ts`. A **IA é exclusiva do Pro+** (`planHasAI()` em `src/lib/billing.ts`) — protege a margem, já que cada conversa consome a API da Anthropic. **A cobrança automática (gateway) e o teste grátis de 14 dias ainda não estão implementados** — troca de plano hoje é manual.
 
 ---
 

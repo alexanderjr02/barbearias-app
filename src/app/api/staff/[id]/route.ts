@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
+import { isValidCpf, onlyDigits } from "@/lib/br";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireBarbershopSession();
@@ -13,6 +14,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const body = await request.json().catch(() => null);
   if (!body) {
     return NextResponse.json({ error: "Corpo da requisição inválido" }, { status: 400 });
+  }
+
+  if (typeof body.cpf === "string" && body.cpf.trim() && !isValidCpf(body.cpf)) {
+    return NextResponse.json({ error: "CPF inválido" }, { status: 400 });
   }
 
   const staff = await prisma.staff.findUnique({ where: { id } });
@@ -51,6 +56,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ...((typeof body.avatar === "string" || body.avatar === null) && { avatar: body.avatar }),
       ...(typeof body.commissionRate === "number" && { commissionRate: body.commissionRate }),
       ...(typeof body.isActive === "boolean" && { isActive: body.isActive }),
+      ...((typeof body.cpf === "string" || body.cpf === null) && { cpf: body.cpf ? onlyDigits(body.cpf) : null }),
+      ...((typeof body.employmentType === "string" || body.employmentType === null) && { employmentType: body.employmentType }),
+      ...((typeof body.pixKey === "string" || body.pixKey === null) && { pixKey: body.pixKey }),
+      ...((typeof body.hireDate === "string" || body.hireDate === null) && { hireDate: body.hireDate ? new Date(body.hireDate) : null }),
       ...(userId && { userId }),
     },
   });

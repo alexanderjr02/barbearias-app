@@ -7,6 +7,9 @@ class Session {
   final String? staffId;
   final String? phone;
   final String? avatar;
+  /// "YYYY-MM-DD". Alimenta a campanha de aniversário da barbearia, por isso
+  /// o próprio cliente pode preencher em vez de depender do gestor.
+  final String? dateOfBirth;
 
   Session({
     required this.id,
@@ -17,6 +20,7 @@ class Session {
     required this.staffId,
     this.phone,
     this.avatar,
+    this.dateOfBirth,
   });
 
   factory Session.fromJson(Map<String, dynamic> json) => Session(
@@ -28,9 +32,10 @@ class Session {
         staffId: json['staffId'],
         phone: json['phone'],
         avatar: json['avatar'],
+        dateOfBirth: json['dateOfBirth'] as String?,
       );
 
-  Session copyWith({String? name, String? phone, String? avatar}) => Session(
+  Session copyWith({String? name, String? phone, String? avatar, String? dateOfBirth}) => Session(
         id: id,
         name: name ?? this.name,
         email: email,
@@ -39,6 +44,7 @@ class Session {
         staffId: staffId,
         phone: phone ?? this.phone,
         avatar: avatar ?? this.avatar,
+        dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       );
 
   bool get isBarber => role == 'BARBER';

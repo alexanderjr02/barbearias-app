@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Star, Phone, Users, Camera, Loader2, Award, Crown } from "lucide-react";
-import { formatCurrency, formatDate, cn } from "@/lib/utils";
+import { Plus, Search, Star, Phone, Users, Camera, Loader2, Award, Crown, Check, Minus, Gift } from "lucide-react";
+import { formatCurrency, formatDate, formatPhoneBR, cn } from "@/lib/utils";
 import { apiGet, apiPatch, apiPost, apiUpload } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
@@ -36,6 +36,12 @@ const TIER_COLORS: Record<string, string> = {
 function initialsOf(name: string) {
   return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 }
+
+const CLIENT_PWD_RULES = [
+  { label: "8+ caracteres", test: (p: string) => p.length >= 8 },
+  { label: "Uma letra", test: (p: string) => /[a-zA-Z]/.test(p) },
+  { label: "Um número", test: (p: string) => /[0-9]/.test(p) },
+] as const;
 
 function ClientAvatar({ client, onChange }: { client: ApiClient; onChange: (avatar: string | null) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,9 +95,24 @@ export default function ClientsPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [newPwd, setNewPwd] = useState("");
+
+  const openModal = () => {
+    setNewPwd("");
+    setModalOpen(true);
+  };
+  const closeModal = () => setModalOpen(false);
 
   const queryClient = useQueryClient();
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: () => apiGet<ApiClient[]>("/api/clients") });
+
+  // Só para o select de barbeiro preferido — carrega junto com o modal aberto.
+  const { data: staffList = [] } = useQuery({
+    queryKey: ["staff"],
+    queryFn: () => apiGet<{ id: string; name: string; isActive: boolean }[]>("/api/staff"),
+    enabled: modalOpen,
+    select: (rows) => rows.filter((s) => s.isActive),
+  });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["clients"] });
 
@@ -101,11 +122,18 @@ export default function ClientsPage() {
   });
 
   const createClient = useMutation({
-    mutationFn: (data: Record<string, unknown>) => apiPost("/api/clients", data),
-    onSuccess: () => {
+    mutationFn: (data: Record<string, unknown>) =>
+      apiPost<{ reusedExistingAccount?: boolean }>("/api/clients", data),
+    onSuccess: (res) => {
       invalidate();
       setModalOpen(false);
-      toast.success("Cliente cadastrado");
+      // Conta que já existia mantém a senha antiga — avisar aqui evita o
+      // gestor entregar ao cliente uma senha que não funciona.
+      if (res?.reusedExistingAccount) {
+        toast.success("Cliente vinculado. A conta já existia, então ele entra com a senha que já usava.");
+      } else {
+        toast.success("Cliente cadastrado");
+      }
     },
   });
 
@@ -118,6 +146,12 @@ export default function ClientsPage() {
       phone: form.get("phone") || undefined,
       dateOfBirth: form.get("dateOfBirth") || undefined,
       password: form.get("password"),
+      cpf: form.get("cpf") || undefined,
+      neighborhood: form.get("neighborhood") || undefined,
+      profession: form.get("profession") || undefined,
+      instagram: form.get("instagram") || undefined,
+      howFoundUs: form.get("howFoundUs") || undefined,
+      preferredStaffId: form.get("preferredStaffId") || undefined,
     });
   };
 
@@ -142,35 +176,132 @@ export default function ClientsPage() {
     <div className="space-y-6">
       <FormModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={closeModal}
         title="Cadastrar cliente"
         onSubmit={handleSubmit}
         isPending={createClient.isPending}
         error={createClient.error?.message}
         submitLabel="Cadastrar cliente"
       >
-        <p className="text-xs text-zinc-500">
-          O cliente recebe um acesso próprio para acompanhar o histórico e os pontos pelo app.
-        </p>
+        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
+          <Award className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-zinc-400">
+            O cliente recebe acesso próprio para agendar, acompanhar o histórico e acumular pontos de fidelidade pelo app.
+          </p>
+        </div>
         <div>
-          <label className={labelCls}>Nome</label>
-          <input name="name" required className={fieldCls} placeholder="Ex: Maria Souza" />
+          <label className={labelCls}>Nome completo</label>
+          <input name="name" required autoComplete="off" className={fieldCls} placeholder="Ex: Maria Souza" />
         </div>
         <div>
           <label className={labelCls}>E-mail</label>
-          <input name="email" type="email" required className={fieldCls} placeholder="cliente@email.com" />
+          <input name="email" type="email" required autoComplete="off" className={fieldCls} placeholder="cliente@email.com" />
         </div>
-        <div>
-          <label className={labelCls}>Telefone</label>
-          <input name="phone" className={fieldCls} placeholder="(11) 99999-9999" />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Telefone / WhatsApp</label>
+            <input
+              name="phone"
+              inputMode="numeric"
+              className={fieldCls}
+              placeholder="(11) 99999-9999"
+              onInput={(e) => {
+                e.currentTarget.value = formatPhoneBR(e.currentTarget.value);
+              }}
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Nascimento</label>
+            <input
+              name="dateOfBirth"
+              type="date"
+              max={new Date().toISOString().slice(0, 10)}
+              className={`${fieldCls} [color-scheme:dark]`}
+            />
+          </div>
         </div>
-        <div>
-          <label className={labelCls}>Data de nascimento</label>
-          <input name="dateOfBirth" type="date" max={new Date().toISOString().slice(0, 10)} className={fieldCls} />
+        <p className="-mt-2 flex items-center gap-1.5 text-[11px] text-zinc-500">
+          <Gift className="w-3 h-3 text-amber-400" />
+          A data de nascimento habilita felicitações e campanhas de aniversário automáticas.
+        </p>
+
+        <div className="pt-3 border-t border-zinc-800 space-y-3">
+          <p className="text-xs text-zinc-500">
+            Ficha do cliente — tudo opcional. Quanto mais preenchido, melhor o Copiloto entende quem é ele.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>CPF</label>
+              <input name="cpf" inputMode="numeric" autoComplete="off" className={fieldCls} placeholder="000.000.000-00" />
+            </div>
+            <div>
+              <label className={labelCls}>Bairro</label>
+              <input name="neighborhood" autoComplete="off" className={fieldCls} placeholder="Ex: Centro" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Profissão</label>
+              <input name="profession" autoComplete="off" className={fieldCls} placeholder="Ex: Motorista" />
+            </div>
+            <div>
+              <label className={labelCls}>Instagram</label>
+              <input name="instagram" autoComplete="off" className={fieldCls} placeholder="@perfil" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Como conheceu</label>
+              <select name="howFoundUs" defaultValue="" className={fieldCls}>
+                <option value="">Não informado</option>
+                <option value="INDICACAO">Indicação de amigo</option>
+                <option value="INSTAGRAM">Instagram</option>
+                <option value="GOOGLE">Google / Maps</option>
+                <option value="PASSOU_NA_FRENTE">Passou na frente</option>
+                <option value="OUTRO">Outro</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Barbeiro preferido</label>
+              <select name="preferredStaffId" defaultValue="" className={fieldCls}>
+                <option value="">Sem preferência</option>
+                {staffList.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
         <div>
           <label className={labelCls}>Senha inicial</label>
-          <input name="password" type="password" minLength={8} required className={fieldCls} placeholder="Mínimo 8 caracteres" />
+          <input
+            name="password"
+            type="password"
+            minLength={8}
+            required
+            autoComplete="new-password"
+            value={newPwd}
+            onChange={(e) => setNewPwd(e.target.value)}
+            className={fieldCls}
+            placeholder="Mínimo 8 caracteres"
+          />
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+            {CLIENT_PWD_RULES.map((rule) => {
+              const ok = rule.test(newPwd);
+              return (
+                <span
+                  key={rule.label}
+                  className={cn(
+                    "inline-flex items-center gap-1 text-[11px] transition-colors",
+                    ok ? "text-emerald-400" : "text-zinc-600"
+                  )}
+                >
+                  {ok ? <Check className="w-3 h-3" /> : <Minus className="w-3 h-3" />} {rule.label}
+                </span>
+              );
+            })}
+          </div>
+          <p className="mt-1.5 text-[11px] text-zinc-600">Você pode compartilhar essa senha com o cliente — ele poderá alterá-la depois.</p>
         </div>
       </FormModal>
 
@@ -179,7 +310,7 @@ export default function ClientsPage() {
         title="Clientes"
         subtitle={`${clients.length} clientes cadastrados · ${goldCount} no nível Ouro`}
         action={
-          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+          <button onClick={openModal} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" />
             Cadastrar cliente
           </button>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { createMembershipCharge, isPaymentProvider, providerRequiresCpf } from "@/lib/payments";
 
 const CYCLE_DAYS: Record<string, number> = { MONTHLY: 30, QUARTERLY: 90, ANNUAL: 365 };
 
@@ -93,7 +94,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Plano e forma de pagamento são obrigatórios" }, { status: 400 });
   }
 
-  const plan = await prisma.subscriptionPlan.findUnique({ where: { id: body.planId } });
+  const plan = await prisma.subscriptionPlan.findUnique({
+    where: { id: body.planId },
+    include: { barbershop: { select: { id: true, name: true, paymentProvider: true, paymentApiKey: true } } },
+  });
   if (!plan || !plan.isActive) {
     return NextResponse.json({ error: "Plano não encontrado" }, { status: 404 });
   }
@@ -111,6 +115,35 @@ export async function POST(request: NextRequest) {
   }
 
   const cycleDays = CYCLE_DAYS[plan.billingCycle] ?? 30;
+  const nextBillingAt = new Date(Date.now() + cycleDays * 24 * 60 * 60 * 1000);
+  const provider = plan.barbershop.paymentProvider;
+  const apiKey = plan.barbershop.paymentApiKey;
+
+  // No payment provider connected → simulated activation (keeps the flow usable
+  // in demo/dev; the barbershop connects a provider to charge for real).
+  if (!provider || !apiKey || !isPaymentProvider(provider)) {
+    const subscription = await prisma.clientSubscription.create({
+      data: {
+        planId: plan.id,
+        clientId: user.id,
+        clientName: user.name,
+        clientPhone: user.phone ?? "",
+        paymentMethod: body.paymentMethod,
+        status: "ACTIVE",
+        startedAt: new Date(),
+        nextBillingAt,
+      },
+    });
+    return NextResponse.json({ simulated: true, subscription }, { status: 201 });
+  }
+
+  const cpfCnpj = typeof body.cpfCnpj === "string" ? body.cpfCnpj : undefined;
+  if (providerRequiresCpf(provider) && !cpfCnpj) {
+    return NextResponse.json({ error: "CPF é obrigatório para este pagamento", needsCpf: true }, { status: 400 });
+  }
+
+  // Real charge → create the subscription as PENDING; the webhook flips it to
+  // ACTIVE once the provider confirms the payment.
   const subscription = await prisma.clientSubscription.create({
     data: {
       planId: plan.id,
@@ -118,11 +151,42 @@ export async function POST(request: NextRequest) {
       clientName: user.name,
       clientPhone: user.phone ?? "",
       paymentMethod: body.paymentMethod,
-      status: "ACTIVE",
+      status: "PENDING",
       startedAt: new Date(),
-      nextBillingAt: new Date(Date.now() + cycleDays * 24 * 60 * 60 * 1000),
+      nextBillingAt,
     },
   });
 
-  return NextResponse.json(subscription, { status: 201 });
+  const baseUrl = process.env.APP_URL || request.nextUrl.origin;
+  const notificationUrl = `${baseUrl}/api/client/subscriptions/webhook`;
+
+  try {
+    const charge = await createMembershipCharge(provider, apiKey, {
+      method: body.paymentMethod,
+      amount: plan.price,
+      description: `${plan.name} · ${plan.barbershop.name}`,
+      payerEmail: user.email,
+      payerName: user.name,
+      payerPhone: user.phone ?? undefined,
+      cpfCnpj,
+      externalReference: subscription.id,
+      backUrl: `${baseUrl}/`,
+      notificationUrl,
+    });
+
+    if (charge.kind === "pix") {
+      await prisma.clientSubscription.update({ where: { id: subscription.id }, data: { mpPaymentId: charge.id } });
+      return NextResponse.json(
+        { subscriptionId: subscription.id, provider, pix: { qrCode: charge.qrCode, qrCodeBase64: charge.qrCodeBase64 } },
+        { status: 201 }
+      );
+    }
+    await prisma.clientSubscription.update({ where: { id: subscription.id }, data: { mpPreapprovalId: charge.id } });
+    return NextResponse.json({ subscriptionId: subscription.id, provider, initPoint: charge.initPoint }, { status: 201 });
+  } catch (error) {
+    console.error("[client-subscribe]", error);
+    await prisma.clientSubscription.delete({ where: { id: subscription.id } }).catch(() => {});
+    const message = error instanceof Error ? error.message : "Não foi possível iniciar o pagamento.";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }
