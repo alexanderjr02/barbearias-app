@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { planHasAI } from "@/lib/billing";
 import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
-import { churnedClients, tomorrowAppointments } from "@/lib/copilot/insights";
+import { churnedClients, tomorrowAppointments, emptySlotsToday } from "@/lib/copilot/insights";
 
 // POST /api/copilot/action { action } — executes one of the briefing's one-tap
 // actions. Each is a real, safe operation scoped to the caller's barbershop.
@@ -58,8 +58,15 @@ export async function POST(request: NextRequest) {
       select: { id: true, clientId: true },
     });
     const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
+    // Diz QUAIS horários abriram — "abriu horário" sem a hora obriga o cliente
+    // a abrir o app pra descobrir. Pega os horários livres de hoje de verdade
+    // (todos os barbeiros), os 3 mais cedo, e cita na mensagem.
+    const { perStaff } = await emptySlotsToday(barbershopId);
+    const times = [...new Set(perStaff.flatMap((s) => s.free))].sort().slice(0, 3);
+    const whenTxt = times.length ? ` às ${times.join(", ")}` : "";
+    const shopName = shop?.name ?? "barbearia";
     for (const w of waiting) {
-      await notifyClient(barbershopId, w.clientId!, "APPOINTMENT_CONFIRMED", "Abriu horário!", `Vagou horário hoje na ${shop?.name ?? "barbearia"}. Corre pra garantir!`, "/appointments");
+      await notifyClient(barbershopId, w.clientId!, "APPOINTMENT_CONFIRMED", "Abriu horário!", `Vagou horário hoje${whenTxt} na ${shopName}. Corre pra garantir!`, "/appointments");
     }
     await prisma.waitlistEntry.updateMany({ where: { id: { in: waiting.map((w: { id: string }) => w.id) } }, data: { status: "DONE" } });
     return NextResponse.json({ ok: true, count: waiting.length, message: `${waiting.length} cliente(s) da fila avisado(s).` });
