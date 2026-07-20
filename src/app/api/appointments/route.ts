@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { validateRequestedSlot } from "@/lib/scheduling";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
-import { sendWhatsAppText, bookingConfirmationText } from "@/lib/whatsapp";
+import { sendBookingConfirmation } from "@/lib/whatsapp";
 import { appointmentLimitError } from "@/lib/planLimits";
 
 // GET /api/appointments?barbershopId=xxx&staffId=yyy&from=YYYY-MM-DD&to=YYYY-MM-DD
@@ -159,17 +159,14 @@ export async function POST(request: NextRequest) {
       const iso = String(date).slice(0, 10);
       const [y, m, d] = iso.split("-");
       const dateLabel = d && m && y ? `${d}/${m}/${y}` : iso;
-      await sendWhatsAppText(
-        clientPhone,
-        bookingConfirmationText({
-          clientName,
-          barbershopName: appointment.barbershop.name,
-          serviceName: appointment.service.name,
-          staffName: appointment.staff.name,
-          dateLabel,
-          startTime,
-        })
-      );
+      await sendBookingConfirmation(clientPhone, {
+        clientName,
+        barbershopName: appointment.barbershop.name,
+        serviceName: appointment.service.name,
+        staffName: appointment.staff.name,
+        dateLabel,
+        startTime,
+      });
     } catch (err) {
       console.error("[appointments] WhatsApp confirmation failed", err);
     }

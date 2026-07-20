@@ -77,15 +77,63 @@ export async function sendWhatsAppTemplate(
   });
 }
 
-// Booking confirmation copy, shared so tone stays consistent.
-export function bookingConfirmationText(input: {
+export interface BookingConfirmationInput {
   clientName: string;
   barbershopName: string;
   serviceName: string;
   staffName: string;
   dateLabel: string;
   startTime: string;
-}): string {
+}
+
+/**
+ * Confirmação de agendamento — o caminho que a Meta EXIGE para mensagem
+ * iniciada pela empresa.
+ *
+ * Isto existe porque texto livre não chega a um cliente novo. A política da
+ * Meta só entrega texto livre a quem mandou mensagem para a empresa nas
+ * últimas 24h — exatamente o que um cliente que acabou de agendar pelo app
+ * NÃO fez. Sem template, a confirmação sairia daqui, a Meta aceitaria a
+ * chamada e a mensagem simplesmente não seria entregue: falha silenciosa, a
+ * pior categoria.
+ *
+ * Com WHATSAPP_TEMPLATE_CONFIRMATION definido, manda pelo template aprovado.
+ * Sem a variável, cai no texto livre — que é o certo em desenvolvimento (vai
+ * pro log) e continua válido para quem está dentro da janela de 24h.
+ *
+ * O template aprovado na Meta precisa ter EXATAMENTE seis variáveis, nesta
+ * ordem — a Meta as identifica por posição, não por nome:
+ *   {{1}} nome do cliente   {{2}} barbearia   {{3}} serviço
+ *   {{4}} barbeiro          {{5}} data        {{6}} hora
+ * Categoria: UTILITY (transacional) — aprova mais fácil e custa menos que
+ * MARKETING.
+ */
+export async function sendBookingConfirmation(toPhone: string, input: BookingConfirmationInput): Promise<void> {
+  const templateName = process.env.WHATSAPP_TEMPLATE_CONFIRMATION?.trim();
+
+  if (!templateName) {
+    await sendWhatsAppText(toPhone, bookingConfirmationText(input));
+    return;
+  }
+
+  const firstName = input.clientName.trim().split(/\s+/)[0] || input.clientName;
+  await sendWhatsAppTemplate(toPhone, templateName, process.env.WHATSAPP_TEMPLATE_LANG || "pt_BR", [
+    {
+      type: "body",
+      parameters: [
+        { type: "text", text: firstName },
+        { type: "text", text: input.barbershopName },
+        { type: "text", text: input.serviceName },
+        { type: "text", text: input.staffName },
+        { type: "text", text: input.dateLabel },
+        { type: "text", text: input.startTime },
+      ],
+    },
+  ]);
+}
+
+// Booking confirmation copy, shared so tone stays consistent.
+export function bookingConfirmationText(input: BookingConfirmationInput): string {
   const firstName = input.clientName.trim().split(/\s+/)[0] || "";
   return (
     `Olá, ${firstName}! ✂️\n\n` +
