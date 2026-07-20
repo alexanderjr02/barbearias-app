@@ -72,6 +72,37 @@ model User {
   loyaltyRewards   LoyaltyReward[]
   referralsMade    Referral[] @relation("ReferralsMade")
   referralsReceived Referral[] @relation("ReferralsReceived")
+  pushSubscriptions PushSubscription[]
+}
+
+// Assinatura de Web Push de UM aparelho de UM usuário. É o que faz o celular
+// apitar com o app fechado, como o WhatsApp — o navegador entrega o push a um
+// service worker mesmo sem a aba aberta.
+//
+// Uma linha por (usuário + aparelho): a mesma pessoa no iPhone e no
+// computador tem duas. `endpoint` é a URL única que o serviço de push do
+// navegador (Apple/Google/Mozilla) nos dá para aquele aparelho — é a chave
+// natural, então mandar a mesma assinatura de novo só atualiza (upsert).
+//
+// barbershopId é desnormalizado de propósito: o gestor recebe "novo
+// agendamento na SUA barbearia", e filtrar por barbearia sem um JOIN por
+// staff/owner a cada disparo mantém o envio barato. Guardado no momento em
+// que a pessoa ativa as notificações.
+model PushSubscription {
+  id           String   @id @default(cuid())
+  endpoint     String   @unique
+  p256dh       String   // chave pública do aparelho (criptografia do payload)
+  auth         String   // segredo de autenticação do aparelho
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershopId String?
+  role         String   // papel no momento da inscrição (CLIENT / OWNER / ...)
+  userAgent    String?  // só p/ diagnóstico ("de qual aparelho é esta?")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([barbershopId])
 }
 
 model Barbershop {

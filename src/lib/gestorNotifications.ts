@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { sendWhatsAppText, isWhatsAppConfigured } from "@/lib/whatsapp";
+import { sendPushToBarbershopStaff, sendPushToUser } from "@/lib/push";
 
 export const NOTIFICATION_TYPES = ["NEW_APPOINTMENT", "APPOINTMENT_CANCELLED", "SUPPORT_REPLY"] as const;
 export type GestorNotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -7,12 +8,19 @@ export type GestorNotificationType = (typeof NOTIFICATION_TYPES)[number];
 export const CLIENT_NOTIFICATION_TYPES = ["APPOINTMENT_CONFIRMED", "APPOINTMENT_CANCELLED_BY_SHOP", "APPOINTMENT_COMPLETED"] as const;
 export type ClientNotificationType = (typeof CLIENT_NOTIFICATION_TYPES)[number];
 
-// Single integration point for the gestor/staff-facing notification feed.
-// Today this only writes a Notification row the Topbar/app bell reads back —
-// no push is sent. TODO: once a Firebase project exists, send a push here
-// too, keyed off the same (barbershopId, type, title, body) call.
+// Ponto único das notificações da equipe (gestor/barbeiro). Grava a linha que
+// o sininho do app lê E dispara o push, para o celular apitar mesmo com o app
+// fechado. O push só sai para quem ativou notificações naquele aparelho; sem
+// VAPID configurado, sendPushToBarbershopStaff é um no-op.
 export async function notifyBarbershop(barbershopId: string, type: GestorNotificationType, title: string, body: string, link?: string) {
   await prisma.notification.create({ data: { barbershopId, type, title, body, link } });
+  // Push é best-effort: uma falha aqui não pode derrubar a ação que gerou o
+  // aviso (criar um agendamento, por exemplo).
+  try {
+    await sendPushToBarbershopStaff(barbershopId, { title, body, url: link ?? "/", tag: type });
+  } catch (err) {
+    console.error("[notifyBarbershop] push falhou", err);
+  }
 }
 
 // Same table, same future push hook — but targeted at one client instead of
@@ -29,6 +37,12 @@ export async function notifyBarbershop(barbershopId: string, type: GestorNotific
 export async function notifyClient(barbershopId: string, clientId: string, type: ClientNotificationType, title: string, body: string, link?: string) {
   await prisma.notification.create({ data: { barbershopId, clientId, type, title, body, link } });
   await sendClientWhatsApp(clientId, title, body);
+  // Push para todos os aparelhos do cliente — mesmo best-effort do WhatsApp.
+  try {
+    await sendPushToUser(clientId, { title, body, url: link ?? "/", tag: type });
+  } catch (err) {
+    console.error("[notifyClient] push falhou", err);
+  }
 }
 
 /**
