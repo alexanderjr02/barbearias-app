@@ -66,6 +66,21 @@
       set('apple-touch-icon', icon + '&size=180');
       set('icon', icon + '&size=192');
 
+      // Troca o manifesto pelo da barbearia. É o passo que faz a marca
+      // sobreviver à INSTALAÇÃO: o app aberto pela tela de início não usa a
+      // URL visitada, e sim o start_url do manifesto — que no estático era
+      // "/", sem o ?shop=. Por isso, depois de instalar, o login voltava à
+      // marca padrão.
+      var manifestUrl = API + '/api/brand/manifest?slug=' + encodeURIComponent(slug) +
+        '&app=' + encodeURIComponent(location.origin);
+      var m = document.querySelector('link[rel="manifest"]');
+      if (m) {
+        m.href = manifestUrl;
+        // Manifesto de outra origem exige crossorigin, senão o navegador o
+        // descarta e cai no padrão.
+        m.crossOrigin = 'anonymous';
+      }
+
       // Nome sob o ícone e título da aba.
       fetch(API + '/api/v1/barbershop?slug=' + encodeURIComponent(slug))
         .then(function (r) { return r.ok ? r.json() : null; })
