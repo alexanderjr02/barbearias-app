@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'core/push/push_primer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'features/auth/login_screen.dart';
@@ -71,9 +72,11 @@ class AuthGate extends StatelessWidget {
         return const LoginScreen(key: ValueKey('login'));
       case SessionStatus.authenticated:
         final session = sessionProvider.session!;
-        if (session.isBarber) return const BarbeiroShell(key: ValueKey('barbeiro'));
-        if (session.isClient) return const ClienteShell(key: ValueKey('cliente'));
-        if (session.isManager) return const GestorShell(key: ValueKey('gestor'));
+        // PushPrimer envolve os três shells: é onde, uma vez, convidamos a
+        // ativar as notificações (o convite nosso antes do pedido do sistema).
+        if (session.isBarber) return const PushPrimer(key: ValueKey('barbeiro'), child: BarbeiroShell());
+        if (session.isClient) return const PushPrimer(key: ValueKey('cliente'), child: ClienteShell());
+        if (session.isManager) return const PushPrimer(key: ValueKey('gestor'), child: GestorShell());
         return Scaffold(
           key: const ValueKey('unsupported-role'),
           backgroundColor: const Color(0xFF09090B),
