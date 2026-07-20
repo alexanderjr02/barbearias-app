@@ -152,6 +152,20 @@ export function FinancialCockpit() {
           </button>
         </div>
 
+        {/* Veredito em uma frase.
+            Barra e porcentagem exigem interpretação: o gestor precisa olhar
+            onde a barra parou, cruzar com o dia do mês e concluir sozinho se
+            está bom. Aqui a conclusão vem pronta, e o gráfico abaixo passa a
+            ser a comprovação — não o enunciado. */}
+        <Verdict
+          goal={derived.goal}
+          monthRevenue={derived.monthRevenue}
+          dayOfMonth={derived.dayOfMonth}
+          daysInMonth={derived.daysInMonth}
+          covered={derived.covered}
+          monthExpenses={derived.monthExpenses}
+        />
+
         {/* THERMOMETER — meta + ponto de equilíbrio numa só imagem */}
         <div className="relative mb-2">
           <div className="flex items-end justify-between mb-2">
@@ -208,7 +222,7 @@ export function FinancialCockpit() {
             <p className="text-xl font-black text-white">{formatCurrency(derived.projection)}</p>
             <p className={cn("text-xs mt-1 font-medium", derived.projectionPct >= 100 ? "text-emerald-400" : "text-zinc-500")}>
               {derived.projectionPct >= 100
-                ? `no ritmo atual, bate a meta 🎯`
+                ? "no ritmo atual, bate a meta"
                 : `${Math.round(derived.projectionPct)}% da meta no ritmo atual`}
             </p>
           </div>
@@ -225,7 +239,7 @@ export function FinancialCockpit() {
               </>
             ) : derived.covered ? (
               <>
-                <p className="text-xl font-black text-emerald-400">Custos cobertos ✓</p>
+                <p className="text-xl font-black text-emerald-400">Custos cobertos</p>
                 <p className="text-xs text-emerald-400/80 mt-1">
                   {derived.breakEvenDay ? `virada no dia ${derived.breakEvenDay} — daí em diante é lucro` : "tudo o que entrar é lucro"}
                 </p>
@@ -287,6 +301,68 @@ export function FinancialCockpit() {
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * A conclusão do mês em uma frase, com o número que importa em destaque.
+ *
+ * Compara o que já entrou com o que DEVERIA ter entrado a esta altura do mês
+ * (meta rateada por dia). É isso que diz se "60% da meta" é bom ou ruim: no
+ * dia 12 é ótimo, no dia 28 é problema — e essa conta o gestor não deveria
+ * refazer de cabeça toda vez que abre a tela.
+ */
+function Verdict({
+  goal,
+  monthRevenue,
+  dayOfMonth,
+  daysInMonth,
+  covered,
+  monthExpenses,
+}: {
+  goal: number;
+  monthRevenue: number;
+  dayOfMonth: number;
+  daysInMonth: number;
+  covered: boolean;
+  monthExpenses: number;
+}) {
+  const expected = goal * (dayOfMonth / daysInMonth);
+  const diff = monthRevenue - expected;
+  const ahead = diff >= 0;
+  const hit = monthRevenue >= goal;
+
+  const tone = hit || ahead ? "emerald" : "amber";
+  const box = {
+    emerald: "border-emerald-500/25 bg-emerald-500/[0.07]",
+    amber: "border-amber-500/25 bg-amber-500/[0.07]",
+  }[tone];
+  const dot = { emerald: "bg-emerald-400", amber: "bg-amber-400" }[tone];
+  const strong = { emerald: "text-emerald-300", amber: "text-amber-300" }[tone];
+
+  const headline = hit
+    ? "Meta batida."
+    : ahead
+      ? `Você está ${formatCurrency(diff)} à frente do ritmo.`
+      : `Faltam ${formatCurrency(Math.abs(diff))} para estar no ritmo.`;
+
+  const detail = hit
+    ? "Daqui em diante é tudo acima do planejado."
+    : `No dia ${dayOfMonth} de ${daysInMonth}, o esperado era ${formatCurrency(expected)}.`;
+
+  return (
+    <div className={cn("mb-5 flex items-start gap-3 rounded-xl border px-4 py-3.5", box)}>
+      <span className={cn("mt-1.5 h-2 w-2 flex-shrink-0 rounded-full", dot)} />
+      <div className="min-w-0">
+        <p className={cn("text-sm font-bold", strong)}>{headline}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-zinc-400">
+          {detail}
+          {monthExpenses > 0 && (
+            <> {covered ? " Os custos do mês já estão pagos." : " Os custos do mês ainda não estão cobertos."}</>
+          )}
+        </p>
+      </div>
+    </div>
   );
 }
 
