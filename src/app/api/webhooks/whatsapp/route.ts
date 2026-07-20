@@ -12,12 +12,16 @@ import { notifyBarbershop } from "@/lib/gestorNotifications";
 //
 // Configure (env):
 //   WHATSAPP_VERIFY_TOKEN   — arbitrary string you also type into the Meta
-//                             webhook "Verify token" field.
-//   WHATSAPP_BARBERSHOP_ID  — which barbershop this WhatsApp number belongs to
-//                             (one number = one shop).
-//   plus WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID (already used for sending).
+//                             webhook "Verify token" field. É único da
+//                             plataforma: o webhook é UM só para todas as
+//                             barbearias; o roteamento por loja acontece por
+//                             mensagem (pelo phone_number_id de quem recebeu).
+//   WHATSAPP_BARBERSHOP_ID  — fallback single-tenant: usado só quando a
+//                             mensagem não casa com nenhuma WhatsappConnection.
 //
-// Until those are set the endpoint is inert — nothing breaks.
+// Multi-barbearia: cada loja tem sua conexão (WhatsappConnection); a mensagem
+// recebida traz o phone_number_id do número que a recebeu, e é por ele que
+// descobrimos de qual barbearia é. Até haver conexões, o endpoint é inerte.
 
 // Meta calls GET once to verify the webhook subscription.
 export function GET(request: NextRequest) {
@@ -43,10 +47,23 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   // Always ACK fast so Meta doesn't retry; process best-effort below.
   try {
-    const barbershopId = process.env.WHATSAPP_BARBERSHOP_ID;
+    const value = body?.entry?.[0]?.changes?.[0]?.value;
+
+    // De qual barbearia é esta mensagem? Pelo número que RECEBEU
+    // (phone_number_id). O webhook é único da plataforma; o roteamento é aqui.
+    const phoneNumberId: string | undefined = value?.metadata?.phone_number_id;
+    let barbershopId: string | null = null;
+    if (phoneNumberId) {
+      const conn = await prisma.whatsappConnection.findFirst({
+        where: { phoneNumberId },
+        select: { barbershopId: true },
+      });
+      barbershopId = conn?.barbershopId ?? null;
+    }
+    // Fallback single-tenant (número único da plataforma via env).
+    if (!barbershopId) barbershopId = process.env.WHATSAPP_BARBERSHOP_ID ?? null;
     if (!barbershopId) return NextResponse.json({ ok: true });
 
-    const value = body?.entry?.[0]?.changes?.[0]?.value;
     const message: WaMessage | undefined = value?.messages?.[0];
     if (!message || message.type !== "text") return NextResponse.json({ ok: true });
 
@@ -61,9 +78,9 @@ export async function POST(request: NextRequest) {
     // Human handoff: flag the team and let the client know.
     if (HANDOFF_RE.test(text)) {
       await notifyBarbershop(barbershopId, "SUPPORT_REPLY", "Cliente pediu atendimento humano", `Pelo WhatsApp (${from}): "${text.slice(0, 120)}"`, "/dashboard");
-      const reply = "Claro! Já avisei a equipe — em breve alguém fala com você por aqui. 🙌";
+      const reply = "Claro! Já avisei a equipe — em breve alguém fala com você por aqui.";
       await prisma.chatMessage.create({ data: { content: reply, role: "BOT", sessionId, barbershopId } });
-      await sendWhatsAppText(from, reply);
+      await sendWhatsAppText(barbershopId, from, reply);
       return NextResponse.json({ ok: true });
     }
 
@@ -91,14 +108,14 @@ export async function POST(request: NextRequest) {
           reply = await runAssistant(barbershopId, history);
         }
       } catch {
-        reply = "Tive um probleminha aqui agora. Pode repetir daqui a pouco? 🙏";
+        reply = "Tive um probleminha aqui agora. Pode repetir daqui a pouco?";
       }
     } else {
-      reply = "Oi! 👋 Para agendar, ver serviços ou seus horários, baixe nosso app ou acesse nossa página de agendamento. Se precisar, é só escrever *atendente* que chamamos a equipe.";
+      reply = "Oi! Para agendar, ver serviços ou seus horários, baixe nosso app ou acesse nossa página de agendamento. Se precisar, é só escrever *atendente* que chamamos a equipe.";
     }
 
     await prisma.chatMessage.create({ data: { content: reply, role: "BOT", sessionId, barbershopId } });
-    await sendWhatsAppText(from, reply);
+    await sendWhatsAppText(barbershopId, from, reply);
   } catch (err) {
     console.error("[whatsapp webhook]", err);
   }

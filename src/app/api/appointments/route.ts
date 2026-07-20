@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       const iso = String(date).slice(0, 10);
       const [y, m, d] = iso.split("-");
       const dateLabel = d && m && y ? `${d}/${m}/${y}` : iso;
-      await sendBookingConfirmation(clientPhone, {
+      await sendBookingConfirmation(barbershopId, clientPhone, {
         clientName,
         barbershopName: appointment.barbershop.name,
         serviceName: appointment.service.name,

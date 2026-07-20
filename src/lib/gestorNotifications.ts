@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { sendWhatsAppText, isWhatsAppConfigured } from "@/lib/whatsapp";
+import { sendWhatsAppText } from "@/lib/whatsapp";
 import { sendPushToBarbershopStaff, sendPushToUser } from "@/lib/push";
 
 export const NOTIFICATION_TYPES = ["NEW_APPOINTMENT", "APPOINTMENT_CANCELLED", "SUPPORT_REPLY"] as const;
@@ -36,7 +36,7 @@ export async function notifyBarbershop(barbershopId: string, type: GestorNotific
 // em que WHATSAPP_TOKEN e WHATSAPP_PHONE_NUMBER_ID forem preenchidos.
 export async function notifyClient(barbershopId: string, clientId: string, type: ClientNotificationType, title: string, body: string, link?: string) {
   await prisma.notification.create({ data: { barbershopId, clientId, type, title, body, link } });
-  await sendClientWhatsApp(clientId, title, body);
+  await sendClientWhatsApp(barbershopId, clientId, title, body);
   // Push para todos os aparelhos do cliente — mesmo best-effort do WhatsApp.
   try {
     await sendPushToUser(clientId, { title, body, url: link ?? "/", tag: type });
@@ -74,18 +74,19 @@ export async function notifyClientMarketing(
   if (!link_?.marketingConsent || link_.status === "BLOCKED") return false;
 
   await prisma.notification.create({ data: { barbershopId, clientId, type, title, body, link } });
-  await sendClientWhatsApp(clientId, title, body);
+  await sendClientWhatsApp(barbershopId, clientId, title, body);
   return true;
 }
 
 /** Envio best-effort: falha de WhatsApp nunca pode derrubar a ação que a
  * originou (confirmar um agendamento, concluir um atendimento). */
-async function sendClientWhatsApp(clientId: string, title: string, body: string) {
-  if (!isWhatsAppConfigured()) return;
+async function sendClientWhatsApp(barbershopId: string, clientId: string, title: string, body: string) {
   try {
     const user = await prisma.user.findUnique({ where: { id: clientId }, select: { phone: true } });
     if (!user?.phone) return;
-    await sendWhatsAppText(user.phone, `*${title}*\n\n${body}`);
+    // send() resolve a conexão daquela barbearia e vira no-op se não houver
+    // nenhuma (nem conexão própria, nem env) — não precisa checar antes.
+    await sendWhatsAppText(barbershopId, user.phone, `*${title}*\n\n${body}`);
   } catch (err) {
     console.warn("[notifyClient] WhatsApp não enviado:", err);
   }

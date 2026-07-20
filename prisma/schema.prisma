@@ -223,6 +223,7 @@ model Barbershop {
   stampCards      StampCard[]
   loyaltyRewards  LoyaltyReward[]
   referrals       Referral[]
+  whatsappConnection WhatsappConnection?
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
   platformInvoices  PlatformInvoice[]
@@ -234,6 +235,39 @@ model Barbershop {
   // O @unique de ownerId dava índice de graça; sem ele, listar as unidades de
   // um dono viraria varredura de tabela.
   @@index([ownerId])
+}
+
+// Credenciais de WhatsApp de UMA barbearia. É o que torna o WhatsApp
+// multi-barbearia: cada loja tem o SEU número/token, em vez de um número único
+// da plataforma numa variável de ambiente.
+//
+// De onde vêm: do Embedded Signup da Meta (o gestor clica "Conectar WhatsApp",
+// autoriza, e a Meta devolve o token + phoneNumberId da conta dele) ou, pra
+// testar antes da aprovação Meta, digitados à mão com o número de teste grátis.
+//
+// O accessToken fica em texto puro — o mesmo padrão do 2FA neste app (não há
+// KMS/cofre em lugar nenhum aqui; "criptografar" sem infra seria teatro). É um
+// token que envia mensagens cobradas da conta do gestor, então trate o acesso
+// ao banco como sensível.
+model WhatsappConnection {
+  id            String   @id @default(cuid())
+  barbershopId  String   @unique
+  barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  // Identificadores da Meta.
+  wabaId        String?  // WhatsApp Business Account ID
+  phoneNumberId String   // "Phone number ID" do remetente — a chave que o
+  //                        webhook usa pra saber de qual barbearia é a mensagem.
+  displayPhone  String?  // número legível, só pra mostrar no painel
+  accessToken   String   // token de envio desta barbearia
+  // Template de confirmação aprovado desta barbearia (cada conta aprova o seu).
+  templateName  String?
+  templateLang  String   @default("pt_BR")
+  // connected | pending | error — estado da conexão pra UI.
+  status        String   @default("connected")
+  connectedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([phoneNumberId])
 }
 
 // Gestor-facing notification feed — shared per barbershop (not per user),

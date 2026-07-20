@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Calendar, Users, UserCheck, Scissors,
   TrendingUp, Package, Megaphone, Settings, LogOut,
-  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy, Hourglass, Star, FileText, Palette, Building2, Gift, Share2,
+  ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy, Hourglass, Star, FileText, Palette, Building2, Gift, Share2, MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -26,6 +26,7 @@ const navItems = [
   { label: "Nota Fiscal", href: "/dashboard/fiscal", icon: FileText },
   { label: "Estoque", href: "/dashboard/inventory", icon: Package },
   { label: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
+  { label: "WhatsApp", href: "/dashboard/whatsapp", icon: MessageCircle },
   { label: "Divulgação", href: "/dashboard/convite", icon: Share2 },
   { label: "Aparência do app", href: "/dashboard/appearance", icon: Palette },
   { label: "Assinaturas", href: "/dashboard/subscriptions", icon: Repeat },
