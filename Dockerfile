@@ -18,6 +18,9 @@ RUN npx prisma generate
 # be present *here*, not just in the running container's environment.
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=""
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+# Liga o output standalone (ver next.config.ts). Fora do Docker ele fica
+# desligado, porque a Vercel monta o deploy do jeito dela.
+ENV DOCKER_BUILD=1
 RUN npm run build
 
 # --- Runtime image ---
