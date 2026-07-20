@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import '../../core/brand/brand_slug.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
@@ -64,8 +65,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 
   Future<void> _loadBrand() async {
-    const slug = String.fromEnvironment('BRAND_SLUG');
-    if (slug.isEmpty) return;
+    final slug = await resolveBrandSlug();
+    if (slug == null || slug.isEmpty) return;
     try {
       final data = await ApiClient.instance.get('/barbershop', query: {'slug': slug}) as Map<String, dynamic>;
       if (!mounted) return;
