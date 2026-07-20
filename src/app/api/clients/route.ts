@@ -203,6 +203,25 @@ export async function POST(request: NextRequest) {
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
 
+  // Reaproveitar uma conta existente é legítimo — o cliente pode já ser
+  // cliente de outra barbearia. Mas duas coisas precisam ser ditas em voz
+  // alta, porque antes acontecia em silêncio:
+  //
+  // 1. A senha digitada aqui é IGNORADA (a conta já tem a dela). O gestor
+  //    entregava uma senha ao cliente e ela nunca funcionava.
+  // 2. Se a conta não é de cliente, vinculá-la daria acesso de cliente a um
+  //    gestor ou admin. Aconteceu de verdade: um SUPER_ADMIN virou "cliente".
+  if (existingUser && existingUser.role !== "CLIENT") {
+    return NextResponse.json(
+      {
+        error:
+          `Esse e-mail já pertence a uma conta de ${roleLabel(existingUser.role)}. ` +
+          `Use outro e-mail para cadastrar o cliente.`,
+      },
+      { status: 409 }
+    );
+  }
+
   const user = existingUser
     ? existingUser
     : await prisma.user.create({
@@ -236,5 +255,31 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ id: user.id, name: user.name, email: user.email }, { status: 201 });
+  return NextResponse.json(
+    {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      // Diz à tela se a senha digitada valeu. Quando a conta já existia, ela
+      // não vale — e o gestor precisa saber, senão entrega ao cliente uma
+      // senha que nunca vai funcionar.
+      reusedExistingAccount: !!existingUser,
+    },
+    { status: 201 }
+  );
+}
+
+function roleLabel(role: string): string {
+  switch (role) {
+    case "OWNER":
+    case "MANAGER":
+      return "gestor";
+    case "BARBER":
+      return "barbeiro";
+    case "SUPER_ADMIN":
+    case "SUPPORT_ADMIN":
+      return "administrador";
+    default:
+      return "outro tipo";
+  }
 }

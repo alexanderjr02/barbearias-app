@@ -122,11 +122,18 @@ export default function ClientsPage() {
   });
 
   const createClient = useMutation({
-    mutationFn: (data: Record<string, unknown>) => apiPost("/api/clients", data),
-    onSuccess: () => {
+    mutationFn: (data: Record<string, unknown>) =>
+      apiPost<{ reusedExistingAccount?: boolean }>("/api/clients", data),
+    onSuccess: (res) => {
       invalidate();
       setModalOpen(false);
-      toast.success("Cliente cadastrado");
+      // Conta que já existia mantém a senha antiga — avisar aqui evita o
+      // gestor entregar ao cliente uma senha que não funciona.
+      if (res?.reusedExistingAccount) {
+        toast.success("Cliente vinculado. A conta já existia, então ele entra com a senha que já usava.");
+      } else {
+        toast.success("Cliente cadastrado");
+      }
     },
   });
 
