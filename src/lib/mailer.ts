@@ -20,6 +20,14 @@ interface SendMailInput {
 
 const DEFAULT_FROM = "CORTIX <onboarding@resend.dev>";
 
+// Há provedor de e-mail configurado? Quem chama usa isto para distinguir
+// "não enviei porque falhou" de "não enviei porque ninguém ligou o e-mail
+// ainda" — a diferença entre um alerta perdido e um alerta que nunca teve
+// para onde ir.
+export function isMailerConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
 export async function sendMail({ to, subject, html, text }: SendMailInput): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || DEFAULT_FROM;
@@ -91,4 +99,59 @@ export function passwordResetEmail(name: string, resetUrl: string): { subject: s
 </div>`;
 
   return { subject, html, text };
+}
+
+// Alerta operacional da PLATAFORMA para o dono do sistema (você) — cobrança
+// falhou, barbearia suspensa, login de IP novo, health score caindo. Não vai
+// para barbearia nem para cliente final.
+export function platformAlertEmail(
+  subject: string,
+  body: string,
+  metadata?: Record<string, unknown>
+): { subject: string; html: string; text: string } {
+  const detailLines = metadata
+    ? Object.entries(metadata).map(([k, v]) => `${k}: ${String(v)}`)
+    : [];
+
+  const text =
+    `${body}\n` +
+    (detailLines.length ? `\nDetalhes:\n${detailLines.join("\n")}\n` : "") +
+    `\n— CORTIX (alerta automático da plataforma)`;
+
+  const detailHtml = detailLines.length
+    ? `<div style="margin-top:20px;padding:14px 16px;background:#09090b;border:1px solid #27272a;border-radius:12px;">
+        ${detailLines
+          .map(
+            (l) =>
+              `<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#a1a1aa;line-height:1.8;">${escapeHtml(l)}</div>`
+          )
+          .join("")}
+      </div>`
+    : "";
+
+  const html = `<!-- platform alert -->
+<div style="background:#09090b;padding:32px 0;font-family:Inter,system-ui,Arial,sans-serif;">
+  <div style="max-width:480px;margin:0 auto;background:#18181b;border:1px solid #27272a;border-radius:20px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#fbbf24,#d97706);padding:24px 28px;">
+      <span style="font-size:22px;font-weight:900;color:#18181b;letter-spacing:1px;">CORT<span style="color:#7c2d12;">IX</span></span>
+    </div>
+    <div style="padding:28px;">
+      <h1 style="margin:0 0 12px;font-size:18px;color:#fafafa;">${escapeHtml(subject)}</h1>
+      <p style="margin:0;font-size:14px;line-height:1.6;color:#a1a1aa;">${escapeHtml(body)}</p>
+      ${detailHtml}
+      <hr style="border:none;border-top:1px solid #27272a;margin:24px 0;"/>
+      <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;">
+        Alerta automático da plataforma. Você pode desligar este tipo de aviso no painel administrativo.
+      </p>
+    </div>
+  </div>
+</div>`;
+
+  return { subject: `${subject} · CORTIX`, html, text };
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string
+  ));
 }
