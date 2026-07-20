@@ -188,8 +188,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(12, 10, 16, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Voltar: o Perfil é empurrado por cima do shell (a barra de
+                  // abas some enquanto ele está aberto), e sem AppBar não havia
+                  // como voltar a não ser pelo gesto de borda — que no PWA
+                  // instalado nem sempre existe. Só aparece quando a tela foi
+                  // empurrada; onde o Perfil é uma aba fixa, canPop é false.
+                  if (Navigator.of(context).canPop())
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _HeaderBackButton(palette: palette),
+                    ),
+                  Row(
                 children: [
                   GestureDetector(
                     onTap: _uploadingAvatar ? null : _pickAvatar,
@@ -289,6 +302,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ),
+                ],
+              ),
                 ],
               ),
             ),
@@ -442,6 +457,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+}
+
+/// Botão de voltar do cabeçalho do Perfil. Existe porque a tela é empurrada
+/// sem AppBar; devolve o gestor/cliente/barbeiro ao shell com as abas.
+class _HeaderBackButton extends StatelessWidget {
+  final AppPalette palette;
+  const _HeaderBackButton({required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Navigator.of(context).maybePop(),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 38,
+          height: 38,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: palette.surface.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: palette.border),
+          ),
+          child: Icon(Icons.arrow_back_rounded, size: 20, color: palette.textPrimary),
+        ),
+      ),
+    );
+  }
 }
 
 /// Rótulo de grupo. Agrupar em blocos com título é o que transforma uma pilha
