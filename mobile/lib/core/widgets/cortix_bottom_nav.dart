@@ -13,7 +13,10 @@ class CortixNavItem {
 /// posicionado pelo Scaffold — dois sistemas independentes para a mesma
 /// pergunta ("onde a barra termina?"). Bastou a barra mudar de altura para
 /// um encostar no outro e ficarem desalinhados entre si.
-const double kNavContentHeight = 56; // ícone + respiro interno
+/// Altura real do conteúdo: ícone (22) + padding do item (11×2) + respiro
+/// interno (8×2). Precisa bater com os valores usados abaixo — é dela que
+/// saem as posições do chat e do botão flutuante.
+const double kNavContentHeight = 60;
 const double kNavBottomMargin = 18; // distância da borda de baixo da tela
 
 /// Onde qualquer elemento flutuante deve começar, medido da base da tela

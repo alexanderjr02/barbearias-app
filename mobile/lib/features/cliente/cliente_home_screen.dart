@@ -560,27 +560,32 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
 /// muda o visual do cartão — a recompensa é visível, não só numérica.
 /// Coloca o "Agendar" na mesma linha do balão do chat.
 ///
-/// O chat vive num Stack por cima do Scaffold, posicionado por coordenada
-/// absoluta a partir da base da tela. O botão flutuante, por padrão, é
-/// posicionado pelo Scaffold em relação à barra inferior. São dois cálculos
-/// independentes para a mesma altura — por isso desalinhavam a cada mudança
-/// na barra. Aqui o botão passa a usar exatamente a conta do chat.
+/// O chat vive no Stack do shell e se posiciona a partir da BASE DA TELA. Já
+/// este Scaffold vive DENTRO do shell, então a altura dele termina onde a
+/// barra começa — a folga da barra já está descontada.
+///
+/// Foi exatamente aí que eu errei antes: descontei a folga de novo e o botão
+/// subiu demais. Aqui só resta a diferença entre onde o chat flutua e onde o
+/// Scaffold interno termina.
 class _ChatAlignedFabLocation extends FloatingActionButtonLocation {
   const _ChatAlignedFabLocation();
 
   /// O balão tem 60 de altura e o botão estendido, 48. Metade da diferença
-  /// alinha os centros, não as bordas.
+  /// alinha os CENTROS — alinhar bordas deixaria 12px de desnível visível.
   static const double _bubbleSize = 60;
 
   @override
   Offset getOffset(ScaffoldPrelayoutGeometry geometry) {
     final fab = geometry.floatingActionButtonSize;
-    final safeBottom = geometry.minViewPadding.bottom;
     final centerAdjust = (_bubbleSize - fab.height) / 2;
+
+    // Distância entre a base do chat e a base deste Scaffold. A área segura
+    // aparece nos dois lados da conta e se cancela, por isso não entra aqui.
+    final lift = kNavClearance - (kNavBottomMargin + kNavContentHeight) + centerAdjust;
 
     return Offset(
       geometry.scaffoldSize.width - fab.width - 16,
-      geometry.scaffoldSize.height - kNavClearance - safeBottom - fab.height - centerAdjust,
+      geometry.scaffoldSize.height - fab.height - lift,
     );
   }
 }
