@@ -8,6 +8,7 @@ import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/br_phone_formatter.dart';
+import '../../core/widgets/cortix_date_picker.dart';
 import '../auth/session_provider.dart';
 import 'booking_repository.dart';
 import 'client_repository.dart';
@@ -180,11 +181,12 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showCortixDatePicker(
       context: context,
-      initialDate: now,
+      initialDate: _selectedDate ?? now,
       firstDate: now,
       lastDate: now.add(const Duration(days: 60)),
+      title: 'Escolha o dia',
     );
     if (picked != null) _selectDate(picked);
   }
@@ -424,7 +426,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                       ),
                       const SizedBox(height: 12),
                       SizedBox(
-                        height: 168,
+                        height: 140,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: _detail!.staff.length,
@@ -872,8 +874,8 @@ class _BarberCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        width: 116,
-        padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+        width: 92,
+        padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
         decoration: BoxDecoration(
           gradient: selected
               ? LinearGradient(
@@ -915,7 +917,7 @@ class _BarberCard extends StatelessWidget {
                     ),
                   ),
                   child: CircleAvatar(
-                    radius: 32,
+                    radius: 25,
                     backgroundColor: palette.surfaceAlt,
                     backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
                     child: avatarUrl == null
@@ -923,7 +925,7 @@ class _BarberCard extends StatelessWidget {
                             style: TextStyle(
                                 color: selected ? accent : palette.textSecondary,
                                 fontWeight: FontWeight.w900,
-                                fontSize: 19))
+                                fontSize: 16))
                         : null,
                   ),
                 ),
@@ -943,13 +945,13 @@ class _BarberCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 9),
+            const SizedBox(height: 7),
             Text(
               staff.name.split(' ').first,
               style: TextStyle(
                 color: selected ? accent : palette.textPrimary,
                 fontWeight: FontWeight.w800,
-                fontSize: 13.5,
+                fontSize: 12.5,
                 letterSpacing: -0.2,
               ),
               maxLines: 1,
@@ -960,7 +962,7 @@ class _BarberCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 3),
                 child: Text(
                   staff.specialties!,
-                  style: TextStyle(color: palette.textFaint, fontSize: 10.5, height: 1.25),
+                  style: TextStyle(color: palette.textFaint, fontSize: 9.5, height: 1.2),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,

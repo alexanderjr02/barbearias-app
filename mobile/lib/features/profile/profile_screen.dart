@@ -5,6 +5,7 @@ import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../core/widgets/app_toast.dart';
+import '../../core/widgets/cortix_date_picker.dart';
 import '../auth/session_provider.dart';
 import '../barbeiro/barbeiro_copilot_screen.dart';
 import 'profile_repository.dart';
@@ -49,12 +50,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _pickBirthDate() async {
     final now = DateTime.now();
     final current = _birthDate != null ? DateTime.tryParse(_birthDate!) : null;
-    final picked = await showDatePicker(
+    final picked = await showCortixDatePicker(
       context: context,
       initialDate: current ?? DateTime(now.year - 25),
       firstDate: DateTime(now.year - 100),
       lastDate: now,
-      helpText: 'Sua data de nascimento',
+      title: 'Sua data de nascimento',
     );
     if (picked == null) return;
     setState(() {
@@ -315,7 +316,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   label: 'Nascimento',
                   value: _birthDate != null ? _formatBirth(_birthDate!) : null,
                   placeholder: 'Toque para escolher',
-                  icon: Icons.cake_rounded,
+                  icon: Icons.calendar_month_rounded,
                   palette: palette,
                   accent: accent,
                   onTap: _pickBirthDate,
