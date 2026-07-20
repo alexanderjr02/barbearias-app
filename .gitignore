@@ -59,3 +59,7 @@ next-env.d.ts
 # disposable SQLite db created by the integration tests (tests/setup/globalSetup.ts)
 /tests/test.db
 mobile/build/
+
+# gerado por mobile/scripts/build-web-deploy.js a partir de mobile/build/web
+# + mobile/web-deploy-src/ — nunca editar aqui, é sobrescrito a cada build.
+mobile/web-deploy/

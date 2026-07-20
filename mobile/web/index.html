@@ -19,84 +19,48 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Agende seu horário na barbearia.">
-  <meta name="theme-color" content="#0B0A0F">
+  <meta name="theme-color" content="%%CORTIX_THEME_COLOR%%">
 
-  <!-- PWA / iOS "Adicionar à Tela de Início". Brand name + icon are per-shop;
-       in the white-label build these come from the Aparência do app config. -->
+  <!--
+    PWA / iOS "Adicionar à Tela de Início" — marca por barbearia.
+
+    Isto NÃO é mais preenchido por JavaScript depois que a página carrega.
+    Os marcadores CORTIX_ abaixo são substituídos pelo SERVIDOR, antes de
+    qualquer byte chegar ao navegador — veja mobile/web-deploy-src/api/index.js.
+    A troca por JS que existia aqui tinha uma corrida real com o Safari: quem
+    tocasse em "Adicionar à Tela de Início" antes do script terminar (ou com o
+    service worker servindo uma cópia em cache) caía na marca genérica. Com o
+    HTML já certo desde a primeira resposta, essa corrida deixa de existir.
+  -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Cortezz Barbearia">
-  <link rel="apple-touch-icon" href="brand-icon.jpg">
+  <meta name="apple-mobile-web-app-title" content="%%CORTIX_NAME%%">
+  <link rel="apple-touch-icon" href="%%CORTIX_ICON_URL%%">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>Cortezz Barbearia</title>
-  <link rel="manifest" href="manifest.json">
+  <title>%%CORTIX_NAME%%</title>
+  <link rel="manifest" href="%%CORTIX_MANIFEST_URL%%" crossorigin="anonymous">
 
   <script>
-    // Marca por barbearia, sem rebuild.
-    //
-    // O ícone e o nome estavam fixos no build: um arquivo servindo todas as
-    // barbearias. Pior, brand-icon.jpg era uma foto 800x1421, e o iOS recorta
-    // o centro de imagem não quadrada — metade da logo sumia.
-    //
-    // Com ?shop=<slug> no link que o gestor compartilha, apontamos o ícone
-    // para /api/brand/icon, que devolve a logo daquela barbearia já quadrada.
-    // O Safari lê essas tags no momento em que a pessoa toca em "Adicionar à
-    // Tela de Início", então trocá-las agora vale para a instalação.
-    (function () {
-      var API = 'https://cortix-pied.vercel.app';
-      var slug = new URLSearchParams(location.search).get('shop');
-      // Depois de instalado não há query string — por isso o slug fica salvo.
-      try {
-        if (slug) localStorage.setItem('cortix_brand_slug', slug);
-        else slug = localStorage.getItem('cortix_brand_slug');
-      } catch (e) { /* modo privado bloqueia storage; segue sem persistir */ }
-      if (!slug) return;
-
-      var icon = API + '/api/brand/icon?slug=' + encodeURIComponent(slug);
-      function set(rel, href, sizes) {
-        var l = document.querySelector('link[rel="' + rel + '"]') || document.createElement('link');
-        l.rel = rel; l.href = href;
-        if (sizes) l.sizes = sizes;
-        document.head.appendChild(l);
+    // Limpa service worker/cache de instalações anteriores. O app não
+    // registra mais um service worker (ver web/flutter_bootstrap.js) porque
+    // era ele quem guardava uma cópia velha do index.html — com a marca de
+    // OUTRA barbearia ou a tela de login antiga — e a servia em vez de
+    // buscar a versão nova. Isso roda uma vez por aparelho: se não havia
+    // nada registrado, é instantâneo e não faz nada.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        regs.forEach(function (r) { r.unregister(); });
+      });
+      if (window.caches) {
+        caches.keys().then(function (names) {
+          names.forEach(function (name) { caches.delete(name); });
+        });
       }
-      set('apple-touch-icon', icon + '&size=180');
-      set('icon', icon + '&size=192');
-
-      // Troca o manifesto pelo da barbearia. É o passo que faz a marca
-      // sobreviver à INSTALAÇÃO: o app aberto pela tela de início não usa a
-      // URL visitada, e sim o start_url do manifesto — que no estático era
-      // "/", sem o ?shop=. Por isso, depois de instalar, o login voltava à
-      // marca padrão.
-      var manifestUrl = API + '/api/brand/manifest?slug=' + encodeURIComponent(slug) +
-        '&app=' + encodeURIComponent(location.origin);
-      var m = document.querySelector('link[rel="manifest"]');
-      if (m) {
-        m.href = manifestUrl;
-        // Manifesto de outra origem exige crossorigin, senão o navegador o
-        // descarta e cai no padrão.
-        m.crossOrigin = 'anonymous';
-      }
-
-      // Nome sob o ícone e título da aba.
-      fetch(API + '/api/v1/barbershop?slug=' + encodeURIComponent(slug))
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (body) {
-          var shop = body && (body.data || body);
-          if (!shop || !shop.name) return;
-          document.title = shop.name;
-          var t = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-          if (t) t.content = shop.name;
-          if (shop.primaryColor) {
-            var tc = document.querySelector('meta[name="theme-color"]');
-            if (tc) tc.content = shop.primaryColor;
-          }
-        })
-        .catch(function () { /* sem rede: fica o nome padrão */ });
-    })();
+    }
   </script>
 </head>
 <body>
