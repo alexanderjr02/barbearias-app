@@ -7,6 +7,19 @@ class CortixNavItem {
   const CortixNavItem(this.icon, this.label);
 }
 
+/// Medidas da barra, exportadas porque outras coisas flutuam por cima dela.
+///
+/// O balão do chat usava um valor fixo chutado (92) e o botão "Agendar" era
+/// posicionado pelo Scaffold — dois sistemas independentes para a mesma
+/// pergunta ("onde a barra termina?"). Bastou a barra mudar de altura para
+/// um encostar no outro e ficarem desalinhados entre si.
+const double kNavContentHeight = 56; // ícone + respiro interno
+const double kNavBottomMargin = 18; // distância da borda de baixo da tela
+
+/// Onde qualquer elemento flutuante deve começar, medido da base da tela
+/// (sem contar a área segura, que quem usa soma por cima).
+const double kNavClearance = kNavContentHeight + kNavBottomMargin + 12;
+
 /// Modern floating "expanding pill" bottom nav shared by all three roles
 /// (cliente / barbeiro / gestor). Inactive items show just the icon; the
 /// active item expands into an accent pill with its label. Sits above content
@@ -25,7 +38,7 @@ class CortixBottomNav extends StatelessWidget {
       // Mais afastado da borda de baixo: no iPhone a barra ficava colada na
       // faixa de gestos do sistema, e o toque no item competia com o swipe
       // de "voltar à tela inicial".
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, kNavBottomMargin),
       child: Container(
         decoration: BoxDecoration(
           color: palette.surface.withValues(alpha: 0.97),
@@ -36,7 +49,7 @@ class CortixBottomNav extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -67,7 +80,7 @@ class CortixBottomNav extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(horizontal: active ? pad : pad - 3, vertical: 13),
+        padding: EdgeInsets.symmetric(horizontal: active ? pad : pad - 3, vertical: 11),
         decoration: BoxDecoration(
           color: active ? accent.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),

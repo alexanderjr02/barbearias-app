@@ -5,6 +5,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/cortix_bottom_nav.dart';
 import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import 'client_repository.dart';
@@ -528,6 +529,11 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
           ),
         ),
       ),
+      // Alinhado com o balão do chat, que fica do outro lado da tela na mesma
+      // linha. Sem isto o Scaffold posiciona o botão pela altura da barra e o
+      // chat por coordenada absoluta — dois cálculos diferentes para a mesma
+      // linha, e eles nunca batem.
+      floatingActionButtonLocation: const _ChatAlignedFabLocation(),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: accent,
         foregroundColor: contrastingTextColor(accent),
@@ -552,6 +558,33 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
 /// próxima faixa vira uma barra com meta explícita ("faltam 150 pts"), que é
 /// o que faz alguém querer voltar. A cor sai da faixa, então subir de nível
 /// muda o visual do cartão — a recompensa é visível, não só numérica.
+/// Coloca o "Agendar" na mesma linha do balão do chat.
+///
+/// O chat vive num Stack por cima do Scaffold, posicionado por coordenada
+/// absoluta a partir da base da tela. O botão flutuante, por padrão, é
+/// posicionado pelo Scaffold em relação à barra inferior. São dois cálculos
+/// independentes para a mesma altura — por isso desalinhavam a cada mudança
+/// na barra. Aqui o botão passa a usar exatamente a conta do chat.
+class _ChatAlignedFabLocation extends FloatingActionButtonLocation {
+  const _ChatAlignedFabLocation();
+
+  /// O balão tem 60 de altura e o botão estendido, 48. Metade da diferença
+  /// alinha os centros, não as bordas.
+  static const double _bubbleSize = 60;
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry geometry) {
+    final fab = geometry.floatingActionButtonSize;
+    final safeBottom = geometry.minViewPadding.bottom;
+    final centerAdjust = (_bubbleSize - fab.height) / 2;
+
+    return Offset(
+      geometry.scaffoldSize.width - fab.width - 16,
+      geometry.scaffoldSize.height - kNavClearance - safeBottom - fab.height - centerAdjust,
+    );
+  }
+}
+
 class _PointsHeroCard extends StatelessWidget {
   final LoyaltyBalance balance;
   final String tierLabel;

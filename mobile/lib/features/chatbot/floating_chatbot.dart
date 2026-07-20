@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../core/widgets/cortix_bottom_nav.dart';
 import 'dart:math';
 import 'dart:ui';
 
@@ -31,7 +32,9 @@ class FloatingChatbot extends StatefulWidget {
 }
 
 class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderStateMixin {
-  static const double _navClearance = 92;
+  // Vem da barra, não de um número chutado: quando ela muda de altura, o
+  // balão acompanha sozinho em vez de encostar nela.
+  static const double _navClearance = kNavClearance;
 
   bool _open = false;
   bool _typing = false;
