@@ -30,8 +30,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final session = context.read<SessionProvider>().session;
     _nameController.text = session?.name ?? '';
     _phoneController.text = session?.phone ?? '';
+    _birthDate = session?.dateOfBirth;
     _nameController.addListener(_markDirty);
     _phoneController.addListener(_markDirty);
+  }
+
+  /// "YYYY-MM-DD" como o servidor devolve. Guardado como String e não DateTime
+  /// para ir e voltar da API sem conversão de fuso no meio — data de
+  /// nascimento não tem hora, e tratá-la como instante já rendeu bug de
+  /// "nasceu um dia antes" em muito sistema.
+  String? _birthDate;
+
+  String _formatBirth(String iso) {
+    final p = iso.split('-');
+    return p.length == 3 ? '${p[2]}/${p[1]}/${p[0]}' : iso;
+  }
+
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final current = _birthDate != null ? DateTime.tryParse(_birthDate!) : null;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current ?? DateTime(now.year - 25),
+      firstDate: DateTime(now.year - 100),
+      lastDate: now,
+      helpText: 'Sua data de nascimento',
+    );
+    if (picked == null) return;
+    setState(() {
+      _birthDate = '${picked.year.toString().padLeft(4, '0')}-'
+          '${picked.month.toString().padLeft(2, '0')}-'
+          '${picked.day.toString().padLeft(2, '0')}';
+      _dirty = true;
+    });
   }
 
   void _markDirty() {
@@ -71,6 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final ok = await context.read<SessionProvider>().updateProfile(
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
+          dateOfBirth: _birthDate,
         );
     if (mounted) {
       setState(() {
@@ -130,10 +162,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // ---------- Cabeçalho ----------
           // O nome só existia dentro do campo editável, então a tela abria sem
           // dizer de quem é. Agora ele é o título, como em qualquer perfil.
-          SafeArea(
+          // Faixa de cor da marca atrás do topo: dá ao Perfil a mesma
+          // identidade das outras telas em vez de abrir num fundo cru.
+          Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [accent.withValues(alpha: 0.20), accent.withValues(alpha: 0.04), palette.surface],
+                stops: const [0, 0.6, 1],
+              ),
+              border: Border.all(color: accent.withValues(alpha: 0.18)),
+            ),
+            child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(4, 14, 4, 22),
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
               child: Row(
                 children: [
                   GestureDetector(
@@ -238,6 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+          ),
 
           // ---------- Dados ----------
           _GroupLabel('Seus dados', palette: palette),
@@ -261,6 +308,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   accent: accent,
                 ),
                 _Divider(palette: palette),
+                // Nascimento é o gancho da campanha de aniversário — a barbearia
+                // manda mensagem no dia. Por isso ganha um "por quê" visível em
+                // vez de ser mais um campo mudo que ninguém preenche.
+                _TapRow(
+                  label: 'Nascimento',
+                  value: _birthDate != null ? _formatBirth(_birthDate!) : null,
+                  placeholder: 'Toque para escolher',
+                  icon: Icons.cake_rounded,
+                  palette: palette,
+                  accent: accent,
+                  onTap: _pickBirthDate,
+                ),
+                _Divider(palette: palette),
                 // E-mail não é editável (é a identidade de login), então nem
                 // finge ser campo — vira linha de leitura com cadeado.
                 Padding(
@@ -269,7 +329,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       SizedBox(
                         width: 76,
-                        child: Text('E-mail',
+                        // "Login" e não "E-mail": explica por que está trancado
+                        // e evita repetir o rótulo do e-mail já no cabeçalho.
+                        child: Text('Login',
                             style: TextStyle(
                                 color: palette.textFaint, fontSize: 12.5, fontWeight: FontWeight.w600)),
                       ),
@@ -470,6 +532,62 @@ class _FieldRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Linha que abre um seletor em vez de aceitar digitação. Mostra o valor
+/// quando existe e um convite quando não — campo vazio sem convite é campo
+/// que fica vazio para sempre.
+class _TapRow extends StatelessWidget {
+  final String label;
+  final String? value;
+  final String placeholder;
+  final IconData icon;
+  final VoidCallback onTap;
+  final AppPalette palette;
+  final Color accent;
+
+  const _TapRow({
+    required this.label,
+    required this.value,
+    required this.placeholder,
+    required this.icon,
+    required this.onTap,
+    required this.palette,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final filled = value != null;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 76,
+              child: Text(label,
+                  style: TextStyle(color: palette.textFaint, fontSize: 12.5, fontWeight: FontWeight.w600)),
+            ),
+            Icon(icon, size: 15, color: filled ? accent : palette.textFaint.withValues(alpha: 0.6)),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Text(
+                filled ? value! : placeholder,
+                style: TextStyle(
+                  color: filled ? palette.textPrimary : palette.textFaint.withValues(alpha: 0.7),
+                  fontSize: 14.5,
+                  fontWeight: filled ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, size: 17, color: palette.textFaint),
+          ],
+        ),
       ),
     );
   }

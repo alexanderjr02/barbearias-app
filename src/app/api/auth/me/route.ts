@@ -10,7 +10,7 @@ export async function GET() {
 
   const [staff, user] = await Promise.all([
     session.role === "BARBER" ? prisma.staff.findUnique({ where: { userId: session.sub } }) : null,
-    prisma.user.findUnique({ where: { id: session.sub }, select: { phone: true, avatar: true } }),
+    prisma.user.findUnique({ where: { id: session.sub }, select: { phone: true, avatar: true, dateOfBirth: true } }),
   ]);
 
   return NextResponse.json({
@@ -22,6 +22,7 @@ export async function GET() {
     staffId: staff?.id ?? null,
     phone: user?.phone ?? null,
     avatar: user?.avatar ?? null,
+    dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.toISOString().slice(0, 10) : null,
   });
 }
 
@@ -39,10 +40,21 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Corpo da requisição inválido" }, { status: 400 });
   }
 
-  const data: Record<string, string | null> = {};
+  const data: Record<string, string | null | Date> = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
   if (typeof body.phone === "string" || body.phone === null) data.phone = body.phone;
   if (typeof body.avatar === "string" || body.avatar === null) data.avatar = body.avatar;
+  // Nascimento habilita a campanha de aniversário — por isso o cliente pode
+  // preencher sozinho, sem depender do gestor cadastrar por ele.
+  if (typeof body.dateOfBirth === "string" && body.dateOfBirth.trim()) {
+    const d = new Date(body.dateOfBirth);
+    if (Number.isNaN(d.getTime())) {
+      return NextResponse.json({ error: "Data de nascimento inválida" }, { status: 400 });
+    }
+    data.dateOfBirth = d;
+  } else if (body.dateOfBirth === null) {
+    data.dateOfBirth = null;
+  }
 
   const user = await prisma.user.update({ where: { id: session.sub }, data });
 
@@ -62,5 +74,6 @@ export async function PATCH(request: NextRequest) {
     email: user.email,
     phone: user.phone,
     avatar: user.avatar,
+    dateOfBirth: user.dateOfBirth ? user.dateOfBirth.toISOString().slice(0, 10) : null,
   });
 }

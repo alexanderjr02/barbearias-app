@@ -3,11 +3,12 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/api/api_client.dart';
 
 class ProfileRepository {
-  Future<Map<String, dynamic>> updateProfile({String? name, String? phone, String? avatar}) async {
+  Future<Map<String, dynamic>> updateProfile({String? name, String? phone, String? avatar, String? dateOfBirth}) async {
     final data = <String, dynamic>{};
     if (name != null) data['name'] = name;
     if (phone != null) data['phone'] = phone;
     if (avatar != null) data['avatar'] = avatar;
+    if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth;
     final result = await ApiClient.instance.patch('/me', data: data);
     return result as Map<String, dynamic>;
   }

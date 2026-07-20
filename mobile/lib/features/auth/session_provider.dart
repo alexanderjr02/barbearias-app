@@ -121,12 +121,13 @@ class SessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> updateProfile({String? name, String? phone, String? avatar}) async {
+  Future<bool> updateProfile({String? name, String? phone, String? avatar, String? dateOfBirth}) async {
     try {
-      final data = await _profileRepository.updateProfile(name: name, phone: phone, avatar: avatar);
+      final data = await _profileRepository.updateProfile(name: name, phone: phone, avatar: avatar, dateOfBirth: dateOfBirth);
       session = session?.copyWith(
         name: data['name'] as String?,
         phone: data['phone'] as String?,
+        dateOfBirth: data['dateOfBirth'] as String?,
         avatar: data['avatar'] as String?,
       );
       notifyListeners();

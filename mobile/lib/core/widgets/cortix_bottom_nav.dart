@@ -53,13 +53,18 @@ class CortixBottomNav extends StatelessWidget {
   Widget _item(int i, Color accent, AppPalette palette) {
     final active = index == i;
     final item = items[i];
+    // Com 6 abas o espaço por item cai bastante; apertar ícone e respiro é o
+    // que mantém o rótulo ativo legível em vez de virar "Prefe…".
+    final many = items.length >= 6;
+    final iconSize = many ? 20.0 : 22.0;
+    final pad = many ? 10.0 : 13.0;
     return GestureDetector(
       onTap: () => onTap(i),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(horizontal: active ? 13 : 10, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: active ? pad : pad - 3, vertical: 10),
         decoration: BoxDecoration(
           color: active ? accent.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
@@ -67,23 +72,24 @@ class CortixBottomNav extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(item.icon, color: active ? accent : palette.textFaint, size: 22),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.easeOutCubic,
-              child: active
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Text(
-                        item.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: false,
-                        style: TextStyle(color: accent, fontWeight: FontWeight.w800, fontSize: 12),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
+            Icon(item.icon, color: active ? accent : palette.textFaint, size: iconSize),
+            // Flexible (e não AnimatedSize solto): o AnimatedSize mede o filho
+            // com largura infinita, então o ellipsis do Text nunca dispara e a
+            // linha estoura. Dentro de um Flexible o Text recebe largura máxima
+            // real e trunca como deveria.
+            if (active)
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: TextStyle(color: accent, fontWeight: FontWeight.w800, fontSize: 12),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
