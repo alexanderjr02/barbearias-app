@@ -135,42 +135,83 @@ export default function FinancePage() {
       {/* Caixa do Dia + fechamento */}
       <DailyCashPanel />
 
-      {/* Summary cards */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <ArrowUpRight className="w-5 h-5 text-emerald-400" />
+      {/* Resultado.
+          Três cards iguais tratavam receita, despesa e lucro como se pesassem
+          o mesmo — mas lucro é a resposta e os outros dois são a conta que
+          leva até ela. Aqui o lucro domina e a barra mostra, em uma olhada,
+          quanto da receita sobrou. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-2xl border p-6",
+            profit >= 0
+              ? "border-amber-500/25 bg-gradient-to-br from-amber-500/[0.09] via-amber-500/[0.02] to-transparent"
+              : "border-red-500/25 bg-gradient-to-br from-red-500/[0.09] via-red-500/[0.02] to-transparent"
+          )}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Lucro líquido</p>
+              <p className={cn("mt-2 text-4xl font-black tracking-tight", profit >= 0 ? "text-white" : "text-red-400")}>
+                {formatCurrency(profit)}
+              </p>
             </div>
+            <span
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-xs font-bold",
+                profit >= 0
+                  ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
+                  : "border-red-500/30 bg-red-500/10 text-red-400"
+              )}
+            >
+              {margin}% de margem
+            </span>
           </div>
-          <p className="text-2xl font-black text-white">{formatCurrency(income)}</p>
-          <p className="text-sm text-zinc-500 mt-1">Receitas</p>
-          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-zinc-800/80 text-xs text-zinc-500">
-            <span className="flex items-center gap-1"><Scissors className="w-3 h-3 text-zinc-600" /> {formatCurrency(serviceRevenue)} serviços</span>
-            <span className="flex items-center gap-1"><FileText className="w-3 h-3 text-zinc-600" /> {formatCurrency(manualIncome)} manual</span>
+
+          {/* Barra receita x despesa: proporção lida sem precisar comparar números */}
+          <div className="mt-6">
+            <div className="flex h-2.5 overflow-hidden rounded-full bg-zinc-800">
+              <div
+                className="bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-700"
+                style={{ width: `${income > 0 ? Math.max(0, Math.min(100, (1 - expenses / income) * 100)) : 0}%` }}
+              />
+              <div className="flex-1 bg-gradient-to-r from-red-500/70 to-red-400/70" />
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 text-zinc-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                Sobrou {formatCurrency(profit)}
+              </span>
+              <span className="flex items-center gap-1.5 text-zinc-400">
+                <span className="h-2 w-2 rounded-full bg-red-400" />
+                Saiu {formatCurrency(expenses)}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-              <ArrowDownRight className="w-5 h-5 text-red-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-white">{formatCurrency(expenses)}</p>
-          <p className="text-sm text-zinc-500 mt-1">Despesas</p>
-          <p className="text-xs text-zinc-600 mt-3 pt-3 border-t border-zinc-800/80">
-            {expensesByCategory.length > 0 ? `Maior categoria: ${expensesByCategory[0].name}` : "Nenhuma despesa lançada"}
-          </p>
-        </div>
-        <div className={cn("border rounded-xl p-5", profit >= 0 ? "bg-amber-500/[0.04] border-amber-500/20" : "bg-red-500/5 border-red-500/20")}>
-          <div className="flex items-center justify-between mb-3">
-            <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", profit >= 0 ? "bg-amber-500/10" : "bg-red-500/10")}>
-              <DollarSign className={cn("w-5 h-5", profit >= 0 ? "text-amber-400" : "text-red-400")} />
-            </div>
-            <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", profit >= 0 ? "bg-amber-500/10 text-amber-400" : "bg-red-500/10 text-red-400")}>{margin}% margem</span>
-          </div>
-          <p className={cn("text-2xl font-black", profit >= 0 ? "text-amber-400" : "text-red-400")}>{formatCurrency(profit)}</p>
-          <p className="text-sm text-zinc-500 mt-1">Lucro líquido</p>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <MetricCard
+            icon={ArrowUpRight}
+            tone="emerald"
+            label="Receitas"
+            value={formatCurrency(income)}
+            rows={[
+              { icon: Scissors, label: "Serviços", value: formatCurrency(serviceRevenue) },
+              { icon: FileText, label: "Manual", value: formatCurrency(manualIncome) },
+            ]}
+          />
+          <MetricCard
+            icon={ArrowDownRight}
+            tone="red"
+            label="Despesas"
+            value={formatCurrency(expenses)}
+            rows={
+              expensesByCategory.length > 0
+                ? expensesByCategory.slice(0, 2).map((c) => ({ label: c.name, value: formatCurrency(c.value), dot: c.color }))
+                : [{ label: "Nada lançado ainda", value: "—" }]
+            }
+          />
         </div>
       </div>
 
@@ -213,35 +254,119 @@ export default function FinancePage() {
         </div>
       </div>
 
-      {/* Transactions */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl">
-        <div className="px-6 py-4 border-b border-zinc-800">
-          <h3 className="text-lg font-bold text-white">Últimos Lançamentos Manuais</h3>
-        </div>
-        <div className="divide-y divide-zinc-800">
-          {transactions.length === 0 && (
-            <p className="text-sm text-zinc-500 px-6 py-8 text-center">Nenhum lançamento manual registrado ainda.</p>
+      {/* Lançamentos */}
+      <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
+        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+          <div>
+            <h3 className="text-sm font-bold text-white">Lançamentos manuais</h3>
+            <p className="mt-0.5 text-xs text-zinc-600">
+              O que você digitou à mão — a receita dos serviços entra sozinha
+            </p>
+          </div>
+          {transactions.length > 0 && (
+            <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-400">
+              {transactions.length}
+            </span>
           )}
-          {transactions.map((t) => (
-            <div key={t.id} className="flex items-center gap-4 px-6 py-4 hover:bg-white/2 transition-colors">
-              <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0", t.type === "INCOME" ? "bg-emerald-500/10" : "bg-red-500/10")}>
-                {t.type === "INCOME" ? <ArrowUpRight className="w-5 h-5 text-emerald-400" /> : <ArrowDownRight className="w-5 h-5 text-red-400" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-white truncate">{t.description}</p>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 flex-shrink-0">{t.category}</span>
-                </div>
-                <p className="text-xs text-zinc-500">
-                  {formatDate(t.date)} {t.paymentMethod ? `· ${t.paymentMethod}` : ""}
-                </p>
-              </div>
-              <span className={cn("text-sm font-bold flex-shrink-0", t.type === "INCOME" ? "text-emerald-400" : "text-red-400")}>
-                {t.type === "INCOME" ? "+" : "-"}{formatCurrency(t.amount)}
-              </span>
-            </div>
-          ))}
         </div>
+
+        {transactions.length === 0 ? (
+          <div className="px-6 py-16 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-800/60">
+              <Wallet className="h-6 w-6 text-zinc-600" />
+            </div>
+            <p className="mt-4 text-sm font-semibold text-zinc-300">Nenhum lançamento manual</p>
+            <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-zinc-600">
+              Aluguel, produtos, energia — o que não passa pelo agendamento entra aqui e o lucro acima passa a
+              refletir a realidade.
+            </p>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="mt-5 rounded-xl bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-200 transition-colors hover:bg-zinc-700"
+            >
+              Fazer o primeiro lançamento
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-zinc-800/70">
+            {transactions.map((t) => (
+              <div key={t.id} className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-white/[0.02]">
+                <div
+                  className={cn(
+                    "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl",
+                    t.type === "INCOME" ? "bg-emerald-500/10" : "bg-red-500/10"
+                  )}
+                >
+                  {t.type === "INCOME" ? (
+                    <ArrowUpRight className="h-4.5 w-4.5 text-emerald-400" />
+                  ) : (
+                    <ArrowDownRight className="h-4.5 w-4.5 text-red-400" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-white">{t.description}</p>
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-zinc-600">
+                    <span className="rounded bg-zinc-800/80 px-1.5 py-0.5 font-medium text-zinc-400">{t.category}</span>
+                    <span>{formatDate(t.date)}</span>
+                    {t.paymentMethod && <span>· {t.paymentMethod}</span>}
+                  </div>
+                </div>
+                <span
+                  className={cn(
+                    "flex-shrink-0 text-sm font-bold tabular-nums",
+                    t.type === "INCOME" ? "text-emerald-400" : "text-red-400"
+                  )}
+                >
+                  {t.type === "INCOME" ? "+" : "−"}
+                  {formatCurrency(t.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Cartão de apoio: um número grande e até duas linhas que o explicam. */
+function MetricCard({
+  icon: Icon,
+  tone,
+  label,
+  value,
+  rows,
+}: {
+  icon: React.ElementType;
+  tone: "emerald" | "red";
+  label: string;
+  value: string;
+  rows: { icon?: React.ElementType; label: string; value: string; dot?: string }[];
+}) {
+  const tones = {
+    emerald: { chip: "bg-emerald-500/10 text-emerald-400", border: "border-zinc-800" },
+    red: { chip: "bg-red-500/10 text-red-400", border: "border-zinc-800" },
+  }[tone];
+
+  return (
+    <div className={cn("flex flex-col rounded-2xl border bg-zinc-900/60 p-5", tones.border)}>
+      <div className={cn("flex h-9 w-9 items-center justify-center rounded-xl", tones.chip)}>
+        <Icon className="h-4.5 w-4.5" />
+      </div>
+      <p className="mt-3.5 text-2xl font-black tracking-tight text-white">{value}</p>
+      <p className="mt-0.5 text-xs text-zinc-500">{label}</p>
+      <div className="mt-3.5 space-y-1.5 border-t border-zinc-800/80 pt-3">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-center gap-2 text-xs">
+            {r.dot ? (
+              <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: r.dot }} />
+            ) : r.icon ? (
+              <r.icon className="h-3 w-3 flex-shrink-0 text-zinc-600" />
+            ) : null}
+            <span className="flex-1 truncate text-zinc-500">{r.label}</span>
+            <span className="font-medium text-zinc-300 tabular-nums">{r.value}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
