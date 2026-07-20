@@ -955,129 +955,395 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
     super.dispose();
   }
 
+  /// "2026-07-20" -> (20, "JUL"). Bloco de calendário lê mais rápido que
+  /// "20/07" corrido — é o mesmo motivo de todo app de viagem usar isso.
+  (String, String) _dayMonth() {
+    const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+    try {
+      final d = DateTime.parse(widget.apt.date);
+      return (d.day.toString().padLeft(2, '0'), months[d.month - 1]);
+    } catch (_) {
+      return (widget.dateLabel, '');
+    }
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = widget.palette;
+    final accent = widget.accent;
     final status = widget.apt.status;
     final inProgress = status == 'IN_PROGRESS';
     final arrived = status == 'ARRIVED';
     final live = inProgress || arrived;
+    final (day, month) = _dayMonth();
+
     final badgeLabel = inProgress
-        ? '✂️ EM ATENDIMENTO AGORA'
+        ? 'EM ATENDIMENTO AGORA'
         : arrived
-            ? '✅ CHECK-IN FEITO · JÁ É SUA VEZ'
-            : 'PRÓXIMO · ${widget.countdown.toUpperCase()}';
+            ? 'CHECK-IN FEITO · JÁ É SUA VEZ'
+            : widget.countdown.toUpperCase();
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final glow = 0.25 + _controller.value * 0.25;
+        // O brilho só pulsa quando algo está acontecendo de verdade. Card
+        // parado piscando é ruído — vira aquele banner que a pessoa aprende
+        // a ignorar.
+        final glow = live ? 0.22 + _controller.value * 0.26 : 0.16;
         return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [BoxShadow(color: widget.accent.withValues(alpha: glow), blurRadius: 26, spreadRadius: 1)],
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [BoxShadow(color: accent.withValues(alpha: glow), blurRadius: 28, spreadRadius: -2)],
           ),
           child: child,
         );
       },
       child: GlassPanel(
-        padding: const EdgeInsets.all(20),
-        borderRadius: BorderRadius.circular(24),
-        tint: widget.accent,
+        padding: EdgeInsets.zero,
+        borderRadius: BorderRadius.circular(26),
+        tint: accent,
         borderOpacity: 0.24,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: widget.accent.withValues(alpha: live ? 0.28 : 0.18), borderRadius: BorderRadius.circular(20)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (live) ...[
-                        Container(width: 6, height: 6, decoration: BoxDecoration(color: widget.accent, shape: BoxShape.circle)),
-                        const SizedBox(width: 6),
-                      ],
-                      Text(badgeLabel, style: TextStyle(color: widget.accent, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.4)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(widget.apt.barbershopName, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 17)),
-            const SizedBox(height: 4),
-            Text('${widget.apt.serviceName} · com ${widget.apt.staffName}', style: TextStyle(color: palette.textSecondary, fontSize: 13.5)),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(Icons.calendar_today_rounded, size: 14, color: widget.accent),
-                const SizedBox(width: 6),
-                Text('${widget.dateLabel} · ${widget.apt.startTime}', style: TextStyle(color: widget.accent, fontWeight: FontWeight.bold, fontSize: 13.5)),
-                const Spacer(),
-                Text('R\$ ${widget.apt.totalPrice.toStringAsFixed(2)}', style: TextStyle(color: palette.textFaint, fontSize: 13)),
-              ],
-            ),
-            if (_queue != null && _queue!.isToday && _queue!.active && !inProgress) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(color: widget.accent.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(12), border: Border.all(color: widget.accent.withValues(alpha: 0.25))),
-                child: Row(
-                  children: [
-                    Container(width: 7, height: 7, decoration: BoxDecoration(color: widget.accent, shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
-                    Icon(Icons.groups_rounded, size: 15, color: widget.accent),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        _queue!.ahead == 0
-                            ? 'Você é o próximo! 🔥'
-                            : '${_queue!.position}º na fila · ~${_queue!.etaMinutes} min de espera',
-                        style: TextStyle(color: widget.accent, fontWeight: FontWeight.w700, fontSize: 12.5),
-                      ),
-                    ),
-                    Text('ao vivo', style: TextStyle(color: widget.accent.withValues(alpha: 0.6), fontSize: 10, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-            if (live)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(color: widget.accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
-                child: Text(
-                  inProgress ? 'Aproveite o corte! ✂️' : 'Você já fez check-in. Aguarde ser chamado.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: widget.accent, fontWeight: FontWeight.w700, fontSize: 13),
-                ),
-              )
-            else
-              Row(
+            // ---------- Topo: data + o que/com quem ----------
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: widget.onCancel,
-                      style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent)),
-                      child: const Text('Cancelar'),
+                  // Bloco de calendário
+                  Container(
+                    width: 60,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [accent.withValues(alpha: 0.26), accent.withValues(alpha: 0.10)],
+                      ),
+                      border: Border.all(color: accent.withValues(alpha: 0.32)),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(day,
+                            style: TextStyle(
+                              color: palette.textPrimary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              height: 1,
+                              letterSpacing: -1,
+                            )),
+                        const SizedBox(height: 2),
+                        Text(month,
+                            style: TextStyle(
+                              color: accent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            )),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 14),
                   Expanded(
-                    child: PulseButton(
-                      onPressed: widget.onReschedule,
-                      color: widget.accent,
-                      height: 40,
-                      child: Text('Remarcar', style: TextStyle(color: contrastingTextColor(widget.accent), fontWeight: FontWeight.bold, fontSize: 13.5)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Selo de estado: ponto pulsante só quando ao vivo.
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: live ? 0.26 : 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (live) ...[
+                                _LiveDot(color: accent, controller: _controller),
+                                const SizedBox(width: 6),
+                              ] else ...[
+                                Icon(Icons.schedule_rounded, size: 11, color: accent),
+                                const SizedBox(width: 4),
+                              ],
+                              Text(badgeLabel,
+                                  style: TextStyle(
+                                    color: accent,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.4,
+                                  )),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 9),
+                        Text(
+                          widget.apt.serviceName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: palette.textPrimary,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 19,
+                            letterSpacing: -0.5,
+                            height: 1.15,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.apt.barbershopName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: palette.textFaint, fontSize: 12.5),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ---------- Faixa: horário, barbeiro e preço ----------
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: palette.bg.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    // Barbeiro com avatar: o cliente volta pela PESSOA, então
+                    // ela merece rosto e não só um nome no meio de uma frase.
+                    Container(
+                      width: 34,
+                      height: 34,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [accent.withValues(alpha: 0.35), accent.withValues(alpha: 0.15)],
+                        ),
+                        border: Border.all(color: accent.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        _initials(widget.apt.staffName),
+                        style: TextStyle(color: accent, fontWeight: FontWeight.w900, fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('com ${widget.apt.staffName}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color: palette.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 1),
+                          Row(
+                            children: [
+                              Icon(Icons.access_time_rounded, size: 11, color: palette.textFaint),
+                              const SizedBox(width: 3),
+                              Text(widget.apt.startTime,
+                                  style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      'R\$ ${widget.apt.totalPrice.toStringAsFixed(2).replaceAll('.', ',')}',
+                      style: TextStyle(
+                        color: palette.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ---------- Fila ao vivo ----------
+            if (_queue != null && _queue!.isToday && _queue!.active && !inProgress) ...[
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: accent.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    children: [
+                      _LiveDot(color: accent, controller: _controller),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          _queue!.ahead == 0
+                              ? 'Você é o próximo! 🔥'
+                              : '${_queue!.position}º na fila · ~${_queue!.etaMinutes} min de espera',
+                          style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 12.5),
+                        ),
+                      ),
+                      Text('ao vivo',
+                          style: TextStyle(
+                              color: accent.withValues(alpha: 0.6), fontSize: 10, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 16),
+
+            // ---------- Picote + ações ----------
+            if (live)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    inProgress ? 'Aproveite o corte! ✂️' : 'Você já fez check-in. Aguarde ser chamado.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                ),
+              )
+            else ...[
+              _DashedLine(color: palette.textFaint.withValues(alpha: 0.22)),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+                child: Row(
+                  children: [
+                    // Cancelar deixou de ter o mesmo peso de Remarcar. Ação
+                    // destrutiva com botão vermelho grande do lado do primário
+                    // é convite a errar; quem quer cancelar acha mesmo discreto.
+                    TextButton(
+                      onPressed: widget.onCancel,
+                      style: TextButton.styleFrom(
+                        foregroundColor: palette.textFaint,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: const Text('Cancelar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    ),
+                    const Spacer(),
+                    PulseButton(
+                      onPressed: widget.onReschedule,
+                      color: accent,
+                      height: 42,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 22),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.event_repeat_rounded, size: 16, color: contrastingTextColor(accent)),
+                            const SizedBox(width: 7),
+                            Text('Remarcar',
+                                style: TextStyle(
+                                    color: contrastingTextColor(accent),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13.5)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Ponto "ao vivo" com halo pulsante — o mesmo sinal que apps de entrega usam
+/// para dizer "isto está acontecendo agora", sem precisar escrever.
+class _LiveDot extends StatelessWidget {
+  final Color color;
+  final AnimationController controller;
+  const _LiveDot({required this.color, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final t = controller.value;
+        return SizedBox(
+          width: 8,
+          height: 8,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 8 + t * 7,
+                height: 8 + t * 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: (1 - t) * 0.35),
+                ),
+              ),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Picote do bilhete. Separa a informação da ação, que é o que faz o card
+/// parecer um ticket destacável em vez de mais uma caixa arredondada.
+class _DashedLine extends StatelessWidget {
+  final Color color;
+  const _DashedLine({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const dash = 5.0, gap = 4.0;
+          final count = (constraints.maxWidth / (dash + gap)).floor();
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(
+              count,
+              (_) => Container(width: dash, height: 1, color: color),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1124,7 +1390,11 @@ class _HistoryTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: palette.textFaint.withValues(alpha: 0.10)),
+      ),
       child: Row(
         children: [
           Container(
@@ -1138,8 +1408,20 @@ class _HistoryTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(apt.barbershopName, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('${apt.serviceName} · com ${apt.staffName}', style: TextStyle(color: palette.textSecondary, fontSize: 12)),
+                // O serviço passa a ser o título. O nome da barbearia liderava
+                // uma lista onde quase tudo é da mesma barbearia — repetia sem
+                // distinguir nada.
+                Text(apt.serviceName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 14.5, letterSpacing: -0.2)),
+                const SizedBox(height: 2),
+                Text('com ${apt.staffName}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: palette.textSecondary, fontSize: 12)),
+                const SizedBox(height: 1),
                 Text('$dateLabel · ${apt.startTime}', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
               ],
             ),
