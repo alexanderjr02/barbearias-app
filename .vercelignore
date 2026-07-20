@@ -1,0 +1,23 @@
+# O deploy estava abortando no upload: sem esta lista, a CLI tenta enviar a
+# pasta inteira — node_modules, .next, o app Flutter e o banco local — o que
+# são gigabytes. A Vercel instala as dependências e compila do lado dela.
+
+node_modules
+.next
+.git
+
+# App Flutter: é publicado à parte, não faz parte do build do Next.
+mobile
+
+# Banco e uploads locais. Em produção o banco é o Turso e as imagens vão
+# para o Blob — subir estes arquivos só atrasaria o deploy.
+dev.db
+dev.db-journal
+*.db
+public/uploads
+
+# Ambiente e artefatos locais
+.env*
+!.env.example
+*.tmp.js
+scripts/*.tmp.js
