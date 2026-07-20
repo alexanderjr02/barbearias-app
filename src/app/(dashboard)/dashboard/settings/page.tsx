@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Store,
@@ -470,43 +471,26 @@ export default function SettingsPage() {
                     </div>
 
                     {canWhatsapp && (
-                      <div className="rounded-lg border border-zinc-800 bg-zinc-900/80 p-4 space-y-4">
-                        <div className="flex items-center justify-between gap-3">
+                      // A conexão de WhatsApp mora numa página própria, que
+                      // valida o número na Meta e o guarda no servidor. O
+                      // formulário que existia aqui só salvava no navegador e
+                      // não conectava nada — por isso virou um atalho para o
+                      // lugar certo.
+                      <Link
+                        href="/dashboard/whatsapp"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-4 hover:bg-emerald-500/10 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <MessageSquareText className="h-5 w-5 text-emerald-400 shrink-0" />
                           <div>
-                            <p className="text-sm font-semibold text-white">Integração WhatsApp</p>
-                            <p className="text-xs text-zinc-500">Ative o atendimento direto pelo WhatsApp.</p>
+                            <p className="text-sm font-semibold text-white">Conectar o WhatsApp da barbearia</p>
+                            <p className="text-xs text-zinc-500">
+                              Envie confirmações e responda clientes automaticamente. Abre a página de conexão.
+                            </p>
                           </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={chatbot.whatsapp.enabled}
-                              onChange={(e) => setChatbot((prev) => ({ ...prev, whatsapp: { ...prev.whatsapp, enabled: e.target.checked } }))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-10 h-5 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500" />
-                          </label>
                         </div>
-                        {chatbot.whatsapp.enabled && (
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-zinc-300 mb-2">Telefone</label>
-                              <input value={chatbot.whatsapp.phone} onChange={(e) => setChatbot((prev) => ({ ...prev, whatsapp: { ...prev.whatsapp, phone: e.target.value } }))} className={inputCls} />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-zinc-300 mb-2">Token</label>
-                              <input value={chatbot.whatsapp.token} onChange={(e) => setChatbot((prev) => ({ ...prev, whatsapp: { ...prev.whatsapp, token: e.target.value } }))} className={inputCls} />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-zinc-300 mb-2">Horário automático (de)</label>
-                              <input type="time" value={chatbot.whatsapp.autoFrom} onChange={(e) => setChatbot((prev) => ({ ...prev, whatsapp: { ...prev.whatsapp, autoFrom: e.target.value } }))} className={inputCls} />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-zinc-300 mb-2">Horário automático (até)</label>
-                              <input type="time" value={chatbot.whatsapp.autoTo} onChange={(e) => setChatbot((prev) => ({ ...prev, whatsapp: { ...prev.whatsapp, autoTo: e.target.value } }))} className={inputCls} />
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                        <span className="text-emerald-400 text-lg shrink-0">→</span>
+                      </Link>
                     )}
 
                     <div className="space-y-3">
