@@ -28,7 +28,7 @@ export async function onSlotOpened(barbershopId: string, freed: { startTime?: st
   const waiting = await prisma.waitlistEntry.findMany({ where: { barbershopId, status: "WAITING", clientId: { not: null } }, select: { id: true, clientId: true } });
   for (const w of waiting as { id: string; clientId: string | null }[]) {
     if (w.clientId) {
-      await notifyClient(barbershopId, w.clientId, "APPOINTMENT_CONFIRMED", "Abriu um horário! ⏰", `Vagou um horário${whenTxt} na ${shopName}. Corra, é por ordem de chegada!`, "/appointments");
+      await notifyClient(barbershopId, w.clientId, "APPOINTMENT_CONFIRMED", "Abriu um horário!", `Vagou um horário${whenTxt} na ${shopName}. Corra, é por ordem de chegada!`, "/appointments");
       reached++;
     }
   }
@@ -41,7 +41,7 @@ export async function onSlotOpened(barbershopId: string, freed: { startTime?: st
     // fila pediu exatamente esse aviso.
     const churned = (await churnedClients(barbershopId, 30, 10)).filter((c) => c.clientId).slice(0, 3);
     for (const c of churned) {
-      const ok = await notifyClientMarketing(barbershopId, c.clientId!, "APPOINTMENT_CONFIRMED", "Abriu um horário 💈", `Surgiu um horário${whenTxt} na ${shopName}. Que tal aproveitar pra dar aquele trato?`, "/appointments");
+      const ok = await notifyClientMarketing(barbershopId, c.clientId!, "APPOINTMENT_CONFIRMED", "Abriu um horário", `Surgiu um horário${whenTxt} na ${shopName}. Que tal aproveitar pra dar aquele trato?`, "/appointments");
       if (ok) reached++;
     }
   }

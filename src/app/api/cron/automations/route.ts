@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
         let n = 0;
         for (const a of list.filter((x) => x.status === "SCHEDULED")) {
           await prisma.appointment.update({ where: { id: a.id }, data: { status: "CONFIRMED" } });
-          if (a.clientId) await notifyClient(shop.id, a.clientId, "APPOINTMENT_CONFIRMED", "Agendamento confirmado ✅", `Confirmamos seu horário de amanhã às ${a.startTime}. Até lá! 💈`, "/appointments");
+          if (a.clientId) await notifyClient(shop.id, a.clientId, "APPOINTMENT_CONFIRMED", "Agendamento confirmado", `Confirmamos seu horário de amanhã às ${a.startTime}. Até lá!`, "/appointments");
           confirmed++;
           n++;
         }
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
           for (const u of users as { id: string; name: string; dateOfBirth: Date | null }[]) {
             const d = u.dateOfBirth!;
             if (d.getUTCMonth() + 1 === tMonth && d.getUTCDate() === tDay) {
-              await notifyClientMarketing(shop.id, u.id, "APPOINTMENT_CONFIRMED", "Feliz aniversário! 🎉", `Parabéns, ${u.name.split(" ")[0]}! A ${shop.name} te deseja tudo de bom. Vem comemorar com um corte novo. 💈`, "/appointments");
+              await notifyClientMarketing(shop.id, u.id, "APPOINTMENT_CONFIRMED", "Feliz aniversário!", `Parabéns, ${u.name.split(" ")[0]}! A ${shop.name} te deseja tudo de bom. Vem comemorar com um corte novo.`, "/appointments");
               birthdays++;
               n++;
             }
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
         let n = 0;
         for (const c of churned) {
           if (c.clientId && c.daysSince === shop.autoWinbackDays) {
-            await notifyClientMarketing(shop.id, c.clientId, "APPOINTMENT_CONFIRMED", "Saudades de você! 💈", `Faz um tempo que você não aparece na ${shop.name}. Que tal marcar um horário? A gente separou um cuidado especial pra você.`, "/appointments");
+            await notifyClientMarketing(shop.id, c.clientId, "APPOINTMENT_CONFIRMED", "Saudades de você!", `Faz um tempo que você não aparece na ${shop.name}. Que tal marcar um horário? A gente separou um cuidado especial pra você.`, "/appointments");
             winbacks++;
             n++;
           }

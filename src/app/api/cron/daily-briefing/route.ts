@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
       const delta = b.revenue.weekDeltaPercent == null ? "" : ` (${b.revenue.weekDeltaPercent >= 0 ? "+" : ""}${b.revenue.weekDeltaPercent.toFixed(0)}%)`;
       const body = `Faturamento 7 dias: ${money(b.revenue.thisWeek)}${delta}. Precisa da sua atenção: ${problems.join(", ")}. Abra o Copiloto que eu te ajudo a resolver.`;
-      await notifyBarbershop(shop.id, "SUPPORT_REPLY", "🤖 Copiloto: seu dia", body, "/dashboard");
+      await notifyBarbershop(shop.id, "SUPPORT_REPLY", "Copiloto: seu dia", body, "/dashboard");
       notified++;
     } catch (err) {
       console.error(`[daily-briefing] ${shop.id}`, err);

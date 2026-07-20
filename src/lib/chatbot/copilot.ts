@@ -569,7 +569,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       // gente do que alcançou.
       let sent = 0;
       for (const cid of clientIds) {
-        if (await notifyClientMarketing(barbershopId, cid, "APPOINTMENT_CONFIRMED", "Promoção 💈", message, "/appointments")) sent++;
+        if (await notifyClientMarketing(barbershopId, cid, "APPOINTMENT_CONFIRMED", "Promoção", message, "/appointments")) sent++;
       }
       const blocked = clientIds.length - sent;
       if (sent === 0) return `Ninguém recebeu: os ${clientIds.length} clientes encontrados não autorizaram receber promoção. O aceite é pedido no cadastro do cliente.`;

@@ -73,7 +73,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         clientId: appointment.clientId,
         barbershopId: appointment.barbershopId,
         imageUrl: newResultPhoto,
-        note: shop?.name ? `Feito na ${shop.name} 💈` : "Meu corte 💈",
+        note: shop?.name ? `Feito na ${shop.name}` : "Meu corte",
       },
     });
   }
@@ -99,10 +99,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if ((isManager || isAssignedBarber) && appointment.clientId && appointment.status !== body.status) {
     const CLIENT_MESSAGES: Record<string, [string, string]> = {
       CONFIRMED: ["Agendamento confirmado", `Sua barbearia confirmou seu agendamento das ${appointment.startTime}`],
-      ARRIVED: ["Check-in feito ✅", `Recebemos você! Já já é a sua vez.`],
-      IN_PROGRESS: ["É a sua vez ✂️", `Seu atendimento das ${appointment.startTime} começou.`],
+      ARRIVED: ["Check-in feito", `Recebemos você! Já já é a sua vez.`],
+      IN_PROGRESS: ["É a sua vez", `Seu atendimento das ${appointment.startTime} começou.`],
       CANCELLED: ["Agendamento cancelado", `Sua barbearia cancelou seu agendamento das ${appointment.startTime}`],
-      COMPLETED: ["Como foi o corte? ⭐", `Atendimento concluído! Avalie o Thalles e já garanta seu próximo horário. 💈`.replace("Thalles", appointment.staff.name)],
+      COMPLETED: ["Como foi o corte?", `Atendimento concluído! Avalie o Thalles e já garanta seu próximo horário.`.replace("Thalles", appointment.staff.name)],
     };
     const CLIENT_TYPE: Record<string, "APPOINTMENT_CONFIRMED" | "APPOINTMENT_CANCELLED_BY_SHOP" | "APPOINTMENT_COMPLETED"> = {
       CONFIRMED: "APPOINTMENT_CONFIRMED",

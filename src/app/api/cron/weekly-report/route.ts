@@ -37,12 +37,12 @@ export async function GET(request: NextRequest) {
       ].filter(Boolean);
       const bodyText = lines.join(" ");
 
-      await notifyBarbershop(shop.id, "SUPPORT_REPLY", "📊 Seu resumo da semana", bodyText, "/dashboard");
+      await notifyBarbershop(shop.id, "SUPPORT_REPLY", "Seu resumo da semana", bodyText, "/dashboard");
 
       if (shop.owner?.email) {
         await sendMail({
           to: shop.owner.email,
-          subject: `📊 Resumo da semana — ${shop.name}`,
+          subject: `Resumo da semana — ${shop.name}`,
           text: `Olá${shop.owner.name ? `, ${shop.owner.name.split(" ")[0]}` : ""}!\n\n${lines.join("\n")}\n\nAbra o painel para ver os detalhes e agir com o Copiloto.`,
           html: `<p>Olá${shop.owner.name ? `, ${shop.owner.name.split(" ")[0]}` : ""}!</p><ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul><p>Abra o painel para ver os detalhes e agir com o Copiloto.</p>`,
         }).catch(() => {});

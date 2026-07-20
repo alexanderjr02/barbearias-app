@@ -79,7 +79,7 @@ export async function addStampForAppointment(appointmentId: string): Promise<voi
     // mesmo sem aceite de marketing.
     await notifyClient(
       appt.barbershopId, appt.clientId, "APPOINTMENT_COMPLETED",
-      "Cartela completa! 🎉",
+      "Cartela completa!",
       `Você completou ${cfg.stampGoal} atendimentos e ganhou: ${cfg.stampRewardLabel}. É só pedir no balcão.`,
       "/loyalty",
     );
@@ -161,8 +161,8 @@ export async function completeReferralIfFirstVisit(appointmentId: string): Promi
     ],
   });
 
-  await notifyClient(appt.barbershopId, referral.referrerId, "APPOINTMENT_COMPLETED", "Sua indicação valeu! 🎁", `Seu amigo veio cortar. Você ganhou: ${cfg.referralReferrerReward}.`, "/loyalty");
-  await notifyClient(appt.barbershopId, appt.clientId, "APPOINTMENT_COMPLETED", "Bem-vindo! 🎁", `Por vir na indicação, você ganhou: ${cfg.referralFriendReward}.`, "/loyalty");
+  await notifyClient(appt.barbershopId, referral.referrerId, "APPOINTMENT_COMPLETED", "Sua indicação valeu!", `Seu amigo veio cortar. Você ganhou: ${cfg.referralReferrerReward}.`, "/loyalty");
+  await notifyClient(appt.barbershopId, appt.clientId, "APPOINTMENT_COMPLETED", "Bem-vindo!", `Por vir na indicação, você ganhou: ${cfg.referralFriendReward}.`, "/loyalty");
 }
 
 /** O que o cliente vê: progresso da cartela + prêmios disponíveis. */

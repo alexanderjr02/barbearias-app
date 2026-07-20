@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Human handoff: flag the team and let the client know.
     if (HANDOFF_RE.test(text)) {
-      await notifyBarbershop(barbershopId, "SUPPORT_REPLY", "Cliente pediu atendimento humano 💬", `Pelo WhatsApp (${from}): "${text.slice(0, 120)}"`, "/dashboard");
+      await notifyBarbershop(barbershopId, "SUPPORT_REPLY", "Cliente pediu atendimento humano", `Pelo WhatsApp (${from}): "${text.slice(0, 120)}"`, "/dashboard");
       const reply = "Claro! Já avisei a equipe — em breve alguém fala com você por aqui. 🙌";
       await prisma.chatMessage.create({ data: { content: reply, role: "BOT", sessionId, barbershopId } });
       await sendWhatsAppText(from, reply);

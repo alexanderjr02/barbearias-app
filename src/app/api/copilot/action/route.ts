@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     for (const a of toConfirm) {
       await prisma.appointment.update({ where: { id: a.id }, data: { status: "CONFIRMED" } });
       if (a.clientId) {
-        await notifyClient(barbershopId, a.clientId, "APPOINTMENT_CONFIRMED", "Agendamento confirmado", `Confirmamos seu horário de amanhã às ${a.startTime}. Até lá! 💈`, "/appointments");
+        await notifyClient(barbershopId, a.clientId, "APPOINTMENT_CONFIRMED", "Agendamento confirmado", `Confirmamos seu horário de amanhã às ${a.startTime}. Até lá!`, "/appointments");
       }
     }
     return NextResponse.json({ ok: true, count: toConfirm.length, message: `${toConfirm.length} agendamento(s) confirmado(s).` });
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         barbershopId,
         c.clientId!,
         "APPOINTMENT_CONFIRMED",
-        "Saudades de você! 💈",
+        "Saudades de você!",
         `Faz um tempo que você não aparece na ${shop?.name ?? "barbearia"}. Que tal marcar um horário? Estamos te esperando.`,
         "/appointments"
       );
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     });
     const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
     for (const w of waiting) {
-      await notifyClient(barbershopId, w.clientId!, "APPOINTMENT_CONFIRMED", "Abriu horário! ⏰", `Vagou horário hoje na ${shop?.name ?? "barbearia"}. Corre pra garantir!`, "/appointments");
+      await notifyClient(barbershopId, w.clientId!, "APPOINTMENT_CONFIRMED", "Abriu horário!", `Vagou horário hoje na ${shop?.name ?? "barbearia"}. Corre pra garantir!`, "/appointments");
     }
     await prisma.waitlistEntry.updateMany({ where: { id: { in: waiting.map((w: { id: string }) => w.id) } }, data: { status: "DONE" } });
     return NextResponse.json({ ok: true, count: waiting.length, message: `${waiting.length} cliente(s) da fila avisado(s).` });
