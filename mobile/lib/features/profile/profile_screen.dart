@@ -9,6 +9,7 @@ import '../../core/widgets/cortix_date_picker.dart';
 import '../auth/session_provider.dart';
 import '../barbeiro/barbeiro_copilot_screen.dart';
 import 'profile_repository.dart';
+import 'push_notification_card.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -402,6 +403,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: _ThemeModeSelector(),
             ),
           ),
+
+          // ---------- Notificações no aparelho (Web Push) ----------
+          // Traz o próprio rótulo/moldura; some sozinho onde push não existe.
+          const PushNotificationCard(),
 
           if (session?.isBarber == true) ...[
             const SizedBox(height: 26),

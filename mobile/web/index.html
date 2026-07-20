@@ -45,15 +45,21 @@
   <link rel="manifest" href="%%CORTIX_MANIFEST_URL%%" crossorigin="anonymous">
 
   <script>
-    // Limpa service worker/cache de instalações anteriores. O app não
-    // registra mais um service worker (ver web/flutter_bootstrap.js) porque
-    // era ele quem guardava uma cópia velha do index.html — com a marca de
-    // OUTRA barbearia ou a tela de login antiga — e a servia em vez de
-    // buscar a versão nova. Isso roda uma vez por aparelho: se não havia
-    // nada registrado, é instantâneo e não faz nada.
+    // Limpa o service worker de CACHE do Flutter de instalações anteriores —
+    // era ele quem guardava uma cópia velha do index.html (marca de outra
+    // barbearia, tela de login antiga) e a servia em vez de buscar a nova.
+    //
+    // MAS poupa o push-sw.js: esse não intercepta rede nem guarda HTML (é só
+    // notificação), então não tem o problema do cache — e removê-lo a cada
+    // carregamento desligaria o push que a pessoa acabou de ativar.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function (regs) {
-        regs.forEach(function (r) { r.unregister(); });
+        regs.forEach(function (r) {
+          var script = (r.active && r.active.scriptURL) ||
+                       (r.waiting && r.waiting.scriptURL) ||
+                       (r.installing && r.installing.scriptURL) || '';
+          if (script.indexOf('push-sw.js') === -1) r.unregister();
+        });
       });
       if (window.caches) {
         caches.keys().then(function (names) {
@@ -61,6 +67,106 @@
         });
       }
     }
+
+    // Ponte de push chamada pelo app Flutter. Toda a mecânica do navegador
+    // (permissão, service worker, assinatura) mora aqui em JS puro; o Dart só
+    // chama window.cortixPush.enable(token, apiBase) num toque de botão e lê o
+    // resultado. Feito assim porque requestPermission() do iOS exige ser
+    // chamado dentro do gesto do usuário e com o mínimo de espera antes.
+    (function () {
+      function supported() {
+        return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+      }
+
+      // A chave VAPID vem em base64url; o navegador quer um Uint8Array.
+      function urlB64ToUint8Array(base64) {
+        var padding = '='.repeat((4 - (base64.length % 4)) % 4);
+        var b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+        var raw = atob(b64);
+        var out = new Uint8Array(raw.length);
+        for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+        return out;
+      }
+
+      function statusNow() {
+        if (!supported()) {
+          // No iPhone o push só existe com o app INSTALADO na tela de início.
+          // Um Safari normal do iOS nem tem window.Notification — então
+          // distinguimos "precisa instalar" de "navegador não suporta".
+          var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+          var standalone = window.navigator.standalone === true ||
+            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+          if (isIOS && !standalone) return 'needs-install';
+          return 'unsupported';
+        }
+        return Notification.permission; // 'granted' | 'denied' | 'default'
+      }
+
+      window.cortixPush = {
+        status: function () { return statusNow(); },
+
+        enable: function (token, apiBase) {
+          if (!supported()) return Promise.resolve(statusNow());
+
+          // Permissão PRIMEIRO, ainda dentro do gesto — o Safari do iOS recusa
+          // se houver await demais antes desta chamada.
+          return Notification.requestPermission().then(function (perm) {
+            if (perm !== 'granted') return perm; // 'denied' | 'default'
+
+            return navigator.serviceWorker.register('push-sw.js')
+              .then(function () { return navigator.serviceWorker.ready; })
+              .then(function (reg) {
+                return fetch(apiBase + '/push/public-key')
+                  .then(function (r) { return r.json(); })
+                  .then(function (body) {
+                    if (!body || !body.enabled || !body.key) throw new Error('push desligado no servidor');
+                    return reg.pushManager.subscribe({
+                      userVisibleOnly: true,
+                      applicationServerKey: urlB64ToUint8Array(body.key),
+                    });
+                  });
+              })
+              .then(function (sub) {
+                var json = sub.toJSON();
+                return fetch(apiBase + '/push/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                  body: JSON.stringify({
+                    endpoint: json.endpoint,
+                    keys: json.keys,
+                    userAgent: navigator.userAgent,
+                  }),
+                });
+              })
+              .then(function (r) {
+                if (!r.ok) throw new Error('falha ao registrar assinatura (' + r.status + ')');
+                return 'granted';
+              });
+          }).catch(function (e) {
+            console.error('[cortixPush] enable falhou', e);
+            return 'error';
+          });
+        },
+
+        disable: function (token, apiBase) {
+          if (!supported()) return Promise.resolve('unsupported');
+          return navigator.serviceWorker.ready
+            .then(function (reg) { return reg.pushManager.getSubscription(); })
+            .then(function (sub) {
+              if (!sub) return 'ok';
+              var endpoint = sub.endpoint;
+              return sub.unsubscribe().then(function () {
+                return fetch(apiBase + '/push/unsubscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                  body: JSON.stringify({ endpoint: endpoint }),
+                }).then(function () { return 'ok'; });
+              });
+            })
+            .catch(function (e) { console.error('[cortixPush] disable falhou', e); return 'error'; });
+        },
+      };
+    })();
   </script>
 </head>
 <body>
