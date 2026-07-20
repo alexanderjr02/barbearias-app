@@ -37,7 +37,11 @@ class CortixBottomNav extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                for (var i = 0; i < items.length; i++) _item(i, accent, palette),
+                // Flexible em cada item: com 6 abas, o pílula do item ativo
+                // mais 5 ícones estoura a largura num aparelho estreito
+                // (iPhone SE e afins). Assim eles dividem o espaço e o
+                // rótulo trunca em vez de rasgar o layout.
+                for (var i = 0; i < items.length; i++) Flexible(child: _item(i, accent, palette)),
               ],
             ),
           ),
@@ -70,7 +74,13 @@ class CortixBottomNav extends StatelessWidget {
               child: active
                   ? Padding(
                       padding: const EdgeInsets.only(left: 6),
-                      child: Text(item.label, maxLines: 1, style: TextStyle(color: accent, fontWeight: FontWeight.w800, fontSize: 12)),
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                        style: TextStyle(color: accent, fontWeight: FontWeight.w800, fontSize: 12),
+                      ),
                     )
                   : const SizedBox.shrink(),
             ),

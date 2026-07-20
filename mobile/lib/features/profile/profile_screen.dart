@@ -7,7 +7,6 @@ import '../../core/theme/theme_controller.dart';
 import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import '../barbeiro/barbeiro_copilot_screen.dart';
-import '../cliente/client_preferences_screen.dart';
 import 'profile_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -117,132 +116,250 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final initials = (session?.name.trim().isNotEmpty ?? false)
         ? session!.name.trim().split(RegExp(r'\s+')).map((e) => e[0]).take(2).join().toUpperCase()
         : '?';
+    final roleLabel = session?.isBarber == true
+        ? 'Barbeiro'
+        : session?.isManager == true
+            ? 'Gestor'
+            : 'Cliente';
 
     return Scaffold(
       backgroundColor: palette.bg,
-      appBar: AppBar(backgroundColor: palette.bg, title: const Text('Perfil')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
         children: [
-          Center(
-            child: GestureDetector(
-              onTap: _uploadingAvatar ? null : _pickAvatar,
-              child: Stack(
+          // ---------- Cabeçalho ----------
+          // O nome só existia dentro do campo editável, então a tela abria sem
+          // dizer de quem é. Agora ele é o título, como em qualquer perfil.
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 14, 4, 22),
+              child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundColor: palette.surfaceAlt,
-                    backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                    child: avatarUrl == null
-                        ? Text(initials, style: TextStyle(color: palette.textSecondary, fontSize: 28, fontWeight: FontWeight.bold))
-                        : null,
-                  ),
-                  if (_uploadingAvatar)
-                    Positioned.fill(
-                      child: CircleAvatar(
-                        backgroundColor: Colors.black54,
-                        child: const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
-                      ),
+                  GestureDetector(
+                    onTap: _uploadingAvatar ? null : _pickAvatar,
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(2.5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [accent, accent.withValues(alpha: 0.25)],
+                            ),
+                          ),
+                          child: CircleAvatar(
+                            radius: 36,
+                            backgroundColor: palette.surfaceAlt,
+                            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                            child: avatarUrl == null
+                                ? Text(initials,
+                                    style: TextStyle(
+                                        color: palette.textSecondary, fontSize: 24, fontWeight: FontWeight.w900))
+                                : null,
+                          ),
+                        ),
+                        if (_uploadingAvatar)
+                          Positioned.fill(
+                            child: Container(
+                              margin: const EdgeInsets.all(2.5),
+                              decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black54),
+                              child: const Center(
+                                child: SizedBox(
+                                    width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                              ),
+                            ),
+                          ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: accent,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: palette.bg, width: 2.5),
+                            ),
+                            child: Icon(Icons.camera_alt_rounded, size: 12, color: contrastingTextColor(accent)),
+                          ),
+                        ),
+                      ],
                     ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: accent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: palette.bg, width: 2),
-                      ),
-                      child: Icon(Icons.camera_alt, size: 14, color: contrastingTextColor(accent)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          session?.name ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: palette.textPrimary,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.7,
+                            height: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: accent.withValues(alpha: 0.14),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: accent.withValues(alpha: 0.3)),
+                              ),
+                              child: Text(roleLabel.toUpperCase(),
+                                  style: TextStyle(
+                                      color: accent,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.6)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          session?.email ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: palette.textFaint, fontSize: 12.5),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              session?.isBarber == true
-                  ? 'Barbeiro'
-                  : session?.isManager == true
-                      ? 'Gestor'
-                      : 'Cliente',
-              style: TextStyle(color: palette.textFaint, fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(height: 28),
 
-          Text('Aparência', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          const _ThemeModeSelector(),
-          const SizedBox(height: 28),
+          // ---------- Dados ----------
+          _GroupLabel('Seus dados', palette: palette),
+          _Card(
+            palette: palette,
+            child: Column(
+              children: [
+                _FieldRow(
+                  label: 'Nome',
+                  controller: _nameController,
+                  palette: palette,
+                  accent: accent,
+                ),
+                _Divider(palette: palette),
+                _FieldRow(
+                  label: 'Telefone',
+                  controller: _phoneController,
+                  hint: '(11) 99999-9999',
+                  keyboardType: TextInputType.phone,
+                  palette: palette,
+                  accent: accent,
+                ),
+                _Divider(palette: palette),
+                // E-mail não é editável (é a identidade de login), então nem
+                // finge ser campo — vira linha de leitura com cadeado.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 13, 16, 13),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 76,
+                        child: Text('E-mail',
+                            style: TextStyle(
+                                color: palette.textFaint, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      ),
+                      Expanded(
+                        child: Text(session?.email ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: palette.textSecondary, fontSize: 14)),
+                      ),
+                      Icon(Icons.lock_outline_rounded, size: 14, color: palette.textFaint),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-          Text('Nome', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          TextField(controller: _nameController, style: TextStyle(color: palette.textPrimary), decoration: _inputDecoration(palette)),
-          const SizedBox(height: 18),
-          Text('Telefone', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            style: TextStyle(color: palette.textPrimary),
-            decoration: _inputDecoration(palette, hint: '(11) 99999-9999'),
+          // Botão salvar só aparece quando há o que salvar. Botão desabilitado
+          // permanente na tela é peso morto que a pessoa aprende a ignorar.
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            child: _dirty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: SizedBox(
+                      height: 48,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _saving ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: accent,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: _saving
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: contrastingTextColor(accent)))
+                            : Text('Salvar alterações',
+                                style: TextStyle(
+                                    color: contrastingTextColor(accent),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14.5)),
+                      ),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
           ),
-          const SizedBox(height: 18),
-          Text('E-mail', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(12)),
-            child: Text(session?.email ?? '', style: TextStyle(color: palette.textFaint)),
-          ),
-          const SizedBox(height: 28),
-          SizedBox(
-            height: 48,
-            child: ElevatedButton(
-              onPressed: _dirty && !_saving ? _save : null,
-              style: ElevatedButton.styleFrom(backgroundColor: accent),
-              child: _saving
-                  ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: contrastingTextColor(accent)))
-                  : Text('Salvar alterações', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
+
+          const SizedBox(height: 26),
+
+          // ---------- Aparência ----------
+          _GroupLabel('Aparência', palette: palette),
+          _Card(
+            palette: palette,
+            child: const Padding(
+              padding: EdgeInsets.all(14),
+              child: _ThemeModeSelector(),
             ),
           ),
-          if (session?.isClient == true) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 48,
-              child: OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientPreferencesScreen())),
-                style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)),
-                icon: const Icon(Icons.tune_rounded),
-                label: const Text('Minhas preferências'),
-              ),
-            ),
-          ],
+
           if (session?.isBarber == true) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 48,
-              child: OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BarbeiroCopilotScreen())),
-                style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)),
-                icon: const Icon(Icons.auto_awesome_rounded),
-                label: const Text('Meu Copiloto'),
+            const SizedBox(height: 26),
+            _GroupLabel('Ferramentas', palette: palette),
+            _Card(
+              palette: palette,
+              child: _ActionRow(
+                icon: Icons.auto_awesome_rounded,
+                label: 'Meu Copiloto',
+                sub: 'Seu assistente de atendimento',
+                palette: palette,
+                accent: accent,
+                onTap: () => Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const BarbeiroCopilotScreen())),
               ),
             ),
           ],
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 48,
-            child: OutlinedButton.icon(
-              onPressed: _confirmLogout,
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent)),
-              icon: const Icon(Icons.logout),
-              label: const Text('Sair da conta'),
+
+          const SizedBox(height: 26),
+          _Card(
+            palette: palette,
+            child: _ActionRow(
+              icon: Icons.logout_rounded,
+              label: 'Sair da conta',
+              palette: palette,
+              accent: Colors.redAccent,
+              danger: true,
+              onTap: _confirmLogout,
             ),
           ),
         ],
@@ -250,13 +367,178 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(AppPalette palette, {String? hint}) => InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: palette.textFaint),
-        filled: true,
-        fillColor: palette.surfaceAlt,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+}
+
+/// Rótulo de grupo. Agrupar em blocos com título é o que transforma uma pilha
+/// de campos numa tela de ajustes que dá pra escanear.
+class _GroupLabel extends StatelessWidget {
+  final String text;
+  final AppPalette palette;
+  const _GroupLabel(this.text, {required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 6, bottom: 9),
+      child: Text(text,
+          style: TextStyle(
+            color: palette.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+          )),
+    );
+  }
+}
+
+class _Card extends StatelessWidget {
+  final Widget child;
+  final AppPalette palette;
+  const _Card({required this.child, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: palette.textFaint.withValues(alpha: 0.11)),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _Divider extends StatelessWidget {
+  final AppPalette palette;
+  const _Divider({required this.palette});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Divider(height: 1, thickness: 1, color: palette.textFaint.withValues(alpha: 0.10)),
       );
+}
+
+/// Campo em linha (rótulo à esquerda, valor à direita) no lugar de rótulo
+/// acima + caixa cheia embaixo. Ocupa metade da altura e alinha tudo numa
+/// coluna só — é como iOS e a maioria dos apps de ajustes fazem.
+class _FieldRow extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final String? hint;
+  final TextInputType? keyboardType;
+  final AppPalette palette;
+  final Color accent;
+
+  const _FieldRow({
+    required this.label,
+    required this.controller,
+    required this.palette,
+    required this.accent,
+    this.hint,
+    this.keyboardType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 76,
+            child: Text(label,
+                style: TextStyle(color: palette.textFaint, fontSize: 12.5, fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              textAlign: TextAlign.start,
+              style: TextStyle(color: palette.textPrimary, fontSize: 14.5, fontWeight: FontWeight.w600),
+              cursorColor: accent,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(color: palette.textFaint.withValues(alpha: 0.6), fontSize: 14),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? sub;
+  final VoidCallback onTap;
+  final AppPalette palette;
+  final Color accent;
+  final bool danger;
+
+  const _ActionRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.palette,
+    required this.accent,
+    this.sub,
+    this.danger = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        style: TextStyle(
+                          color: danger ? accent : palette.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.5,
+                        )),
+                    if (sub != null) ...[
+                      const SizedBox(height: 2),
+                      Text(sub!, style: TextStyle(color: palette.textFaint, fontSize: 12)),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, size: 18, color: palette.textFaint),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Simple 3-way appearance toggle — the same pattern most mainstream apps

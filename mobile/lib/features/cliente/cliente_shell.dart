@@ -3,13 +3,14 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/cortix_bottom_nav.dart';
 import '../chatbot/floating_chatbot.dart';
 import '../profile/profile_screen.dart';
+import 'client_preferences_screen.dart';
 import 'cliente_home_screen.dart';
 import 'cliente_subscriptions_screen.dart';
 import 'cut_wallet_screen.dart';
 import 'loyalty_tab_screen.dart';
 
 /// Bottom-tab shell for the cliente role: Início / Cortes / Fidelidade /
-/// Clube / Perfil.
+/// Clube / Preferências / Perfil.
 /// Wrapped in a Stack so the floating chatbot bubble sits above the nav bar.
 class ClienteShell extends StatefulWidget {
   const ClienteShell({super.key});
@@ -26,6 +27,7 @@ class _ClienteShellState extends State<ClienteShell> {
     CutWalletScreen(),
     LoyaltyTabScreen(),
     ClientSubscriptionsScreen(),
+    ClientPreferencesScreen(),
     ProfileScreen(),
   ];
 
@@ -45,6 +47,7 @@ class _ClienteShellState extends State<ClienteShell> {
               CortixNavItem(Icons.content_cut_rounded, 'Cortes'),
               CortixNavItem(Icons.card_giftcard_rounded, 'Fidelidade'),
               CortixNavItem(Icons.workspace_premium_rounded, 'Clube'),
+              CortixNavItem(Icons.tune_rounded, 'Preferências'),
               CortixNavItem(Icons.person_rounded, 'Perfil'),
             ],
           ),
