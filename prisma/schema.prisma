@@ -178,6 +178,7 @@ model Barbershop {
   transactions    FinancialTransaction[]
   chatMessages    ChatMessage[]
   workingHours    WorkingHour[]
+  recurringExpenses RecurringExpense[]
   loyaltyAccounts LoyaltyAccount[]
   clients         BarbershopClient[]
   subscriptionPlans SubscriptionPlan[]
@@ -982,4 +983,25 @@ model Refund {
   reason      String
   processedBy String
   createdAt   DateTime @default(now())
+}
+
+/// Despesa que se repete todo mês (aluguel, energia, internet, contador).
+/// É a maior parte do que o gestor digitava de novo a cada mês — e o que ele
+/// parava de digitar primeiro, deixando o lucro parecer maior do que é.
+model RecurringExpense {
+  id            String   @id @default(cuid())
+  barbershopId  String
+  barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  description   String
+  category      String
+  amount        Float
+  /// Dia do mês em que vence (1-28). Limitado a 28 de propósito: 29/30/31 não
+  /// existem em todo mês, e "vence dia 31" viraria comportamento imprevisível
+  /// em fevereiro.
+  dayOfMonth    Int      @default(1)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([barbershopId, isActive])
 }

@@ -49,6 +49,59 @@ export async function recordAutoIncome(params: {
 }
 
 /**
+ * Cria os lançamentos das despesas recorrentes do mês corrente que já
+ * venceram.
+ *
+ * Roda quando o financeiro é carregado, em vez de depender de cron: o gestor
+ * só precisa do número certo quando olha a tela, e uma tarefa agendada que
+ * falha em silêncio deixaria o lucro errado sem ninguém saber. Idempotente
+ * por `recurring:<id>:<ano-mês>`, então chamar toda vez não duplica nada.
+ *
+ * Só materializa despesa cujo dia de vencimento já passou — lançar o aluguel
+ * do dia 25 logo no dia 1º faria o mês inteiro parecer no prejuízo.
+ */
+export async function materializeRecurringExpenses(barbershopId: string): Promise<number> {
+  const expenses = await prisma.recurringExpense.findMany({
+    where: { barbershopId, isActive: true },
+    select: { id: true, description: true, category: true, amount: true, dayOfMonth: true },
+  });
+  if (expenses.length === 0) return 0;
+
+  const now = new Date();
+  const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const today = now.getDate();
+
+  type Row = (typeof expenses)[number];
+  let created = 0;
+
+  for (const e of expenses as Row[]) {
+    if (e.dayOfMonth > today) continue;
+
+    const reference = `recurring:${e.id}:${period}`;
+    const exists = await prisma.financialTransaction.findFirst({
+      where: { barbershopId, reference },
+      select: { id: true },
+    });
+    if (exists) continue;
+
+    await prisma.financialTransaction.create({
+      data: {
+        barbershopId,
+        type: "EXPENSE",
+        category: e.category,
+        description: e.description,
+        amount: e.amount,
+        reference,
+        date: new Date(now.getFullYear(), now.getMonth(), e.dayOfMonth),
+      },
+    });
+    created++;
+  }
+
+  return created;
+}
+
+/**
  * Mensalidade confirmada vira receita. A referência inclui o mês de cobrança
  * para que a renovação do mês seguinte gere um lançamento novo — mas o mesmo
  * mês, reenviado, não.

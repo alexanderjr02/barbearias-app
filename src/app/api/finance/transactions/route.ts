@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
+import { materializeRecurringExpenses } from "@/lib/finance/autoEntry";
 
 // Income = completed appointments (automatic) + manually logged INCOME transactions
 // (products sold, etc). Expenses = manually logged EXPENSE transactions.
@@ -8,6 +9,16 @@ export async function GET() {
   const session = await requireBarbershopSession();
   if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
+  // Materializa as recorrentes ANTES de somar — senão a tela mostraria o mês
+  // sem o aluguel que já venceu, e o lucro apareceria maior do que é.
+  // Nunca derruba a tela: financeiro incompleto é ruim, financeiro fora do ar
+  // é pior.
+  try {
+    await materializeRecurringExpenses(session.barbershopId);
+  } catch (e) {
+    console.error("[finance] materializeRecurringExpenses", e);
   }
 
   const [transactions, completedAppointments] = await Promise.all([
