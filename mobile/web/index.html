@@ -34,6 +34,55 @@
 
   <title>Cortezz Barbearia</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    // Marca por barbearia, sem rebuild.
+    //
+    // O ícone e o nome estavam fixos no build: um arquivo servindo todas as
+    // barbearias. Pior, brand-icon.jpg era uma foto 800x1421, e o iOS recorta
+    // o centro de imagem não quadrada — metade da logo sumia.
+    //
+    // Com ?shop=<slug> no link que o gestor compartilha, apontamos o ícone
+    // para /api/brand/icon, que devolve a logo daquela barbearia já quadrada.
+    // O Safari lê essas tags no momento em que a pessoa toca em "Adicionar à
+    // Tela de Início", então trocá-las agora vale para a instalação.
+    (function () {
+      var API = 'https://cortix-pied.vercel.app';
+      var slug = new URLSearchParams(location.search).get('shop');
+      // Depois de instalado não há query string — por isso o slug fica salvo.
+      try {
+        if (slug) localStorage.setItem('cortix_brand_slug', slug);
+        else slug = localStorage.getItem('cortix_brand_slug');
+      } catch (e) { /* modo privado bloqueia storage; segue sem persistir */ }
+      if (!slug) return;
+
+      var icon = API + '/api/brand/icon?slug=' + encodeURIComponent(slug);
+      function set(rel, href, sizes) {
+        var l = document.querySelector('link[rel="' + rel + '"]') || document.createElement('link');
+        l.rel = rel; l.href = href;
+        if (sizes) l.sizes = sizes;
+        document.head.appendChild(l);
+      }
+      set('apple-touch-icon', icon + '&size=180');
+      set('icon', icon + '&size=192');
+
+      // Nome sob o ícone e título da aba.
+      fetch(API + '/api/v1/barbershop?slug=' + encodeURIComponent(slug))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (body) {
+          var shop = body && (body.data || body);
+          if (!shop || !shop.name) return;
+          document.title = shop.name;
+          var t = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+          if (t) t.content = shop.name;
+          if (shop.primaryColor) {
+            var tc = document.querySelector('meta[name="theme-color"]');
+            if (tc) tc.content = shop.primaryColor;
+          }
+        })
+        .catch(function () { /* sem rede: fica o nome padrão */ });
+    })();
+  </script>
 </head>
 <body>
   <!--

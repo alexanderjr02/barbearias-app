@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api/api_client.dart';
 import '../../core/storage/token_storage.dart';
 import '../profile/profile_repository.dart';
@@ -137,12 +138,45 @@ class SessionProvider extends ChangeNotifier {
     }
   }
 
-  /// White-label: when the app is built for a specific barbershop (via the
-  /// BRAND_SLUG dart-define), load its brand color up front so the pre-login
-  /// screens (login/register) are already themed with the barbershop's color.
+  /// Slug da barbearia para as telas ANTES do login.
+  ///
+  /// Vinha só do dart-define BRAND_SLUG, definido em tempo de compilação —
+  /// então um build servindo várias barbearias nunca tinha slug e a tela de
+  /// login ficava sem marca nenhuma. Agora, em ordem:
+  ///
+  ///   1. `?shop=slug` na URL — é o link que o gestor compartilha;
+  ///   2. o último slug usado neste aparelho, para a marca continuar certa
+  ///      depois de instalar na tela de início (onde não há query string);
+  ///   3. o dart-define, para builds dedicados a uma única barbearia.
+  /// Fica no SharedPreferences e não no TokenStorage: o slug é público (vai
+  /// na URL), então usar armazenamento seguro ali seria abusar da abstração
+  /// que existe para os tokens.
+  static const _slugKey = 'cortix_brand_slug';
+
+  Future<String?> resolveBrandSlug() async {
+    final fromUrl = Uri.base.queryParameters['shop']?.trim();
+    try {
+      final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 5));
+      if (fromUrl != null && fromUrl.isNotEmpty) {
+        await prefs.setString(_slugKey, fromUrl);
+        return fromUrl;
+      }
+      final saved = prefs.getString(_slugKey);
+      if (saved != null && saved.isNotEmpty) return saved;
+    } catch (_) {
+      // Preferências indisponíveis não podem derrubar a marca: cai no que
+      // veio na URL, ou no build dedicado.
+      if (fromUrl != null && fromUrl.isNotEmpty) return fromUrl;
+    }
+    const fromBuild = String.fromEnvironment('BRAND_SLUG');
+    return fromBuild.isEmpty ? null : fromBuild;
+  }
+
+  /// White-label: carrega cor, capa e logo da barbearia antes do login, para
+  /// login e cadastro já aparecerem com a marca dela.
   Future<void> loadBrandFromSlug() async {
-    const slug = String.fromEnvironment('BRAND_SLUG');
-    if (slug.isEmpty) return;
+    final slug = await resolveBrandSlug();
+    if (slug == null || slug.isEmpty) return;
     try {
       final data = await ApiClient.instance.get('/barbershop', query: {'slug': slug}) as Map<String, dynamic>?;
       final hex = data?['primaryColor'] as String?;
