@@ -135,9 +135,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
-    if (confirmed == true && mounted) {
-      await context.read<SessionProvider>().logout();
-    }
+    if (confirmed != true || !mounted) return;
+
+    // O AuthGate troca a tela da RAIZ quando a sessão cai. Só que o gestor
+    // chega no Perfil por Navigator.push, então o login aparecia por baixo e
+    // a pessoa continuava vendo o Perfil, achando que o "Sair" não funcionou.
+    // Pegar o navigator antes do await evita usar o context depois que o
+    // widget pode ter sido descartado.
+    final navigator = Navigator.of(context);
+    await context.read<SessionProvider>().logout();
+    navigator.popUntil((route) => route.isFirst);
   }
 
   @override
