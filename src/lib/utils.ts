@@ -6,10 +6,19 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
+  return (
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    })
+      .format(value)
+      // O Intl separa "R$" do número com espaço não separável (U+00A0), e a
+      // versão do ICU no Node nem sempre bate com a do navegador. Quando
+      // divergem, o texto renderizado no servidor difere do cliente e o React
+      // derruba a hidratação da árvore inteira. Normalizar para espaço comum
+      // elimina a classe toda desse problema.
+      .replace(/ /g, " ")
+  );
 }
 
 export function formatDate(date: Date | string): string {
