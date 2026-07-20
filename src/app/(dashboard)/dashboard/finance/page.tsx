@@ -11,6 +11,7 @@ import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal"
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { FinancialCockpit } from "@/components/dashboard/FinancialCockpit";
 import { DailyCashPanel } from "@/components/dashboard/DailyCashPanel";
+import { RecurringExpensesPanel } from "@/components/dashboard/RecurringExpensesPanel";
 
 interface ApiTransaction {
   id: string;
@@ -214,6 +215,10 @@ export default function FinancePage() {
           />
         </div>
       </div>
+
+      {/* Fixas — ficam acima do gráfico de propósito: é o que o gestor precisa
+          cadastrar para o número lá em cima parar de mentir. */}
+      <RecurringExpensesPanel />
 
       {/* Chart + category breakdown */}
       <div className="grid lg:grid-cols-3 gap-6">
