@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { FinancialCockpit } from "@/components/dashboard/FinancialCockpit";
 import { DailyCashPanel } from "@/components/dashboard/DailyCashPanel";
 import { RecurringExpensesPanel } from "@/components/dashboard/RecurringExpensesPanel";
+import { TipPayoutsPanel } from "@/components/dashboard/TipPayoutsPanel";
 
 interface ApiTransaction {
   id: string;
@@ -215,6 +216,8 @@ export default function FinancePage() {
           />
         </div>
       </div>
+
+      <TipPayoutsPanel />
 
       {/* Fixas — ficam acima do gráfico de propósito: é o que o gestor precisa
           cadastrar para o número lá em cima parar de mentir. */}

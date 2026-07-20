@@ -53,14 +53,24 @@ export async function POST(request: NextRequest) {
   }
   if (appt.tip) return NextResponse.json({ error: "Gorjeta já registrada" }, { status: 409 });
 
+  // Para onde o dinheiro foi decide se a barbearia deve algo. Se o barbeiro
+  // tem chave própria, o cliente pagou direto a ele e a loja nunca viu esse
+  // valor; senão caiu na chave da loja e vira repasse a pagar. Sem gravar
+  // isso na hora, depois não há como reconstruir — a chave do barbeiro pode
+  // ser cadastrada ou removida a qualquer momento.
+  const staff = await prisma.staff.findUnique({ where: { id: appt.staffId }, select: { pixKey: true } });
+  const paidToBarber = !!staff?.pixKey;
+
   const tip = await prisma.tip.create({
-    data: { appointmentId, staffId: appt.staffId, barbershopId: appt.barbershopId, amount },
+    data: { appointmentId, staffId: appt.staffId, barbershopId: appt.barbershopId, amount, paidToBarber },
   });
   await notifyBarbershop(
     appt.barbershopId,
     "NEW_APPOINTMENT",
-    "Gorjeta recebida 💸",
-    `${appt.clientName} deixou R$ ${amount.toFixed(2)} de gorjeta`,
+    "Gorjeta recebida",
+    paidToBarber
+      ? `${appt.clientName} deixou R$ ${amount.toFixed(2)} de gorjeta — foi direto para o barbeiro`
+      : `${appt.clientName} deixou R$ ${amount.toFixed(2)} de gorjeta — repassar ao barbeiro`,
     "/dashboard"
   );
   return NextResponse.json(tip, { status: 201 });

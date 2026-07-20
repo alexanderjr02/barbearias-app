@@ -340,6 +340,13 @@ model Tip {
   barbershop    Barbershop  @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   amount        Float
   status        String      @default("PENDING") // PENDING | CONFIRMED
+  /// Se o dinheiro foi direto para a chave PIX do próprio barbeiro. Quando
+  /// true a barbearia não deve nada — ela nunca viu esse dinheiro. Quando
+  /// false, caiu na chave da loja e vira repasse a pagar.
+  paidToBarber  Boolean     @default(false)
+  /// Quando a barbearia repassou. Só faz sentido para gorjeta que caiu na
+  /// chave dela (paidToBarber = false).
+  settledAt     DateTime?
   createdAt     DateTime    @default(now())
 
   @@index([staffId])
