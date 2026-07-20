@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cronSecretFrom } from "@/lib/cronAuth";
 import { prisma } from "@/lib/db";
 import { planHasAI } from "@/lib/billing";
 import { buildBriefing } from "@/lib/copilot/insights";
@@ -11,7 +12,7 @@ import { notifyBarbershop } from "@/lib/gestorNotifications";
 // Schedule it on your host (Render Cron). Inert until CRON_SECRET is set.
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  const provided = request.nextUrl.searchParams.get("secret") ?? request.headers.get("x-cron-secret");
+  const provided = cronSecretFrom(request);
   if (!secret || provided !== secret) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }

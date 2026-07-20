@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cronSecretFrom } from "@/lib/cronAuth";
 import { prisma } from "@/lib/db";
 import { revenueSummary, churnedClients, barberLeaderboard } from "@/lib/copilot/insights";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
@@ -13,7 +14,7 @@ import { sendMail } from "@/lib/mailer";
 // Job pointing at this URL). Inert/safe until CRON_SECRET is configured.
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  const provided = request.nextUrl.searchParams.get("secret") ?? request.headers.get("x-cron-secret");
+  const provided = cronSecretFrom(request);
   if (!secret || provided !== secret) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
