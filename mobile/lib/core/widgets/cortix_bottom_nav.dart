@@ -22,7 +22,10 @@ class CortixBottomNav extends StatelessWidget {
     final palette = AppPalette.of(context);
     final accent = Theme.of(context).colorScheme.primary;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+      // Mais afastado da borda de baixo: no iPhone a barra ficava colada na
+      // faixa de gestos do sistema, e o toque no item competia com o swipe
+      // de "voltar à tela inicial".
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
       child: Container(
         decoration: BoxDecoration(
           color: palette.surface.withValues(alpha: 0.97),
@@ -33,7 +36,7 @@ class CortixBottomNav extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -64,7 +67,7 @@ class CortixBottomNav extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(horizontal: active ? pad : pad - 3, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: active ? pad : pad - 3, vertical: 13),
         decoration: BoxDecoration(
           color: active ? accent.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
