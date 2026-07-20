@@ -13,7 +13,10 @@ import 'client_repository.dart';
 class LoyaltyWalletScreen extends StatefulWidget {
   final String barbershopId;
   final String? barbershopName;
-  const LoyaltyWalletScreen({super.key, required this.barbershopId, this.barbershopName});
+  /// Quando vive dentro de uma aba não há para onde voltar — some o botão de
+  /// voltar e o título vira cabeçalho da aba, não de uma tela empilhada.
+  final bool embedded;
+  const LoyaltyWalletScreen({super.key, required this.barbershopId, this.barbershopName, this.embedded = false});
 
   @override
   State<LoyaltyWalletScreen> createState() => _LoyaltyWalletScreenState();
@@ -109,7 +112,18 @@ class _LoyaltyWalletScreenState extends State<LoyaltyWalletScreen> {
 
     return Scaffold(
       backgroundColor: palette.bg,
-      appBar: AppBar(backgroundColor: palette.bg, elevation: 0, title: Text(widget.barbershopName ?? 'Minha carteira')),
+      appBar: AppBar(
+        backgroundColor: palette.bg,
+        elevation: 0,
+        automaticallyImplyLeading: !widget.embedded,
+        titleSpacing: widget.embedded ? 20 : null,
+        title: Text(
+          widget.embedded ? 'Minha carteira' : (widget.barbershopName ?? 'Minha carteira'),
+          style: widget.embedded
+              ? TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 22, letterSpacing: -0.5)
+              : null,
+        ),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : d == null

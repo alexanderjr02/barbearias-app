@@ -8,8 +8,6 @@ import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../auth/session_provider.dart';
 import 'client_repository.dart';
-import 'client_preferences_screen.dart';
-import 'cut_wallet_screen.dart';
 import 'loyalty_wallet_screen.dart';
 import 'new_appointment_screen.dart';
 import 'tip_screen.dart';
@@ -416,21 +414,6 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        // Atalhos: o que o cliente mais quer fazer, a um toque.
-                        // Sem isto tudo mora atrás de scroll ou de aba, e a
-                        // carteira/preferências viravam recurso que ninguém acha.
-                        _QuickActions(
-                          palette: palette,
-                          accent: accent,
-                          loyalty: loyalty,
-                          onBook: () async {
-                            final booked = await Navigator.of(context).push<bool>(
-                              MaterialPageRoute(builder: (_) => const NewAppointmentScreen()),
-                            );
-                            if (booked == true) _refresh();
-                          },
-                        ),
-                        const SizedBox(height: 22),
                         if (suggestion != null) ...[
                           RiseIn(
                             child: Material(
@@ -487,46 +470,23 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                             label: 'Minha fidelidade',
                             palette: palette,
                             accent: accent,
-                            trailing: 'ver carteira',
+                            trailing: loyalty.length > 1 ? 'ver todas' : 'ver carteira',
                           ),
                           const SizedBox(height: 12),
-                          SizedBox(
-                            height: 148,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: loyalty.length,
-                              separatorBuilder: (_, _) => const SizedBox(width: 12),
-                              itemBuilder: (context, index) {
-                                final l = loyalty[index];
-                                final range = _tierRange(l.tier);
-                                final progress = range.$2 == null ? 1.0 : ((l.points - range.$1) / (range.$2! - range.$1)).clamp(0.0, 1.0);
-                                return RiseIn(
-                                  delay: Duration(milliseconds: 60 * index),
-                                  // O anel é só o resumo; a carteira completa
-                                  // (selos, prêmios, indicação) abre no toque.
-                                  child: GestureDetector(
-                                    onTap: l.barbershopId.isEmpty
-                                        ? null
-                                        : () => Navigator.of(context).push(MaterialPageRoute(
-                                              builder: (_) => LoyaltyWalletScreen(
-                                                barbershopId: l.barbershopId,
-                                                barbershopName: l.barbershopName,
-                                              ),
-                                            )),
-                                    child: _LoyaltyRing(
-                                      barbershopName: l.barbershopName,
-                                      points: l.points,
-                                      tierLabel: _tierLabel(l.tier),
-                                      color: _tierColor(l.tier),
-                                      progress: progress,
-                                      nextTier: range.$3,
-                                      palette: palette,
-                                    ),
-                                  ),
-                                );
-                              },
+                          for (var i = 0; i < loyalty.length; i++) ...[
+                            if (i > 0) const SizedBox(height: 10),
+                            RiseIn(
+                              delay: Duration(milliseconds: 60 * i),
+                              child: _PointsHeroCard(
+                                balance: loyalty[i],
+                                tierLabel: _tierLabel(loyalty[i].tier),
+                                tierColor: _tierColor(loyalty[i].tier),
+                                range: _tierRange(loyalty[i].tier),
+                                palette: palette,
+                                accent: accent,
+                              ),
                             ),
-                          ),
+                          ],
                           const SizedBox(height: 22),
                         ],
                         _SectionTitle(
@@ -584,121 +544,228 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
   }
 }
 
-/// Faixa de atalhos sob o cabeçalho. Cada app grande tem a sua (Nubank,
-/// Revolut, iFood) pelo mesmo motivo: as 4 coisas que a pessoa realmente faz
-/// não podem exigir navegação.
-class _QuickActions extends StatelessWidget {
+/// O cartão de pontos.
+///
+/// Antes era um anel pequeno num carrossel horizontal — o número que deveria
+/// ser o troféu do cliente aparecia menor que o nome da barbearia. Aqui ele é
+/// o assunto: ocupa a largura toda, o número domina, e o progresso até a
+/// próxima faixa vira uma barra com meta explícita ("faltam 150 pts"), que é
+/// o que faz alguém querer voltar. A cor sai da faixa, então subir de nível
+/// muda o visual do cartão — a recompensa é visível, não só numérica.
+class _PointsHeroCard extends StatelessWidget {
+  final LoyaltyBalance balance;
+  final String tierLabel;
+  final Color tierColor;
+  final (int, int?, String?) range;
   final AppPalette palette;
   final Color accent;
-  final List<LoyaltyBalance> loyalty;
-  final VoidCallback onBook;
 
-  const _QuickActions({required this.palette, required this.accent, required this.loyalty, required this.onBook});
-
-  @override
-  Widget build(BuildContext context) {
-    // A carteira precisa de uma barbearia; sem vínculo o atalho não leva a
-    // lugar nenhum, então ele simplesmente não aparece.
-    final wallet = loyalty.where((l) => l.barbershopId.isNotEmpty).firstOrNull;
-
-    final actions = <({IconData icon, String label, VoidCallback? onTap})>[
-      (icon: Icons.add_rounded, label: 'Agendar', onTap: onBook),
-      if (wallet != null)
-        (
-          icon: Icons.card_giftcard_rounded,
-          label: 'Fidelidade',
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => LoyaltyWalletScreen(
-                  barbershopId: wallet.barbershopId,
-                  barbershopName: wallet.barbershopName,
-                ),
-              )),
-        ),
-      (
-        icon: Icons.photo_library_rounded,
-        label: 'Meus cortes',
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CutWalletScreen())),
-      ),
-      (
-        icon: Icons.tune_rounded,
-        label: 'Preferências',
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientPreferencesScreen())),
-      ),
-    ];
-
-    return Row(
-      children: [
-        for (var i = 0; i < actions.length; i++) ...[
-          if (i > 0) const SizedBox(width: 10),
-          Expanded(
-            child: _QuickAction(
-              icon: actions[i].icon,
-              label: actions[i].label,
-              onTap: actions[i].onTap,
-              palette: palette,
-              accent: accent,
-              // O primeiro é a ação principal — ganha peso visual em vez de
-              // ficar indistinguível dos outros três.
-              primary: i == 0,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _QuickAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final AppPalette palette;
-  final Color accent;
-  final bool primary;
-
-  const _QuickAction({
-    required this.icon,
-    required this.label,
-    required this.onTap,
+  const _PointsHeroCard({
+    required this.balance,
+    required this.tierLabel,
+    required this.tierColor,
+    required this.range,
     required this.palette,
     required this.accent,
-    this.primary = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final floor = range.$1;
+    final ceiling = range.$2;
+    final nextTier = range.$3;
+    final isMax = ceiling == null;
+    final progress = isMax ? 1.0 : ((balance.points - floor) / (ceiling - floor)).clamp(0.0, 1.0);
+    final missing = isMax ? 0 : (ceiling - balance.points).clamp(0, 1 << 30);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
+        onTap: balance.barbershopId.isEmpty
+            ? null
+            : () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => LoyaltyWalletScreen(
+                    barbershopId: balance.barbershopId,
+                    barbershopName: balance.barbershopName,
+                  ),
+                )),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: primary ? accent.withValues(alpha: 0.14) : palette.surface,
-            border: Border.all(
-              color: primary ? accent.withValues(alpha: 0.35) : palette.textFaint.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(22),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                tierColor.withValues(alpha: 0.22),
+                tierColor.withValues(alpha: 0.06),
+                palette.surface,
+              ],
+              stops: const [0, 0.55, 1],
             ),
+            border: Border.all(color: tierColor.withValues(alpha: 0.28)),
           ),
-          child: Column(
+          child: Stack(
             children: [
-              Icon(icon, size: 21, color: primary ? accent : palette.textSecondary),
-              const SizedBox(height: 7),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: primary ? accent : palette.textSecondary,
-                  fontSize: 10.5,
-                  fontWeight: primary ? FontWeight.w800 : FontWeight.w600,
+              // Halo da faixa — dá profundidade sem pesar a leitura.
+              Positioned(
+                top: -46,
+                right: -26,
+                child: Container(
+                  width: 132,
+                  height: 132,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: tierColor.withValues(alpha: 0.13),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            balance.barbershopName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: palette.textSecondary,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.1,
+                            ),
+                          ),
+                        ),
+                        _TierBadge(label: tierLabel, color: tierColor),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          _grouped(balance.points),
+                          style: TextStyle(
+                            color: palette.textPrimary,
+                            fontSize: 42,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.8,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text('pontos',
+                              style: TextStyle(
+                                color: palette.textFaint,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              )),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Barra de progresso da faixa
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Stack(
+                        children: [
+                          Container(height: 7, color: palette.textFaint.withValues(alpha: 0.14)),
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0, end: progress),
+                            duration: const Duration(milliseconds: 750),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, v, _) => FractionallySizedBox(
+                              widthFactor: v.clamp(0.0, 1.0),
+                              child: Container(
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [tierColor.withValues(alpha: 0.75), tierColor],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(color: tierColor.withValues(alpha: 0.45), blurRadius: 8, spreadRadius: -1),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            isMax
+                                ? 'Você chegou ao topo. Aproveite os benefícios.'
+                                : 'Faltam ${_grouped(missing)} pts para $nextTier',
+                            style: TextStyle(
+                              color: isMax ? tierColor : palette.textSecondary,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Text('ver carteira',
+                            style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w700)),
+                        Icon(Icons.chevron_right_rounded, size: 16, color: accent),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 1500 -> "1.500". Número grande sem separador vira borrão.
+  static String _grouped(int n) {
+    final s = n.toString();
+    final b = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) b.write('.');
+      b.write(s[i]);
+    }
+    return b.toString();
+  }
+}
+
+class _TierBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _TierBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.workspace_premium_rounded, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.6),
+          ),
+        ],
       ),
     );
   }
@@ -1016,87 +1083,6 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
   }
 }
 
-class _LoyaltyRing extends StatelessWidget {
-  final String barbershopName;
-  final int points;
-  final String tierLabel;
-  final Color color;
-  final double progress;
-  final String? nextTier;
-  final AppPalette palette;
-
-  const _LoyaltyRing({
-    required this.barbershopName,
-    required this.points,
-    required this.tierLabel,
-    required this.color,
-    required this.progress,
-    required this.nextTier,
-    required this.palette,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 168,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: palette.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(barbershopName, style: TextStyle(color: palette.textSecondary, fontSize: 11.5), maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Center(
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: progress),
-                duration: const Duration(milliseconds: 900),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, _) => SizedBox(
-                  width: 74,
-                  height: 74,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 74,
-                        height: 74,
-                        child: CircularProgressIndicator(
-                          value: value,
-                          strokeWidth: 6,
-                          backgroundColor: palette.surfaceAlt,
-                          valueColor: AlwaysStoppedAnimation(color),
-                        ),
-                      ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('$points', style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 16)),
-                          Text('pts', style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 9)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            nextTier != null ? '$tierLabel · rumo a $nextTier' : '$tierLabel · nível máximo',
-            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _HistoryTile extends StatelessWidget {
   final ClientAppointment apt;
