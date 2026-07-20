@@ -37,6 +37,12 @@ export async function POST(request: NextRequest) {
     await recordAiUsage(session.barbershopId, "marketing", process.env.CHATBOT_MODEL || "claude-opus-4-8", msg.usage?.input_tokens ?? 0, msg.usage?.output_tokens ?? 0);
     return NextResponse.json({ available: true, text });
   } catch (e) {
-    return NextResponse.json({ available: true, text: `Não consegui gerar agora. ${e instanceof Error ? e.message : ""}`.trim() });
+    // Mesmo motivo do style-advisor: erro cru da API (ex.: saldo insuficiente)
+    // não vai para a tela do gestor. Fica no log.
+    console.error("[copilot/marketing] falhou:", e);
+    return NextResponse.json({
+      available: true,
+      text: "Não consegui gerar agora. Tente de novo em instantes.",
+    });
   }
 }

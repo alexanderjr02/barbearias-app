@@ -66,6 +66,11 @@ export async function POST(request: NextRequest) {
     if (session.barbershopId) await recordAiUsage(session.barbershopId, "reference", process.env.CHATBOT_MODEL || "claude-opus-4-8", msg.usage?.input_tokens ?? 0, msg.usage?.output_tokens ?? 0);
     return NextResponse.json({ available: true, description: description || "Sem descrição." });
   } catch (e) {
-    return NextResponse.json({ available: true, description: `Não consegui analisar agora. ${e instanceof Error ? e.message : ""}`.trim() });
+    // Erro cru da API não vai para a tela do barbeiro (ver style-advisor).
+    console.error("[analyze-reference] falhou:", e);
+    return NextResponse.json({
+      available: true,
+      description: "Não consegui analisar agora. Tente de novo em instantes.",
+    });
   }
 }

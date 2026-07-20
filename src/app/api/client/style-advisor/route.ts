@@ -71,6 +71,15 @@ export async function POST(request: NextRequest) {
     await recordAiUsage(barbershopId, "style", MODEL, msg.usage?.input_tokens ?? 0, msg.usage?.output_tokens ?? 0);
     return NextResponse.json({ available: true, recommendation: recommendation || "Não consegui analisar agora." });
   } catch (e) {
-    return NextResponse.json({ available: true, recommendation: `Não consegui analisar agora. ${e instanceof Error ? e.message : ""}`.trim() });
+    // O erro cru NÃO vai para a tela: quem lê isto é o cliente da barbearia.
+    // A mensagem da Anthropic quando a conta fica sem crédito é literalmente
+    // "Your credit balance is too low..." — mostrar isso para o cliente final
+    // expõe a situação de pagamento da plataforma numa tela de corte de
+    // cabelo. O detalhe fica no log do servidor, onde é útil.
+    console.error("[style-advisor] falhou:", e);
+    return NextResponse.json({
+      available: true,
+      recommendation: "Não consegui analisar agora. Tente de novo em instantes.",
+    });
   }
 }
