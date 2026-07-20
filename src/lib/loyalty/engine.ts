@@ -179,6 +179,11 @@ export async function clientLoyaltyStatus(userId: string, barbershopId: string) 
     pointsEnabled: cfg?.loyaltyEnabled ?? false,
     points: account?.points ?? 0,
     tier: account?.tier ?? "BRONZE",
+    // As faixas vêm junto para o app poder mostrar QUANTO FALTA para a
+    // próxima. Sem elas o cliente só vê um número solto, e é a distância até
+    // o próximo nível que faz ele querer voltar — não o saldo em si.
+    silverThreshold: cfg?.silverThreshold ?? 0,
+    goldThreshold: cfg?.goldThreshold ?? 0,
     stampEnabled: cfg?.stampEnabled ?? false,
     stamps: card?.stamps ?? 0,
     stampGoal: cfg?.stampGoal ?? 0,

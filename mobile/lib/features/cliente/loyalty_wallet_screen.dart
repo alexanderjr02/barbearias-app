@@ -127,20 +127,23 @@ class _LoyaltyWalletScreenState extends State<LoyaltyWalletScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : d == null
-              ? Center(child: TextButton(onPressed: _load, child: const Text('Tentar de novo')))
+              ? _WalletError(palette: palette, accent: accent, onRetry: _load)
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 32),
                     children: [
+                      // Prêmio a resgatar vem SEMPRE primeiro. É a única coisa
+                      // aqui que exige ação no balcão — enterrar isso embaixo
+                      // do saldo seria esconder o que o cliente já ganhou.
                       if (d.rewards.isNotEmpty) ...[
-                        _sectionLabel('SEUS PRÊMIOS', palette),
-                        ...d.rewards.map((r) => _RewardCard(label: r.label, palette: palette, accent: accent)),
-                        const SizedBox(height: 22),
+                        _SectionLabel('Para resgatar', palette: palette, count: d.rewards.length, accent: accent),
+                        ...d.rewards.map((r) => _RewardTicket(label: r.label, palette: palette)),
+                        const SizedBox(height: 24),
                       ],
 
                       if (d.stampEnabled) ...[
-                        _sectionLabel('CARTÃO FIDELIDADE', palette),
+                        _SectionLabel('Cartão de selos', palette: palette),
                         _StampCard(
                           stamps: d.stamps,
                           goal: d.stampGoal,
@@ -149,17 +152,24 @@ class _LoyaltyWalletScreenState extends State<LoyaltyWalletScreen> {
                           palette: palette,
                           accent: accent,
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 24),
                       ],
 
                       if (d.pointsEnabled) ...[
-                        _sectionLabel('PONTOS', palette),
-                        _PointsCard(points: d.points, tier: d.tier, palette: palette, accent: accent),
-                        const SizedBox(height: 22),
+                        _SectionLabel('Seus pontos', palette: palette),
+                        _PointsCard(
+                          points: d.points,
+                          tier: d.tier,
+                          silverThreshold: d.silverThreshold,
+                          goldThreshold: d.goldThreshold,
+                          palette: palette,
+                          accent: accent,
+                        ),
+                        const SizedBox(height: 24),
                       ],
 
                       if (d.referralEnabled) ...[
-                        _sectionLabel('INDIQUE UM AMIGO', palette),
+                        _SectionLabel('Indique um amigo', palette: palette),
                         _ReferralCard(
                           code: d.referralCode,
                           reward: d.referralReward,
@@ -170,151 +180,486 @@ class _LoyaltyWalletScreenState extends State<LoyaltyWalletScreen> {
                       ],
 
                       if (!d.stampEnabled && !d.pointsEnabled && !d.referralEnabled)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 60),
-                          child: Column(children: [
-                            Icon(Icons.card_giftcard_rounded, size: 40, color: palette.textFaint),
-                            const SizedBox(height: 12),
-                            Text('Esta barbearia ainda não tem\nprograma de fidelidade.', textAlign: TextAlign.center, style: TextStyle(color: palette.textFaint, fontSize: 13, height: 1.5)),
-                          ]),
-                        ),
+                        _NoProgram(palette: palette, accent: accent),
                     ],
                   ),
                 ),
     );
   }
-
-  Widget _sectionLabel(String text, AppPalette palette) => Padding(
-        padding: const EdgeInsets.only(bottom: 10, top: 2),
-        child: Text(text, style: TextStyle(color: palette.textFaint, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
-      );
 }
 
-/// A cartela. Selos preenchidos em destaque, os que faltam pontilhados — o
-/// contraste é o que cria a vontade de fechar.
+/// Rótulo de seção com contador opcional. Caixa alta espaçada envelhece rápido;
+/// peso e tamanho separam melhor sem gritar.
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  final AppPalette palette;
+  final int? count;
+  final Color? accent;
+  const _SectionLabel(this.text, {required this.palette, this.count, this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 11, top: 2, left: 2),
+      child: Row(
+        children: [
+          Text(text,
+              style: TextStyle(
+                color: palette.textPrimary,
+                fontSize: 15.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              )),
+          if (count != null && count! > 0) ...[
+            const SizedBox(width: 7),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: (accent ?? palette.textFaint).withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('$count',
+                  style: TextStyle(
+                      color: accent ?? palette.textFaint, fontSize: 11, fontWeight: FontWeight.w900)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A cartela.
+///
+/// O que faz alguém querer fechar não é o número de selos: é ver o espaço
+/// vazio ao lado dos preenchidos. Por isso os que faltam são pontilhados (têm
+/// presença, mas nítida ausência), o último traz o presente à mostra desde o
+/// começo — o cliente sabe o que está perseguindo — e os preenchidos entram
+/// com escala animada, um após o outro, como carimbo batendo.
 class _StampCard extends StatelessWidget {
   final int stamps, goal, completed;
   final String reward;
   final AppPalette palette;
   final Color accent;
-  const _StampCard({required this.stamps, required this.goal, required this.reward, required this.completed, required this.palette, required this.accent});
+  const _StampCard({
+    required this.stamps,
+    required this.goal,
+    required this.reward,
+    required this.completed,
+    required this.palette,
+    required this.accent,
+  });
 
   @override
   Widget build(BuildContext context) {
     final left = (goal - stamps).clamp(0, goal);
+    final done = left == 0;
+    final progress = goal == 0 ? 0.0 : (stamps / goal).clamp(0.0, 1.0);
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [accent.withValues(alpha: 0.16), accent.withValues(alpha: 0.03)]),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.28)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [accent.withValues(alpha: done ? 0.28 : 0.16), accent.withValues(alpha: 0.03)],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: accent.withValues(alpha: done ? 0.55 : 0.26), width: done ? 1.6 : 1),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(
-            child: Text(
-              left == 0 ? 'Cartela completa! 🎉' : left == 1 ? 'Falta 1 corte!' : 'Faltam $left cortes',
-              style: TextStyle(color: palette.textPrimary, fontSize: 19, fontWeight: FontWeight.w900),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      done
+                          ? 'Cartela completa! 🎉'
+                          : left == 1
+                              ? 'Falta 1 corte'
+                              : 'Faltam $left cortes',
+                      style: TextStyle(
+                        color: palette.textPrimary,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.6,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      done ? 'Peça seu prêmio no balcão' : 'para ganhar $reward',
+                      style: TextStyle(color: accent, fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ),
+              if (completed > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: accent.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.emoji_events_rounded, size: 11, color: accent),
+                      const SizedBox(width: 3),
+                      Text('$completed',
+                          style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.w900)),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Barra fina acima dos selos: leitura instantânea do quanto já andou,
+          // antes de contar bolinha por bolinha.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+                Container(height: 5, color: palette.textFaint.withValues(alpha: 0.15)),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: progress),
+                  duration: const Duration(milliseconds: 700),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, v, _) => FractionallySizedBox(
+                    widthFactor: v.clamp(0.0, 1.0),
+                    child: Container(height: 5, color: accent),
+                  ),
+                ),
+              ],
             ),
           ),
-          if (completed > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-              decoration: BoxDecoration(color: accent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
-              child: Text('$completed ${completed == 1 ? "cartela" : "cartelas"}', style: TextStyle(color: accent, fontSize: 10.5, fontWeight: FontWeight.w900)),
-            ),
-        ]),
-        const SizedBox(height: 4),
-        Text('Prêmio: $reward', style: TextStyle(color: accent, fontSize: 13, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 18),
-        Wrap(
-          spacing: 9,
-          runSpacing: 9,
-          children: List.generate(goal, (i) {
-            final filled = i < stamps;
-            final isLast = i == goal - 1;
-            return Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: filled ? accent : Colors.transparent,
-                border: Border.all(color: filled ? accent : palette.border, width: 2, style: filled ? BorderStyle.solid : BorderStyle.solid),
-              ),
-              child: Icon(
-                isLast ? Icons.card_giftcard_rounded : Icons.content_cut_rounded,
-                size: 17,
-                color: filled ? contrastingTextColor(accent) : palette.textFaint.withValues(alpha: 0.5),
-              ),
-            );
-          }),
-        ),
-      ]),
+          const SizedBox(height: 16),
+
+          Wrap(
+            spacing: 9,
+            runSpacing: 9,
+            children: List.generate(goal, (i) {
+              final filled = i < stamps;
+              final isLast = i == goal - 1;
+              return _Stamp(
+                filled: filled,
+                isLast: isLast,
+                index: i,
+                accent: accent,
+                palette: palette,
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _RewardCard extends StatelessWidget {
+class _Stamp extends StatelessWidget {
+  final bool filled, isLast;
+  final int index;
+  final Color accent;
+  final AppPalette palette;
+  const _Stamp({
+    required this.filled,
+    required this.isLast,
+    required this.index,
+    required this.accent,
+    required this.palette,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final circle = Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: filled
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [accent, accent.withValues(alpha: 0.72)],
+              )
+            : null,
+        border: filled
+            ? null
+            : Border.all(
+                color: isLast ? accent.withValues(alpha: 0.55) : palette.textFaint.withValues(alpha: 0.28),
+                width: 1.6,
+              ),
+        boxShadow: filled
+            ? [BoxShadow(color: accent.withValues(alpha: 0.35), blurRadius: 10, spreadRadius: -2)]
+            : null,
+      ),
+      child: Icon(
+        isLast ? Icons.card_giftcard_rounded : Icons.content_cut_rounded,
+        size: 18,
+        color: filled
+            ? contrastingTextColor(accent)
+            : isLast
+                ? accent.withValues(alpha: 0.75)
+                : palette.textFaint.withValues(alpha: 0.45),
+      ),
+    );
+
+    if (!filled) return circle;
+
+    // Carimbo batendo: escala com overshoot, escalonada pelo índice.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.5, end: 1),
+      duration: Duration(milliseconds: 260 + index * 55),
+      curve: Curves.elasticOut,
+      builder: (context, v, child) => Transform.scale(scale: v, child: child),
+      child: circle,
+    );
+  }
+}
+
+/// Prêmio disponível, em forma de bilhete — com os recortes laterais que todo
+/// cupom tem. É o que separa "mais um card" de algo que parece destacável.
+class _RewardTicket extends StatelessWidget {
   final String label;
   final AppPalette palette;
-  final Color accent;
-  const _RewardCard({required this.label, required this.palette, required this.accent});
+  const _RewardTicket({required this.label, required this.palette});
+
+  static const _green = Color(0xFF34D399);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.greenAccent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.35)),
+      child: ClipPath(
+        clipper: _TicketClipper(),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [_green.withValues(alpha: 0.20), _green.withValues(alpha: 0.07)],
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _green.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: const Icon(Icons.redeem_rounded, color: _green, size: 22),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        style: TextStyle(
+                            color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15.5, letterSpacing: -0.2)),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Icon(Icons.storefront_rounded, size: 11, color: _green),
+                        const SizedBox(width: 4),
+                        Text('Mostre esta tela no balcão',
+                            style: TextStyle(color: palette.textSecondary, fontSize: 11.5)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Row(children: [
-        Container(
-          width: 42, height: 42,
-          decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(12)),
-          child: const Icon(Icons.card_giftcard_rounded, color: Colors.greenAccent, size: 21),
-        ),
-        const SizedBox(width: 13),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15)),
-            const SizedBox(height: 2),
-            Text('Mostre esta tela no balcão', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
-          ]),
-        ),
-      ]),
     );
   }
 }
 
+/// Recortes semicirculares nas laterais, como um cupom picotado.
+class _TicketClipper extends CustomClipper<Path> {
+  static const _radius = 9.0;
+  static const _corner = 18.0;
+
+  @override
+  Path getClip(Size size) {
+    final body = Path()
+      ..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(_corner)));
+    final notches = Path()
+      ..addOval(Rect.fromCircle(center: Offset(0, size.height / 2), radius: _radius))
+      ..addOval(Rect.fromCircle(center: Offset(size.width, size.height / 2), radius: _radius));
+    return Path.combine(PathOperation.difference, body, notches);
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+/// Pontos com a distância até a próxima faixa. A cor sai da faixa atual, então
+/// subir de nível muda o cartão — a recompensa fica visível, não só numérica.
 class _PointsCard extends StatelessWidget {
   final int points;
   final String tier;
+  final int silverThreshold, goldThreshold;
   final AppPalette palette;
   final Color accent;
-  const _PointsCard({required this.points, required this.tier, required this.palette, required this.accent});
+
+  const _PointsCard({
+    required this.points,
+    required this.tier,
+    required this.silverThreshold,
+    required this.goldThreshold,
+    required this.palette,
+    required this.accent,
+  });
+
+  static const _labels = {'BRONZE': 'Bronze', 'SILVER': 'Prata', 'GOLD': 'Ouro'};
+  static const _colors = {
+    'BRONZE': Color(0xFFCD8155),
+    'SILVER': Color(0xFFC7CDD6),
+    'GOLD': Color(0xFFF5C518),
+  };
 
   @override
   Widget build(BuildContext context) {
-    const labels = {'BRONZE': 'Bronze', 'SILVER': 'Prata', 'GOLD': 'Ouro'};
+    final tierColor = _colors[tier] ?? accent;
+
+    // Faixas em 0 = servidor antigo ou programa sem faixas: mostra só o saldo
+    // em vez de inventar uma meta que não existe.
+    final hasTiers = goldThreshold > 0 && silverThreshold > 0;
+    final isMax = !hasTiers || points >= goldThreshold;
+    final target = points >= silverThreshold ? goldThreshold : silverThreshold;
+    final floor = points >= silverThreshold ? silverThreshold : 0;
+    final nextLabel = points >= silverThreshold ? 'Ouro' : 'Prata';
+    final progress = isMax ? 1.0 : ((points - floor) / (target - floor).clamp(1, 1 << 30)).clamp(0.0, 1.0);
+
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: palette.border)),
-      child: Row(children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('$points', style: TextStyle(color: palette.textPrimary, fontSize: 30, fontWeight: FontWeight.w900, height: 1)),
-          Text('pontos', style: TextStyle(color: palette.textFaint, fontSize: 12)),
-        ]),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(color: accent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
-          child: Text(labels[tier] ?? tier, style: TextStyle(color: accent, fontWeight: FontWeight.w900, fontSize: 12.5)),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [tierColor.withValues(alpha: 0.20), tierColor.withValues(alpha: 0.05), palette.surface],
+          stops: const [0, 0.5, 1],
         ),
-      ]),
+        border: Border.all(color: tierColor.withValues(alpha: 0.26)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      _grouped(points),
+                      style: TextStyle(
+                        color: palette.textPrimary,
+                        fontSize: 38,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1.6,
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: Text('pontos',
+                          style: TextStyle(color: palette.textFaint, fontSize: 13, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: tierColor.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: tierColor.withValues(alpha: 0.45)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.workspace_premium_rounded, size: 12, color: tierColor),
+                    const SizedBox(width: 4),
+                    Text((_labels[tier] ?? tier).toUpperCase(),
+                        style: TextStyle(
+                            color: tierColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.6)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (hasTiers) ...[
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  Container(height: 6, color: palette.textFaint.withValues(alpha: 0.14)),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: progress),
+                    duration: const Duration(milliseconds: 750),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, v, _) => FractionallySizedBox(
+                      widthFactor: v.clamp(0.0, 1.0),
+                      child: Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [tierColor.withValues(alpha: 0.7), tierColor]),
+                          boxShadow: [
+                            BoxShadow(color: tierColor.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: -1),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 9),
+            Text(
+              isMax
+                  ? 'Você chegou ao topo. Aproveite os benefícios.'
+                  : 'Faltam ${_grouped(target - points)} pts para $nextLabel',
+              style: TextStyle(
+                color: isMax ? tierColor : palette.textSecondary,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
+  }
+
+  static String _grouped(int n) {
+    final s = n.toString();
+    final b = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) b.write('.');
+      b.write(s[i]);
+    }
+    return b.toString();
   }
 }
 
@@ -324,50 +669,170 @@ class _ReferralCard extends StatelessWidget {
   final AppPalette palette;
   final Color accent;
   final VoidCallback onUseCode;
-  const _ReferralCard({required this.code, required this.reward, required this.palette, required this.accent, required this.onUseCode});
+  const _ReferralCard({
+    required this.code,
+    required this.reward,
+    required this.palette,
+    required this.accent,
+    required this.onUseCode,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: palette.border)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Seu amigo ganha $reward — e você também.', style: TextStyle(color: palette.textSecondary, fontSize: 13, height: 1.4)),
-        const SizedBox(height: 14),
-        if (code != null)
-          InkWell(
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: code!));
-              AppToast.success(context, 'Código copiado!');
-            },
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.5),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: palette.textFaint.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(color: accent.withValues(alpha: 0.13), borderRadius: BorderRadius.circular(11)),
+                child: Icon(Icons.group_add_rounded, color: accent, size: 19),
               ),
-              child: Column(children: [
-                Text(code!, textAlign: TextAlign.center, style: TextStyle(color: accent, fontSize: 25, fontWeight: FontWeight.w900, letterSpacing: 3)),
-                const SizedBox(height: 3),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.copy_rounded, size: 12, color: palette.textFaint),
-                  const SizedBox(width: 4),
-                  Text('toque para copiar', style: TextStyle(color: palette.textFaint, fontSize: 11)),
-                ]),
-              ]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Seu amigo ganha $reward — e você também.',
+                  style: TextStyle(color: palette.textSecondary, fontSize: 13, height: 1.35),
+                ),
+              ),
+            ],
+          ),
+          if (code != null) ...[
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: code!));
+                AppToast.success(context, 'Código copiado!');
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 17),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [accent.withValues(alpha: 0.16), accent.withValues(alpha: 0.05)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.4),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      code!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: accent,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 5,
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.copy_rounded, size: 12, color: palette.textFaint),
+                        const SizedBox(width: 5),
+                        Text('toque para copiar',
+                            style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: onUseCode,
+              icon: Icon(Icons.redeem_rounded, size: 16, color: palette.textSecondary),
+              label: Text('Tenho um código de amigo',
+                  style: TextStyle(color: palette.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                backgroundColor: palette.bg.withValues(alpha: 0.6),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ),
-        const SizedBox(height: 10),
-        TextButton.icon(
-          onPressed: onUseCode,
-          icon: Icon(Icons.redeem_rounded, size: 16, color: palette.textSecondary),
-          label: Text('Tenho um código de amigo', style: TextStyle(color: palette.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w600)),
-          style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoProgram extends StatelessWidget {
+  final AppPalette palette;
+  final Color accent;
+  const _NoProgram({required this.palette, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 70),
+      child: Column(
+        children: [
+          Container(
+            width: 66,
+            height: 66,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: accent.withValues(alpha: 0.09)),
+            child: Icon(Icons.card_giftcard_rounded, size: 30, color: accent.withValues(alpha: 0.7)),
+          ),
+          const SizedBox(height: 16),
+          Text('Ainda sem programa de fidelidade',
+              style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 15.5)),
+          const SizedBox(height: 6),
+          Text('Esta barbearia ainda não ativou selos, pontos\nou indicação. Volte outra hora.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: palette.textFaint, fontSize: 13, height: 1.5)),
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletError extends StatelessWidget {
+  final AppPalette palette;
+  final Color accent;
+  final Future<void> Function() onRetry;
+  const _WalletError({required this.palette, required this.accent, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 34, color: palette.textFaint),
+            const SizedBox(height: 13),
+            Text('Não consegui carregar sua carteira',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: palette.textSecondary, fontSize: 14)),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: onRetry,
+              style: FilledButton.styleFrom(backgroundColor: accent),
+              child: const Text('Tentar de novo'),
+            ),
+          ],
         ),
-      ]),
+      ),
     );
   }
 }

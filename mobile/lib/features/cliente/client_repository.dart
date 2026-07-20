@@ -158,6 +158,8 @@ class LoyaltyStatus {
   final bool pointsEnabled;
   final int points;
   final String tier;
+  final int silverThreshold;
+  final int goldThreshold;
   final bool stampEnabled;
   final int stamps;
   final int stampGoal;
@@ -172,6 +174,8 @@ class LoyaltyStatus {
     required this.pointsEnabled,
     required this.points,
     required this.tier,
+    required this.silverThreshold,
+    required this.goldThreshold,
     required this.stampEnabled,
     required this.stamps,
     required this.stampGoal,
@@ -187,6 +191,8 @@ class LoyaltyStatus {
         pointsEnabled: j['pointsEnabled'] == true,
         points: j['points'] as int? ?? 0,
         tier: j['tier'] as String? ?? 'BRONZE',
+        silverThreshold: j['silverThreshold'] as int? ?? 0,
+        goldThreshold: j['goldThreshold'] as int? ?? 0,
         stampEnabled: j['stampEnabled'] == true,
         stamps: j['stamps'] as int? ?? 0,
         stampGoal: j['stampGoal'] as int? ?? 0,
