@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getPayment, getPreapproval } from "@/lib/mercadopago";
 import { fetchAsaasPaymentStatus } from "@/lib/payments";
+import { recordSubscriptionPayment } from "@/lib/finance/autoEntry";
 
 // Payment providers (the BARBERSHOP's own account) ping this when a client's
 // membership payment changes. We identify the subscription, then re-fetch the
@@ -60,8 +61,20 @@ async function findSubscription(
 }
 
 async function applyStatus(id: string, current: string, status: "paid" | "pending" | "failed") {
-  if (status === "paid" && current !== "ACTIVE") {
-    await prisma.clientSubscription.update({ where: { id }, data: { status: "ACTIVE" } });
+  if (status === "paid") {
+    if (current !== "ACTIVE") {
+      await prisma.clientSubscription.update({ where: { id }, data: { status: "ACTIVE" } });
+    }
+    // Lança a mensalidade no financeiro sozinho. Fica FORA do if acima de
+    // propósito: na renovação mensal a assinatura já está ACTIVE, e só o
+    // primeiro pagamento seria contado se dependesse da troca de status.
+    // A idempotência é por assinatura+mês, dentro de recordSubscriptionPayment.
+    try {
+      await recordSubscriptionPayment(id);
+    } catch {
+      // Financeiro não pode derrubar a confirmação do pagamento: se o
+      // lançamento falhar, a assinatura continua ativa e o gestor lança à mão.
+    }
   } else if (status === "failed" && current === "PENDING") {
     await prisma.clientSubscription.update({ where: { id }, data: { status: "CANCELLED", cancelledAt: new Date() } });
   }

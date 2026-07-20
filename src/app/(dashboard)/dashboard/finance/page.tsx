@@ -120,7 +120,7 @@ export default function FinancePage() {
       <PageHeader
         icon={Wallet}
         title="Financeiro"
-        subtitle="Receita de serviços concluídos + lançamentos manuais"
+        subtitle="Serviços e mensalidades entram automático — você só lança o que sobra"
         action={
           <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" />
@@ -260,7 +260,7 @@ export default function FinancePage() {
           <div>
             <h3 className="text-sm font-bold text-white">Lançamentos manuais</h3>
             <p className="mt-0.5 text-xs text-zinc-600">
-              O que você digitou à mão — a receita dos serviços entra sozinha
+              Serviços concluídos e mensalidades pagas entram sozinhos — aqui fica o resto
             </p>
           </div>
           {transactions.length > 0 && (
