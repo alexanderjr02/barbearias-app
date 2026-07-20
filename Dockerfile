@@ -49,6 +49,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# scripts/ carrega o is-db-empty.js que o entrypoint usa para decidir o seed.
+# Sem esta linha o container morre no boot chamando um arquivo inexistente.
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+# O seed importa a tabela de preços de src/lib/planPricingDefaults — o
+# standalone não carrega src/, então esse arquivo vai junto. Copiar src/
+# inteiro incharia a imagem à toa.
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/planPricingDefaults.ts ./src/lib/planPricingDefaults.ts
+
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh && chown nextjs:nodejs ./docker-entrypoint.sh
 

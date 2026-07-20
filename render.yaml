@@ -26,6 +26,10 @@ services:
         value: file:/app/data/dev.db
       - key: NODE_ENV
         value: production
+      # Popula o banco no 1o deploy. Deixe em 1 na primeira subida e mude
+      # para 0 depois — o seed nao e idempotente e duplicaria dados.
+      - key: SEED_ON_FIRST_BOOT
+        value: "1"
       - key: JWT_SECRET
         generateValue: true # Render gera um segredo forte automaticamente
       - key: APP_URL

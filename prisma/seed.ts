@@ -4,7 +4,16 @@ import crypto from "crypto";
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const adapter = new PrismaLibSql({ url: "file:./dev.db" });
+// Respeita DATABASE_URL. Estava fixo em "file:./dev.db", o que fazia o seed
+// ignorar o banco do ambiente: no container ele tentava criar um arquivo em
+// /app (sem permissão de escrita) e falhava, mas o script terminava dizendo
+// "concluído" — o deploy subia com o banco vazio e ninguém conseguia logar.
+const url = process.env.DATABASE_URL ?? "file:./dev.db";
+const isRemote = url.startsWith("libsql://") || url.startsWith("https://");
+const adapter = new PrismaLibSql({
+  url,
+  ...(isRemote && { authToken: process.env.DATABASE_AUTH_TOKEN }),
+});
 const prisma = new PrismaClient({ adapter });
 
 // Seed script for development
