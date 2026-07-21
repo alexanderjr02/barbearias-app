@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   await prisma.chatMessage.create({ data: { content: message, role: "USER", sessionId: sessionKey, barbershopId } });
 
   const [shop, user, prefs, visits, priorRows] = await Promise.all([
-    prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { plan: true } }),
+    prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { plan: true, chatbotEnabled: true } }),
     prisma.user.findUnique({ where: { id: clientId }, select: { name: true } }),
     prisma.clientPreferences.findUnique({ where: { clientId } }),
     prisma.appointment.findMany({
@@ -38,6 +38,13 @@ export async function POST(request: NextRequest) {
     }),
     prisma.chatMessage.findMany({ where: { sessionId: sessionKey }, orderBy: { createdAt: "asc" }, take: 30, select: { content: true, role: true } }),
   ]);
+
+  // Assistente desligado pelo gestor: responde de forma educada, sem IA.
+  if (shop && shop.chatbotEnabled === false) {
+    const off = "O assistente virtual está desativado no momento. Fale com a barbearia pelo WhatsApp ou use o app para agendar.";
+    await prisma.chatMessage.create({ data: { content: off, role: "BOT", sessionId: sessionKey, barbershopId } });
+    return NextResponse.json({ response: off });
+  }
 
   let reply: string;
   const quota = await aiQuota(barbershopId, shop?.plan);

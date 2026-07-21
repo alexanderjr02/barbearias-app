@@ -15,17 +15,30 @@ export async function GET(request: NextRequest) {
   if (!barbershopId) return NextResponse.json({ greeting: "", proactive: false, suggestion: null });
 
   const [shop, user] = await Promise.all([
-    prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { plan: true } }),
+    prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { plan: true, chatbotEnabled: true, chatbotWelcome: true } }),
     prisma.user.findUnique({ where: { id: session.sub }, select: { name: true } }),
   ]);
-  // Personalized AI opener is a Pro+ perk; on other plans, no proactive nudge.
-  if (!planHasAI(shop?.plan)) return NextResponse.json({ greeting: "", proactive: false, suggestion: null });
+  // Assistente desligado pelo gestor → sem saudação.
+  if (shop && shop.chatbotEnabled === false) return NextResponse.json({ greeting: "", proactive: false, suggestion: null });
+
+  // A saudação configurada pelo gestor (chatbotWelcome) é o piso — vale em
+  // qualquer plano. É ela que torna o "welcome" real: antes ficava só no
+  // localStorage e nunca chegava ao cliente.
+  const welcome = shop?.chatbotWelcome?.trim() || "";
+
+  // Abertura proativa com IA é um extra do Pro+. Nos demais planos, entrega a
+  // saudação configurada (se houver) sem o empurrão personalizado.
+  if (!planHasAI(shop?.plan)) {
+    return NextResponse.json({ greeting: welcome, proactive: false, suggestion: null });
+  }
 
   const firstName = (user?.name ?? "").split(" ")[0] ?? "";
   try {
     const opener = await clientProactiveOpener(barbershopId, session.sub, firstName);
+    // Se a IA não trouxe abertura proativa, cai na saudação configurada.
+    if (!opener.greeting?.trim() && welcome) return NextResponse.json({ greeting: welcome, proactive: false, suggestion: null });
     return NextResponse.json(opener);
   } catch {
-    return NextResponse.json({ greeting: "", proactive: false, suggestion: null });
+    return NextResponse.json({ greeting: welcome, proactive: false, suggestion: null });
   }
 }

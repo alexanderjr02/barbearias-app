@@ -12,8 +12,6 @@ import {
   CheckCircle,
   Lock,
   Sparkles,
-  Plus,
-  Trash2,
 } from "lucide-react";
 import { usePlan, PLAN_INFO, FEATURES_BY_PLAN, type Feature } from "@/context/PlanContext";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -36,6 +34,9 @@ interface BarbershopMe {
   autoConfirm?: boolean;
   autoBirthday?: boolean;
   autoWinbackDays?: number | null;
+  chatbotEnabled?: boolean;
+  chatbotName?: string | null;
+  chatbotWelcome?: string | null;
   workingHours: { dayOfWeek: number; isOpen: boolean; openTime: string; closeTime: string }[];
 }
 
@@ -74,62 +75,17 @@ const defaultHours = days.map((day, i) => ({
 const inputCls =
   "w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500";
 
-interface ChatbotFaqItem {
-  question: string;
-  answer: string;
-}
-
-interface ChatbotConfig {
-  enabled: boolean;
-  name: string;
-  welcomeMessage: string;
-  address: string;
-  hours: string;
-  whatsapp: {
-    enabled: boolean;
-    phone: string;
-    autoFrom: string;
-    autoTo: string;
-    token: string;
-  };
-  faqItems: ChatbotFaqItem[];
-}
-
-const defaultChatbot: ChatbotConfig = {
-  enabled: true,
-  name: "Assistente",
-  welcomeMessage: "Olá! 👋 Como posso te ajudar hoje?",
-  address: "Rua das Barbearias, 123 — São Paulo, SP",
-  hours: "Seg–Sex: 09h–20h | Sáb: 09h–18h",
-  whatsapp: {
-    enabled: false,
-    phone: "",
-    autoFrom: "09:00",
-    autoTo: "18:00",
-    token: "",
-  },
-  faqItems: [
-    { question: "Horário de funcionamento", answer: "Atendemos de segunda a sábado, das 09h às 20h." },
-  ],
-};
-
 export default function SettingsPage() {
   const { plan, can, setPlan, formatPrice, pricing } = usePlan();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("profile");
   const [hours, setHours] = useState(defaultHours);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [chatbot, setChatbot] = useState<ChatbotConfig>(() => {
-    if (typeof window === "undefined") return defaultChatbot;
-    const stored = localStorage.getItem("cortix_chatbot_config");
-    if (!stored) return defaultChatbot;
-    try {
-      const parsed = JSON.parse(stored) as Partial<ChatbotConfig>;
-      return { ...defaultChatbot, ...parsed, whatsapp: { ...defaultChatbot.whatsapp, ...parsed.whatsapp } };
-    } catch {
-      return defaultChatbot;
-    }
-  });
+  // Config do chatbot agora vem do servidor (não mais do localStorage). Estado
+  // local editável, semeado quando a barbearia carrega, salvo via API.
+  const [cbName, setCbName] = useState("");
+  const [cbWelcome, setCbWelcome] = useState("");
+  const [cbFaq, setCbFaq] = useState("");
   const [chatbotSaved, setChatbotSaved] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [hoursSaved, setHoursSaved] = useState(false);
@@ -150,6 +106,9 @@ export default function SettingsPage() {
   const [syncedBarbershop, setSyncedBarbershop] = useState<BarbershopMe | undefined>(undefined);
   if (barbershop && barbershop !== syncedBarbershop) {
     setSyncedBarbershop(barbershop);
+    setCbName(barbershop.chatbotName ?? "");
+    setCbWelcome(barbershop.chatbotWelcome ?? "");
+    setCbFaq(barbershop.faqText ?? "");
     if (barbershop.workingHours.length > 0) {
       setHours(
         days.map((day, i) => {
@@ -209,24 +168,15 @@ export default function SettingsPage() {
   const planInfo = PLAN_INFO[plan];
 
   const saveChatbot = () => {
-    localStorage.setItem("cortix_chatbot_config", JSON.stringify(chatbot));
-    setChatbotSaved(true);
-    setTimeout(() => setChatbotSaved(false), 1600);
-  };
-
-  const addFaq = () => {
-    setChatbot((prev) => ({ ...prev, faqItems: [...prev.faqItems, { question: "", answer: "" }] }));
-  };
-
-  const updateFaq = (index: number, field: "question" | "answer", value: string) => {
-    setChatbot((prev) => ({
-      ...prev,
-      faqItems: prev.faqItems.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
-    }));
-  };
-
-  const removeFaq = (index: number) => {
-    setChatbot((prev) => ({ ...prev, faqItems: prev.faqItems.filter((_, i) => i !== index) }));
+    updateBarbershop.mutate(
+      { chatbotName: cbName.trim(), chatbotWelcome: cbWelcome.trim(), faqText: cbFaq.trim() },
+      {
+        onSuccess: () => {
+          setChatbotSaved(true);
+          setTimeout(() => setChatbotSaved(false), 1600);
+        },
+      }
+    );
   };
 
   return (
@@ -384,25 +334,70 @@ export default function SettingsPage() {
 
           {activeTab === "notifications" && (
             <div className="space-y-5">
-              <h2 className="text-lg font-bold text-white">Configurações de Notificações</h2>
-              {[
-                { label: "Lembrete de agendamento (24h antes)", desc: "Envia mensagem automática para o cliente", enabled: true },
-                { label: "Lembrete de agendamento (2h antes)", desc: "Segundo lembrete antes do horário", enabled: true },
-                { label: "Confirmação de agendamento", desc: "Confirma quando o agendamento é feito", enabled: true },
-                { label: "Aviso de cancelamento", desc: "Notifica quando um cliente cancela", enabled: false },
-                { label: "Relatório diário", desc: "Resumo do dia no final do expediente", enabled: true },
-              ].map((setting) => (
-                <div key={setting.label} className="flex items-center justify-between py-4 border-b border-zinc-800">
+              <div>
+                <h2 className="text-lg font-bold text-white">Avisos automáticos</h2>
+                <p className="text-sm text-zinc-500 mt-1">
+                  Estes rodam de verdade — o Copiloto dispara sozinho todo dia. As mudanças salvam na hora.
+                </p>
+              </div>
+
+              {/* Toggles LIGADOS ao servidor (autoConfirm/autoBirthday/autoWinbackDays
+                  do Autopilot), não mais uma lista decorativa. */}
+              <RealToggle
+                label="Confirmação automática (dia anterior)"
+                desc="Na véspera, confirma os agendamentos de amanhã e avisa cada cliente — derruba faltas."
+                checked={Boolean(barbershop?.autoConfirm)}
+                pending={updateBarbershop.isPending}
+                onChange={(v) => updateBarbershop.mutate({ autoConfirm: v })}
+              />
+              <RealToggle
+                label="Mensagem de aniversário"
+                desc="Parabeniza o cliente no dia (só quem aceitou receber mensagens)."
+                checked={Boolean(barbershop?.autoBirthday)}
+                pending={updateBarbershop.isPending}
+                onChange={(v) => updateBarbershop.mutate({ autoBirthday: v })}
+              />
+              <div className="py-4 border-b border-zinc-800">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-white">{setting.label}</p>
-                    <p className="text-xs text-zinc-500">{setting.desc}</p>
+                    <p className="text-sm font-medium text-white">Reativar clientes sumidos (win-back)</p>
+                    <p className="text-xs text-zinc-500">Chama de volta quem ficou um tempo sem aparecer.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked={setting.enabled} className="sr-only peer" />
+                    <input
+                      type="checkbox"
+                      checked={Boolean(barbershop?.autoWinbackDays)}
+                      onChange={(e) => updateBarbershop.mutate({ autoWinbackDays: e.target.checked ? (barbershop?.autoWinbackDays || 45) : null })}
+                      className="sr-only peer"
+                    />
                     <div className="w-10 h-5 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500" />
                   </label>
                 </div>
-              ))}
+                {Boolean(barbershop?.autoWinbackDays) && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-xs text-zinc-400">Avisar após</span>
+                    <input
+                      type="number"
+                      min={7}
+                      defaultValue={barbershop?.autoWinbackDays ?? 45}
+                      onBlur={(e) => {
+                        const n = parseInt(e.target.value, 10);
+                        if (n >= 7) updateBarbershop.mutate({ autoWinbackDays: n });
+                      }}
+                      className="w-20 rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100 outline-none focus:border-amber-500"
+                    />
+                    <span className="text-xs text-zinc-400">dias sem vir</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  <span className="text-zinc-300 font-medium">Sempre ligados:</span> a confirmação na hora do agendamento,
+                  os avisos de status (confirmado, cancelado, concluído) e o resumo diário do Copiloto. Esses são
+                  automáticos e chegam por push/WhatsApp para quem ativou.
+                </p>
+              </div>
             </div>
           )}
 
@@ -432,16 +427,20 @@ export default function SettingsPage() {
               ) : (
                 <>
                   <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4">
+                    {/* Ligar/desligar salva NA HORA no servidor — o assistente
+                        do app respeita de verdade (greeting some, chat recusa
+                        educadamente). */}
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-white">Ativar chatbot</p>
-                        <p className="text-xs text-zinc-500">Exibe o assistente na página de agendamento do cliente.</p>
+                        <p className="text-sm font-semibold text-white">Ativar assistente</p>
+                        <p className="text-xs text-zinc-500">Quando desligado, o assistente não responde os clientes.</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={chatbot.enabled}
-                          onChange={(e) => setChatbot((prev) => ({ ...prev, enabled: e.target.checked }))}
+                          checked={barbershop?.chatbotEnabled !== false}
+                          disabled={updateBarbershop.isPending}
+                          onChange={(e) => updateBarbershop.mutate({ chatbotEnabled: e.target.checked })}
                           className="sr-only peer"
                         />
                         <div className="w-10 h-5 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500" />
@@ -451,31 +450,19 @@ export default function SettingsPage() {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-zinc-300 mb-2">Nome do assistente</label>
-                        <input value={chatbot.name} onChange={(e) => setChatbot((prev) => ({ ...prev, name: e.target.value }))} className={inputCls} />
+                        <input value={cbName} onChange={(e) => setCbName(e.target.value)} placeholder="Ex.: Léo, da Barbearia" className={inputCls} />
+                        <p className="text-xs text-zinc-600 mt-1">Como o assistente se apresenta ao cliente.</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-zinc-300 mb-2">Mensagem de boas-vindas</label>
-                        <input value={chatbot.welcomeMessage} onChange={(e) => setChatbot((prev) => ({ ...prev, welcomeMessage: e.target.value }))} className={inputCls} />
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">Endereço</label>
-                        <input value={chatbot.address} onChange={(e) => setChatbot((prev) => ({ ...prev, address: e.target.value }))} className={inputCls} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">Horário</label>
-                        <input value={chatbot.hours} onChange={(e) => setChatbot((prev) => ({ ...prev, hours: e.target.value }))} className={inputCls} />
+                        <input value={cbWelcome} onChange={(e) => setCbWelcome(e.target.value)} placeholder="Olá! Como posso te ajudar hoje?" className={inputCls} />
+                        <p className="text-xs text-zinc-600 mt-1">Primeira mensagem quando o cliente abre o chat.</p>
                       </div>
                     </div>
 
                     {canWhatsapp && (
                       // A conexão de WhatsApp mora numa página própria, que
-                      // valida o número na Meta e o guarda no servidor. O
-                      // formulário que existia aqui só salvava no navegador e
-                      // não conectava nada — por isso virou um atalho para o
-                      // lugar certo.
+                      // valida o número na Meta e o guarda no servidor.
                       <Link
                         href="/dashboard/whatsapp"
                         className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-4 hover:bg-emerald-500/10 transition-colors"
@@ -493,31 +480,22 @@ export default function SettingsPage() {
                       </Link>
                     )}
 
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-white">FAQ do assistente</p>
-                          <p className="text-xs text-zinc-500">Adicione respostas rápidas para dúvidas comuns.</p>
-                        </div>
-                        <button onClick={addFaq} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 text-sm hover:bg-zinc-700">
-                          <Plus className="w-4 h-4" /> Adicionar
-                        </button>
-                      </div>
-                      {chatbot.faqItems.map((item, index) => (
-                        <div key={`${item.question}-${index}`} className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-3 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-white">Pergunta {index + 1}</p>
-                            <button onClick={() => removeFaq(index)} className="text-zinc-500 hover:text-red-400 transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <input value={item.question} onChange={(e) => updateFaq(index, "question", e.target.value)} placeholder="Ex.: Como agendar?" className={inputCls} />
-                          <textarea rows={2} value={item.answer} onChange={(e) => updateFaq(index, "answer", e.target.value)} placeholder="Resposta do chatbot..." className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none" />
-                        </div>
-                      ))}
+                    <div>
+                      <label className="block text-sm font-semibold text-white mb-1">Informações e regras (FAQ)</label>
+                      <p className="text-xs text-zinc-500 mb-2">
+                        A IA usa isto para responder dúvidas da sua barbearia — formas de pagamento, estacionamento,
+                        política de atraso, o que quiser. Escreva livre, como se explicasse para um cliente.
+                      </p>
+                      <textarea
+                        rows={6}
+                        value={cbFaq}
+                        onChange={(e) => setCbFaq(e.target.value)}
+                        placeholder={"Ex.:\nAceitamos Pix, cartão e dinheiro.\nTem estacionamento na rua de trás.\nTolerância de 10 min de atraso."}
+                        className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y"
+                      />
                     </div>
                   </div>
-                  <button onClick={saveChatbot} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm">
+                  <button onClick={saveChatbot} disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
                     {chatbotSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar chatbot"}
                   </button>
                 </>
@@ -678,6 +656,41 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Interruptor ligado ao servidor: reflete o valor real e salva ao trocar.
+// Diferente da lista antiga (defaultChecked sem onChange), que era enfeite.
+function RealToggle({
+  label,
+  desc,
+  checked,
+  pending,
+  onChange,
+}: {
+  label: string;
+  desc: string;
+  checked: boolean;
+  pending: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-4 border-b border-zinc-800">
+      <div className="pr-4">
+        <p className="text-sm font-medium text-white">{label}</p>
+        <p className="text-xs text-zinc-500">{desc}</p>
+      </div>
+      <label className="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={pending}
+          onChange={(e) => onChange(e.target.checked)}
+          className="sr-only peer"
+        />
+        <div className="w-10 h-5 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500" />
+      </label>
     </div>
   );
 }

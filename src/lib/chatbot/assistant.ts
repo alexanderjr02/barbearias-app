@@ -216,7 +216,7 @@ function textFrom(content: Anthropic.ContentBlock[]): string {
 export async function runAssistant(barbershopId: string, history: ChatTurn[], clientContext?: string): Promise<string> {
   const client = getAnthropic();
 
-  const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true, faqText: true } });
+  const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true, faqText: true, chatbotName: true } });
   const services: ServiceRow[] = await prisma.service.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true, duration: true, price: true } });
   const staff: StaffRow[] = await prisma.staff.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true } });
   const now = shopNow();
@@ -224,7 +224,11 @@ export async function runAssistant(barbershopId: string, history: ChatTurn[], cl
   const serviceList = services.map((s) => `- ${s.name}: R$ ${s.price.toFixed(2)} (${s.duration}min)`).join("\n") || "- (nenhum serviço cadastrado)";
   const staffList = staff.map((s) => `- ${s.name}`).join("\n") || "- (nenhum barbeiro cadastrado)";
 
-  const system = `Você é o assistente virtual da barbearia "${shop?.name ?? "nossa barbearia"}". Fale em português do Brasil, simpático mas direto e objetivo — como um recepcionista esperto, não um robô. Hoje é ${now.dateKey}.
+  const botName = shop?.chatbotName?.trim();
+  const identity = botName
+    ? `Você é ${botName}, o assistente virtual da barbearia "${shop?.name ?? "nossa barbearia"}". Quando fizer sentido se apresentar, use esse nome.`
+    : `Você é o assistente virtual da barbearia "${shop?.name ?? "nossa barbearia"}".`;
+  const system = `${identity} Fale em português do Brasil, simpático mas direto e objetivo — como um recepcionista esperto, não um robô. Hoje é ${now.dateKey}.
 
 FORMATO (a resposta aparece num balão de chat): texto limpo, sem markdown — nada de **negrito**, ## ou listas com "-". Se listar serviços/horários, use "•" e vá direto. Respostas curtas (2–5 frases). Comece pela resposta, sem "Claro!" nem repetir a pergunta.
 

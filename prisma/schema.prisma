@@ -150,6 +150,13 @@ model Barbershop {
   // estacionamento?", "atende criança?"). Fed into the client chatbot's system
   // prompt so it answers shop-specific questions instead of guessing.
   faqText         String?
+  // Personalização do chatbot do cliente — antes era config só no localStorage
+  // do navegador (não chegava a cliente nenhum). Agora vive aqui e o assistente
+  // real usa: chatbotName é como ele se apresenta; chatbotWelcome é a saudação
+  // ao abrir o chat; chatbotEnabled liga/desliga o assistente.
+  chatbotEnabled  Boolean  @default(true)
+  chatbotName     String?
+  chatbotWelcome  String?
   isActive        Boolean  @default(true)
   plan            String   @default("FREE")
   // Mercado Pago recurring subscription (preapproval) that pays for `plan`.

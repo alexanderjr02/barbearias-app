@@ -1,0 +1,77 @@
+-- RedefineTables
+PRAGMA defer_foreign_keys=ON;
+PRAGMA foreign_keys=OFF;
+CREATE TABLE "new_Barbershop" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "description" TEXT,
+    "logo" TEXT,
+    "coverImage" TEXT,
+    "phone" TEXT,
+    "email" TEXT,
+    "cnpj" TEXT,
+    "address" TEXT,
+    "city" TEXT,
+    "state" TEXT,
+    "zipCode" TEXT,
+    "primaryColor" TEXT NOT NULL DEFAULT '#D4AF37',
+    "secondaryColor" TEXT NOT NULL DEFAULT '#1a1a1a',
+    "themePreset" TEXT,
+    "themeMode" TEXT,
+    "appTagline" TEXT,
+    "bgType" TEXT,
+    "bgVideo" TEXT,
+    "bgDim" INTEGER,
+    "bgBlur" INTEGER,
+    "bgGradient" BOOLEAN NOT NULL DEFAULT true,
+    "bgEffect" TEXT,
+    "monthlyGoal" REAL,
+    "autopilotLevel" TEXT NOT NULL DEFAULT 'suggest',
+    "autoConfirm" BOOLEAN NOT NULL DEFAULT true,
+    "autoBirthday" BOOLEAN NOT NULL DEFAULT true,
+    "autoWinbackDays" INTEGER DEFAULT 45,
+    "instagram" TEXT,
+    "whatsapp" TEXT,
+    "pixKey" TEXT,
+    "faqText" TEXT,
+    "chatbotEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "chatbotName" TEXT,
+    "chatbotWelcome" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "plan" TEXT NOT NULL DEFAULT 'FREE',
+    "mpPreapprovalId" TEXT,
+    "mpSubscriptionStatus" TEXT,
+    "paymentProvider" TEXT,
+    "paymentApiKey" TEXT,
+    "fiscalProvider" TEXT,
+    "fiscalApiKey" TEXT,
+    "municipalServiceCode" TEXT,
+    "taxRegime" TEXT,
+    "issRate" REAL,
+    "pointsPerReal" INTEGER NOT NULL DEFAULT 10,
+    "loyaltyEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "silverThreshold" INTEGER NOT NULL DEFAULT 501,
+    "goldThreshold" INTEGER NOT NULL DEFAULT 1501,
+    "silverDiscount" REAL NOT NULL DEFAULT 0.05,
+    "goldDiscount" REAL NOT NULL DEFAULT 0.10,
+    "stampEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "stampGoal" INTEGER NOT NULL DEFAULT 10,
+    "stampRewardLabel" TEXT NOT NULL DEFAULT '1 corte grátis',
+    "referralEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "referralReferrerReward" TEXT NOT NULL DEFAULT 'R$ 10 de desconto',
+    "referralFriendReward" TEXT NOT NULL DEFAULT 'R$ 10 de desconto',
+    "onboardingDismissed" BOOLEAN NOT NULL DEFAULT false,
+    "ownerId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "Barbershop_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+INSERT INTO "new_Barbershop" ("address", "appTagline", "autoBirthday", "autoConfirm", "autoWinbackDays", "autopilotLevel", "bgBlur", "bgDim", "bgEffect", "bgGradient", "bgType", "bgVideo", "city", "cnpj", "coverImage", "createdAt", "description", "email", "faqText", "fiscalApiKey", "fiscalProvider", "goldDiscount", "goldThreshold", "id", "instagram", "isActive", "issRate", "logo", "loyaltyEnabled", "monthlyGoal", "mpPreapprovalId", "mpSubscriptionStatus", "municipalServiceCode", "name", "onboardingDismissed", "ownerId", "paymentApiKey", "paymentProvider", "phone", "pixKey", "plan", "pointsPerReal", "primaryColor", "referralEnabled", "referralFriendReward", "referralReferrerReward", "secondaryColor", "silverDiscount", "silverThreshold", "slug", "stampEnabled", "stampGoal", "stampRewardLabel", "state", "taxRegime", "themeMode", "themePreset", "updatedAt", "whatsapp", "zipCode") SELECT "address", "appTagline", "autoBirthday", "autoConfirm", "autoWinbackDays", "autopilotLevel", "bgBlur", "bgDim", "bgEffect", "bgGradient", "bgType", "bgVideo", "city", "cnpj", "coverImage", "createdAt", "description", "email", "faqText", "fiscalApiKey", "fiscalProvider", "goldDiscount", "goldThreshold", "id", "instagram", "isActive", "issRate", "logo", "loyaltyEnabled", "monthlyGoal", "mpPreapprovalId", "mpSubscriptionStatus", "municipalServiceCode", "name", "onboardingDismissed", "ownerId", "paymentApiKey", "paymentProvider", "phone", "pixKey", "plan", "pointsPerReal", "primaryColor", "referralEnabled", "referralFriendReward", "referralReferrerReward", "secondaryColor", "silverDiscount", "silverThreshold", "slug", "stampEnabled", "stampGoal", "stampRewardLabel", "state", "taxRegime", "themeMode", "themePreset", "updatedAt", "whatsapp", "zipCode" FROM "Barbershop";
+DROP TABLE "Barbershop";
+ALTER TABLE "new_Barbershop" RENAME TO "Barbershop";
+CREATE UNIQUE INDEX "Barbershop_slug_key" ON "Barbershop"("slug");
+CREATE INDEX "Barbershop_ownerId_idx" ON "Barbershop"("ownerId");
+PRAGMA foreign_keys=ON;
+PRAGMA defer_foreign_keys=OFF;
+
