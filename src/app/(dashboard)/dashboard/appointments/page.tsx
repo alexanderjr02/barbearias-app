@@ -163,9 +163,18 @@ export default function AppointmentsPage() {
   // que alguns navegadores disparam logo depois (abriria os detalhes sozinho).
   const draggingRef = useRef(false);
 
+  // Diálogo de "encaixar mesmo assim" quando o destino já tem cliente naquele
+  // horário — a saída para o conflito, em vez de um beco sem saída.
+  const [pendingMove, setPendingMove] = useState<
+    | { kind: "staff"; id: string; staffId: string; label: string }
+    | { kind: "date"; id: string; date: string; label: string }
+    | null
+  >(null);
+
   const queryClient = useQueryClient();
   const reassign = useMutation({
-    mutationFn: ({ id, staffId }: { id: string; staffId: string }) => apiPatch(`/api/appointments/${id}`, { staffId }),
+    mutationFn: ({ id, staffId, force }: { id: string; staffId: string; force?: boolean }) =>
+      apiPatch(`/api/appointments/${id}`, { staffId, ...(force ? { force: true } : {}) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       toast.success("Agendamento movido para outro barbeiro");
@@ -177,13 +186,18 @@ export default function AppointmentsPage() {
   // Week view: arrastar o agendamento para outro dia remarca a data (mesmo
   // horário e barbeiro), com a mesma validação de choque no servidor.
   const reschedule = useMutation({
-    mutationFn: ({ id, date }: { id: string; date: string }) => apiPatch(`/api/appointments/${id}`, { date }),
+    mutationFn: ({ id, date, force }: { id: string; date: string; force?: boolean }) =>
+      apiPatch(`/api/appointments/${id}`, { date, ...(force ? { force: true } : {}) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       toast.success("Agendamento remarcado para outro dia");
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui remarcar o agendamento"),
   });
+
+  // Sobreposição de dois intervalos "HH:MM".
+  const overlaps = (s1: string, e1: string, s2: string, e2: string) =>
+    minutesOf(s1) < minutesOf(e2 || s2) && minutesOf(e1 || s1) > minutesOf(s2);
 
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => apiGet<MeResponse>("/api/auth/me") });
   const { data: staffList = [] } = useQuery({ queryKey: ["staff-lite"], queryFn: () => apiGet<ApiStaff[]>("/api/staff") });
@@ -334,6 +348,43 @@ export default function AppointmentsPage() {
   return (
     <div className="space-y-6">
       <NewAppointmentModal open={newApptOpen} onClose={() => setNewApptOpen(false)} />
+
+      {/* Saída para o conflito: o destino já tem cliente no horário — deixa o
+          gestor encaixar mesmo assim (sobrepor) ou desistir, em vez de só
+          recusar. O servidor confirma o encaixe com force. */}
+      {pendingMove && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={() => setPendingMove(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                <Clock className="h-4 w-4 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Horário ocupado</p>
+                <p className="mt-1 text-sm text-zinc-400">{pendingMove.label} Deseja encaixar mesmo assim (dois no mesmo horário)?</p>
+              </div>
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setPendingMove(null)}
+                className="flex-1 rounded-lg border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:bg-white/5"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (pendingMove.kind === "staff") reassign.mutate({ id: pendingMove.id, staffId: pendingMove.staffId, force: true });
+                  else reschedule.mutate({ id: pendingMove.id, date: pendingMove.date, force: true });
+                  setPendingMove(null);
+                }}
+                className="flex-1 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400"
+              >
+                Encaixar mesmo assim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Shared hover preview — one team barber avatar per row with their
           free-hour label for the hovered day. position: fixed so it escapes
@@ -731,8 +782,12 @@ export default function AppointmentsPage() {
                         e.preventDefault();
                         setDragOverDay(null);
                         try {
-                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; fromDay: string };
-                          if (data.id && data.fromDay && data.fromDay !== k) reschedule.mutate({ id: data.id, date: k });
+                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; fromDay: string; staffId: string; start: string; end: string };
+                          if (!data.id || !data.fromDay || data.fromDay === k) return;
+                          const dayList = byDay.get(k) ?? [];
+                          const conflict = dayList.some((a) => a.id !== data.id && a.staff.id === data.staffId && a.status !== "CANCELLED" && a.status !== "NO_SHOW" && overlaps(data.start, data.end, a.startTime, a.endTime));
+                          if (conflict) setPendingMove({ kind: "date", id: data.id, date: k, label: `Já há um agendamento desse barbeiro às ${data.start} nesse dia.` });
+                          else reschedule.mutate({ id: data.id, date: k });
                         } catch { /* payload inesperado — ignora */ }
                       }}
                       className={cn("relative border-l border-zinc-800/80 transition-colors", dragOverDay === k && "bg-amber-500/[0.06] ring-1 ring-inset ring-amber-500/50")}
@@ -763,7 +818,7 @@ export default function AppointmentsPage() {
                             onDragStart={(e) => {
                               draggingRef.current = true;
                               e.stopPropagation();
-                              e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, fromDay: k }));
+                              e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, fromDay: k, staffId: apt.staff.id, start: apt.startTime, end: apt.endTime || apt.startTime }));
                               e.dataTransfer.effectAllowed = "move";
                             }}
                             onDragEnd={() => { setDragOverDay(null); setTimeout(() => { draggingRef.current = false; }, 0); }}
@@ -835,8 +890,11 @@ export default function AppointmentsPage() {
                         e.preventDefault();
                         setDragOverStaff(null);
                         try {
-                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; from: string };
-                          if (data.id && data.from !== s.id) reassign.mutate({ id: data.id, staffId: s.id });
+                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; from: string; start: string; end: string };
+                          if (!data.id || data.from === s.id) return;
+                          const conflict = dayApts.some((a) => a.id !== data.id && a.status !== "CANCELLED" && a.status !== "NO_SHOW" && overlaps(data.start, data.end, a.startTime, a.endTime));
+                          if (conflict) setPendingMove({ kind: "staff", id: data.id, staffId: s.id, label: `${s.name} já tem um cliente às ${data.start}.` });
+                          else reassign.mutate({ id: data.id, staffId: s.id });
                         } catch { /* payload inesperado — ignora */ }
                       }}
                       className={cn(
@@ -884,7 +942,7 @@ export default function AppointmentsPage() {
                               draggable={canDrag}
                               onDragStart={(e) => {
                                 draggingRef.current = true;
-                                e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, from: s.id }));
+                                e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, from: s.id, start: apt.startTime, end: apt.endTime || apt.startTime }));
                                 e.dataTransfer.effectAllowed = "move";
                               }}
                               onDragEnd={() => {

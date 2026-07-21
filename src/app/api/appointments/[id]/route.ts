@@ -96,6 +96,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // NÃO muda a data (trocar de barbeiro no mesmo dia não é "agendar de
     // novo"); ao remarcar para outro dia, a data nova tem que ser válida.
     if (staffChanged || dateChanged) {
+      // force = "encaixar mesmo assim": o gestor decidiu sobrepor. Pula só o
+      // choque de horário; folga, expediente e passado continuam barrando.
+      const force = body.force === true;
       const slotError = await validateRequestedSlot({
         barbershopId: appointment.barbershopId,
         staffId: targetStaffId,
@@ -103,9 +106,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         startTime: appointment.startTime,
         endTime: appointment.endTime || appointment.startTime,
         ignorePast: !dateChanged,
+        allowOverlap: force,
       });
       if (slotError) {
-        return NextResponse.json({ error: slotError }, { status: 409 });
+        // code SLOT_TAKEN quando o único problema é o choque (o front oferece
+        // "encaixar mesmo assim"); os demais são bloqueios definitivos.
+        const code = slotError.includes("ocupado") ? "SLOT_TAKEN" : undefined;
+        return NextResponse.json({ error: slotError, code }, { status: 409 });
       }
     }
 

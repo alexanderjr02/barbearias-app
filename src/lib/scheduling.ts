@@ -238,8 +238,12 @@ export async function validateRequestedSlot(params: {
   // não faz sentido barrar por "esse horário já passou" — o horário é o mesmo,
   // só muda quem atende. Um agendamento novo mantém a trava (default false).
   ignorePast?: boolean;
+  // Encaixe deliberado do gestor: pula SÓ a checagem de choque de horário
+  // (dois clientes no mesmo barbeiro), mantendo as demais (folga, expediente,
+  // passado). É o "encaixar mesmo assim" do arrastar-e-soltar.
+  allowOverlap?: boolean;
 }): Promise<string | null> {
-  const { barbershopId, staffId, dateKey, startTime, endTime, ignorePast = false } = params;
+  const { barbershopId, staffId, dateKey, startTime, endTime, ignorePast = false, allowOverlap = false } = params;
 
   const schedule = await getEffectiveSchedule(barbershopId, staffId, dateKey);
   if (!schedule.isOpen || !schedule.openTime || !schedule.closeTime) {
@@ -259,20 +263,22 @@ export async function validateRequestedSlot(params: {
     return "Esse horário já passou.";
   }
 
-  const sameDay = await prisma.appointment.findMany({
-    where: {
-      staffId,
-      date: new Date(dateKey),
-      status: { in: [...OCCUPYING_STATUSES] },
-    },
-    select: { startTime: true, endTime: true },
-  });
-  const conflict = sameDay.some((apt: { startTime: string; endTime: string }) => {
-    const aStart = timeToMinutes(apt.startTime);
-    const aEnd = timeToMinutes(apt.endTime || apt.startTime);
-    return startMin < aEnd && endMin > aStart;
-  });
-  if (conflict) return "Esse horário já está ocupado para este barbeiro.";
+  if (!allowOverlap) {
+    const sameDay = await prisma.appointment.findMany({
+      where: {
+        staffId,
+        date: new Date(dateKey),
+        status: { in: [...OCCUPYING_STATUSES] },
+      },
+      select: { startTime: true, endTime: true },
+    });
+    const conflict = sameDay.some((apt: { startTime: string; endTime: string }) => {
+      const aStart = timeToMinutes(apt.startTime);
+      const aEnd = timeToMinutes(apt.endTime || apt.startTime);
+      return startMin < aEnd && endMin > aStart;
+    });
+    if (conflict) return "Esse horário já está ocupado para este barbeiro.";
+  }
 
   return null;
 }
