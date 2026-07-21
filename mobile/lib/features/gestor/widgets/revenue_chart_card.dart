@@ -92,6 +92,13 @@ class _RevenueChartCardState extends State<RevenueChartCard> {
                       ? Center(child: Text('Sem dados no período', style: TextStyle(color: palette.textFaint, fontSize: 12)))
                       : LineChart(
                           LineChartData(
+                            // Recorta o desenho ao retângulo do gráfico. Sem
+                            // isto, um valor absurdo (ex.: uma despesa -9999
+                            // lançada por engano) desenha um pico cuja linha e
+                            // área vermelha VAZAM pra fora e pintam uma faixa
+                            // vermelha na tela inteira. Com o clip, dado ruim
+                            // fica contido no gráfico e nunca quebra a tela.
+                            clipData: const FlClipData.all(),
                             minY: 0,
                             maxY: maxY * 1.15,
                             gridData: FlGridData(
