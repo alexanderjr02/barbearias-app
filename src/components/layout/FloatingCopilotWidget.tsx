@@ -76,6 +76,31 @@ export function FloatingCopilotWidget() {
   const [conversations, setConversations] = useState<{ id: string; title: string; updatedAt: string }[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [speak, setSpeak] = useState(false);
+  // Some ao rolar para baixo (some da frente do conteúdo) e volta ao rolar
+  // para cima — assim o botão nunca tapa informação de forma permanente.
+  const [hiddenOnScroll, setHiddenOnScroll] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = (e: Event) => {
+      // Captura tanto a rolagem da janela quanto a de um container interno
+      // (o painel usa uma área de conteúdo com overflow próprio).
+      const target = e.target as HTMLElement | null;
+      const y = target && typeof target.scrollTop === "number" ? target.scrollTop : window.scrollY;
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        if (y > lastScrollY.current + 6 && y > 120) setHiddenOnScroll(true);
+        else if (y < lastScrollY.current - 6) setHiddenOnScroll(false);
+        lastScrollY.current = y;
+        ticking = false;
+      });
+    };
+    // capture: true pega a rolagem de qualquer container que role, não só a janela.
+    document.addEventListener("scroll", onScroll, true);
+    return () => document.removeEventListener("scroll", onScroll, true);
+  }, []);
 
   const { data: briefing, refetch: refetchBriefing } = useQuery({
     queryKey: ["copilot-briefing"],
@@ -250,7 +275,7 @@ export function FloatingCopilotWidget() {
       >
         <div className="flex h-[600px] max-h-[82vh] flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl shadow-black/60">
           <div className="flex items-center gap-2.5 border-b border-white/5 px-4 py-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-black">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-black">
               <Sparkles className="h-4 w-4" />
             </div>
             <div className="flex-1">
@@ -322,7 +347,7 @@ export function FloatingCopilotWidget() {
                 ) : (
                   <>
                     <div className="mb-6 mt-6 flex flex-col items-center text-center">
-                      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/20">
+                      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500 text-black ">
                         <Sparkles className="h-7 w-7" />
                       </div>
                       <p className="text-lg font-semibold text-white">Como posso ajudar?</p>
@@ -383,7 +408,7 @@ export function FloatingCopilotWidget() {
                 </div>
               ) : (
                 <div key={i} className="flex gap-3 px-4 py-2.5">
-                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-black">
+                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 text-black">
                     <Sparkles className="h-3.5 w-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -420,7 +445,7 @@ export function FloatingCopilotWidget() {
             )}
             {sending && (
               <div className="flex gap-3 px-4 py-2.5">
-                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-black">
+                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 text-black">
                   <Sparkles className="h-3.5 w-3.5" />
                 </div>
                 <div className="flex items-center gap-1 py-2">
@@ -468,14 +493,18 @@ export function FloatingCopilotWidget() {
         </div>
       </div>
 
-      {/* Launcher */}
+      {/* Launcher — plano, sem gradiente nem brilho. Circular e discreto; some
+          ao rolar para baixo para não tapar o conteúdo. */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="group fixed bottom-6 right-6 z-50 flex h-14 items-center gap-2 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 px-5 text-black shadow-xl shadow-amber-500/40 ring-1 ring-white/20 transition-all hover:scale-105 hover:shadow-amber-500/60"
+        title="Copiloto"
+        className={cn(
+          "group fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500 text-black shadow-lg shadow-black/25 transition-all duration-300 hover:bg-amber-400",
+          hiddenOnScroll && !open ? "pointer-events-none translate-y-20 opacity-0" : "translate-y-0 opacity-100"
+        )}
         aria-label="Copiloto"
       >
-        {open ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6 transition-transform group-hover:rotate-12" />}
-        {!open && <span className="text-sm font-bold">Copiloto</span>}
+        {open ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5 transition-transform group-hover:rotate-12" />}
       </button>
     </>
   );
