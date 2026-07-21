@@ -238,14 +238,39 @@ export default function AppointmentsPage() {
   // Sobreposição de dois intervalos "HH:MM".
   const overlaps = (s1: string, e1: string, s2: string, e2: string) =>
     minutesOf(s1) < minutesOf(e2 || s2) && minutesOf(e1 || s1) > minutesOf(s2);
-  // Converte a posição vertical (px dentro da timeline) em horário "HH:MM",
-  // arredondando para a grade de SNAP_MIN. É o que traduz "soltar nesta altura"
-  // em "às 15h30".
-  const yToTime = (yPx: number, durationMin: number): string => {
+  // Posição vertical (px dentro da timeline) -> minuto de início, arredondado
+  // para a grade de SNAP_MIN e preso dentro do expediente. É o que traduz
+  // "soltar nesta altura" em "às 15h30".
+  const yToStartMin = (yPx: number, durationMin: number): number => {
     const raw = RANGE_START_HOUR * 60 + (yPx / HOUR_HEIGHT) * 60;
     let start = Math.round(raw / SNAP_MIN) * SNAP_MIN;
     start = Math.max(RANGE_START_HOUR * 60, Math.min(start, RANGE_END_HOUR * 60 - durationMin));
-    return timeLabel(start);
+    return start;
+  };
+  const yToTime = (yPx: number, durationMin: number): string => timeLabel(yToStartMin(yPx, durationMin));
+
+  // Prévia ao vivo enquanto arrasta: dados do card em arraste (guardados no
+  // dragStart, porque o payload do dataTransfer só é legível no drop) e onde
+  // ele vai cair (coluna + topo + altura + horário), atualizado no dragOver.
+  const dragInfoRef = useRef<{ dur: number; grab: number } | null>(null);
+  const [dropPreview, setDropPreview] = useState<{ key: string; top: number; height: number; time: string } | null>(null);
+  // Atualiza a prévia só quando muda de coluna ou de horário (a grade é
+  // discreta), pra não re-renderizar a cada pixel.
+  const updatePreview = (key: string, clientY: number, rectTop: number, headerOffset: number) => {
+    const info = dragInfoRef.current;
+    if (!info) return;
+    const yTop = clientY - rectTop - headerOffset - info.grab;
+    const startMin = yToStartMin(yTop, info.dur);
+    const time = timeLabel(startMin);
+    setDropPreview((cur) =>
+      cur && cur.key === key && cur.time === time
+        ? cur
+        : { key, time, top: ((startMin - RANGE_START_HOUR * 60) / 60) * HOUR_HEIGHT, height: (info.dur / 60) * HOUR_HEIGHT },
+    );
+  };
+  const clearDrag = () => {
+    dragInfoRef.current = null;
+    setDropPreview(null);
   };
 
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => apiGet<MeResponse>("/api/auth/me") });
@@ -826,10 +851,16 @@ export default function AppointmentsPage() {
                     <div
                       key={k}
                       onDragEnter={(e) => e.preventDefault()}
-                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (dragOverDay !== k) setDragOverDay(k); }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                        if (dragOverDay !== k) setDragOverDay(k);
+                        updatePreview(k, e.clientY, e.currentTarget.getBoundingClientRect().top, 0);
+                      }}
                       onDrop={(e) => {
                         e.preventDefault();
                         setDragOverDay(null);
+                        clearDrag();
                         try {
                           const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; fromDay: string; staffId: string; start: string; end: string; grab: number };
                           if (!data.id) return;
@@ -854,6 +885,17 @@ export default function AppointmentsPage() {
                       {Array.from({ length: RANGE_END_HOUR - RANGE_START_HOUR }, (_, i) => i).map((i) => (
                         <div key={i} style={{ height: HOUR_HEIGHT }} className="border-t border-zinc-800/40" />
                       ))}
+                      {/* Prévia ao vivo do horário ao arrastar. */}
+                      {dropPreview && dropPreview.key === k && (
+                        <div
+                          className="pointer-events-none absolute left-0.5 right-0.5 z-30 rounded-md border-2 border-dashed border-amber-400 bg-amber-400/15"
+                          style={{ top: dropPreview.top, height: dropPreview.height }}
+                        >
+                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded bg-amber-400 px-1 py-0.5 text-[9px] font-black text-zinc-950 shadow">
+                            {dropPreview.time}
+                          </span>
+                        </div>
+                      )}
                       {isToday && nowMin >= rangeStartMin && nowMin <= rangeEndMin && (
                         <div className="absolute left-0 right-0 flex items-center pointer-events-none z-10" style={{ top: ((nowMin - rangeStartMin) / 60) * HOUR_HEIGHT }}>
                           <div className="w-1.5 h-1.5 rounded-full bg-red-500 -ml-0.5" />
@@ -877,11 +919,12 @@ export default function AppointmentsPage() {
                             draggable={canDrag}
                             onDragStart={(e) => {
                               draggingRef.current = true;
+                              dragInfoRef.current = { dur: minutesOf(apt.endTime || apt.startTime) - minutesOf(apt.startTime), grab: e.nativeEvent.offsetY };
                               e.stopPropagation();
                               e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, fromDay: k, staffId: apt.staff.id, start: apt.startTime, end: apt.endTime || apt.startTime, grab: e.nativeEvent.offsetY }));
                               e.dataTransfer.effectAllowed = "move";
                             }}
-                            onDragEnd={() => { setDragOverDay(null); setTimeout(() => { draggingRef.current = false; }, 0); }}
+                            onDragEnd={() => { setDragOverDay(null); clearDrag(); setTimeout(() => { draggingRef.current = false; }, 0); }}
                             onClick={(e) => { e.stopPropagation(); if (draggingRef.current) return; setDetailDayKey(k); }}
                             style={{ top, height, left: `calc(${(col / cols) * 100}% + 1px)`, width: `calc(${100 / cols}% - 2px)` }}
                             className={cn("absolute rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:z-20", canDrag && "cursor-grab active:cursor-grabbing", status.block)}
@@ -946,10 +989,16 @@ export default function AppointmentsPage() {
                       // contínuo; quem limpa é o onDragEnd do card (sem o
                       // piscar do dragLeave ao passar sobre os cards filhos).
                       onDragEnter={(e) => { e.preventDefault(); }}
-                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (dragOverStaff !== s.id) setDragOverStaff(s.id); }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                        if (dragOverStaff !== s.id) setDragOverStaff(s.id);
+                        updatePreview(s.id, e.clientY, e.currentTarget.getBoundingClientRect().top, DAY_HEADER_H);
+                      }}
                       onDrop={(e) => {
                         e.preventDefault();
                         setDragOverStaff(null);
+                        clearDrag();
                         try {
                           const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; from: string; start: string; end: string; grab: number };
                           if (!data.id) return;
@@ -992,6 +1041,17 @@ export default function AppointmentsPage() {
                         {Array.from({ length: RANGE_END_HOUR - RANGE_START_HOUR }, (_, i) => i).map((i) => (
                           <div key={i} style={{ height: HOUR_HEIGHT }} className="border-t border-zinc-800/40" />
                         ))}
+                        {/* Prévia ao vivo: onde o card vai cair + o horário. */}
+                        {dropPreview && dropPreview.key === s.id && (
+                          <div
+                            className="pointer-events-none absolute left-1 right-1 z-30 rounded-md border-2 border-dashed border-amber-400 bg-amber-400/15"
+                            style={{ top: dropPreview.top, height: dropPreview.height }}
+                          >
+                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black text-zinc-950 shadow">
+                              {dropPreview.time}
+                            </span>
+                          </div>
+                        )}
                         {info.segments.map((seg, i) => (
                           <div
                             key={i}
@@ -1015,11 +1075,13 @@ export default function AppointmentsPage() {
                               draggable={canDrag}
                               onDragStart={(e) => {
                                 draggingRef.current = true;
+                                dragInfoRef.current = { dur: minutesOf(apt.endTime || apt.startTime) - minutesOf(apt.startTime), grab: e.nativeEvent.offsetY };
                                 e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, from: s.id, start: apt.startTime, end: apt.endTime || apt.startTime, grab: e.nativeEvent.offsetY }));
                                 e.dataTransfer.effectAllowed = "move";
                               }}
                               onDragEnd={() => {
                                 setDragOverStaff(null);
+                                clearDrag();
                                 // Some browsers disparam um click logo após o
                                 // drag — este sinal descarta esse click fantasma
                                 // (que abriria os detalhes sem querer).
