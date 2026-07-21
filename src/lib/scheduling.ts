@@ -242,8 +242,11 @@ export async function validateRequestedSlot(params: {
   // (dois clientes no mesmo barbeiro), mantendo as demais (folga, expediente,
   // passado). É o "encaixar mesmo assim" do arrastar-e-soltar.
   allowOverlap?: boolean;
+  // Ignora este agendamento na checagem de choque — usado ao mover SÓ o
+  // horário do próprio agendamento (senão ele "colidiria consigo mesmo").
+  excludeId?: string;
 }): Promise<string | null> {
-  const { barbershopId, staffId, dateKey, startTime, endTime, ignorePast = false, allowOverlap = false } = params;
+  const { barbershopId, staffId, dateKey, startTime, endTime, ignorePast = false, allowOverlap = false, excludeId } = params;
 
   const schedule = await getEffectiveSchedule(barbershopId, staffId, dateKey);
   if (!schedule.isOpen || !schedule.openTime || !schedule.closeTime) {
@@ -269,6 +272,7 @@ export async function validateRequestedSlot(params: {
         staffId,
         date: new Date(dateKey),
         status: { in: [...OCCUPYING_STATUSES] },
+        ...(excludeId ? { id: { not: excludeId } } : {}),
       },
       select: { startTime: true, endTime: true },
     });

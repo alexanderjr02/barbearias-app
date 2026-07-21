@@ -8,6 +8,23 @@ import { validateRequestedSlot } from "@/lib/scheduling";
 
 const VALID_STATUSES = ["SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"];
 
+// Aritmética de "HH:MM" para o arraste que muda o horário (mantém a duração).
+function toMin(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+function toLabel(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+function minutesBetween(a: string, b: string): number {
+  return Math.max(toMin(b) - toMin(a), 0);
+}
+function addDurationLabel(start: string, dur: number): string {
+  return toLabel(toMin(start) + Math.max(dur, 0));
+}
+
 // PATCH /api/appointments/{id} — update status. Allowed for the barbershop's
 // gestor/manager, the barber assigned to the appointment (Staff.userId), or
 // the client it belongs to (Appointment.clientId) — but a client may only
@@ -39,11 +56,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (key in body) extras[key] = str(body[key]) ?? null;
   }
   const hasExtras = Object.keys(extras).length > 0;
-  // Arrastar-e-soltar: trocar de barbeiro (day view) e/ou remarcar de dia
-  // (week view). Independentes — um, outro, ou os dois.
+  // Arrastar-e-soltar: trocar de barbeiro (coluna), remarcar de dia e/ou mudar
+  // de horário (altura). Combináveis — soltar numa posição pode mudar os três.
   const wantsStaffChange = typeof body.staffId === "string" && body.staffId.trim().length > 0;
   const wantsDateChange = typeof body.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date);
-  if (!hasStatus && !hasExtras && !wantsStaffChange && !wantsDateChange) {
+  const wantsTimeChange = typeof body.startTime === "string" && /^\d{2}:\d{2}$/.test(body.startTime);
+  if (!hasStatus && !hasExtras && !wantsStaffChange && !wantsDateChange && !wantsTimeChange) {
     return NextResponse.json({ error: "Nada para atualizar" }, { status: 400 });
   }
 
@@ -67,9 +85,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const data: Record<string, unknown> = { ...(isOwnClientCancelling ? {} : extras) };
   if (hasStatus) data.status = body.status;
 
-  // Trocar de barbeiro e/ou remarcar de dia: só gestor/gerente ou o próprio
-  // barbeiro do horário. Um novo barbeiro tem que ser DESTA barbearia.
-  if (wantsStaffChange || wantsDateChange) {
+  // Mover o agendamento (barbeiro, dia e/ou horário): só gestor/gerente ou o
+  // próprio barbeiro do horário. Um novo barbeiro tem que ser DESTA barbearia.
+  if (wantsStaffChange || wantsDateChange || wantsTimeChange) {
     if (!isManager && !isAssignedBarber) {
       return NextResponse.json({ error: "Sem permissão para mover este agendamento" }, { status: 403 });
     }
@@ -77,8 +95,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const currentDateKey = appointment.date.toISOString().slice(0, 10);
     const targetStaffId = wantsStaffChange ? (body.staffId as string) : appointment.staffId;
     const targetDateKey = wantsDateChange ? (body.date as string) : currentDateKey;
+    const targetStartTime = wantsTimeChange ? (body.startTime as string) : appointment.startTime;
+    // endTime novo (mantém a duração): o front manda; se não vier, calcula pela
+    // duração original a partir do novo início.
+    const targetEndTime =
+      wantsTimeChange && typeof body.endTime === "string" && /^\d{2}:\d{2}$/.test(body.endTime)
+        ? (body.endTime as string)
+        : wantsTimeChange
+          ? addDurationLabel(targetStartTime, minutesBetween(appointment.startTime, appointment.endTime || appointment.startTime))
+          : appointment.endTime || appointment.startTime;
     const staffChanged = targetStaffId !== appointment.staffId;
     const dateChanged = targetDateKey !== currentDateKey;
+    const timeChanged = targetStartTime !== appointment.startTime || targetEndTime !== (appointment.endTime || appointment.startTime);
 
     if (staffChanged) {
       const newStaff = await prisma.staff.findUnique({ where: { id: targetStaffId }, select: { barbershopId: true, isActive: true } });
@@ -95,7 +123,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // clientes cairiam no mesmo barbeiro na mesma hora. ignorePast só quando
     // NÃO muda a data (trocar de barbeiro no mesmo dia não é "agendar de
     // novo"); ao remarcar para outro dia, a data nova tem que ser válida.
-    if (staffChanged || dateChanged) {
+    if (staffChanged || dateChanged || timeChanged) {
       // force = "encaixar mesmo assim": o gestor decidiu sobrepor. Pula só o
       // choque de horário; folga, expediente e passado continuam barrando.
       const force = body.force === true;
@@ -103,14 +131,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         barbershopId: appointment.barbershopId,
         staffId: targetStaffId,
         dateKey: targetDateKey,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime || appointment.startTime,
-        ignorePast: !dateChanged,
+        startTime: targetStartTime,
+        endTime: targetEndTime,
+        // Só ignora o "já passou" num puro trocar-de-barbeiro no mesmo dia/hora;
+        // mudar a data ou o horário exige um alvo válido (não no passado).
+        ignorePast: !dateChanged && !timeChanged,
         allowOverlap: force,
+        // Exclui o próprio agendamento do choque: ao mudar SÓ o horário no
+        // mesmo barbeiro, ele não pode "colidir consigo mesmo".
+        excludeId: appointment.id,
       });
       if (slotError) {
-        // code SLOT_TAKEN quando o único problema é o choque (o front oferece
-        // "encaixar mesmo assim"); os demais são bloqueios definitivos.
         const code = slotError.includes("ocupado") ? "SLOT_TAKEN" : undefined;
         return NextResponse.json({ error: slotError, code }, { status: 409 });
       }
@@ -118,6 +149,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (staffChanged) data.staffId = targetStaffId;
     if (dateChanged) data.date = new Date(targetDateKey);
+    if (timeChanged) {
+      data.startTime = targetStartTime;
+      data.endTime = targetEndTime;
+    }
   }
 
   const updated = await prisma.appointment.update({ where: { id }, data });

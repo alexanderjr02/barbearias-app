@@ -79,6 +79,14 @@ const WEEKDAY_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const RANGE_START_HOUR = 7;
 const RANGE_END_HOUR = 21;
 const HOUR_HEIGHT = 52;
+// Grade de arredondamento do arraste-de-horário e altura do cabeçalho do
+// barbeiro na coluna do dia (o arraste desconta essa faixa para achar a hora).
+const SNAP_MIN = 15;
+const DAY_HEADER_H = 76;
+
+// Movimento de um agendamento pelo arraste: qualquer combinação de barbeiro,
+// dia e horário.
+type MovePayload = { staffId?: string; date?: string; startTime?: string; endTime?: string };
 
 function addUtcDays(d: Date, n: number) {
   const r = new Date(d);
@@ -208,40 +216,37 @@ export default function AppointmentsPage() {
   const draggingRef = useRef(false);
 
   // Diálogo de "encaixar mesmo assim" quando o destino já tem cliente naquele
-  // horário — a saída para o conflito, em vez de um beco sem saída.
-  const [pendingMove, setPendingMove] = useState<
-    | { kind: "staff"; id: string; staffId: string; label: string }
-    | { kind: "date"; id: string; date: string; label: string }
-    | null
-  >(null);
+  // horário — a saída para o conflito, em vez de um beco sem saída. `payload`
+  // é o movimento completo (barbeiro/dia/horário), reenviado com force.
+  const [pendingMove, setPendingMove] = useState<{ id: string; payload: MovePayload; label: string } | null>(null);
 
   const queryClient = useQueryClient();
-  const reassign = useMutation({
-    mutationFn: ({ id, staffId, force }: { id: string; staffId: string; force?: boolean }) =>
-      apiPatch(`/api/appointments/${id}`, { staffId, ...(force ? { force: true } : {}) }),
+  // Um único "mover": arrastar pode mudar barbeiro (coluna), dia e/ou horário
+  // (altura) — o servidor valida tudo junto.
+  const moveAppt = useMutation({
+    mutationFn: ({ id, payload, force }: { id: string; payload: MovePayload; force?: boolean }) =>
+      apiPatch(`/api/appointments/${id}`, { ...payload, ...(force ? { force: true } : {}) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toast.success("Agendamento movido para outro barbeiro");
+      toast.success("Agendamento movido");
     },
     // Mostra o motivo real (ex.: "Esse horário já está ocupado para este
     // barbeiro") em vez de um erro genérico.
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui mover o agendamento"),
   });
-  // Week view: arrastar o agendamento para outro dia remarca a data (mesmo
-  // horário e barbeiro), com a mesma validação de choque no servidor.
-  const reschedule = useMutation({
-    mutationFn: ({ id, date, force }: { id: string; date: string; force?: boolean }) =>
-      apiPatch(`/api/appointments/${id}`, { date, ...(force ? { force: true } : {}) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toast.success("Agendamento remarcado para outro dia");
-    },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui remarcar o agendamento"),
-  });
 
   // Sobreposição de dois intervalos "HH:MM".
   const overlaps = (s1: string, e1: string, s2: string, e2: string) =>
     minutesOf(s1) < minutesOf(e2 || s2) && minutesOf(e1 || s1) > minutesOf(s2);
+  // Converte a posição vertical (px dentro da timeline) em horário "HH:MM",
+  // arredondando para a grade de SNAP_MIN. É o que traduz "soltar nesta altura"
+  // em "às 15h30".
+  const yToTime = (yPx: number, durationMin: number): string => {
+    const raw = RANGE_START_HOUR * 60 + (yPx / HOUR_HEIGHT) * 60;
+    let start = Math.round(raw / SNAP_MIN) * SNAP_MIN;
+    start = Math.max(RANGE_START_HOUR * 60, Math.min(start, RANGE_END_HOUR * 60 - durationMin));
+    return timeLabel(start);
+  };
 
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => apiGet<MeResponse>("/api/auth/me") });
   const { data: staffList = [] } = useQuery({ queryKey: ["staff-lite"], queryFn: () => apiGet<ApiStaff[]>("/api/staff") });
@@ -417,8 +422,7 @@ export default function AppointmentsPage() {
               </button>
               <button
                 onClick={() => {
-                  if (pendingMove.kind === "staff") reassign.mutate({ id: pendingMove.id, staffId: pendingMove.staffId, force: true });
-                  else reschedule.mutate({ id: pendingMove.id, date: pendingMove.date, force: true });
+                  moveAppt.mutate({ id: pendingMove.id, payload: pendingMove.payload, force: true });
                   setPendingMove(null);
                 }}
                 className="flex-1 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400"
@@ -827,12 +831,22 @@ export default function AppointmentsPage() {
                         e.preventDefault();
                         setDragOverDay(null);
                         try {
-                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; fromDay: string; staffId: string; start: string; end: string };
-                          if (!data.id || !data.fromDay || data.fromDay === k) return;
+                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; fromDay: string; staffId: string; start: string; end: string; grab: number };
+                          if (!data.id) return;
+                          // Coluna da semana é a própria timeline (sem cabeçalho).
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const yTop = e.clientY - rect.top - (data.grab || 0);
+                          const dur = minutesOf(data.end) - minutesOf(data.start);
+                          const newStart = yToTime(yTop, dur);
+                          const newEnd = timeLabel(minutesOf(newStart) + dur);
+                          const dateChanged = data.fromDay !== k;
+                          const timeChanged = newStart !== data.start;
+                          if (!dateChanged && !timeChanged) return;
+                          const payload: MovePayload = { ...(dateChanged ? { date: k } : {}), startTime: newStart, endTime: newEnd };
                           const dayList = byDay.get(k) ?? [];
-                          const conflict = dayList.some((a) => a.id !== data.id && a.staff.id === data.staffId && a.status !== "CANCELLED" && a.status !== "NO_SHOW" && overlaps(data.start, data.end, a.startTime, a.endTime));
-                          if (conflict) setPendingMove({ kind: "date", id: data.id, date: k, label: `Já há um agendamento desse barbeiro às ${data.start} nesse dia.` });
-                          else reschedule.mutate({ id: data.id, date: k });
+                          const conflict = dayList.some((a) => a.id !== data.id && a.staff.id === data.staffId && a.status !== "CANCELLED" && a.status !== "NO_SHOW" && overlaps(newStart, newEnd, a.startTime, a.endTime));
+                          if (conflict) setPendingMove({ id: data.id, payload, label: `Já há um agendamento desse barbeiro às ${newStart} nesse dia.` });
+                          else moveAppt.mutate({ id: data.id, payload });
                         } catch { /* payload inesperado — ignora */ }
                       }}
                       className={cn("relative border-l border-zinc-800/80 transition-colors", dragOverDay === k && "bg-amber-500/[0.06] ring-1 ring-inset ring-amber-500/50")}
@@ -864,7 +878,7 @@ export default function AppointmentsPage() {
                             onDragStart={(e) => {
                               draggingRef.current = true;
                               e.stopPropagation();
-                              e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, fromDay: k, staffId: apt.staff.id, start: apt.startTime, end: apt.endTime || apt.startTime }));
+                              e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, fromDay: k, staffId: apt.staff.id, start: apt.startTime, end: apt.endTime || apt.startTime, grab: e.nativeEvent.offsetY }));
                               e.dataTransfer.effectAllowed = "move";
                             }}
                             onDragEnd={() => { setDragOverDay(null); setTimeout(() => { draggingRef.current = false; }, 0); }}
@@ -937,11 +951,22 @@ export default function AppointmentsPage() {
                         e.preventDefault();
                         setDragOverStaff(null);
                         try {
-                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; from: string; start: string; end: string };
-                          if (!data.id || data.from === s.id) return;
-                          const conflict = dayApts.some((a) => a.id !== data.id && a.status !== "CANCELLED" && a.status !== "NO_SHOW" && overlaps(data.start, data.end, a.startTime, a.endTime));
-                          if (conflict) setPendingMove({ kind: "staff", id: data.id, staffId: s.id, label: `${s.name} já tem um cliente às ${data.start}.` });
-                          else reassign.mutate({ id: data.id, staffId: s.id });
+                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; from: string; start: string; end: string; grab: number };
+                          if (!data.id) return;
+                          // Onde o TOPO do agendamento cai: y do cursor dentro da
+                          // timeline (desconta o cabeçalho) menos o ponto de pega.
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const yTop = e.clientY - rect.top - DAY_HEADER_H - (data.grab || 0);
+                          const dur = minutesOf(data.end) - minutesOf(data.start);
+                          const newStart = yToTime(yTop, dur);
+                          const newEnd = timeLabel(minutesOf(newStart) + dur);
+                          const staffChanged = data.from !== s.id;
+                          const timeChanged = newStart !== data.start;
+                          if (!staffChanged && !timeChanged) return;
+                          const payload: MovePayload = { staffId: s.id, startTime: newStart, endTime: newEnd };
+                          const conflict = dayApts.some((a) => a.id !== data.id && a.status !== "CANCELLED" && a.status !== "NO_SHOW" && overlaps(newStart, newEnd, a.startTime, a.endTime));
+                          if (conflict) setPendingMove({ id: data.id, payload, label: `${s.name} já tem um cliente às ${newStart}.` });
+                          else moveAppt.mutate({ id: data.id, payload });
                         } catch { /* payload inesperado — ignora */ }
                       }}
                       className={cn(
@@ -990,7 +1015,7 @@ export default function AppointmentsPage() {
                               draggable={canDrag}
                               onDragStart={(e) => {
                                 draggingRef.current = true;
-                                e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, from: s.id, start: apt.startTime, end: apt.endTime || apt.startTime }));
+                                e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, from: s.id, start: apt.startTime, end: apt.endTime || apt.startTime, grab: e.nativeEvent.offsetY }));
                                 e.dataTransfer.effectAllowed = "move";
                               }}
                               onDragEnd={() => {
