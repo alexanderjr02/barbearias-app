@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search, Phone, Calendar as CalendarIcon, ChevronLeft, ChevronRight, List, LayoutGrid, Grid3x3,
   Columns3, X, Clock, DollarSign, CheckCircle2, XCircle, CalendarClock, Plus, Crown,
 } from "lucide-react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { apiGet } from "@/lib/apiClient";
+import { apiGet, apiPatch } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { NewAppointmentModal } from "@/components/dashboard/NewAppointmentModal";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -153,6 +154,19 @@ export default function AppointmentsPage() {
   const [detailStaffId, setDetailStaffId] = useState<string | null>(null);
   const [newApptOpen, setNewApptOpen] = useState(false);
   const [hoverPreview, setHoverPreview] = useState<{ key: string; day: Date; top: number; left: number } | null>(null);
+  // Arrastar-e-soltar (mouse) na visão de dia: barbeiro sobre o qual o cursor
+  // está com um agendamento seguro — usado só para o destaque da coluna.
+  const [dragOverStaff, setDragOverStaff] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
+  const reassign = useMutation({
+    mutationFn: ({ id, staffId }: { id: string; staffId: string }) => apiPatch(`/api/appointments/${id}`, { staffId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      toast.success("Agendamento movido para outro barbeiro");
+    },
+    onError: () => toast.error("Não consegui mover o agendamento"),
+  });
 
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => apiGet<MeResponse>("/api/auth/me") });
   const { data: staffList = [] } = useQuery({ queryKey: ["staff-lite"], queryFn: () => apiGet<ApiStaff[]>("/api/staff") });
@@ -768,7 +782,23 @@ export default function AppointmentsPage() {
                   const color = barberColorOf(s.id, orderedStaffIds);
                   const activeCount = dayApts.filter((a) => a.status !== "CANCELLED" && a.status !== "NO_SHOW").length;
                   return (
-                    <div key={s.id} className="flex-1 min-w-[200px] border-l border-zinc-800 relative">
+                    <div
+                      key={s.id}
+                      onDragOver={(e) => { e.preventDefault(); if (dragOverStaff !== s.id) setDragOverStaff(s.id); }}
+                      onDragLeave={() => setDragOverStaff((cur) => (cur === s.id ? null : cur))}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOverStaff(null);
+                        try {
+                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; from: string };
+                          if (data.id && data.from !== s.id) reassign.mutate({ id: data.id, staffId: s.id });
+                        } catch { /* payload inesperado — ignora */ }
+                      }}
+                      className={cn(
+                        "flex-1 min-w-[200px] border-l border-zinc-800 relative transition-colors",
+                        dragOverStaff === s.id && "bg-amber-500/[0.06] ring-1 ring-inset ring-amber-500/50"
+                      )}
+                    >
                       <div className="h-[76px] border-b border-zinc-800 px-3 py-2.5 flex items-center gap-2.5">
                         <div className={cn("w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-black flex-shrink-0 overflow-hidden", color.dot)}>
                           {s.avatar ? (
@@ -802,12 +832,18 @@ export default function AppointmentsPage() {
                           const top = ((startMin - rangeStartMin) / 60) * HOUR_HEIGHT;
                           const height = Math.max(((endMin - startMin) / 60) * HOUR_HEIGHT, 22);
                           const status = statusOf(apt.status);
+                          const canDrag = apt.status !== "CANCELLED" && apt.status !== "NO_SHOW";
                           return (
                             <button
                               key={apt.id}
+                              draggable={canDrag}
+                              onDragStart={(e) => {
+                                e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, from: s.id }));
+                                e.dataTransfer.effectAllowed = "move";
+                              }}
                               onClick={() => { setDetailStaffId(s.id); setDetailDayKey(k); }}
                               style={{ top, height }}
-                              className={cn("absolute left-1 right-1 rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:scale-[1.02] hover:z-20", status.block)}
+                              className={cn("absolute left-1 right-1 rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:scale-[1.02] hover:z-20", canDrag && "cursor-grab active:cursor-grabbing", status.block)}
                             >
                               <p className="text-[10px] font-bold leading-tight truncate">{apt.startTime} {apt.clientName}</p>
                               <p className="text-[9px] leading-tight truncate opacity-80">{apt.service.name}</p>
