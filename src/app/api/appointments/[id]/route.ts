@@ -39,9 +39,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (key in body) extras[key] = str(body[key]) ?? null;
   }
   const hasExtras = Object.keys(extras).length > 0;
-  // Reatribuição de barbeiro (arrastar o cliente para outro barbeiro).
+  // Arrastar-e-soltar: trocar de barbeiro (day view) e/ou remarcar de dia
+  // (week view). Independentes — um, outro, ou os dois.
   const wantsStaffChange = typeof body.staffId === "string" && body.staffId.trim().length > 0;
-  if (!hasStatus && !hasExtras && !wantsStaffChange) {
+  const wantsDateChange = typeof body.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date);
+  if (!hasStatus && !hasExtras && !wantsStaffChange && !wantsDateChange) {
     return NextResponse.json({ error: "Nada para atualizar" }, { status: 400 });
   }
 
@@ -65,41 +67,50 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const data: Record<string, unknown> = { ...(isOwnClientCancelling ? {} : extras) };
   if (hasStatus) data.status = body.status;
 
-  // Trocar de barbeiro: só gestor/gerente ou o próprio barbeiro do horário
-  // (passando o cliente para um colega). O novo barbeiro tem que ser DESTA
-  // barbearia — senão o horário migraria para outra unidade. Não revalido o
-  // choque de horário aqui de propósito: quem arrasta é o gestor olhando a
-  // agenda e decidindo; o app mostra o dia do barbeiro de destino.
-  if (wantsStaffChange) {
+  // Trocar de barbeiro e/ou remarcar de dia: só gestor/gerente ou o próprio
+  // barbeiro do horário. Um novo barbeiro tem que ser DESTA barbearia.
+  if (wantsStaffChange || wantsDateChange) {
     if (!isManager && !isAssignedBarber) {
-      return NextResponse.json({ error: "Sem permissão para trocar o barbeiro" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para mover este agendamento" }, { status: 403 });
     }
-    if (body.staffId !== appointment.staffId) {
-      const newStaff = await prisma.staff.findUnique({ where: { id: body.staffId }, select: { barbershopId: true, isActive: true } });
+
+    const currentDateKey = appointment.date.toISOString().slice(0, 10);
+    const targetStaffId = wantsStaffChange ? (body.staffId as string) : appointment.staffId;
+    const targetDateKey = wantsDateChange ? (body.date as string) : currentDateKey;
+    const staffChanged = targetStaffId !== appointment.staffId;
+    const dateChanged = targetDateKey !== currentDateKey;
+
+    if (staffChanged) {
+      const newStaff = await prisma.staff.findUnique({ where: { id: targetStaffId }, select: { barbershopId: true, isActive: true } });
       if (!newStaff || newStaff.barbershopId !== appointment.barbershopId) {
         return NextResponse.json({ error: "Barbeiro não encontrado nesta barbearia" }, { status: 404 });
       }
       if (!newStaff.isActive) {
         return NextResponse.json({ error: "Esse barbeiro está inativo" }, { status: 409 });
       }
-      // A "tratação" que evita quebrar a agenda: o barbeiro de destino precisa
-      // atender nesse dia, no horário, e estar LIVRE naquele intervalo. Sem
-      // isto, arrastar poria dois clientes no mesmo barbeiro na mesma hora.
-      // ignorePast: é um remanejamento de um horário que já existe.
-      const dateKey = appointment.date.toISOString().slice(0, 10);
+    }
+
+    // A "tratação" que evita quebrar a agenda: o barbeiro de destino precisa
+    // atender no dia/horário e estar LIVRE naquele intervalo — senão dois
+    // clientes cairiam no mesmo barbeiro na mesma hora. ignorePast só quando
+    // NÃO muda a data (trocar de barbeiro no mesmo dia não é "agendar de
+    // novo"); ao remarcar para outro dia, a data nova tem que ser válida.
+    if (staffChanged || dateChanged) {
       const slotError = await validateRequestedSlot({
         barbershopId: appointment.barbershopId,
-        staffId: body.staffId,
-        dateKey,
+        staffId: targetStaffId,
+        dateKey: targetDateKey,
         startTime: appointment.startTime,
         endTime: appointment.endTime || appointment.startTime,
-        ignorePast: true,
+        ignorePast: !dateChanged,
       });
       if (slotError) {
         return NextResponse.json({ error: slotError }, { status: 409 });
       }
-      data.staffId = body.staffId;
     }
+
+    if (staffChanged) data.staffId = targetStaffId;
+    if (dateChanged) data.date = new Date(targetDateKey);
   }
 
   const updated = await prisma.appointment.update({ where: { id }, data });

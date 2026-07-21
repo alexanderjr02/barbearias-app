@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search, Phone, Calendar as CalendarIcon, ChevronLeft, ChevronRight, List, LayoutGrid, Grid3x3,
@@ -157,6 +157,11 @@ export default function AppointmentsPage() {
   // Arrastar-e-soltar (mouse) na visão de dia: barbeiro sobre o qual o cursor
   // está com um agendamento seguro — usado só para o destaque da coluna.
   const [dragOverStaff, setDragOverStaff] = useState<string | null>(null);
+  // Dia (week view) sobre o qual um agendamento está sendo arrastado.
+  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
+  // Marca que um arraste acabou de acontecer, para descartar o click fantasma
+  // que alguns navegadores disparam logo depois (abriria os detalhes sozinho).
+  const draggingRef = useRef(false);
 
   const queryClient = useQueryClient();
   const reassign = useMutation({
@@ -168,6 +173,16 @@ export default function AppointmentsPage() {
     // Mostra o motivo real (ex.: "Esse horário já está ocupado para este
     // barbeiro") em vez de um erro genérico.
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui mover o agendamento"),
+  });
+  // Week view: arrastar o agendamento para outro dia remarca a data (mesmo
+  // horário e barbeiro), com a mesma validação de choque no servidor.
+  const reschedule = useMutation({
+    mutationFn: ({ id, date }: { id: string; date: string }) => apiPatch(`/api/appointments/${id}`, { date }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      toast.success("Agendamento remarcado para outro dia");
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui remarcar o agendamento"),
   });
 
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => apiGet<MeResponse>("/api/auth/me") });
@@ -708,7 +723,20 @@ export default function AppointmentsPage() {
                   const rangeStartMin = RANGE_START_HOUR * 60;
                   const rangeEndMin = RANGE_END_HOUR * 60;
                   return (
-                    <div key={k} className="relative border-l border-zinc-800/80">
+                    <div
+                      key={k}
+                      onDragEnter={(e) => e.preventDefault()}
+                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (dragOverDay !== k) setDragOverDay(k); }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOverDay(null);
+                        try {
+                          const data = JSON.parse(e.dataTransfer.getData("text/plain")) as { id: string; fromDay: string };
+                          if (data.id && data.fromDay && data.fromDay !== k) reschedule.mutate({ id: data.id, date: k });
+                        } catch { /* payload inesperado — ignora */ }
+                      }}
+                      className={cn("relative border-l border-zinc-800/80 transition-colors", dragOverDay === k && "bg-amber-500/[0.06] ring-1 ring-inset ring-amber-500/50")}
+                    >
                       {Array.from({ length: RANGE_END_HOUR - RANGE_START_HOUR }, (_, i) => i).map((i) => (
                         <div key={i} style={{ height: HOUR_HEIGHT }} className="border-t border-zinc-800/40" />
                       ))}
@@ -727,12 +755,21 @@ export default function AppointmentsPage() {
                         const height = Math.max(((endMin - startMin) / 60) * HOUR_HEIGHT, 22);
                         const status = statusOf(apt.status);
                         const color = barberColorOf(apt.staff.id, orderedStaffIds);
+                        const canDrag = apt.status !== "CANCELLED" && apt.status !== "NO_SHOW";
                         return (
                           <button
                             key={apt.id}
-                            onClick={(e) => { e.stopPropagation(); setDetailDayKey(k); }}
+                            draggable={canDrag}
+                            onDragStart={(e) => {
+                              draggingRef.current = true;
+                              e.stopPropagation();
+                              e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, fromDay: k }));
+                              e.dataTransfer.effectAllowed = "move";
+                            }}
+                            onDragEnd={() => { setDragOverDay(null); setTimeout(() => { draggingRef.current = false; }, 0); }}
+                            onClick={(e) => { e.stopPropagation(); if (draggingRef.current) return; setDetailDayKey(k); }}
                             style={{ top, height }}
-                            className={cn("absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:scale-[1.02] hover:z-20", status.block)}
+                            className={cn("absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:scale-[1.02] hover:z-20", canDrag && "cursor-grab active:cursor-grabbing", status.block)}
                           >
                             <p className="text-[10px] font-bold leading-tight truncate flex items-center gap-1">
                               {showTeamColors && <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", color.dot)} />}
@@ -786,8 +823,14 @@ export default function AppointmentsPage() {
                   return (
                     <div
                       key={s.id}
-                      onDragOver={(e) => { e.preventDefault(); if (dragOverStaff !== s.id) setDragOverStaff(s.id); }}
-                      onDragLeave={() => setDragOverStaff((cur) => (cur === s.id ? null : cur))}
+                      // dragEnter + dragOver com preventDefault E dropEffect
+                      // "move": sem os dois, o navegador mostra o cursor de
+                      // "não pode soltar" (o risco) e recusa a soltura. É o que
+                      // impedia soltar de volta. O realce vem do dragOver
+                      // contínuo; quem limpa é o onDragEnd do card (sem o
+                      // piscar do dragLeave ao passar sobre os cards filhos).
+                      onDragEnter={(e) => { e.preventDefault(); }}
+                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (dragOverStaff !== s.id) setDragOverStaff(s.id); }}
                       onDrop={(e) => {
                         e.preventDefault();
                         setDragOverStaff(null);
@@ -840,10 +883,18 @@ export default function AppointmentsPage() {
                               key={apt.id}
                               draggable={canDrag}
                               onDragStart={(e) => {
+                                draggingRef.current = true;
                                 e.dataTransfer.setData("text/plain", JSON.stringify({ id: apt.id, from: s.id }));
                                 e.dataTransfer.effectAllowed = "move";
                               }}
-                              onClick={() => { setDetailStaffId(s.id); setDetailDayKey(k); }}
+                              onDragEnd={() => {
+                                setDragOverStaff(null);
+                                // Some browsers disparam um click logo após o
+                                // drag — este sinal descarta esse click fantasma
+                                // (que abriria os detalhes sem querer).
+                                setTimeout(() => { draggingRef.current = false; }, 0);
+                              }}
+                              onClick={() => { if (draggingRef.current) return; setDetailStaffId(s.id); setDetailDayKey(k); }}
                               style={{ top, height }}
                               className={cn("absolute left-1 right-1 rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:scale-[1.02] hover:z-20", canDrag && "cursor-grab active:cursor-grabbing", status.block)}
                             >
