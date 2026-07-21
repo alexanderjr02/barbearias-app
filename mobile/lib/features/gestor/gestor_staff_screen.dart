@@ -171,12 +171,12 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
                   return RiseIn(
                     delay: Duration(milliseconds: 30 * i),
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: palette.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: isTop ? Border.all(color: accent.withValues(alpha: 0.4)) : null,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: palette.border),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,40 +184,45 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
                           Row(
                             children: [
                               CircleAvatar(
-                                radius: 22,
+                                radius: 24,
                                 backgroundColor: palette.surfaceAlt,
                                 backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                                child: avatarUrl == null ? Text(_initials(member.name), style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold)) : null,
+                                child: avatarUrl == null ? Text(_initials(member.name), style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold, fontSize: 15)) : null,
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 13),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
-                                        Flexible(child: Text(member.name, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.5), overflow: TextOverflow.ellipsis)),
+                                        Flexible(child: Text(member.name, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 15, letterSpacing: -0.2), overflow: TextOverflow.ellipsis)),
                                         if (isTop) ...[
-                                          const SizedBox(width: 6),
-                                          const Icon(Icons.emoji_events_rounded, color: Color(0xFFF5C518), size: 15),
+                                          const SizedBox(width: 7),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                            decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
+                                            child: Text('Top do mês', style: TextStyle(color: accent, fontSize: 9.5, fontWeight: FontWeight.w700)),
+                                          ),
                                         ],
                                         if (!member.isActive) ...[
-                                          const SizedBox(width: 6),
+                                          const SizedBox(width: 7),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                            decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(8)),
-                                            child: Text('Inativo', style: TextStyle(color: palette.textFaint, fontSize: 9)),
+                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                            decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(6)),
+                                            child: Text('Inativo', style: TextStyle(color: palette.textFaint, fontSize: 9.5, fontWeight: FontWeight.w600)),
                                           ),
                                         ],
                                       ],
                                     ),
+                                    const SizedBox(height: 3),
                                     Row(
                                       children: [
-                                        Text(member.role, style: TextStyle(color: palette.textSecondary, fontSize: 12)),
+                                        Flexible(child: Text(member.role, style: TextStyle(color: palette.textSecondary, fontSize: 12.5), overflow: TextOverflow.ellipsis)),
                                         if (member.avgRating != null) ...[
-                                          const SizedBox(width: 6),
-                                          const Icon(Icons.star, size: 11, color: Colors.amber),
-                                          Text(' ${member.avgRating!.toStringAsFixed(1)}', style: const TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.w600)),
+                                          const SizedBox(width: 8),
+                                          Icon(Icons.star_rounded, size: 13, color: palette.textFaint),
+                                          Text(' ${member.avgRating!.toStringAsFixed(1)}', style: TextStyle(color: palette.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
                                         ],
                                       ],
                                     ),
@@ -226,19 +231,22 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
                               ),
                               IconButton(
                                 onPressed: () => _openForm(editing: member),
-                                icon: Icon(Icons.edit_outlined, size: 18, color: palette.textSecondary),
+                                icon: Icon(Icons.tune_rounded, size: 18, color: palette.textFaint),
                                 tooltip: 'Editar',
+                                visualDensity: VisualDensity.compact,
                               ),
                             ],
                           ),
+                          const SizedBox(height: 14),
+                          Container(height: 1, color: palette.border),
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              _MetricPill(icon: Icons.content_cut, label: '${member.appointmentsCount} cortes', palette: palette),
-                              const SizedBox(width: 8),
-                              _MetricPill(icon: Icons.attach_money, label: 'R\$${member.revenue.toStringAsFixed(0)}', palette: palette),
-                              const SizedBox(width: 8),
-                              _MetricPill(icon: Icons.percent, label: '${(member.commissionRate * 100).toStringAsFixed(0)}%', palette: palette),
+                              Expanded(child: _StatCell(label: 'CORTES', value: '${member.appointmentsCount}', palette: palette)),
+                              Container(width: 1, height: 26, color: palette.border),
+                              Expanded(child: _StatCell(label: 'RECEITA', value: _money(member.revenue), palette: palette)),
+                              Container(width: 1, height: 26, color: palette.border),
+                              Expanded(child: _StatCell(label: 'COMISSÃO', value: '${(member.commissionRate * 100).toStringAsFixed(0)}%', palette: palette)),
                             ],
                           ),
                         ],
@@ -255,28 +263,33 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
   }
 }
 
-class _MetricPill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final AppPalette palette;
-  final Color? color;
+// Valor compacto: R$1.2k acima de mil, R$350 abaixo. Mantém o card enxuto.
+String _money(double v) {
+  if (v >= 1000) {
+    final k = v / 1000;
+    return 'R\$${k.toStringAsFixed(k >= 10 ? 0 : 1)}k';
+  }
+  return 'R\$${v.toStringAsFixed(0)}';
+}
 
-  const _MetricPill({required this.icon, required this.label, required this.palette, this.color});
+// Célula de estatística: valor em destaque, rótulo discreto embaixo. Sem caixa
+// colorida nem ícone — três delas numa linha, separadas por um fio fino.
+class _StatCell extends StatelessWidget {
+  final String label;
+  final String value;
+  final AppPalette palette;
+
+  const _StatCell({required this.label, required this.value, required this.palette});
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(10)),
-        child: Column(
-          children: [
-            Icon(icon, size: 14, color: color ?? palette.textSecondary),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(color: color ?? palette.textPrimary, fontSize: 11, fontWeight: FontWeight.w700)),
-          ],
-        ),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15.5, letterSpacing: -0.3)),
+        const SizedBox(height: 3),
+        Text(label, style: TextStyle(color: palette.textFaint, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.4)),
+      ],
     );
   }
 }

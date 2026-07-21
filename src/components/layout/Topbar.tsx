@@ -122,9 +122,9 @@ export function Topbar() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setNewAptOpen(true)}
-            className="hidden sm:flex items-center gap-2 h-9 px-4 bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-900 text-sm font-semibold rounded-xl hover:from-amber-400 hover:to-amber-300 transition-all shadow-lg shadow-amber-500/20"
+            className="hidden sm:flex items-center gap-2 h-9 pl-3 pr-4 bg-amber-500 text-zinc-950 text-sm font-semibold rounded-lg hover:bg-amber-400 transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
             Novo agendamento
           </button>
 

@@ -9,6 +9,7 @@ import { toast } from "@/lib/toast";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PhotoUpload } from "@/components/dashboard/PhotoUpload";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { NumberStepper } from "@/components/dashboard/NumberStepper";
 
 interface ApiProduct {
   id: string;
@@ -29,7 +30,17 @@ export default function InventoryPage() {
   const [image, setImage] = useState<string | null>(null);
   const [selling, setSelling] = useState<ApiProduct | null>(null);
   const [sellQty, setSellQty] = useState(1);
+  // Quantidades do form de novo produto — controladas, para o NumberStepper.
+  const [newQty, setNewQty] = useState(0);
+  const [newMinQty, setNewMinQty] = useState(5);
   const queryClient = useQueryClient();
+
+  const openNewProduct = () => {
+    setNewQty(0);
+    setNewMinQty(5);
+    setImage(null);
+    setModalOpen(true);
+  };
 
   const sellProduct = useMutation({
     mutationFn: ({ id, quantity, paymentMethod }: { id: string; quantity: number; paymentMethod: string }) =>
@@ -68,8 +79,8 @@ export default function InventoryPage() {
       category: form.get("category") || undefined,
       price: Number(form.get("price")),
       costPrice: form.get("costPrice") ? Number(form.get("costPrice")) : undefined,
-      quantity: Number(form.get("quantity")),
-      minQuantity: Number(form.get("minQuantity")),
+      quantity: newQty,
+      minQuantity: newMinQty,
     });
   };
 
@@ -140,11 +151,11 @@ export default function InventoryPage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>Quantidade</label>
-            <input name="quantity" type="number" min={0} defaultValue={0} className={fieldCls} />
+            <NumberStepper value={newQty} onChange={setNewQty} min={0} />
           </div>
           <div>
             <label className={labelCls}>Estoque mínimo</label>
-            <input name="minQuantity" type="number" min={0} defaultValue={5} className={fieldCls} />
+            <NumberStepper value={newMinQty} onChange={setNewMinQty} min={0} />
           </div>
         </div>
       </FormModal>
@@ -169,16 +180,7 @@ export default function InventoryPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Quantidade</label>
-                <input
-                  name="sellQuantity"
-                  type="number"
-                  min={1}
-                  max={selling.quantity}
-                  defaultValue={1}
-                  required
-                  className={fieldCls}
-                  onChange={(e) => setSellQty(Number(e.target.value) || 1)}
-                />
+                <NumberStepper name="sellQuantity" value={sellQty} onChange={setSellQty} min={1} max={selling.quantity} />
               </div>
               <div>
                 <label className={labelCls}>Pagamento</label>
@@ -209,7 +211,7 @@ export default function InventoryPage() {
         title="Estoque"
         subtitle={`${products.length} produtos cadastrados`}
         action={
-          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+          <button onClick={openNewProduct} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-zinc-950 text-sm font-semibold rounded-lg hover:bg-amber-400 transition-colors">
             <Plus className="w-4 h-4" />
             Novo produto
           </button>

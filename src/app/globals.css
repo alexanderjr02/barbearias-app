@@ -67,3 +67,16 @@ body { font-family: var(--font-inter), Inter, system-ui, sans-serif; background-
   .kenburns, .text-shimmer, .marquee-track { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
 }
+
+/* Remove as setas nativas (spin buttons) dos inputs numéricos — cinza/brancas
+   e feias, iguais em todo navegador. Onde faz sentido aumentar/diminuir, usamos
+   o NumberStepper com botões próprios (− valor +). */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

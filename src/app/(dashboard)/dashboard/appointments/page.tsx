@@ -414,8 +414,8 @@ export default function AppointmentsPage() {
         title="Agenda"
         subtitle={hasRange ? `${appointments.length} agendamento${appointments.length !== 1 ? "s" : ""} no período` : `${appointments.length} agendamentos recentes`}
         action={
-          <button onClick={() => setNewApptOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
-            <Plus className="w-4 h-4" />
+          <button onClick={() => setNewApptOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-zinc-950 text-sm font-semibold rounded-lg hover:bg-amber-400 transition-colors">
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
             Novo agendamento
           </button>
         }
