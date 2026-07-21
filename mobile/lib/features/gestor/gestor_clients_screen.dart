@@ -9,11 +9,14 @@ import '../../core/widgets/skeleton.dart';
 import 'gestor_repository.dart';
 
 const _tierLabels = {'BRONZE': 'Bronze', 'SILVER': 'Prata', 'GOLD': 'Ouro'};
+// Paleta metálica contida, igual à do web: ouro âmbar, prata ardósia, bronze
+// quente. Sem tons berrantes.
 const _tierColors = {
-  'BRONZE': Color(0xFFCD8155),
-  'SILVER': Color(0xFFC7CDD6),
-  'GOLD': Color(0xFFF5C518),
+  'BRONZE': Color(0xFFB07A4A),
+  'SILVER': Color(0xFF94A3B8),
+  'GOLD': Color(0xFFF59E0B),
 };
+const _tierOrder = ['GOLD', 'SILVER', 'BRONZE'];
 
 Color _colorFromHex(String hex, [Color fallback = const Color(0xFFD4AF37)]) {
   final cleaned = hex.replaceFirst('#', '');
@@ -155,31 +158,103 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
               final matchSearch = _search.isEmpty || c.name.toLowerCase().contains(_search.toLowerCase()) || c.phone.contains(_search);
               final matchFilter = _filter == 'all' ||
                   (_filter == 'gold' && c.tier == 'GOLD') ||
+                  (_filter == 'silver' && c.tier == 'SILVER') ||
+                  (_filter == 'bronze' && c.tier == 'BRONZE') ||
                   (_filter == 'subscribers' && c.subscription != null) ||
                   (_filter == 'no-account' && !c.hasAccount);
               return matchSearch && matchFilter;
             }).toList();
-            final goldCount = all.where((c) => c.tier == 'GOLD').length;
+            final tierCounts = <String, int>{'GOLD': 0, 'SILVER': 0, 'BRONZE': 0};
+            for (final c in all) {
+              if (c.tier != null && tierCounts.containsKey(c.tier)) tierCounts[c.tier!] = tierCounts[c.tier!]! + 1;
+            }
+            final withTier = tierCounts.values.fold<int>(0, (a, b) => a + b);
             final subscriberCount = all.where((c) => c.subscription != null).length;
+            final noAccountCount = all.where((c) => !c.hasAccount).length;
+            final segments = <(String, String, int)>[
+              ('all', 'Todos', all.length),
+              ('gold', 'Ouro', tierCounts['GOLD']!),
+              ('silver', 'Prata', tierCounts['SILVER']!),
+              ('bronze', 'Bronze', tierCounts['BRONZE']!),
+              ('subscribers', 'Assinantes', subscriberCount),
+              ('no-account', 'Sem conta', noAccountCount),
+            ];
 
             return Column(
               children: [
+                // Distribuição por nível — barra proporcional + contagem por
+                // tier, igual ao web. A leitura rápida do mix da base.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _MiniStat(label: 'Total', value: '${all.length}', icon: Icons.people_outline, palette: palette),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _MiniStat(label: 'Ouro', value: '$goldCount', icon: Icons.star_rounded, palette: palette, iconColor: const Color(0xFFF5C518)),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _MiniStat(label: 'Assinantes', value: '$subscriberCount', icon: Icons.workspace_premium_rounded, palette: palette, iconColor: Theme.of(context).colorScheme.primary),
-                      ),
-                    ],
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: palette.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: palette.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('DISTRIBUIÇÃO POR NÍVEL', style: TextStyle(color: palette.textFaint, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.4)),
+                            Text('${all.length} clientes · $subscriberCount assinantes', style: TextStyle(color: palette.textFaint, fontSize: 10.5)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: SizedBox(
+                            height: 8,
+                            child: withTier == 0
+                                ? Container(color: palette.surfaceAlt)
+                                : Row(
+                                    children: _tierOrder.where((t) => tierCounts[t]! > 0).map((t) {
+                                      return Expanded(flex: tierCounts[t]!, child: Container(color: _tierColors[t]));
+                                    }).toList(),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: _tierOrder.map((t) {
+                            final selected = _filter == t.toLowerCase();
+                            return Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(right: t == 'BRONZE' ? 0 : 8),
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _filter = selected ? 'all' : t.toLowerCase()),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: selected ? palette.surfaceAlt : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: selected ? palette.textFaint.withValues(alpha: 0.3) : palette.border),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(width: 7, height: 7, decoration: BoxDecoration(color: _tierColors[t], shape: BoxShape.circle)),
+                                            const SizedBox(width: 5),
+                                            Text(_tierLabels[t]!, style: TextStyle(color: palette.textSecondary, fontSize: 11)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text('${tierCounts[t]}', style: TextStyle(color: palette.textPrimary, fontSize: 18, fontWeight: FontWeight.w800)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Padding(
@@ -188,7 +263,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
                     onChanged: (v) => setState(() => _search = v),
                     style: TextStyle(color: palette.textPrimary, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Buscar cliente...',
+                      hintText: 'Buscar por nome ou telefone...',
                       hintStyle: TextStyle(color: palette.textFaint, fontSize: 13),
                       prefixIcon: Icon(Icons.search, color: palette.textFaint, size: 20),
                       filled: true,
@@ -200,29 +275,34 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
-                  height: 36,
+                  height: 34,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    children: [
-                      ('all', 'Todos'),
-                      ('gold', 'Ouro'),
-                      ('subscribers', 'Assinantes'),
-                      ('no-account', 'Sem conta'),
-                    ].map((f) {
+                    children: segments.map((f) {
                       final selected = _filter == f.$1;
                       return Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: 6),
                         child: GestureDetector(
                           onTap: () => setState(() => _filter = f.$1),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: selected ? accent.withValues(alpha: 0.18) : palette.surfaceAlt,
-                              borderRadius: BorderRadius.circular(20),
-                              border: selected ? Border.all(color: accent.withValues(alpha: 0.5)) : null,
+                              color: selected ? palette.textPrimary.withValues(alpha: 0.10) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Text(f.$2, style: TextStyle(color: selected ? palette.textPrimary : palette.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(f.$2, style: TextStyle(color: selected ? palette.textPrimary : palette.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                                const SizedBox(width: 5),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                  decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(5)),
+                                  child: Text('${f.$3}', style: TextStyle(color: palette.textFaint, fontSize: 10, fontWeight: FontWeight.w700)),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -245,7 +325,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
                               child: Container(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(14)),
+                                decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: palette.border)),
                                 child: Row(
                                   children: [
                                     GestureDetector(
@@ -304,9 +384,9 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Icon(Icons.star, size: 11, color: tierColor),
-                                                  const SizedBox(width: 3),
-                                                  Text('${_tierLabels[c.tier]} · ${c.points}pts', style: TextStyle(color: tierColor, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                                                  Container(width: 6, height: 6, decoration: BoxDecoration(color: tierColor, shape: BoxShape.circle)),
+                                                  const SizedBox(width: 5),
+                                                  Text('${_tierLabels[c.tier]} · ${c.points} pts', style: TextStyle(color: tierColor, fontSize: 10.5, fontWeight: FontWeight.w600)),
                                                 ],
                                               ),
                                             ),
@@ -336,29 +416,3 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final AppPalette palette;
-  final Color? iconColor;
-
-  const _MiniStat({required this.label, required this.value, required this.icon, required this.palette, this.iconColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: iconColor ?? palette.textSecondary),
-          const SizedBox(width: 8),
-          Text(value, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
-          const SizedBox(width: 4),
-          Flexible(child: Text(label, style: TextStyle(color: palette.textFaint, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis)),
-        ],
-      ),
-    );
-  }
-}

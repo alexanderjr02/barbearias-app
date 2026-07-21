@@ -201,9 +201,9 @@ class _Podium extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (second != null) Expanded(child: _PodiumSlot(entry: second, place: 2, height: 118, color: const Color(0xFFC7CDD6), initials: initials, palette: palette)),
-        if (first != null) Expanded(child: _PodiumSlot(entry: first, place: 1, height: 150, color: const Color(0xFFF5C518), initials: initials, palette: palette)),
-        if (third != null) Expanded(child: _PodiumSlot(entry: third, place: 3, height: 96, color: const Color(0xFFCD8155), initials: initials, palette: palette)),
+        if (second != null) Expanded(child: _PodiumSlot(entry: second, place: 2, height: 118, color: const Color(0xFF94A3B8), initials: initials, palette: palette)),
+        if (first != null) Expanded(child: _PodiumSlot(entry: first, place: 1, height: 150, color: const Color(0xFFF59E0B), initials: initials, palette: palette)),
+        if (third != null) Expanded(child: _PodiumSlot(entry: third, place: 3, height: 96, color: const Color(0xFFB07A4A), initials: initials, palette: palette)),
       ],
     );
   }
@@ -229,7 +229,7 @@ class _PodiumSlot extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (place == 1) const Icon(Icons.emoji_events_rounded, color: Color(0xFFF5C518), size: 26),
+            if (place == 1) const Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 26),
             const SizedBox(height: 4),
             Stack(
               alignment: Alignment.center,
