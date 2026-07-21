@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { Plus, DollarSign, ArrowUpRight, ArrowDownRight, Wallet, Scissors, FileText } from "lucide-react";
+import { Plus, ArrowUpRight, ArrowDownRight, Wallet, Scissors, FileText, Trash2, Loader2 } from "lucide-react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { apiGet, apiPost } from "@/lib/apiClient";
+import { apiGet, apiPost, apiDelete } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -33,6 +34,8 @@ const CATEGORY_PALETTE = ["#F59E0B", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981",
 
 export default function FinancePage() {
   const [modalOpen, setModalOpen] = useState(false);
+  // Lançamento pendente de exclusão (abre o modal de confirmação).
+  const [pendingDelete, setPendingDelete] = useState<ApiTransaction | null>(null);
   const queryClient = useQueryClient();
 
   const { data } = useQuery({ queryKey: ["finance-transactions"], queryFn: () => apiGet<FinanceResponse>("/api/finance/transactions") });
@@ -43,6 +46,16 @@ export default function FinancePage() {
       queryClient.invalidateQueries({ queryKey: ["finance-transactions"] });
       setModalOpen(false);
     },
+  });
+
+  const deleteTransaction = useMutation({
+    mutationFn: (id: string) => apiDelete(`/api/finance/transactions/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance-transactions"] });
+      setPendingDelete(null);
+      toast.success("Lançamento excluído");
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui excluir"),
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -79,6 +92,43 @@ export default function FinancePage() {
 
   return (
     <div className="space-y-6">
+      {/* Confirmação de exclusão de lançamento. */}
+      {pendingDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={() => setPendingDelete(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-red-500/10">
+                <Trash2 className="h-4 w-4 text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Excluir lançamento?</p>
+                <p className="mt-1 text-sm text-zinc-400">
+                  &ldquo;{pendingDelete.description}&rdquo; ({pendingDelete.type === "INCOME" ? "+" : "−"}
+                  {formatCurrency(pendingDelete.amount)}) será removido do financeiro. Isso não pode ser desfeito.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setPendingDelete(null)}
+                disabled={deleteTransaction.isPending}
+                className="flex-1 rounded-lg border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:bg-white/5 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => deleteTransaction.mutate(pendingDelete.id)}
+                disabled={deleteTransaction.isPending}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-60"
+              >
+                {deleteTransaction.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <FormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -328,6 +378,15 @@ export default function FinancePage() {
                   {t.type === "INCOME" ? "+" : "−"}
                   {formatCurrency(t.amount)}
                 </span>
+                {/* Lixeira revelada no hover da linha — some quando não está
+                    focado, para não poluir. */}
+                <button
+                  onClick={() => setPendingDelete(t)}
+                  title="Excluir lançamento"
+                  className="flex-shrink-0 rounded-lg p-1.5 text-zinc-600 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 focus:opacity-100 group-hover:opacity-100"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>
