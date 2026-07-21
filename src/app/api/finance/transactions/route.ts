@@ -54,19 +54,55 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
-  if (!body?.type || !body?.category || !body?.description || typeof body.amount !== "number") {
-    return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
+
+  // Validação de servidor — NUNCA confiar no cliente. O app bloqueia valor <= 0,
+  // mas quem chama a API direto (curl/Postman) pula isso. Sem revalidar aqui,
+  // dava para injetar -9999, NaN, Infinity ou um número gigante, que corrompia
+  // o lucro e quebrava o gráfico (a "faixa vermelha").
+  const type = typeof body?.type === "string" ? body.type : "";
+  if (type !== "INCOME" && type !== "EXPENSE") {
+    return NextResponse.json({ error: "Tipo inválido." }, { status: 400 });
   }
+
+  const rawAmount = body?.amount;
+  // Number.isFinite recusa NaN e Infinity de uma vez (ambos são typeof "number").
+  if (typeof rawAmount !== "number" || !Number.isFinite(rawAmount) || rawAmount <= 0 || rawAmount > 10_000_000) {
+    return NextResponse.json({ error: "Valor inválido — informe um número positivo (máx. 10.000.000)." }, { status: 400 });
+  }
+  const amount = Math.round(rawAmount * 100) / 100; // 2 casas, sem lixo de float
+
+  const category = typeof body?.category === "string" ? body.category.trim() : "";
+  const description = typeof body?.description === "string" ? body.description.trim() : "";
+  if (!category || category.length > 60) {
+    return NextResponse.json({ error: "Categoria inválida." }, { status: 400 });
+  }
+  if (!description || description.length > 200) {
+    return NextResponse.json({ error: "Descrição inválida." }, { status: 400 });
+  }
+
+  let date = new Date();
+  if (body?.date != null) {
+    const parsed = new Date(body.date);
+    if (Number.isNaN(parsed.getTime())) {
+      return NextResponse.json({ error: "Data inválida." }, { status: 400 });
+    }
+    date = parsed;
+  }
+
+  const paymentMethod =
+    typeof body?.paymentMethod === "string" && body.paymentMethod.trim() ? body.paymentMethod.trim().slice(0, 40) : null;
 
   const transaction = await prisma.financialTransaction.create({
     data: {
-      type: body.type,
-      category: body.category,
-      description: body.description,
-      amount: body.amount,
-      date: body.date ? new Date(body.date) : new Date(),
-      paymentMethod: body.paymentMethod,
-      reference: body.reference,
+      type,
+      category,
+      description,
+      amount,
+      date,
+      paymentMethod,
+      // `reference` é só para os lançamentos automáticos (idempotência).
+      // Não aceitamos do cliente, senão dava para forjar/colidir com eles.
+      reference: null,
       barbershopId: session.barbershopId,
     },
   });
