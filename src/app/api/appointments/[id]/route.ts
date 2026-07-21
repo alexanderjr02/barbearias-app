@@ -185,3 +185,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   return NextResponse.json(updated);
 }
+
+// DELETE /api/appointments/{id} — apaga de vez (diferente de cancelar, que
+// deixa o registro riscado na agenda). Só gestor/gerente da barbearia ou o
+// barbeiro do próprio horário.
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+
+  const { id } = await params;
+  const appointment = await prisma.appointment.findUnique({ where: { id }, include: { staff: true } });
+  if (!appointment) return NextResponse.json({ error: "Agendamento não encontrado" }, { status: 404 });
+
+  const isManager = (session.role === "OWNER" || session.role === "MANAGER") && appointment.barbershopId === session.barbershopId;
+  const isAssignedBarber = session.role === "BARBER" && appointment.staff.userId === session.sub;
+  if (!isManager && !isAssignedBarber) {
+    return NextResponse.json({ error: "Sem permissão para excluir este agendamento" }, { status: 403 });
+  }
+
+  await prisma.appointment.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}

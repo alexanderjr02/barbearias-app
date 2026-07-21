@@ -108,6 +108,50 @@ function minutesOf(time: string) {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
 }
+
+// Divide horários SOBREPOSTOS em colunas lado a lado (como o Google Agenda),
+// para que um encaixe (dois no mesmo horário) não fique um EM CIMA do outro —
+// aí dá para ver e arrastar cada um. Devolve, por id, a coluna e o total de
+// colunas do "cacho" de sobreposição.
+function layoutColumns(items: { id: string; startTime: string; endTime: string }[]): Map<string, { col: number; cols: number }> {
+  const sorted = [...items].sort(
+    (a, b) => minutesOf(a.startTime) - minutesOf(b.startTime) || minutesOf(a.endTime || a.startTime) - minutesOf(b.endTime || b.startTime),
+  );
+  const result = new Map<string, { col: number; cols: number }>();
+  let cluster: typeof sorted = [];
+  let clusterEnd = -1;
+  const flush = () => {
+    const colEnds: number[] = []; // fim (min) do último agendamento de cada coluna
+    for (const a of cluster) {
+      const s = minutesOf(a.startTime);
+      const e = Math.max(minutesOf(a.endTime || a.startTime), s + 1);
+      let col = colEnds.findIndex((end) => end <= s);
+      if (col === -1) {
+        col = colEnds.length;
+        colEnds.push(e);
+      } else {
+        colEnds[col] = e;
+      }
+      result.set(a.id, { col, cols: 0 });
+    }
+    const cols = Math.max(1, colEnds.length);
+    for (const a of cluster) {
+      const r = result.get(a.id);
+      if (r) r.cols = cols;
+    }
+    cluster = [];
+    clusterEnd = -1;
+  };
+  for (const a of sorted) {
+    const s = minutesOf(a.startTime);
+    const e = Math.max(minutesOf(a.endTime || a.startTime), s + 1);
+    if (cluster.length && s >= clusterEnd) flush();
+    cluster.push(a);
+    clusterEnd = Math.max(clusterEnd, e);
+  }
+  flush();
+  return result;
+}
 function timeLabel(mins: number) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
@@ -769,6 +813,7 @@ export default function AppointmentsPage() {
                 {weekGrid.map((d) => {
                   const k = dayKey(d);
                   const dayApts = byDay.get(k) ?? [];
+                  const weekLayout = layoutColumns(dayApts);
                   const isToday = k === dayKey(todayUtc());
                   const nowMin = nowMinutesLocal();
                   const rangeStartMin = RANGE_START_HOUR * 60;
@@ -811,6 +856,7 @@ export default function AppointmentsPage() {
                         const status = statusOf(apt.status);
                         const color = barberColorOf(apt.staff.id, orderedStaffIds);
                         const canDrag = apt.status !== "CANCELLED" && apt.status !== "NO_SHOW";
+                        const { col, cols } = weekLayout.get(apt.id) ?? { col: 0, cols: 1 };
                         return (
                           <button
                             key={apt.id}
@@ -823,8 +869,8 @@ export default function AppointmentsPage() {
                             }}
                             onDragEnd={() => { setDragOverDay(null); setTimeout(() => { draggingRef.current = false; }, 0); }}
                             onClick={(e) => { e.stopPropagation(); if (draggingRef.current) return; setDetailDayKey(k); }}
-                            style={{ top, height }}
-                            className={cn("absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:scale-[1.02] hover:z-20", canDrag && "cursor-grab active:cursor-grabbing", status.block)}
+                            style={{ top, height, left: `calc(${(col / cols) * 100}% + 1px)`, width: `calc(${100 / cols}% - 2px)` }}
+                            className={cn("absolute rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:z-20", canDrag && "cursor-grab active:cursor-grabbing", status.block)}
                           >
                             <p className="text-[10px] font-bold leading-tight truncate flex items-center gap-1">
                               {showTeamColors && <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", color.dot)} />}
@@ -867,6 +913,7 @@ export default function AppointmentsPage() {
                 {teamColumns.map((s) => {
                   const k = dayKey(viewDate);
                   const dayApts = (byDay.get(k) ?? []).filter((a) => a.staff.id === s.id);
+                  const dayLayout = layoutColumns(dayApts);
                   const info = computeFreeInfo(s.id, k);
                   const isOff = !info.isOpen;
                   const isToday = k === dayKey(todayUtc());
@@ -936,6 +983,7 @@ export default function AppointmentsPage() {
                           const height = Math.max(((endMin - startMin) / 60) * HOUR_HEIGHT, 22);
                           const status = statusOf(apt.status);
                           const canDrag = apt.status !== "CANCELLED" && apt.status !== "NO_SHOW";
+                          const { col, cols } = dayLayout.get(apt.id) ?? { col: 0, cols: 1 };
                           return (
                             <button
                               key={apt.id}
@@ -953,8 +1001,8 @@ export default function AppointmentsPage() {
                                 setTimeout(() => { draggingRef.current = false; }, 0);
                               }}
                               onClick={() => { if (draggingRef.current) return; setDetailStaffId(s.id); setDetailDayKey(k); }}
-                              style={{ top, height }}
-                              className={cn("absolute left-1 right-1 rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:scale-[1.02] hover:z-20", canDrag && "cursor-grab active:cursor-grabbing", status.block)}
+                              style={{ top, height, left: `calc(${(col / cols) * 100}% + 2px)`, width: `calc(${100 / cols}% - 4px)` }}
+                              className={cn("absolute rounded-md px-1.5 py-0.5 text-left overflow-hidden border transition-transform hover:z-20", canDrag && "cursor-grab active:cursor-grabbing", status.block)}
                             >
                               <p className="text-[10px] font-bold leading-tight truncate">{apt.startTime} {apt.clientName}</p>
                               <p className="text-[9px] leading-tight truncate opacity-80">{apt.service.name}</p>
