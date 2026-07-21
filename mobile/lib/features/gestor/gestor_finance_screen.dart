@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
 import 'widgets/finance_cards.dart';
@@ -35,6 +36,37 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
   }
 
   void _refresh() => setState(() => _future = _repository.finance());
+
+  // Deslizar para excluir → confirma → apaga no servidor. Só retorna true (o
+  // item some) se a exclusão deu certo; se falhar, volta pro lugar.
+  Future<bool> _confirmDelete(FinanceTransaction t) async {
+    final palette = AppPalette.of(context);
+    final sign = t.type == 'INCOME' ? '+' : '-';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: palette.surface,
+        title: Text('Excluir lançamento?', style: TextStyle(color: palette.textPrimary, fontSize: 16)),
+        content: Text(
+          '"${t.description}" ($sign R\$ ${t.amount.toStringAsFixed(2)}) será removido do financeiro. Isso não pode ser desfeito.',
+          style: TextStyle(color: palette.textSecondary, fontSize: 13.5),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Cancelar', style: TextStyle(color: palette.textSecondary))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Excluir', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))),
+        ],
+      ),
+    );
+    if (confirmed != true) return false;
+    try {
+      await _repository.deleteTransaction(t.id);
+      if (mounted) AppToast.success(context, 'Lançamento excluído.');
+      return true;
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'Não consegui excluir. Tente de novo.');
+      return false;
+    }
+  }
 
   Future<void> _openCreate() async {
     final categoryCtrl = TextEditingController();
@@ -264,7 +296,21 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                 const SizedBox(height: 10),
                 if (f.transactions.isEmpty)
                   Text('Nenhum lançamento manual registrado ainda.', style: TextStyle(color: palette.textFaint)),
-                ...f.transactions.map((t) => Container(
+                ...f.transactions.map((t) => Dismissible(
+                      key: ValueKey(t.id),
+                      direction: DismissDirection.endToStart,
+                      confirmDismiss: (_) => _confirmDelete(t),
+                      onDismissed: (_) => _refresh(),
+                      // Fundo revelado ao arrastar para a esquerda: painel
+                      // vermelho com a lixeira, como no Mail do iOS.
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.only(right: 20),
+                        decoration: BoxDecoration(color: Colors.redAccent.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 22),
+                      ),
+                      child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(12)),
@@ -292,7 +338,7 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                           ),
                         ],
                       ),
-                    )),
+                    ))),
               ],
             );
           },

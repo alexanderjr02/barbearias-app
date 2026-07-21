@@ -1359,6 +1359,10 @@ class GestorRepository {
     });
   }
 
+  Future<void> deleteTransaction(String id) async {
+    await ApiClient.instance.delete('/finance/transactions/$id');
+  }
+
   Future<List<GestorService>> services() async {
     final data = await ApiClient.instance.get('/services') as List;
     return data.map((e) => GestorService.fromJson(e)).toList();
