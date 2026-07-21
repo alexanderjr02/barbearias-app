@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { runLoyaltyOnCompletion } from "@/lib/loyalty";
 import { notifyBarbershop, notifyClient } from "@/lib/gestorNotifications";
 import { onSlotOpened } from "@/lib/copilot/autopilot";
+import { validateRequestedSlot } from "@/lib/scheduling";
 
 const VALID_STATUSES = ["SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"];
 
@@ -80,6 +81,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
       if (!newStaff.isActive) {
         return NextResponse.json({ error: "Esse barbeiro está inativo" }, { status: 409 });
+      }
+      // A "tratação" que evita quebrar a agenda: o barbeiro de destino precisa
+      // atender nesse dia, no horário, e estar LIVRE naquele intervalo. Sem
+      // isto, arrastar poria dois clientes no mesmo barbeiro na mesma hora.
+      // ignorePast: é um remanejamento de um horário que já existe.
+      const dateKey = appointment.date.toISOString().slice(0, 10);
+      const slotError = await validateRequestedSlot({
+        barbershopId: appointment.barbershopId,
+        staffId: body.staffId,
+        dateKey,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime || appointment.startTime,
+        ignorePast: true,
+      });
+      if (slotError) {
+        return NextResponse.json({ error: slotError }, { status: 409 });
       }
       data.staffId = body.staffId;
     }

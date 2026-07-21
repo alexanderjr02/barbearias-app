@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../core/api/api_client.dart';
+import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import 'gestor_new_appointment_screen.dart';
 import 'gestor_repository.dart';
@@ -272,6 +273,9 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
       AppToast.success(context, '${apt.clientName} agora corta com ${target.name.split(' ').first}.');
       _load(_focusedDay);
       _loadDaySchedule(_selectedDay);
+    } on ApiException catch (e) {
+      // Mostra o motivo real (ex.: horário ocupado, barbeiro de folga).
+      if (mounted) AppToast.error(context, e.message);
     } catch (_) {
       if (mounted) AppToast.error(context, 'Não consegui mover o agendamento.');
     }

@@ -234,8 +234,12 @@ export async function validateRequestedSlot(params: {
   dateKey: string;
   startTime: string;
   endTime: string;
+  // Ao remanejar um agendamento que já existe (arrastar para outro barbeiro),
+  // não faz sentido barrar por "esse horário já passou" — o horário é o mesmo,
+  // só muda quem atende. Um agendamento novo mantém a trava (default false).
+  ignorePast?: boolean;
 }): Promise<string | null> {
-  const { barbershopId, staffId, dateKey, startTime, endTime } = params;
+  const { barbershopId, staffId, dateKey, startTime, endTime, ignorePast = false } = params;
 
   const schedule = await getEffectiveSchedule(barbershopId, staffId, dateKey);
   if (!schedule.isOpen || !schedule.openTime || !schedule.closeTime) {
@@ -251,7 +255,7 @@ export async function validateRequestedSlot(params: {
   }
 
   const now = shopNow();
-  if (dateKey < now.dateKey || (dateKey === now.dateKey && startMin <= now.minutes)) {
+  if (!ignorePast && (dateKey < now.dateKey || (dateKey === now.dateKey && startMin <= now.minutes))) {
     return "Esse horário já passou.";
   }
 

@@ -165,7 +165,9 @@ export default function AppointmentsPage() {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       toast.success("Agendamento movido para outro barbeiro");
     },
-    onError: () => toast.error("Não consegui mover o agendamento"),
+    // Mostra o motivo real (ex.: "Esse horário já está ocupado para este
+    // barbeiro") em vez de um erro genérico.
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui mover o agendamento"),
   });
 
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => apiGet<MeResponse>("/api/auth/me") });
