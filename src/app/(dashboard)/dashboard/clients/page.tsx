@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Star, Phone, Users, Camera, Loader2, Award, Crown, Check, Minus, Gift } from "lucide-react";
+import { Plus, Search, Phone, Users, Camera, Loader2, Award, Crown, Check, Minus, Gift } from "lucide-react";
 import { formatCurrency, formatDate, formatPhoneBR, cn } from "@/lib/utils";
 import { apiGet, apiPatch, apiPost, apiUpload } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
@@ -26,11 +26,16 @@ interface ApiClient {
   subscription: { planName: string; planColor: string; status: "ACTIVE" | "PAST_DUE" } | null;
 }
 
-const TIER_LABELS: Record<string, string> = { BRONZE: "Bronze", SILVER: "Prata", GOLD: "Ouro" };
-const TIER_COLORS: Record<string, string> = {
-  BRONZE: "bg-zinc-700/40 border-zinc-600 text-zinc-300",
-  SILVER: "bg-slate-400/10 border-slate-400/30 text-slate-300",
-  GOLD: "bg-amber-500/10 border-amber-500/30 text-amber-400",
+const TIERS = ["GOLD", "SILVER", "BRONZE"] as const;
+type Tier = (typeof TIERS)[number];
+
+// Paleta metálica contida (sem gradiente/brilho): ouro âmbar, prata ardósia,
+// bronze quente. Cada tier tem a cor da barra de distribuição, o selo da
+// tabela e o pontinho do indicador.
+const TIER_META: Record<Tier, { label: string; bar: string; badge: string; dot: string }> = {
+  GOLD: { label: "Ouro", bar: "#f59e0b", badge: "border-amber-500/30 bg-amber-500/10 text-amber-300", dot: "bg-amber-400" },
+  SILVER: { label: "Prata", bar: "#94a3b8", badge: "border-slate-400/30 bg-slate-400/10 text-slate-200", dot: "bg-slate-300" },
+  BRONZE: { label: "Bronze", bar: "#b07a4a", badge: "border-amber-800/40 bg-amber-800/10 text-amber-600", dot: "bg-amber-700" },
 };
 
 function initialsOf(name: string) {
@@ -163,14 +168,30 @@ export default function ClientsPage() {
     const matchFilter =
       filter === "all" ||
       (filter === "gold" && c.tier === "GOLD") ||
+      (filter === "silver" && c.tier === "SILVER") ||
+      (filter === "bronze" && c.tier === "BRONZE") ||
       (filter === "no-account" && !c.tier) ||
       (filter === "subscribers" && !!c.subscription);
     return matchSearch && matchFilter;
   });
 
-  const goldCount = clients.filter((c) => c.tier === "GOLD").length;
+  const tierCounts: Record<Tier, number> = { GOLD: 0, SILVER: 0, BRONZE: 0 };
+  for (const c of clients) if (c.tier) tierCounts[c.tier] += 1;
+  const withTier = tierCounts.GOLD + tierCounts.SILVER + tierCounts.BRONZE;
+  const noAccountCount = clients.filter((c) => !c.tier).length;
   const subscriberCount = clients.filter((c) => c.subscription).length;
   const totalSpentAll = clients.reduce((a, c) => a + c.totalSpent, 0);
+  const totalVisitsAll = clients.reduce((a, c) => a + c.visits, 0);
+  const avgTicketAll = totalVisitsAll > 0 ? totalSpentAll / totalVisitsAll : 0;
+
+  const segments: { key: string; label: string; count: number }[] = [
+    { key: "all", label: "Todos", count: clients.length },
+    { key: "gold", label: "Ouro", count: tierCounts.GOLD },
+    { key: "silver", label: "Prata", count: tierCounts.SILVER },
+    { key: "bronze", label: "Bronze", count: tierCounts.BRONZE },
+    { key: "subscribers", label: "Assinantes", count: subscriberCount },
+    { key: "no-account", label: "Sem conta", count: noAccountCount },
+  ];
 
   return (
     <div className="space-y-6">
@@ -308,143 +329,186 @@ export default function ClientsPage() {
       <PageHeader
         icon={Users}
         title="Clientes"
-        subtitle={`${clients.length} clientes cadastrados · ${goldCount} no nível Ouro`}
+        subtitle={`${clients.length} clientes · ${subscriberCount} assinantes`}
         action={
-          <button onClick={openModal} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
-            <Plus className="w-4 h-4" />
+          <button onClick={openModal} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-zinc-950 text-sm font-semibold rounded-lg hover:bg-amber-400 transition-colors">
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
             Cadastrar cliente
           </button>
         }
       />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <Users className="w-4 h-4 text-blue-400 mb-2" />
-          <p className="text-2xl font-black text-white">{clients.length}</p>
-          <p className="text-xs text-zinc-500">Total de clientes</p>
+      {/* KPIs + distribuição de níveis lado a lado. */}
+      <div className="grid gap-4 lg:grid-cols-5">
+        {/* KPI tiles refinados — sem ícones coloridos aleatórios. */}
+        <div className="grid grid-cols-2 gap-4 lg:col-span-2">
+          <Kpi label="Total de clientes" value={`${clients.length}`} loading={isLoading} />
+          <Kpi label="Assinantes" value={`${subscriberCount}`} loading={isLoading} />
+          <Kpi label="Receita acumulada" value={formatCurrency(totalSpentAll)} loading={isLoading} />
+          <Kpi label="Ticket médio" value={formatCurrency(avgTicketAll)} loading={isLoading} />
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <Award className="w-4 h-4 text-amber-400 mb-2 fill-amber-400" />
-          <p className="text-2xl font-black text-white">{goldCount}</p>
-          <p className="text-xs text-zinc-500">Clientes Ouro</p>
-        </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <Crown className="w-4 h-4 text-violet-400 mb-2" />
-          <p className="text-2xl font-black text-white">{subscriberCount}</p>
-          <p className="text-xs text-zinc-500">Assinantes</p>
-        </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <Star className="w-4 h-4 text-emerald-400 mb-2" />
-          <p className="text-2xl font-black text-white">{formatCurrency(totalSpentAll)}</p>
-          <p className="text-xs text-zinc-500">Receita acumulada</p>
+
+        {/* Distribuição por nível — a leitura rápida do mix da base. */}
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 lg:col-span-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Distribuição por nível</p>
+            <p className="text-xs text-zinc-600">{withTier} com conta · {noAccountCount} sem</p>
+          </div>
+          <div className="mt-4 flex h-2.5 w-full overflow-hidden rounded-full bg-zinc-800">
+            {withTier === 0 ? (
+              <div className="h-full w-full bg-zinc-800" />
+            ) : (
+              TIERS.map((t) => {
+                const pct = (tierCounts[t] / withTier) * 100;
+                if (pct <= 0) return null;
+                return <div key={t} style={{ width: `${pct}%`, backgroundColor: TIER_META[t].bar }} className="h-full" />;
+              })
+            )}
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {TIERS.map((t) => (
+              <button
+                key={t}
+                onClick={() => setFilter(t.toLowerCase())}
+                className={cn(
+                  "rounded-xl border px-3 py-2.5 text-left transition-colors",
+                  filter === t.toLowerCase() ? "border-zinc-600 bg-white/[0.03]" : "border-zinc-800 hover:border-zinc-700"
+                )}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: TIER_META[t].bar }} />
+                  <span className="text-xs text-zinc-400">{TIER_META[t].label}</span>
+                </div>
+                <p className="mt-1 text-xl font-black text-white">{tierCounts[t]}</p>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+      {/* Busca + segmentos com contagem. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <input
             type="text"
-            placeholder="Buscar cliente..."
+            placeholder="Buscar por nome, telefone ou e-mail..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 py-2 pl-9 pr-4 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500/60 focus:outline-none"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {["all", "gold", "subscribers", "no-account"].map((f) => (
+        <div className="flex flex-wrap gap-1.5">
+          {segments.map((s) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
+              key={s.key}
+              onClick={() => setFilter(s.key)}
               className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
-                filter === f ? "bg-amber-500/20 border border-amber-500/40 text-amber-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400"
+                "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                filter === s.key ? "bg-white/[0.06] text-white" : "text-zinc-500 hover:text-zinc-300"
               )}
             >
-              {f === "all" ? "Todos" : f === "gold" ? "Ouro" : f === "subscribers" ? "Assinantes" : "Sem conta"}
+              {s.label}
+              <span className={cn("rounded px-1 text-[10px] font-semibold", filter === s.key ? "bg-white/10 text-zinc-300" : "bg-zinc-800 text-zinc-600")}>{s.count}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+      {/* Tabela refinada. */}
+      <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/40">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-zinc-800">
-                <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-6 py-3">Cliente</th>
-                <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Nível</th>
-                <th className="text-center text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3">Visitas</th>
-                <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Total gasto</th>
-                <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Ticket médio</th>
-                <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Favorito</th>
-                <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-6 py-3">Última visita</th>
+              <tr className="border-b border-zinc-800 text-left">
+                <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Cliente</th>
+                <th className="hidden px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 sm:table-cell">Nível</th>
+                <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Visitas</th>
+                <th className="hidden px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500 md:table-cell">Total gasto</th>
+                <th className="hidden px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500 lg:table-cell">Ticket médio</th>
+                <th className="hidden px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 lg:table-cell">Favorito</th>
+                <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Última visita</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-zinc-800/70">
               {isLoading &&
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}>
-                    <td className="px-6 py-3.5" colSpan={7}>
+                    <td className="px-5 py-3.5" colSpan={7}>
                       <Skeleton className="h-10 rounded-lg" />
                     </td>
                   </tr>
                 ))}
-              {!isLoading && filtered.map((client) => (
-                <tr key={client.id} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-6 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <ClientAvatar client={client} onChange={(avatar) => updateAvatar.mutate({ id: client.id, avatar })} />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-semibold text-white truncate">{client.name}</p>
-                          {client.subscription && (
-                            <span
-                              title={client.subscription.status === "PAST_DUE" ? "Assinatura com pagamento pendente" : "Assinante ativo"}
-                              className={cn(
-                                "inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full border flex-shrink-0",
-                                client.subscription.status === "PAST_DUE" ? "border-red-500/40 text-red-400 bg-red-500/10" : "border-transparent"
-                              )}
-                              style={client.subscription.status === "ACTIVE" ? { backgroundColor: `${client.subscription.planColor}1a`, color: client.subscription.planColor } : undefined}
-                            >
-                              <Crown className="w-2.5 h-2.5" /> {client.subscription.planName}
-                            </span>
-                          )}
+              {!isLoading &&
+                filtered.map((client) => (
+                  <tr key={client.id} className="group transition-colors hover:bg-white/[0.02]">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <ClientAvatar client={client} onChange={(avatar) => updateAvatar.mutate({ id: client.id, avatar })} />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="truncate text-sm font-semibold text-white">{client.name}</p>
+                            {client.subscription && (
+                              <span
+                                title={client.subscription.status === "PAST_DUE" ? "Assinatura com pagamento pendente" : "Assinante ativo"}
+                                className={cn(
+                                  "inline-flex flex-shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-bold",
+                                  client.subscription.status === "PAST_DUE" ? "border-red-500/40 bg-red-500/10 text-red-400" : "border-transparent"
+                                )}
+                                style={client.subscription.status === "ACTIVE" ? { backgroundColor: `${client.subscription.planColor}1a`, color: client.subscription.planColor } : undefined}
+                              >
+                                <Crown className="h-2.5 w-2.5" /> {client.subscription.planName}
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-0.5 flex items-center gap-1 text-xs text-zinc-500">
+                            <Phone className="h-3 w-3" /> {client.phone || "—"}
+                          </p>
                         </div>
-                        <p className="text-xs text-zinc-500 flex items-center gap-1">
-                          <Phone className="w-3 h-3" /> {client.phone}
-                        </p>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3.5 hidden sm:table-cell">
-                    {client.tier ? (
-                      <span className={cn("inline-flex items-center gap-1 border text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap", TIER_COLORS[client.tier])}>
-                        <Star className="w-3 h-3 fill-current" /> {TIER_LABELS[client.tier]} · {client.points}pts
-                      </span>
-                    ) : (
-                      <span className="text-xs text-zinc-600">Sem conta</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3.5 text-center text-sm font-semibold text-white">{client.visits}</td>
-                  <td className="px-4 py-3.5 text-right hidden md:table-cell text-sm font-semibold text-amber-400">{formatCurrency(client.totalSpent)}</td>
-                  <td className="px-4 py-3.5 text-right hidden lg:table-cell text-sm text-zinc-300">
-                    {formatCurrency(client.visits > 0 ? client.totalSpent / client.visits : 0)}
-                  </td>
-                  <td className="px-4 py-3.5 hidden lg:table-cell text-sm text-zinc-400 max-w-[160px] truncate">{client.favorite || "—"}</td>
-                  <td className="px-6 py-3.5 text-right text-xs text-zinc-500 whitespace-nowrap">
-                    {client.visits > 0 ? formatDate(client.lastVisit) : `Desde ${formatDate(client.lastVisit)}`}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="hidden px-4 py-3.5 sm:table-cell">
+                      {client.tier ? (
+                        <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-1 text-xs font-medium", TIER_META[client.tier].badge)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", TIER_META[client.tier].dot)} />
+                          {TIER_META[client.tier].label}
+                          <span className="text-[10px] opacity-70">{client.points ?? 0} pts</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-600">Sem conta</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5 text-center text-sm font-semibold text-white">{client.visits}</td>
+                    <td className="hidden px-4 py-3.5 text-right text-sm font-semibold text-white md:table-cell">{formatCurrency(client.totalSpent)}</td>
+                    <td className="hidden px-4 py-3.5 text-right text-sm text-zinc-400 lg:table-cell">
+                      {formatCurrency(client.visits > 0 ? client.totalSpent / client.visits : 0)}
+                    </td>
+                    <td className="hidden max-w-[160px] truncate px-4 py-3.5 text-sm text-zinc-400 lg:table-cell">{client.favorite || "—"}</td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-right text-xs text-zinc-500">
+                      {client.visits > 0 ? formatDate(client.lastVisit) : `Desde ${formatDate(client.lastVisit)}`}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
-          {!isLoading && filtered.length === 0 && <div className="text-center py-12 text-zinc-500">Nenhum cliente encontrado</div>}
+          {!isLoading && filtered.length === 0 && (
+            <div className="py-14 text-center">
+              <Users className="mx-auto h-7 w-7 text-zinc-700" />
+              <p className="mt-2 text-sm text-zinc-500">Nenhum cliente encontrado</p>
+            </div>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// KPI enxuto: rótulo discreto, número em destaque. Sem ícone colorido.
+function Kpi({ label, value, loading }: { label: string; value: string; loading: boolean }) {
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+      <p className="text-xs text-zinc-500">{label}</p>
+      {loading ? <Skeleton className="mt-2 h-7 w-16 rounded" /> : <p className="mt-1 text-2xl font-black text-white">{value}</p>}
     </div>
   );
 }
