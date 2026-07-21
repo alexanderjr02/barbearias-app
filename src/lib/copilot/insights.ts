@@ -97,6 +97,25 @@ export async function churnedClients(barbershopId: string, days = 45, limit = 25
   return out.slice(0, limit);
 }
 
+// Horários livres nos próximos `days` dias (a "capacidade parada" da semana).
+// É o gatilho da campanha "encher a semana": dinheiro parado que dá pra
+// converter em agendamento.
+export async function emptySlotsThisWeek(barbershopId: string, days = 6): Promise<{ days: number; totalFree: number }> {
+  const now = shopNow();
+  const staff = await prisma.staff.findMany({ where: { barbershopId, isActive: true }, select: { id: true } });
+  type StaffRow = (typeof staff)[number];
+  const base = new Date(`${now.dateKey}T00:00:00.000Z`);
+  let totalFree = 0;
+  for (let i = 0; i < days; i++) {
+    const dateKey = dateKeyOf(addUtcDays(base, i));
+    for (const st of staff as StaffRow[]) {
+      const { slots } = await buildDaySlots({ barbershopId, staffId: st.id, dateKey, durationMinutes: 30 });
+      totalFree += slots.filter((s) => s.status === "available").length;
+    }
+  }
+  return { days, totalFree };
+}
+
 export async function emptySlotsToday(barbershopId: string) {
   const now = shopNow();
   const staff = await prisma.staff.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true } });

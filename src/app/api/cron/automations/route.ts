@@ -3,7 +3,7 @@ import { cronSecretFrom } from "@/lib/cronAuth";
 import { prisma } from "@/lib/db";
 import { churnedClients, tomorrowAppointments } from "@/lib/copilot/insights";
 import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
-import { autopilotActive, logAutopilot } from "@/lib/copilot/autopilot";
+import { autopilotActive, logAutopilot, runWeekFillCampaign } from "@/lib/copilot/autopilot";
 
 // GET /api/cron/automations?secret=CRON_SECRET — the AUTO-PILOTO. Runs the
 // automations each Pro+ shop turned on: auto-confirm tomorrow's appointments,
@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
   if (!secret || provided !== secret) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const shops = await prisma.barbershop.findMany({
-    where: { isActive: true, OR: [{ autoConfirm: true }, { autoBirthday: true }, { autoWinbackDays: { not: null } }] },
+    // Inclui lojas em "Agir sozinho" (auto) mesmo sem os outros flags — é o que
+    // liga a campanha "encher a semana".
+    where: { isActive: true, OR: [{ autoConfirm: true }, { autoBirthday: true }, { autoWinbackDays: { not: null } }, { autopilotLevel: "auto" }] },
     select: { id: true, name: true, plan: true, autopilotLevel: true, autoConfirm: true, autoBirthday: true, autoWinbackDays: true },
   });
 
@@ -26,6 +28,7 @@ export async function GET(request: NextRequest) {
   let confirmed = 0;
   let birthdays = 0;
   let winbacks = 0;
+  let weekFills = 0;
 
   for (const shop of shops) {
     if (!autopilotActive(shop.plan, shop.autopilotLevel)) continue;
@@ -80,10 +83,15 @@ export async function GET(request: NextRequest) {
         }
         if (n > 0) await logAutopilot(shop.id, "winback", `Chamei ${n} cliente(s) que estavam sumindo.`);
       }
+
+      // 4) Encher a semana — proativo, só no "Agir sozinho" (as travas de
+      // frequência/consentimento/público estão dentro da função).
+      const fill = await runWeekFillCampaign(shop.id, shop.name, shop.plan, shop.autopilotLevel);
+      weekFills += fill.sent;
     } catch (err) {
       console.error(`[automations] ${shop.id}`, err);
     }
   }
 
-  return NextResponse.json({ ok: true, confirmed, birthdays, winbacks });
+  return NextResponse.json({ ok: true, confirmed, birthdays, winbacks, weekFills });
 }
