@@ -35,8 +35,12 @@ export async function GET(request: NextRequest) {
   const firstName = (user?.name ?? "").split(" ")[0] ?? "";
   try {
     const opener = await clientProactiveOpener(barbershopId, session.sub, firstName);
-    // Se a IA não trouxe abertura proativa, cai na saudação configurada.
-    if (!opener.greeting?.trim() && welcome) return NextResponse.json({ greeting: welcome, proactive: false, suggestion: null });
+    // Uma abertura REALMENTE proativa (propõe um horário porque o cliente está
+    // na hora do corte) é contextual e vale mais que um "oi" fixo — ela passa
+    // na frente. Fora isso, a saudação que o gestor escreveu tem precedência
+    // sobre o "oi" genérico do assistente.
+    if (opener.proactive && opener.greeting?.trim()) return NextResponse.json(opener);
+    if (welcome) return NextResponse.json({ greeting: welcome, proactive: false, suggestion: null });
     return NextResponse.json(opener);
   } catch {
     return NextResponse.json({ greeting: welcome, proactive: false, suggestion: null });
