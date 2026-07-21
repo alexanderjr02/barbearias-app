@@ -12,6 +12,16 @@ import {
   CheckCircle,
   Lock,
   Sparkles,
+  Eye,
+  Lightbulb,
+  Zap,
+  CalendarCheck,
+  Gift,
+  RotateCcw,
+  TrendingUp,
+  Activity,
+  ArrowRight,
+  type LucideIcon,
 } from "lucide-react";
 import { usePlan, PLAN_INFO, FEATURES_BY_PLAN, type Feature } from "@/context/PlanContext";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -335,17 +345,30 @@ export default function SettingsPage() {
           {activeTab === "notifications" && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-bold text-white">Avisos automáticos</h2>
+                <h2 className="text-lg font-bold text-white">Mensagens automáticas</h2>
                 <p className="text-sm text-zinc-500 mt-1">
-                  Estes rodam de verdade — o Copiloto dispara sozinho todo dia. As mudanças salvam na hora.
+                  Escolha o que sua barbearia envia sozinha para os clientes. Chega por push e WhatsApp.
                 </p>
               </div>
 
-              {/* Toggles LIGADOS ao servidor (autoConfirm/autoBirthday/autoWinbackDays
-                  do Autopilot), não mais uma lista decorativa. */}
+              {/* Dependência honesta: as mensagens só saem com o Auto-piloto
+                  ligado. Sem isto, o gestor ligaria um toggle e nada aconteceria
+                  — mais um "parece que funciona". */}
+              {barbershop?.autopilotLevel === "off" && (
+                <button
+                  onClick={() => setActiveTab("autopilot")}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-left"
+                >
+                  <span className="text-xs text-amber-200/90">
+                    O Auto-piloto está desligado, então estas mensagens estão pausadas. Toque para ativar.
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-amber-400" />
+                </button>
+              )}
+
               <RealToggle
-                label="Confirmação automática (dia anterior)"
-                desc="Na véspera, confirma os agendamentos de amanhã e avisa cada cliente — derruba faltas."
+                label="Confirmação de agendamento"
+                desc="Na véspera, confirma os horários do dia seguinte e avisa cada cliente — reduz faltas."
                 checked={Boolean(barbershop?.autoConfirm)}
                 pending={updateBarbershop.isPending}
                 onChange={(v) => updateBarbershop.mutate({ autoConfirm: v })}
@@ -389,14 +412,6 @@ export default function SettingsPage() {
                     <span className="text-xs text-zinc-400">dias sem vir</span>
                   </div>
                 )}
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-                <p className="text-xs text-zinc-500 leading-relaxed">
-                  <span className="text-zinc-300 font-medium">Sempre ligados:</span> a confirmação na hora do agendamento,
-                  os avisos de status (confirmado, cancelado, concluído) e o resumo diário do Copiloto. Esses são
-                  automáticos e chegam por push/WhatsApp para quem ativou.
-                </p>
               </div>
             </div>
           )}
@@ -503,88 +518,142 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {activeTab === "autopilot" && (
-            <div className="space-y-4">
-              <div>
-                <p className="mb-2 text-sm font-semibold text-white">O quanto ele age sozinho</p>
+          {activeTab === "autopilot" && (() => {
+            const level = barbershop?.autopilotLevel ?? "suggest";
+            const levels = [
+              { val: "off", label: "Desligado", Icon: Eye, tag: "Pausado", blurb: "O Copiloto observa, mas não envia nada nem age por conta própria." },
+              { val: "suggest", label: "Sugerir", Icon: Lightbulb, tag: "Você aprova", blurb: "Ele encontra as oportunidades e te avisa. Nada sai sem o seu toque." },
+              { val: "auto", label: "Agir sozinho", Icon: Zap, tag: "Autônomo", blurb: "Ele resolve na hora, sem te interromper — e depois te conta o que fez." },
+            ] as const;
+            const current = levels.find((l) => l.val === level) ?? levels[1];
+            const active = level !== "off";
+            const recovered = autopilotFeed?.recoveredTotal ?? 0;
+            const actions = autopilotFeed?.actionsThisMonth ?? 0;
+            return (
+              <div className="space-y-5">
+                <div>
+                  <h2 className="text-lg font-bold text-white">Auto-piloto</h2>
+                  <p className="text-sm text-zinc-500 mt-1">
+                    Seu Copiloto cuidando da agenda e dos clientes 24 horas — no nível de autonomia que você escolher.
+                  </p>
+                </div>
+
+                {/* Interruptor-mestre: o nível de autonomia. */}
                 <div className="grid grid-cols-3 gap-2">
-                  {(
-                    [
-                      ["off", "Observar", "só avisa"],
-                      ["suggest", "Sugerir", "1 toque"],
-                      ["auto", "Agir sozinho", "faz e conta"],
-                    ] as const
-                  ).map(([val, label, desc]) => {
-                    const on = (barbershop?.autopilotLevel ?? "suggest") === val;
+                  {levels.map(({ val, label, Icon, tag }) => {
+                    const on = level === val;
                     return (
-                      <button key={val} onClick={() => updateBarbershop.mutate({ autopilotLevel: val })} className={cn("rounded-xl border px-2 py-3 text-center transition", on ? "border-amber-500 bg-amber-500/10" : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600")}>
-                        <p className={cn("text-xs font-bold", on ? "text-amber-400" : "text-white")}>{label}</p>
-                        <p className="mt-0.5 text-[10px] text-zinc-500">{desc}</p>
+                      <button
+                        key={val}
+                        onClick={() => updateBarbershop.mutate({ autopilotLevel: val })}
+                        className={cn(
+                          "rounded-2xl border p-3 text-center transition",
+                          on ? "border-amber-500/60 bg-amber-500/10" : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
+                        )}
+                      >
+                        <Icon className={cn("mx-auto h-5 w-5", on ? "text-amber-400" : "text-zinc-500")} />
+                        <p className={cn("mt-2 text-xs font-bold", on ? "text-amber-400" : "text-white")}>{label}</p>
+                        <p className="mt-0.5 text-[10px] text-zinc-500">{tag}</p>
                       </button>
                     );
                   })}
                 </div>
-              </div>
-              <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-400 p-5 text-black">
-                <p className="text-xs font-semibold opacity-80">Receita recuperada este mês</p>
-                <p className="text-3xl font-black">R$ {(autopilotFeed?.recoveredTotal ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <p className="text-xs opacity-70">{autopilotFeed?.actionsThisMonth ?? 0} ações do Copiloto por você</p>
-              </div>
-              <div className="flex gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-200">
-                <Sparkles className="h-5 w-5 shrink-0" />
-                <p>Ligado e trabalhando 24h — reage na hora (vagou horário → chama a fila) e roda as automações todo dia.</p>
-              </div>
-              {[
-                { key: "autoConfirm" as const, title: "Confirmar agendamentos", desc: "Confirma sozinho os agendamentos do dia seguinte. Reduz no-show.", on: !!barbershop?.autoConfirm },
-                { key: "autoBirthday" as const, title: "Mensagem de aniversário", desc: "Parabeniza cada cliente no aniversário e convida pra um corte.", on: !!barbershop?.autoBirthday },
-              ].map((a) => (
-                <div key={a.key} className="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
-                  <div className="pr-4">
-                    <p className="text-sm font-semibold text-white">{a.title}</p>
-                    <p className="mt-0.5 text-xs text-zinc-400">{a.desc}</p>
+
+                {/* O que o nível escolhido significa, agora. */}
+                <div className={cn("flex items-start gap-3 rounded-xl border p-4", active ? "border-amber-500/25 bg-amber-500/[0.06]" : "border-zinc-800 bg-zinc-900/40")}>
+                  <current.Icon className={cn("h-5 w-5 shrink-0 mt-0.5", active ? "text-amber-400" : "text-zinc-500")} />
+                  <div>
+                    <p className="text-sm font-semibold text-white">{current.label}</p>
+                    <p className="mt-0.5 text-xs text-zinc-400 leading-relaxed">{current.blurb}</p>
                   </div>
-                  <button onClick={() => updateBarbershop.mutate({ [a.key]: !a.on })} className={cn("relative h-6 w-11 shrink-0 rounded-full transition", a.on ? "bg-amber-500" : "bg-zinc-600")}>
-                    <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all", a.on ? "left-[22px]" : "left-0.5")} />
-                  </button>
                 </div>
-              ))}
-              <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="pr-4">
-                    <p className="text-sm font-semibold text-white">Chamar clientes sumidos (win-back)</p>
-                    <p className="mt-0.5 text-xs text-zinc-400">Mensagem carinhosa quando o cliente passa do tempo sem voltar.</p>
-                  </div>
-                  <button onClick={() => updateBarbershop.mutate({ autoWinbackDays: barbershop?.autoWinbackDays ? null : 45 })} className={cn("relative h-6 w-11 shrink-0 rounded-full transition", barbershop?.autoWinbackDays ? "bg-amber-500" : "bg-zinc-600")}>
-                    <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all", barbershop?.autoWinbackDays ? "left-[22px]" : "left-0.5")} />
-                  </button>
-                </div>
-                {barbershop?.autoWinbackDays ? (
-                  <div className="mt-3 flex gap-2">
-                    {[30, 45, 60].map((d) => (
-                      <button key={d} onClick={() => updateBarbershop.mutate({ autoWinbackDays: d })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-medium", barbershop?.autoWinbackDays === d ? "border-amber-500 bg-amber-500/10 text-amber-400" : "border-zinc-700 text-zinc-400 hover:border-zinc-600")}>
-                        {d} dias
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-              {autopilotFeed && autopilotFeed.feed.length > 0 && (
+
+                {/* O que ele faz por você — as capacidades, explicadas. */}
                 <div>
-                  <p className="mb-2 mt-2 text-sm font-semibold text-white">O que o Copiloto fez por você</p>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">O que ele faz por você</p>
                   <div className="space-y-2">
-                    {autopilotFeed.feed.map((f, i) => (
-                      <div key={i} className="flex items-center gap-3 rounded-xl border border-zinc-700 bg-zinc-800/50 p-3">
-                        <span className="text-amber-400">⚡</span>
-                        <p className="flex-1 text-xs text-zinc-300">{f.detail}</p>
-                        {f.recoveredValue ? <span className="text-xs font-bold text-amber-400">+R$ {f.recoveredValue.toFixed(0)}</span> : null}
+                    {[
+                      { Icon: Zap, title: "Preenche horários vagos na hora", desc: "Cliente cancelou? Ele chama quem está na fila de espera na mesma hora, 24h por dia." },
+                      { Icon: CalendarCheck, title: "Confirma os agendamentos", desc: "Na véspera, confirma os horários do dia seguinte e reduz as faltas." },
+                      { Icon: Gift, title: "Parabeniza aniversariantes", desc: "Manda os parabéns no dia e convida para um corte." },
+                      { Icon: RotateCcw, title: "Reativa clientes sumidos", desc: "Chama de volta quem passou do tempo sem aparecer." },
+                    ].map((cap) => (
+                      <div key={cap.title} className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                          <cap.Icon className="h-4 w-4 text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{cap.title}</p>
+                          <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">{cap.desc}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
+                  <p className="mt-2 text-[11px] text-zinc-600">
+                    Escolha quais mensagens enviar em{" "}
+                    <button onClick={() => setActiveTab("notifications")} className="text-amber-400/80 underline underline-offset-2 hover:text-amber-400">
+                      Notificações
+                    </button>
+                    .
+                  </p>
                 </div>
-              )}
-              <p className="text-xs text-zinc-500">Você também liga/desliga isso conversando com o Copiloto (ex.: &quot;liga a confirmação automática&quot; ou &quot;agir sozinho&quot;).</p>
-            </div>
-          )}
+
+                {/* Prova de valor — receita recuperada real (AutopilotLog). */}
+                <div className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-900/30 p-5">
+                  <div className="flex items-center gap-2 text-zinc-400">
+                    <TrendingUp className="h-4 w-4 text-amber-400" />
+                    <p className="text-xs font-medium">Receita recuperada este mês</p>
+                  </div>
+                  <p className="mt-2 text-3xl font-black text-white">
+                    R$ {recovered.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    {actions} {actions === 1 ? "ação executada" : "ações executadas"} pelo Auto-piloto
+                  </p>
+                </div>
+
+                {/* Histórico real do que ele fez. */}
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Atividade recente</p>
+                  {autopilotFeed && autopilotFeed.feed.length > 0 ? (
+                    <div className="space-y-2">
+                      {autopilotFeed.feed.map((f, i) => {
+                        const Icon = actionIcon(f.action);
+                        return (
+                          <div key={i} className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
+                              <Icon className="h-4 w-4 text-amber-400" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-xs text-zinc-300">{f.detail}</p>
+                              <p className="text-[10px] text-zinc-600">{relativeTime(f.createdAt)}</p>
+                            </div>
+                            {f.recoveredValue ? (
+                              <span className="shrink-0 rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-400">
+                                +R$ {f.recoveredValue.toFixed(0)}
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 p-6 text-center">
+                      <Activity className="mx-auto h-6 w-6 text-zinc-600" />
+                      <p className="mt-2 text-sm text-zinc-400">Ainda sem ações este mês</p>
+                      <p className="mt-0.5 text-xs text-zinc-600">
+                        Quando o Auto-piloto agir — preencher um horário, confirmar, reativar um cliente — aparece aqui.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-xs text-zinc-600">
+                  Também dá para comandar tudo isso conversando com o Copiloto — ex.: &quot;agir sozinho&quot; ou &quot;liga a confirmação automática&quot;.
+                </p>
+              </div>
+            );
+          })()}
 
           {activeTab === "billing" && (
             <div className="space-y-5">
@@ -658,6 +727,39 @@ export default function SettingsPage() {
       </div>
     </div>
   );
+}
+
+// Ícone por tipo de ação do Auto-piloto, batendo com os action do AutopilotLog
+// (slot_filled / confirmed / birthday / winback).
+function actionIcon(action: string): LucideIcon {
+  switch (action) {
+    case "slot_filled":
+      return Zap;
+    case "confirmed":
+      return CalendarCheck;
+    case "birthday":
+      return Gift;
+    case "winback":
+      return RotateCcw;
+    default:
+      return Activity;
+  }
+}
+
+// Tempo relativo curto ("há 2h", "ontem") para o histórico — mais legível que
+// uma data crua num feed de atividade.
+function relativeTime(input: string | Date): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  const diff = Date.now() - d.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "agora mesmo";
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h}h`;
+  const days = Math.floor(h / 24);
+  if (days === 1) return "ontem";
+  if (days < 7) return `há ${days} dias`;
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }
 
 // Interruptor ligado ao servidor: reflete o valor real e salva ao trocar.
