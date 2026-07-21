@@ -38,7 +38,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (key in body) extras[key] = str(body[key]) ?? null;
   }
   const hasExtras = Object.keys(extras).length > 0;
-  if (!hasStatus && !hasExtras) {
+  // Reatribuição de barbeiro (arrastar o cliente para outro barbeiro).
+  const wantsStaffChange = typeof body.staffId === "string" && body.staffId.trim().length > 0;
+  if (!hasStatus && !hasExtras && !wantsStaffChange) {
     return NextResponse.json({ error: "Nada para atualizar" }, { status: 400 });
   }
 
@@ -61,6 +63,28 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const data: Record<string, unknown> = { ...(isOwnClientCancelling ? {} : extras) };
   if (hasStatus) data.status = body.status;
+
+  // Trocar de barbeiro: só gestor/gerente ou o próprio barbeiro do horário
+  // (passando o cliente para um colega). O novo barbeiro tem que ser DESTA
+  // barbearia — senão o horário migraria para outra unidade. Não revalido o
+  // choque de horário aqui de propósito: quem arrasta é o gestor olhando a
+  // agenda e decidindo; o app mostra o dia do barbeiro de destino.
+  if (wantsStaffChange) {
+    if (!isManager && !isAssignedBarber) {
+      return NextResponse.json({ error: "Sem permissão para trocar o barbeiro" }, { status: 403 });
+    }
+    if (body.staffId !== appointment.staffId) {
+      const newStaff = await prisma.staff.findUnique({ where: { id: body.staffId }, select: { barbershopId: true, isActive: true } });
+      if (!newStaff || newStaff.barbershopId !== appointment.barbershopId) {
+        return NextResponse.json({ error: "Barbeiro não encontrado nesta barbearia" }, { status: 404 });
+      }
+      if (!newStaff.isActive) {
+        return NextResponse.json({ error: "Esse barbeiro está inativo" }, { status: 409 });
+      }
+      data.staffId = body.staffId;
+    }
+  }
+
   const updated = await prisma.appointment.update({ where: { id }, data });
 
   // The "depois" photo just landed → drop a copy into the client's Carteira de

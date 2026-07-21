@@ -5,6 +5,7 @@ import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import 'gestor_new_appointment_screen.dart';
 import 'gestor_repository.dart';
+import '../../core/widgets/app_toast.dart';
 import 'widgets/barber_colors.dart';
 import 'widgets/barber_day_timeline.dart';
 import 'widgets/team_day_timeline.dart';
@@ -262,6 +263,20 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
     );
   }
 
+  // Soltou um agendamento sobre outro barbeiro na tira → reatribui.
+  Future<void> _reassignAppointment(GestorAppointment apt, GestorStaff target) async {
+    if (apt.staffId == target.id) return;
+    try {
+      await _repository.reassignAppointmentStaff(apt.id, target.id);
+      if (!mounted) return;
+      AppToast.success(context, '${apt.clientName} agora corta com ${target.name.split(' ').first}.');
+      _load(_focusedDay);
+      _loadDaySchedule(_selectedDay);
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'Não consegui mover o agendamento.');
+    }
+  }
+
   Future<void> _openNewAppointment() async {
     final created = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const GestorNewAppointmentScreen()));
     if (created == true) {
@@ -349,19 +364,31 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
           final color = barberColorFor(orderedIds, c.member.id);
           final url = resolveAssetUrl(c.member.avatar);
           final selected = index == _currentPage;
-          return GestureDetector(
-            onTap: () => _goToPage(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 78,
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              decoration: BoxDecoration(
-                color: selected ? accent.withValues(alpha: 0.14) : palette.surfaceAlt,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: selected ? accent.withValues(alpha: 0.7) : Colors.transparent, width: 1.4),
-              ),
-              child: Column(
+          return DragTarget<GestorAppointment>(
+            onWillAcceptWithDetails: (d) => d.data.staffId != c.member.id,
+            onAcceptWithDetails: (d) => _reassignAppointment(d.data, c.member),
+            builder: (context, candidate, rejected) {
+              final hovering = candidate.isNotEmpty;
+              return GestureDetector(
+                onTap: () => _goToPage(index),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 78,
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: hovering
+                        ? accent.withValues(alpha: 0.24)
+                        : selected
+                            ? accent.withValues(alpha: 0.14)
+                            : palette.surfaceAlt,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: hovering ? accent : (selected ? accent.withValues(alpha: 0.7) : Colors.transparent),
+                      width: hovering ? 2 : 1.4,
+                    ),
+                  ),
+                  child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
@@ -402,9 +429,11 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
-            ),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         }).toList(),
       ),
@@ -635,6 +664,9 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
                       schedule: schedule,
                       appointments: memberApts,
                       onTapAppointment: _showAppointmentDetail,
+                      // Com mais de um barbeiro, o gestor pode arrastar um
+                      // agendamento para soltar sobre outro barbeiro na tira.
+                      draggableAppointments: _staffList.length > 1,
                     );
                   },
                 );

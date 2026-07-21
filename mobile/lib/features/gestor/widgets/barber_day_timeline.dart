@@ -56,6 +56,11 @@ class BarberDayTimeline extends StatelessWidget {
   /// time from scratch after already seeing exactly where they're free.
   final void Function(int startMinuteOfDay)? onTapFreeSlot;
 
+  /// Quando true, cada agendamento vira arrastável (segurar e arrastar) para
+  /// soltar sobre outro barbeiro na tira do topo e reatribuir. Só o gestor liga
+  /// isto; na agenda do próprio barbeiro fica desligado.
+  final bool draggableAppointments;
+
   const BarberDayTimeline({
     super.key,
     required this.date,
@@ -65,6 +70,7 @@ class BarberDayTimeline extends StatelessWidget {
     required this.appointments,
     required this.onTapAppointment,
     this.onTapFreeSlot,
+    this.draggableAppointments = false,
   });
 
   bool get _isToday {
@@ -72,6 +78,23 @@ class BarberDayTimeline extends StatelessWidget {
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+  }
+
+  // Torna o agendamento arrastável (segurar e arrastar) quando o gestor liga
+  // draggableAppointments. Cancelado/no-show não arrasta. O toque para ver
+  // detalhes segue funcionando (o long-press é que inicia o arraste).
+  Widget _draggableWrap(GestorAppointment apt, Color color, bool cancelled, Widget child) {
+    if (!draggableAppointments || cancelled) return child;
+    return LongPressDraggable<GestorAppointment>(
+      data: apt,
+      hapticFeedbackOnStart: true,
+      feedback: Material(
+        color: Colors.transparent,
+        child: _DragChip(name: apt.clientName, time: apt.startTime, color: color),
+      ),
+      childWhenDragging: Opacity(opacity: 0.3, child: child),
+      child: child,
+    );
   }
 
   @override
@@ -401,7 +424,7 @@ class BarberDayTimeline extends StatelessWidget {
                                     left: 2,
                                     right: 8,
                                     height: height,
-                                    child: GestureDetector(
+                                    child: _draggableWrap(apt, color, cancelled, GestureDetector(
                                       onTap: () => onTapAppointment(apt),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
@@ -492,7 +515,7 @@ class BarberDayTimeline extends StatelessWidget {
                                           ],
                                         ),
                                       ),
-                                    ),
+                                    )),
                                   );
                                 },
                               ),
@@ -577,6 +600,38 @@ class BarberDayTimeline extends StatelessWidget {
 /// coming in and who's serving them — with a small status dot notched into
 /// the corner, the way a messaging app shows presence. Three signals, one
 /// shape, instead of a name and a stray dot spread across the card.
+// Pílula que segue o dedo enquanto arrasta um agendamento.
+class _DragChip extends StatelessWidget {
+  final String name;
+  final String time;
+  final Color color;
+  const _DragChip({required this.name, required this.time, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border(left: BorderSide(color: color, width: 3)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 18, offset: const Offset(0, 8))],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.drag_indicator_rounded, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(name, style: TextStyle(color: palette.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),
+          const SizedBox(width: 6),
+          Text(time, style: TextStyle(color: palette.textFaint, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+}
+
 class _ClientAvatar extends StatelessWidget {
   final String name;
   final String? photoUrl;

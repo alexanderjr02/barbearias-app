@@ -1247,6 +1247,11 @@ class GestorRepository {
     await ApiClient.instance.patch('/clients/$id', data: {'avatar': avatar});
   }
 
+  // Reatribui o agendamento a outro barbeiro (arrastar-e-soltar na agenda).
+  Future<void> reassignAppointmentStaff(String appointmentId, String staffId) async {
+    await ApiClient.instance.patch('/appointments/$appointmentId', data: {'staffId': staffId});
+  }
+
   Future<List<WaitlistEntry>> waitlist() async {
     final data = await ApiClient.instance.get('/waitlist') as List;
     return data.map((e) => WaitlistEntry.fromJson(e as Map<String, dynamic>)).toList();
