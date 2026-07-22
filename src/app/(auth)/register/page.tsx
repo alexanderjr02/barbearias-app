@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Check, X, MapPin, Sparkles, AtSign, Loader2, Scissors } from "lucide-react";
+import { Eye, EyeOff, Check, X, AtSign, Loader2 } from "lucide-react";
 import { registerOwnerSchema } from "@/lib/validation";
 import { slugify, redirectTo, formatPhoneBR, formatCNPJ, formatCEP } from "@/lib/utils";
 import { z } from "zod";
@@ -174,7 +174,7 @@ function RegisterForm() {
 
   return (
     <div className="w-full max-w-md">
-      <h1 className="text-3xl font-black text-white mb-1">
+      <h1 className="text-[28px] font-bold tracking-tight text-white mb-1.5">
         Criar conta grátis
       </h1>
       <p className="text-zinc-500 text-sm mb-1">
@@ -190,21 +190,17 @@ function RegisterForm() {
           já ligada a alguém. */}
       <div className="mb-6" />
 
-      {/* Steps */}
-      <div className="flex items-center gap-2 mb-7">
-        <div className={`flex items-center gap-1.5 text-xs font-medium ${step >= 1 ? "text-amber-400" : "text-zinc-600"}`}>
-          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${step >= 1 ? "bg-amber-500 text-zinc-900" : "bg-zinc-800 text-zinc-500"}`}>
-            {step > 1 ? "✓" : "1"}
-          </div>
-          Dados pessoais
+      {/* Progresso: duas barras e uma legenda, em vez de dois círculos
+          numerados ligados por um fio. Barra diz "quanto falta" sem o leitor
+          ter que interpretar ícone, e some do caminho quando não é o assunto. */}
+      <div className="mb-7">
+        <div className="flex gap-1.5">
+          <span className="h-1 flex-1 rounded-full bg-amber-500" />
+          <span className={`h-1 flex-1 rounded-full transition-colors ${step >= 2 ? "bg-amber-500" : "bg-zinc-800"}`} />
         </div>
-        <div className="flex-1 h-px bg-zinc-800" />
-        <div className={`flex items-center gap-1.5 text-xs font-medium ${step >= 2 ? "text-amber-400" : "text-zinc-600"}`}>
-          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${step >= 2 ? "bg-amber-500 text-zinc-900" : "bg-zinc-800 text-zinc-500"}`}>
-            2
-          </div>
-          Sua barbearia
-        </div>
+        <p className="mt-2 text-xs text-zinc-500">
+          Etapa {step} de 2 · <span className="text-zinc-300">{step === 1 ? "Seus dados" : "Sua barbearia"}</span>
+        </p>
       </div>
 
       {/* O botão do Google saiu daqui de propósito. Uma conta criada por ele
@@ -219,37 +215,37 @@ function RegisterForm() {
         {step === 1 ? (
           <>
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                 Seu nome completo
               </label>
               <input type="text" autoComplete="name" placeholder="João Silva" {...register("name")}
-                className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
+                className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm" />
               {errors.name && <p className="text-xs text-red-400 mt-1.5">{errors.name.message}</p>}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                 E-mail
               </label>
               <input type="email" autoComplete="email" placeholder="seu@email.com" {...register("email")}
-                className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
+                className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm" />
               {errors.email && <p className="text-xs text-red-400 mt-1.5">{errors.email.message}</p>}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                 WhatsApp
               </label>
               <input type="tel" inputMode="numeric" autoComplete="tel" placeholder="(11) 99999-9999"
                 {...register("phone", { onChange: (e) => setValue("phone", formatPhoneBR(e.target.value)) })}
-                className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
+                className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm" />
               {errors.phone && <p className="text-xs text-red-400 mt-1.5">{errors.phone.message}</p>}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                 Senha
               </label>
               <div className="relative">
                 <input type={showPassword ? "text" : "password"} autoComplete="new-password" placeholder="Crie uma senha forte" {...register("password")}
-                  className="w-full h-12 px-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm" />
+                  className="w-full h-11 px-3.5 pr-11 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -280,11 +276,9 @@ function RegisterForm() {
           </>
         ) : (
           <>
-            {/* Live preview — the barbershop's public page taking shape as you type */}
-            <LivePreview name={barbershopName} slug={barbershopSlug} city={city} state={state} />
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                 Nome da barbearia
               </label>
               <input
@@ -295,16 +289,16 @@ function RegisterForm() {
                     if (!slugEdited) setValue("barbershopSlug", slugify(e.target.value), { shouldValidate: true });
                   },
                 })}
-                className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+                className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
               />
               {errors.barbershopName && <p className="text-xs text-red-400 mt-1.5">{errors.barbershopName.message}</p>}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                 Link de agendamento
               </label>
               <div className="flex items-center">
-                <span className="h-12 px-3 bg-zinc-800/80 border border-zinc-700 border-r-0 rounded-l-2xl text-zinc-400 text-sm flex items-center whitespace-nowrap">
+                <span className="h-11 px-3 bg-zinc-900 border border-zinc-800 border-r-0 rounded-l-xl text-zinc-500 text-xs flex items-center whitespace-nowrap">
                   {baseDeAgendamento()}
                 </span>
                 <input
@@ -316,7 +310,7 @@ function RegisterForm() {
                       setValue("barbershopSlug", slugify(e.target.value));
                     },
                   })}
-                  className="flex-1 min-w-0 h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-r-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+                  className="flex-1 min-w-0 h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-r-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
                 />
               </div>
               {errors.barbershopSlug ? (
@@ -341,19 +335,19 @@ function RegisterForm() {
             </div>
             <div className="grid grid-cols-[1fr_auto] gap-3">
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   Cidade
                 </label>
                 <input
                   type="text"
                   placeholder="São Paulo"
                   {...register("city")}
-                  className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+                  className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
                 />
                 {errors.city && <p className="text-xs text-red-400 mt-1.5">{errors.city.message}</p>}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   UF
                 </label>
                 <select
@@ -370,7 +364,7 @@ function RegisterForm() {
             </div>
             <div className="grid grid-cols-[7rem_1fr] gap-3">
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   CEP <span className="text-zinc-600 normal-case font-normal">(opcional)</span>
                 </label>
                 <input
@@ -378,26 +372,26 @@ function RegisterForm() {
                   inputMode="numeric"
                   placeholder="00000-000"
                   {...register("zipCode", { onChange: (e) => setValue("zipCode", formatCEP(e.target.value)) })}
-                  className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+                  className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
                 />
                 {errors.zipCode && <p className="text-xs text-red-400 mt-1.5">{errors.zipCode.message}</p>}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   Endereço <span className="text-zinc-600 normal-case font-normal">(opcional)</span>
                 </label>
                 <input
                   type="text"
                   placeholder="Rua, número, bairro"
                   {...register("address")}
-                  className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+                  className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
                 />
                 {errors.address && <p className="text-xs text-red-400 mt-1.5">{errors.address.message}</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   Instagram <span className="text-zinc-600 normal-case font-normal">(opcional)</span>
                 </label>
                 <div className="relative">
@@ -412,7 +406,7 @@ function RegisterForm() {
                 {errors.instagram && <p className="text-xs text-red-400 mt-1.5">{errors.instagram.message}</p>}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   CNPJ <span className="text-amber-400/80 normal-case font-normal">(obrigatório)</span>
                 </label>
                 <input
@@ -420,13 +414,13 @@ function RegisterForm() {
                   inputMode="numeric"
                   placeholder="00.000.000/0000-00"
                   {...register("cnpj", { onChange: (e) => setValue("cnpj", formatCNPJ(e.target.value)) })}
-                  className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+                  className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
                 />
                 {errors.cnpj && <p className="text-xs text-red-400 mt-1.5">{errors.cnpj.message}</p>}
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                 Plano
               </label>
               <div className="grid gap-2">
@@ -439,12 +433,12 @@ function RegisterForm() {
                       onChange={() => setValue("plan", p.value)}
                       className="sr-only peer"
                     />
-                    <div className="flex items-center justify-between p-3 bg-zinc-900 border border-zinc-800 rounded-xl text-left transition-all peer-checked:border-amber-500 peer-checked:bg-amber-500/10">
+                    <div className="flex items-center justify-between gap-3 p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-left transition-colors hover:border-zinc-700 peer-checked:border-amber-500 peer-checked:bg-amber-500/[0.07]">
                       <div>
-                        <div className="font-semibold text-sm text-white">{p.label}</div>
+                        <div className="text-sm font-semibold text-white">{p.label}</div>
                         <div className="text-xs text-zinc-500 mt-0.5">{p.description}</div>
                       </div>
-                      <div className="text-xs font-bold text-amber-400 whitespace-nowrap ml-3">{p.price}</div>
+                      <div className="text-sm font-semibold text-white whitespace-nowrap">{p.price}</div>
                     </div>
                   </label>
                 ))}
@@ -457,16 +451,14 @@ function RegisterForm() {
           type={step === 1 ? "button" : "submit"}
           onClick={step === 1 ? goToStep2 : undefined}
           disabled={isLoading || (step === 2 && slugStatus === "taken")}
-          className="w-full h-12 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-2xl hover:opacity-90 transition-all disabled:opacity-70 flex items-center justify-center gap-2 text-sm shadow-lg shadow-amber-500/20"
+          className="w-full h-12 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:hover:bg-amber-500 flex items-center justify-center gap-2 text-sm"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
           ) : step === 1 ? (
-            "Continuar →"
+            "Continuar"
           ) : (
-            <>
-              <Sparkles className="w-4 h-4" /> Colocar minha barbearia no ar
-            </>
+            "Criar minha barbearia"
           )}
         </button>
 
@@ -497,83 +489,6 @@ function RegisterForm() {
         <Link href="/privacidade" className="text-zinc-500 hover:underline">
           Política de Privacidade
         </Link>
-      </p>
-    </div>
-  );
-}
-
-/**
- * Prévia do app da barbearia — um aparelho, não um cartão.
- *
- * Ela mostra a PRIMEIRA tela que o cliente vê ao abrir o link: a entrada do
- * app, que é o único lugar onde o nome da barbearia aparece de fato para ele
- * (`Entre na sua conta <marca>`, em auth/login_screen.dart). Depois de entrar,
- * o cliente vê a home com o nome DELE, não o da barbearia — por isso a
- * entrada é o retrato certo aqui.
- *
- * Duas versões anteriores erraram por inventar: a primeira mostrava cinco
- * estrelas e um selo "Aberto" que não existem; a segunda copiou a página web
- * de agendamento, que também não é o que o cliente usa. Esta espelha o app
- * mobile, tela por tela: logo arredondada na cor da marca, "Bem-vindo de
- * volta", a linha com o nome da barbearia, e os botões de entrar.
- */
-function LivePreview({ name, slug, city, state }: { name?: string; slug?: string; city?: string; state?: string }) {
-  const displayName = name?.trim() || "Sua Barbearia";
-  const hasName = Boolean(name?.trim());
-  const location = [city?.trim(), state?.trim()].filter(Boolean).join(", ");
-
-  return (
-    <div className="mb-1">
-      <p className="mb-2.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-        O app que seu cliente vai abrir
-      </p>
-
-      <div className="flex justify-center">
-        {/* Moldura do aparelho */}
-        <div className="w-[184px] rounded-[26px] border-[6px] border-zinc-800 bg-zinc-950 p-0 shadow-2xl shadow-black/50">
-          <div className="relative overflow-hidden rounded-[20px] bg-zinc-950">
-            {/* Entalhe */}
-            <div className="mx-auto mt-1.5 h-1 w-10 rounded-full bg-zinc-800" />
-
-            <div className="px-4 pb-4 pt-6 text-center">
-              {/* Logo: no app é um quadrado arredondado na cor da marca com a
-                  tesoura, trocado pela logo assim que a barbearia envia uma. */}
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500">
-                <Scissors className="h-5 w-5 text-zinc-950" />
-              </div>
-
-              <p className="mt-3 text-[13px] font-extrabold leading-tight text-white">Bem-vindo de volta</p>
-              <p className={`mt-1 truncate text-[10px] ${hasName ? "text-zinc-400" : "text-zinc-600"}`}>
-                Entre na sua conta {displayName}
-              </p>
-
-              {/* Os mesmos botões da tela real. */}
-              <div className="mt-4 space-y-1.5">
-                <div className="flex h-7 items-center justify-center gap-1.5 rounded-xl border border-zinc-800 text-[9px] font-medium text-zinc-400">
-                  Continuar com Google
-                </div>
-                <div className="h-7 rounded-xl border border-zinc-800" />
-                <div className="h-7 rounded-xl border border-zinc-800" />
-                <div className="flex h-7 items-center justify-center rounded-xl bg-amber-500 text-[9px] font-bold text-zinc-950">
-                  Entrar
-                </div>
-              </div>
-
-              {location && (
-                <p className="mt-3 flex items-center justify-center gap-1 truncate text-[9px] text-zinc-600">
-                  <MapPin className="h-2.5 w-2.5 shrink-0" /> {location}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <p className="mt-3 truncate px-1 text-center text-[10px] text-zinc-600">
-        {baseDeAgendamento()}<span className="text-zinc-400">{slug || "sua-barbearia"}</span>
-      </p>
-      <p className="mt-1 px-1 text-center text-[10px] leading-relaxed text-zinc-600">
-        Sua logo e sua cor entram depois, em Aparência — e trocam esta tela inteira.
       </p>
     </div>
   );
