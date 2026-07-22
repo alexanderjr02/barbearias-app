@@ -18,12 +18,17 @@ export async function GET() {
     select: { autopilotLevel: true, plan: true, autoConfirm: true, autoBirthday: true, autoWinbackDays: true },
   });
 
-  const [week, churned, agg, feed] = await Promise.all([
+  const [week, churned, agg, feed, ticketAgg] = await Promise.all([
     emptySlotsThisWeek(bid, 6),
     churnedClients(bid, shop?.autoWinbackDays ?? 45, 500),
     prisma.autopilotLog.aggregate({ where: { barbershopId: bid, createdAt: { gte: startOfUtcMonth(new Date()) } }, _sum: { recoveredValue: true }, _count: { _all: true } }),
     prisma.autopilotLog.findMany({ where: { barbershopId: bid }, orderBy: { createdAt: "desc" }, take: 8, select: { action: true, detail: true, createdAt: true } }),
+    // Ticket médio real (só concluídos) — o valor de CADA horário vago/cliente
+    // recuperado, pra mostrar o dinheiro em jogo.
+    prisma.appointment.aggregate({ where: { barbershopId: bid, status: "COMPLETED" }, _avg: { totalPrice: true } }),
   ]);
+
+  const avgTicket = Math.round((ticketAgg._avg.totalPrice ?? 0) * 100) / 100;
 
   return NextResponse.json({
     autopilotLevel: shop?.autopilotLevel ?? "suggest",
@@ -33,6 +38,7 @@ export async function GET() {
     churnedCount: churned.filter((c) => c.clientId).length,
     recoveredThisMonth: agg._sum.recoveredValue ?? 0,
     actionsThisMonth: agg._count._all,
+    avgTicket,
     feed,
   });
 }

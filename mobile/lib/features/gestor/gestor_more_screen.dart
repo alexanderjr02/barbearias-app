@@ -104,7 +104,7 @@ class GestorMoreScreen extends StatelessWidget {
           _MenuTile(
             icon: Icons.campaign_outlined,
             label: 'Marketing',
-            sub: 'Campanhas e automações',
+            sub: 'O Copiloto acha e dispara as campanhas',
             palette: palette,
             accent: accent,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorMarketingScreen())),

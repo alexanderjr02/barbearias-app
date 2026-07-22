@@ -1515,6 +1515,46 @@ class GestorRepository {
     return data['message'] as String? ?? 'Desfeito.';
   }
 
+  // ---- Copiloto de Marketing ----
+
+  /// As oportunidades REAIS de marketing: horário vago da semana, cliente
+  /// sumido, ticket médio (o valor de cada um deles) e o que o Copiloto já
+  /// recuperou. Nada aqui é inventado — é o que alimenta a tela de Marketing.
+  Future<({
+    String autopilotLevel,
+    String plan,
+    int freeSlotsWeek,
+    int churnedCount,
+    double recoveredThisMonth,
+    int actionsThisMonth,
+    double avgTicket,
+    List<({String action, String detail, String createdAt})> feed,
+  })> marketingOpportunities() async {
+    final data = await ApiClient.instance.get('/marketing/opportunities') as Map<String, dynamic>;
+    final feed = ((data['feed'] as List?) ?? []).map((e) {
+      final m = e as Map<String, dynamic>;
+      return (action: m['action'] as String? ?? '', detail: m['detail'] as String? ?? '', createdAt: m['createdAt'] as String? ?? '');
+    }).toList();
+    return (
+      autopilotLevel: data['autopilotLevel'] as String? ?? 'suggest',
+      plan: data['plan'] as String? ?? 'FREE',
+      freeSlotsWeek: (data['freeSlotsWeek'] as num?)?.toInt() ?? 0,
+      churnedCount: (data['churnedCount'] as num?)?.toInt() ?? 0,
+      recoveredThisMonth: (data['recoveredThisMonth'] as num?)?.toDouble() ?? 0,
+      actionsThisMonth: (data['actionsThisMonth'] as num?)?.toInt() ?? 0,
+      avgTicket: (data['avgTicket'] as num?)?.toDouble() ?? 0,
+      feed: feed,
+    );
+  }
+
+  /// Dispara a campanha "encher a semana" agora. O servidor mantém as travas de
+  /// consentimento e de frequência por cliente, então pode voltar ok:false com
+  /// o motivo — a tela mostra a mensagem como veio.
+  Future<({bool ok, int sent, String message})> fillWeek() async {
+    final data = await ApiClient.instance.post('/marketing/fill-week', data: {}) as Map<String, dynamic>;
+    return (ok: data['ok'] as bool? ?? false, sent: (data['sent'] as num?)?.toInt() ?? 0, message: data['message'] as String? ?? 'Nada enviado agora.');
+  }
+
   // ---- Rede de unidades ----
 
   /// Panorama da rede: totais + desempenho de cada unidade lado a lado.

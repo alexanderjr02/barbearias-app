@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Megaphone, CalendarClock, UserX, Sparkles, TrendingUp, Activity, Loader2, Eye, Lightbulb, Zap, Lock } from "lucide-react";
+import { Megaphone, CalendarClock, UserX, Sparkles, Activity, Loader2, Lock, ArrowRight, Gift } from "lucide-react";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
@@ -15,13 +15,14 @@ interface Opportunities {
   churnedCount: number;
   recoveredThisMonth: number;
   actionsThisMonth: number;
+  avgTicket: number;
   feed: { action: string; detail: string; createdAt: string }[];
 }
 
 const LEVELS = [
-  { val: "off", label: "Desligado", Icon: Eye, blurb: "O Copiloto observa, mas não dispara nenhuma campanha." },
-  { val: "suggest", label: "Sugerir", Icon: Lightbulb, blurb: "Ele acha as oportunidades e mostra aqui. Nada sai sem o seu toque." },
-  { val: "auto", label: "Agir sozinho", Icon: Zap, blurb: "Ele dispara as campanhas na hora certa, sozinho — e te conta o que fez." },
+  { val: "off", label: "Pausado", status: "Em pausa — o Copiloto não dispara nada." },
+  { val: "suggest", label: "Sugerir", status: "Achando oportunidades — você aprova cada envio." },
+  { val: "auto", label: "No automático", status: "No comando — dispara as campanhas na hora certa e te conta depois." },
 ] as const;
 
 export default function MarketingPage() {
@@ -56,118 +57,143 @@ export default function MarketingPage() {
 
   const level = data?.autopilotLevel ?? "suggest";
   const locked = data?.plan === "FREE";
+  const ticket = data?.avgTicket ?? 0;
+  const freeSlots = data?.freeSlotsWeek ?? 0;
+  const churned = data?.churnedCount ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         icon={Megaphone}
         title="Marketing"
-        subtitle="O Copiloto acha as campanhas certas — você aprova, ele dispara."
+        subtitle="O Copiloto acha onde tem dinheiro parado — você aprova, ele traz o cliente."
       />
 
       {locked ? (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-5">
+        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] p-6">
           <div className="flex items-start gap-3">
-            <Lock className="mt-0.5 h-5 w-5 text-amber-400" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+              <Lock className="h-5 w-5 text-amber-400" />
+            </div>
             <div>
               <p className="font-semibold text-white">Copiloto de Marketing é do plano Pro</p>
-              <p className="mt-1 text-sm text-zinc-300">Ative o plano para o Copiloto encontrar oportunidades e trazer clientes de volta sozinho.</p>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-400">Ative o Pro para o Copiloto encontrar horário parado, trazer cliente sumido e encher sua semana sozinho.</p>
             </div>
           </div>
         </div>
       ) : (
         <>
-          {/* Nível de autonomia — o interruptor-mestre do marketing automático. */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <p className="text-sm font-semibold text-white">Quanto o Copiloto age no marketing</p>
-            </div>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {LEVELS.map(({ val, label, Icon }) => {
-                const on = level === val;
-                return (
-                  <button
-                    key={val}
-                    onClick={() => setLevel.mutate(val)}
-                    disabled={setLevel.isPending}
-                    className={cn(
-                      "rounded-xl border p-3 text-center transition-colors",
-                      on ? "border-amber-500/60 bg-amber-500/10" : "border-zinc-800 hover:border-zinc-700"
-                    )}
-                  >
-                    <Icon className={cn("mx-auto h-5 w-5", on ? "text-amber-400" : "text-zinc-500")} />
-                    <p className={cn("mt-1.5 text-xs font-bold", on ? "text-amber-400" : "text-white")}>{label}</p>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-3 text-xs leading-relaxed text-zinc-500">{LEVELS.find((l) => l.val === level)?.blurb}</p>
-          </div>
+          {/* Barra do Copiloto — identidade + status ao vivo + controle de autonomia. */}
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+                  <Sparkles className="h-5 w-5 text-amber-400" />
+                  {level !== "off" && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                      <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-zinc-900 bg-emerald-400" />
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Copiloto de Marketing</p>
+                  <p className="mt-0.5 max-w-md text-xs leading-relaxed text-zinc-500">{LEVELS.find((l) => l.val === level)?.status}</p>
+                </div>
+              </div>
 
-          {/* Oportunidades — cada card com o número REAL e um toque para disparar. */}
+              {/* Controle segmentado — o interruptor-mestre. */}
+              <div className="inline-flex rounded-xl border border-zinc-800 bg-zinc-950/60 p-1">
+                {LEVELS.map(({ val, label }) => {
+                  const on = level === val;
+                  return (
+                    <button
+                      key={val}
+                      onClick={() => setLevel.mutate(val)}
+                      disabled={setLevel.isPending}
+                      className={cn(
+                        "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50",
+                        on ? "bg-amber-500 text-zinc-950" : "text-zinc-400 hover:text-white",
+                      )}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* Oportunidades — linhas de insight com o dinheiro em jogo e um toque pra agir. */}
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Oportunidades agora</p>
-            <div className="grid gap-4 md:grid-cols-2">
-              <OpportunityCard
+            <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">Onde tem dinheiro agora</p>
+            <div className="space-y-3">
+              <OpportunityRow
                 Icon={CalendarClock}
                 title="Encher a semana"
-                highlight={`${data?.freeSlotsWeek ?? 0} horários vagos`}
-                desc="Transforme horário parado em agendamento: convida clientes ativos (que aceitaram receber) a preencher os próximos dias."
+                value={freeSlots}
+                unit={freeSlots === 1 ? "horário livre" : "horários livres"}
+                money={ticket > 0 ? `Cada horário vale ~${formatCurrency(ticket)}` : "Horário parado é dinheiro parado"}
+                desc="Convida clientes ativos a preencher os próximos dias."
                 actionLabel="Enviar convite"
                 pending={fillWeek.isPending}
-                disabled={isLoading || (data?.freeSlotsWeek ?? 0) === 0}
+                disabled={isLoading || freeSlots === 0}
                 onAction={() => fillWeek.mutate()}
-                note={level === "auto" ? "O Copiloto já dispara isto sozinho — você também pode agora." : undefined}
+                highlight={freeSlots > 0}
+                auto={level === "auto"}
               />
-              <OpportunityCard
+              <OpportunityRow
                 Icon={UserX}
                 title="Trazer os sumidos"
-                highlight={`${data?.churnedCount ?? 0} clientes sumidos`}
-                desc="Clientes que não aparecem há um tempo. Um empurrãozinho traz parte deles de volta — só quem aceitou receber."
+                value={churned}
+                unit={churned === 1 ? "cliente sumido" : "clientes sumidos"}
+                money={ticket > 0 && churned > 0 ? `Até ~${formatCurrency(churned * ticket)} se voltarem` : "Um empurrãozinho traz parte deles de volta"}
+                desc="Quem não aparece há um tempo recebe um lembrete pra remarcar."
                 actionLabel="Chamar de volta"
                 pending={winback.isPending}
-                disabled={isLoading || (data?.churnedCount ?? 0) === 0}
+                disabled={isLoading || churned === 0}
                 onAction={() => winback.mutate()}
+                highlight={false}
+                auto={false}
               />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-600">
-              Aniversariantes do dia o Copiloto cuida sozinho no automático. Tudo só vai para quem deu consentimento (LGPD).
-            </p>
-          </div>
-
-          {/* Resultado real. */}
-          <div className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-900/30 p-5">
-            <div className="flex items-center gap-2 text-zinc-400">
-              <TrendingUp className="h-4 w-4 text-amber-400" />
-              <p className="text-xs font-medium">Receita recuperada este mês pelo Copiloto</p>
+            <div className="mt-2.5 flex items-center gap-2 px-0.5 text-[11px] text-zinc-600">
+              <Gift className="h-3.5 w-3.5 shrink-0" />
+              <span>Aniversariantes do dia o Copiloto parabeniza sozinho no automático. Tudo só vai para quem deu consentimento (LGPD).</span>
             </div>
-            <p className="mt-2 text-3xl font-black text-white">{formatCurrency(data?.recoveredThisMonth ?? 0)}</p>
-            <p className="mt-1 text-xs text-zinc-500">{data?.actionsThisMonth ?? 0} ações executadas</p>
           </div>
 
-          {/* O que o Copiloto fez. */}
+          {/* Faixa de resultado — a prova, sem gradiente. */}
+          <div className="grid grid-cols-3 gap-3">
+            <StatCard label="Recuperado no mês" value={formatCurrency(data?.recoveredThisMonth ?? 0)} accent />
+            <StatCard label="Ações do Copiloto" value={String(data?.actionsThisMonth ?? 0)} />
+            <StatCard label="Ticket médio" value={ticket > 0 ? formatCurrency(ticket) : "—"} />
+          </div>
+
+          {/* Linha do tempo do Copiloto. */}
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">O que o Copiloto fez</p>
+            <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">O que o Copiloto fez</p>
             {data && data.feed.length > 0 ? (
-              <div className="space-y-2">
+              <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/40">
                 {data.feed.map((f, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
-                      <Activity className="h-4 w-4 text-amber-400" />
+                  <div key={i} className={cn("flex items-start gap-3 p-3.5", i > 0 && "border-t border-zinc-800/70")}>
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                      <Activity className="h-3.5 w-3.5 text-amber-400" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-zinc-300">{f.detail}</p>
-                      <p className="text-[10px] text-zinc-600">{formatDate(f.createdAt)}</p>
+                      <p className="text-sm leading-snug text-zinc-200">{f.detail}</p>
+                      <p className="mt-0.5 text-[11px] text-zinc-600">{formatDate(f.createdAt)}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 p-6 text-center">
-                <Activity className="mx-auto h-6 w-6 text-zinc-600" />
-                <p className="mt-2 text-sm text-zinc-400">Ainda sem campanhas</p>
-                <p className="mt-0.5 text-xs text-zinc-600">Quando o Copiloto disparar uma campanha, aparece aqui com o resultado.</p>
+              <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 p-8 text-center">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800/60">
+                  <Sparkles className="h-5 w-5 text-zinc-500" />
+                </div>
+                <p className="mt-3 text-sm font-medium text-zinc-300">Ainda sem campanhas</p>
+                <p className="mt-1 text-xs text-zinc-500">Quando o Copiloto disparar uma campanha, ela aparece aqui com o resultado.</p>
               </div>
             )}
           </div>
@@ -177,48 +203,80 @@ export default function MarketingPage() {
   );
 }
 
-function OpportunityCard({
+function OpportunityRow({
   Icon,
   title,
-  highlight,
+  value,
+  unit,
+  money,
   desc,
   actionLabel,
   pending,
   disabled,
   onAction,
-  note,
+  highlight,
+  auto,
 }: {
   Icon: typeof CalendarClock;
   title: string;
-  highlight: string;
+  value: number;
+  unit: string;
+  money: string;
   desc: string;
   actionLabel: string;
   pending: boolean;
   disabled: boolean;
   onAction: () => void;
-  note?: string;
+  highlight: boolean;
+  auto: boolean;
 }) {
   return (
-    <div className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+    <div
+      className={cn(
+        "rounded-2xl border bg-zinc-900/40 p-4 sm:p-5",
+        highlight ? "border-amber-500/30" : "border-zinc-800",
+      )}
+    >
+      <div className="flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
           <Icon className="h-5 w-5 text-amber-400" />
         </div>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          <p className="text-lg font-black text-amber-400">{highlight}</p>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-white">{title}</p>
+            {auto && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">no automático</span>}
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold tabular-nums text-white sm:text-3xl">{value}</span>
+            <span className="text-sm text-zinc-400">{unit}</span>
+          </div>
+          <p className="mt-0.5 text-xs font-medium text-amber-400/90">{money}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{desc}</p>
         </div>
       </div>
-      <p className="mt-2 flex-1 text-xs leading-relaxed text-zinc-400">{desc}</p>
-      {note && <p className="mt-2 text-[11px] text-zinc-500">{note}</p>}
       <button
         onClick={onAction}
         disabled={pending || disabled}
-        className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
+        className="group mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
       >
-        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        {actionLabel}
+        {pending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <>
+            {actionLabel}
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </>
+        )}
       </button>
+    </div>
+  );
+}
+
+function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3.5 sm:p-4">
+      <p className="text-[11px] font-medium leading-tight text-zinc-500">{label}</p>
+      <p className={cn("mt-1.5 text-lg font-bold tabular-nums sm:text-xl", accent ? "text-amber-400" : "text-white")}>{value}</p>
     </div>
   );
 }
