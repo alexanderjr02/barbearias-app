@@ -7,7 +7,12 @@ async function handle<T>(res: Response): Promise<T> {
     // Every apiGet/apiPost/... call funnels through here, so this is the one
     // place that guarantees a failure is never silent — even in screens that
     // don't render their own inline error state (e.g. a bare delete button).
-    toast.error(message);
+    //
+    // Exceção: 401 depois da tentativa de renovar não é "deu erro", é "não tem
+    // sessão". Quem está na tela de login não fez nada errado e não deve
+    // levar um toast vermelho na cara. Continua lançando, pra quem chamou
+    // decidir (redirecionar, esconder a seção, etc).
+    if (res.status !== 401) toast.error(message);
     throw new Error(message);
   }
   return res.json();

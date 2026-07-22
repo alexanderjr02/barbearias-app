@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isValidCpf, onlyDigits } from "./br";
+import { isValidCnpj, isValidCpf, onlyDigits } from "./br";
 
 // Accepts formatted ("(11) 99999-9999") or plain-digit Brazilian phone
 // numbers — landline (10 digits) or mobile (11 digits), area code required.
@@ -51,14 +51,22 @@ export const slugSchema = z
   .max(60, "Link muito longo")
   .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use apenas letras minúsculas, números e hífen");
 
-// Light format check (14 digits), not a full checksum validator — good
-// enough to catch typos without rejecting real CNPJs on a checksum bug.
+/**
+ * CNPJ obrigatório e REAL (dígitos verificadores conferidos).
+ *
+ * Antes era opcional e só checava o tamanho, então "00000000000000" — ou
+ * nada — abria barbearia. Isso é a porta da barbearia fantasma: sem documento
+ * verificável não há como distinguir negócio de cadastro descartável.
+ * Guardamos só os dígitos, para busca e unicidade não dependerem de quem
+ * digitou com ponto e quem digitou sem.
+ */
 export const cnpjSchema = z
-  .string()
+  .string({ error: "CNPJ é obrigatório" })
   .trim()
-  .optional()
-  .transform((v) => (v ? v.replace(/\D/g, "") : v))
-  .refine((v) => !v || v.length === 14, { message: "CNPJ inválido — deve ter 14 dígitos" });
+  .min(1, "CNPJ é obrigatório")
+  .transform((v) => onlyDigits(v))
+  .refine((v) => v.length === 14, { message: "CNPJ inválido — deve ter 14 dígitos" })
+  .refine((v) => isValidCnpj(v), { message: "CNPJ inválido — confira os números" });
 
 // Brazilian state — the two-letter UF code. Optional at signup, but must be
 // a real UF when present.
@@ -149,7 +157,8 @@ export const registerOwnerSchema = z.object({
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
-  phone: optionalPhoneSchema,
+  // Obrigatório: conta de dono sem telefone é conta sem ninguém atrás dela.
+  phone: phoneSchema,
   barbershopName: nameSchema,
   barbershopSlug: slugSchema,
   city: z.string().trim().min(1, "Cidade é obrigatória"),

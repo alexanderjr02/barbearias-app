@@ -10,6 +10,33 @@ export function unique(label: string): string {
   return `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/**
+ * Um CNPJ diferente e VÁLIDO a cada chamada.
+ *
+ * O cadastro passou a exigir CNPJ real (dígitos verificadores conferidos) e
+ * único por barbearia — então os testes não podem mais mandar um número fixo
+ * nem inventado: o primeiro cadastro passaria e todos os seguintes bateriam
+ * no 409 de CNPJ repetido.
+ */
+export function uniqueCnpj(): string {
+  const digit = (nums: string): number => {
+    let sum = 0;
+    let weight = nums.length - 7;
+    for (let i = 0; i < nums.length; i++) {
+      sum += Number(nums[i]) * weight;
+      weight = weight === 2 ? 9 : weight - 1;
+    }
+    const remainder = sum % 11;
+    return remainder < 2 ? 0 : 11 - remainder;
+  };
+  // 8 dígitos de raiz + "0001" de filial; a raiz aleatória é o que dá a
+  // unicidade, e os dois verificadores saem da conta.
+  const root = Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join("");
+  const base = `${root}0001`;
+  const d1 = digit(base);
+  return `${base}${d1}${digit(`${base}${d1}`)}`;
+}
+
 interface RequestOptions {
   token?: string;
   method?: string;
@@ -59,6 +86,10 @@ export async function registerBarbershop(label: string) {
     name: "Dono de Teste",
     email,
     password: "senha12345",
+    // Telefone e CNPJ passaram a ser obrigatórios no cadastro (barbearia
+    // fantasma) — sem eles todo teste que cria barbearia toma 400.
+    phone: "11999999999",
+    cnpj: uniqueCnpj(),
     barbershopName: `Barbearia ${label}`,
     barbershopSlug: slug,
     city: "São Paulo, SP",

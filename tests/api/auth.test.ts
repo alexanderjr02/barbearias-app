@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BASE_URL, getJson, postJson, unique } from "../setup/client";
+import { BASE_URL, getJson, postJson, unique, uniqueCnpj } from "../setup/client";
 
 interface RegisterBody {
   success?: boolean;
@@ -28,6 +28,8 @@ describe("POST /api/auth/register", () => {
       name: "Novo Dono",
       email,
       password: "senha12345",
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Barbearia Teste",
       barbershopSlug: unique("shop"),
       city: "São Paulo, SP",
@@ -47,6 +49,8 @@ describe("POST /api/auth/register", () => {
       name: "Dono",
       email,
       password: "senha12345",
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Barbearia Dup",
       barbershopSlug: unique("dup-shop"),
       city: "São Paulo, SP",
@@ -56,9 +60,11 @@ describe("POST /api/auth/register", () => {
     const first = await postJson<RegisterBody>("/api/auth/register", payload);
     expect(first.status).toBe(201);
 
+    // Slug e CNPJ novos de propósito: assim o 409 só pode ser pelo e-mail.
     const second = await postJson<RegisterBody>("/api/auth/register", {
       ...payload,
       barbershopSlug: unique("dup-shop-2"),
+      cnpj: uniqueCnpj(),
     });
     expect(second.status).toBe(409);
     expect(second.body.error).toBeTruthy();
@@ -94,6 +100,8 @@ describe("POST /api/auth/register", () => {
       name: "Slug Ruim",
       email: `${unique("badslug")}@cortix.test`,
       password: "senha12345",
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Barbearia Slug",
       barbershopSlug: "Minha Barbearia!!",
       city: "São Paulo, SP",
@@ -107,6 +115,8 @@ describe("POST /api/auth/register", () => {
       name: "Primeiro",
       email: `${unique("slugowner1")}@cortix.test`,
       password: "senha12345",
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Primeira Barbearia",
       barbershopSlug: slug,
       city: "São Paulo, SP",
@@ -118,6 +128,8 @@ describe("POST /api/auth/register", () => {
       name: "Segundo",
       email: clashEmail,
       password: "senha12345",
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Segunda Barbearia",
       barbershopSlug: slug,
       city: "São Paulo, SP",
@@ -130,11 +142,88 @@ describe("POST /api/auth/register", () => {
       name: "Segundo de Novo",
       email: clashEmail,
       password: "senha12345",
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Segunda Barbearia",
       barbershopSlug: unique("taken-slug-2"),
       city: "São Paulo, SP",
     });
     expect(retry.status).toBe(201);
+  });
+
+  // --- Barbearia fantasma: o cadastro precisa de documento REAL e único. ---
+
+  it("rejeita cadastro sem CNPJ", async () => {
+    const { status, body } = await postJson<RegisterBody>("/api/auth/register", {
+      name: "Sem Documento",
+      email: `${unique("nocnpj")}@cortix.test`,
+      password: "senha12345",
+      phone: "11999999999",
+      barbershopName: "Barbearia Fantasma",
+      barbershopSlug: unique("fantasma"),
+      city: "São Paulo, SP",
+    });
+    expect(status).toBe(400);
+    expect(body.error).toBeTruthy();
+  });
+
+  it("rejeita CNPJ com dígito verificador inválido (o antigo só via o tamanho)", async () => {
+    for (const cnpj of ["00000000000000", "11111111111111", "11222333000182"]) {
+      const { status } = await postJson<RegisterBody>("/api/auth/register", {
+        name: "Documento Falso",
+        email: `${unique("badcnpj")}@cortix.test`,
+        password: "senha12345",
+        phone: "11999999999",
+        cnpj,
+        barbershopName: "Barbearia Falsa",
+        barbershopSlug: unique("falsa"),
+        city: "São Paulo, SP",
+      });
+      expect(status, `CNPJ ${cnpj} deveria ser recusado`).toBe(400);
+    }
+  });
+
+  it("rejeita o MESMO CNPJ abrindo uma segunda barbearia", async () => {
+    const cnpj = uniqueCnpj();
+    const base = {
+      password: "senha12345",
+      phone: "11999999999",
+      cnpj,
+      city: "São Paulo, SP",
+    };
+    const first = await postJson<RegisterBody>("/api/auth/register", {
+      ...base,
+      name: "Dono Original",
+      email: `${unique("cnpj1")}@cortix.test`,
+      barbershopName: "Barbearia Original",
+      barbershopSlug: unique("original"),
+    });
+    expect(first.status).toBe(201);
+
+    // Tudo diferente menos o documento — é assim que se monta uma fileira de
+    // fantasmas com aparência legítima.
+    const second = await postJson<RegisterBody>("/api/auth/register", {
+      ...base,
+      name: "Dono Clone",
+      email: `${unique("cnpj2")}@cortix.test`,
+      barbershopName: "Barbearia Clone",
+      barbershopSlug: unique("clone"),
+    });
+    expect(second.status).toBe(409);
+    expect(second.body.error).toContain("CNPJ");
+  });
+
+  it("rejeita cadastro sem telefone (conta de dono sem ninguém atrás)", async () => {
+    const { status } = await postJson<RegisterBody>("/api/auth/register", {
+      name: "Sem Telefone",
+      email: `${unique("nophone")}@cortix.test`,
+      password: "senha12345",
+      cnpj: uniqueCnpj(),
+      barbershopName: "Barbearia Muda",
+      barbershopSlug: unique("muda"),
+      city: "São Paulo, SP",
+    });
+    expect(status).toBe(400);
   });
 });
 
@@ -216,6 +305,8 @@ describe("POST /api/auth/login", () => {
       name: "Login Test",
       email,
       password,
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Barbearia Login",
       barbershopSlug: unique("login-shop"),
       city: "São Paulo, SP",
@@ -234,6 +325,8 @@ describe("POST /api/auth/login", () => {
       name: "Wrong Password Test",
       email,
       password: "senha12345",
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Barbearia Wrongpw",
       barbershopSlug: unique("wrongpw-shop"),
       city: "São Paulo, SP",
@@ -269,6 +362,8 @@ describe("POST /api/auth/login", () => {
       name: "Cookie Secure Test",
       email,
       password,
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Barbearia Cookie",
       barbershopSlug: unique("cookie-shop"),
       city: "São Paulo, SP",
@@ -297,6 +392,8 @@ describe("GET /api/auth/me", () => {
       name: "Me Test",
       email,
       password: "senha12345",
+      phone: "11999999999",
+      cnpj: uniqueCnpj(),
       barbershopName: "Barbearia Me",
       barbershopSlug: unique("me-shop"),
       city: "São Paulo, SP",

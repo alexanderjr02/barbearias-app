@@ -72,6 +72,11 @@ export default async function setup() {
     // test flaky depending on whose machine it runs on.
     GOOGLE_CLIENT_ID: "",
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: "",
+    // A suíte cria dezenas de barbearias contra o mesmo localhost, e o
+    // cadastro tem freio por IP (10/h em produção). Sobe o teto em vez de
+    // desligar o freio: o caminho do código continua sendo exercitado, e
+    // testes novos não passam a quebrar só por existirem.
+    REGISTER_RATE_LIMIT: "10000",
   };
 
   await runToCompletion("node", ["node_modules/prisma/build/index.js", "db", "push", "--accept-data-loss"], env);

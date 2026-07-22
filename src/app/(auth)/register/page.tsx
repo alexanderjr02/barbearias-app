@@ -430,7 +430,7 @@ function RegisterForm() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
-                  CNPJ <span className="text-zinc-600 normal-case font-normal">(opcional)</span>
+                  CNPJ <span className="text-amber-400/80 normal-case font-normal">(obrigatório)</span>
                 </label>
                 <input
                   type="text"
