@@ -39,23 +39,37 @@ export async function GET(request: NextRequest) {
         isActive: true,
         lastLoginAt: true,
         createdAt: true,
-        barbershop: { select: { name: true } },
+        // `barbershops` no PLURAL. Esta rota pedia `barbershop` singular, que
+        // deixou de existir quando a rede (um dono, várias unidades) chegou —
+        // o Prisma recusava a consulta e a página de Usuários respondia 500
+        // desde então. Um campo renomeado numa ponta e esquecido na outra.
+        barbershops: { select: { name: true }, orderBy: { createdAt: "asc" } },
         staffProfile: { select: { barbershop: { select: { name: true } } } },
       },
     }),
   ]);
 
   type UserRow = (typeof users)[number];
-  const shaped = users.map((u: UserRow) => ({
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    role: u.role,
-    isActive: u.isActive,
-    lastLoginAt: u.lastLoginAt,
-    createdAt: u.createdAt,
-    barbershopName: u.barbershop?.name ?? u.staffProfile?.barbershop?.name ?? null,
-  }));
+  const shaped = users.map((u: UserRow) => {
+    // Dono de rede tem várias: mostra a primeira e quantas mais, senão a
+    // coluna mentiria dizendo que ele tem uma só.
+    const doDono = (u.barbershops ?? []) as { name: string }[];
+    const barbershopName =
+      doDono.length > 1
+        ? `${doDono[0].name} +${doDono.length - 1}`
+        : (doDono[0]?.name ?? u.staffProfile?.barbershop?.name ?? null);
+
+    return {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      isActive: u.isActive,
+      lastLoginAt: u.lastLoginAt,
+      createdAt: u.createdAt,
+      barbershopName,
+    };
+  });
 
   return NextResponse.json({ users: shaped, total, page, pageSize });
 }
