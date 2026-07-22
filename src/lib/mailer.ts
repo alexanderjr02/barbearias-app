@@ -55,6 +55,14 @@ export async function sendMail({ to, subject, html, text }: SendMailInput): Prom
     // Surface a clean error to the caller; never leak the API key.
     throw new Error(`Falha ao enviar e-mail (${res.status}): ${detail.slice(0, 300)}`);
   }
+
+  // Rastro do que saiu. Sem isto, um e-mail que não chega é indistinguível de
+  // um e-mail que nunca foi tentado: quem investiga fica sem saber se olha o
+  // spam, o provedor ou o código. O id é o mesmo que aparece no painel da
+  // Resend, então dá para seguir a entrega de ponta a ponta. Nunca registra o
+  // corpo — ele carrega link de redefinição de senha.
+  const { id } = ((await res.json().catch(() => ({}))) as { id?: string }) ?? {};
+  console.log(`[mailer] enviado id=${id ?? "?"} de=${from} para=${to} assunto="${subject}"`);
 }
 
 // Branded password-reset email. Kept plain and inline-styled so it renders
