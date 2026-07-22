@@ -53,7 +53,7 @@ export default function AdminAuditLogPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <PageHeader icon={ScrollText} title="Auditoria" subtitle="Todas as ações administrativas tomadas na plataforma" accent="purple" />
+      <PageHeader icon={ScrollText} title="Auditoria" subtitle="Todas as ações administrativas tomadas na plataforma" accent="mono" />
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
@@ -63,7 +63,7 @@ export default function AdminAuditLogPage() {
             placeholder="Buscar por administrador..."
             value={actor}
             onChange={(e) => { setActor(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            className="w-full pl-9 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/30"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -71,7 +71,7 @@ export default function AdminAuditLogPage() {
             <button
               key={t}
               onClick={() => { setTargetType(t); setPage(1); }}
-              className={cn("px-3 py-1.5 text-xs font-medium rounded-lg transition-all", targetType === t ? "bg-purple-500/20 border border-purple-500/40 text-purple-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300")}
+              className={cn("px-3 py-1.5 text-xs font-medium rounded-lg transition-all", targetType === t ? "bg-white/15 border border-white/20 text-white" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300")}
             >
               {t === "ALL" ? "Tudo" : t}
             </button>

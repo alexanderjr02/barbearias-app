@@ -63,7 +63,7 @@ export default function AdminNotificationsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <PageHeader icon={Bell} title="Notificações" subtitle="Tudo que seria enviado por e-mail — sem provedor real configurado ainda" accent="purple" />
+      <PageHeader icon={Bell} title="Notificações" subtitle="Tudo que seria enviado por e-mail — sem provedor real configurado ainda" accent="mono" />
 
       <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm text-amber-400">
         Nenhum e-mail é enviado de verdade hoje. Esta tela registra o que seria disparado — quando você configurar um provedor (Resend, SendGrid...), é só me avisar que eu ligo o envio real.
@@ -75,7 +75,7 @@ export default function AdminNotificationsPage() {
           {(settings ?? Object.keys(TYPE_LABEL).map((type) => ({ type, enabled: true }))).map((s) => (
             <label key={s.type} className="flex items-center justify-between px-3 py-2.5 bg-zinc-800/50 rounded-lg cursor-pointer">
               <span className="text-sm text-zinc-300">{TYPE_LABEL[s.type] ?? s.type}</span>
-              <input type="checkbox" checked={s.enabled} onChange={(e) => toggleSetting(s.type, e.target.checked)} className="accent-purple-500 w-4 h-4" />
+              <input type="checkbox" checked={s.enabled} onChange={(e) => toggleSetting(s.type, e.target.checked)} className="accent-white w-4 h-4" />
             </label>
           ))}
         </div>
@@ -89,7 +89,7 @@ export default function AdminNotificationsPage() {
               <button
                 key={t}
                 onClick={() => { setTypeFilter(t); setPage(1); }}
-                className={cn("px-2.5 py-1 text-xs font-medium rounded-lg transition-all", typeFilter === t ? "bg-purple-500/20 border border-purple-500/40 text-purple-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300")}
+                className={cn("px-2.5 py-1 text-xs font-medium rounded-lg transition-all", typeFilter === t ? "bg-white/15 border border-white/20 text-white" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300")}
               >
                 {t === "ALL" ? "Todos" : TYPE_LABEL[t]}
               </button>

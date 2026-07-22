@@ -59,7 +59,7 @@ export default function AdminWhiteLabelPage() {
         icon={Sparkles}
         title="White Label"
         subtitle="Fila de solicitações de branding personalizado — sem pipeline automático, você avança manualmente"
-        accent="purple"
+        accent="mono"
       />
 
       {!isLoading && items.length === 0 && (
@@ -93,7 +93,7 @@ export default function AdminWhiteLabelPage() {
                   {STATUS_INFO[item.status]?.label ?? item.status}
                 </span>
                 {item.status !== "DELIVERED" && (
-                  <button onClick={() => advance(item)} className="flex items-center gap-1 text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors">
+                  <button onClick={() => advance(item)} className="flex items-center gap-1 text-xs font-semibold text-white hover:text-zinc-200 transition-colors">
                     Avançar <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -104,7 +104,7 @@ export default function AdminWhiteLabelPage() {
                 value={notesDraft[item.id] ?? item.notes ?? ""}
                 onChange={(e) => setNotesDraft((prev) => ({ ...prev, [item.id]: e.target.value }))}
                 placeholder="Notas internas (domínio, contato, status da entrega...)"
-                className="flex-1 h-9 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                className="flex-1 h-9 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/30"
               />
               <button onClick={() => saveNotes(item)} className="px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition-colors">
                 Salvar

@@ -155,7 +155,7 @@ export default function AdminBillingPage() {
         icon={CreditCard}
         title="Faturamento"
         subtitle="Saúde financeira da plataforma — MRR, churn, projeção e faturas"
-        accent="purple"
+        accent="mono"
         action={
           <button onClick={runRenewals} disabled={running} className="flex items-center gap-2 px-3.5 py-2 bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-50">
             <RefreshCw className={cn("w-3.5 h-3.5", running && "animate-spin")} />
@@ -260,7 +260,7 @@ export default function AdminBillingPage() {
               <h3 className="text-base font-bold text-white">Receita recebida + projeção</h3>
               <div className="flex items-center gap-3 text-[11px]">
                 <span className="flex items-center gap-1.5 text-zinc-400"><span className="w-2.5 h-0.5 bg-emerald-500 inline-block" /> Real</span>
-                <span className="flex items-center gap-1.5 text-zinc-400"><span className="w-2.5 h-0.5 bg-purple-400 inline-block" style={{ borderTop: "1px dashed" }} /> Projeção</span>
+                <span className="flex items-center gap-1.5 text-zinc-400"><span className="w-2.5 h-0.5 bg-white inline-block" style={{ borderTop: "1px dashed" }} /> Projeção</span>
               </div>
             </div>
             <p className="text-xs text-zinc-500 mb-5">Últimos 12 meses reais + 3 meses projetados pela tendência recente — não é uma garantia, é uma estimativa simples.</p>
@@ -291,14 +291,14 @@ export default function AdminBillingPage() {
         <div className="px-5 py-4 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-sm font-bold text-white">Faturas</h3>
           <div className="flex flex-wrap items-center gap-2">
-            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 focus:outline-none focus:ring-2 focus:ring-white/30" />
             <span className="text-xs text-zinc-600">até</span>
-            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 focus:outline-none focus:ring-2 focus:ring-white/30" />
             {["ALL", "PAID", "PENDING", "FAILED", "REFUNDED"].map((s) => (
               <button
                 key={s}
                 onClick={() => { setStatusFilter(s); setPage(1); }}
-                className={cn("px-2.5 py-1 text-xs font-medium rounded-lg transition-all", statusFilter === s ? "bg-purple-500/20 border border-purple-500/40 text-purple-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300")}
+                className={cn("px-2.5 py-1 text-xs font-medium rounded-lg transition-all", statusFilter === s ? "bg-white/15 border border-white/20 text-white" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300")}
               >
                 {s === "ALL" ? "Todas" : STATUS_INFO[s]?.label}
               </button>

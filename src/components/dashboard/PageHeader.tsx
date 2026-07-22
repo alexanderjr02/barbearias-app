@@ -5,14 +5,15 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
-  // "purple" is used by the /admin (platform) section to visually separate
-  // it from the gestor dashboard's amber brand at a glance.
-  accent?: "amber" | "purple";
+  // "mono" e o /admin: preto e branco, sem cor de marca. O painel do gestor
+  // usa "amber" — a diferenca continua obvia a distancia, sem precisar de uma
+  // terceira cor so para anunciar "voce esta no admin".
+  accent?: "amber" | "mono";
 }
 
 const ACCENT_CLASSES = {
   amber: { badge: "bg-gradient-to-br from-amber-500/15 to-amber-600/5 border-amber-500/20", icon: "text-amber-400" },
-  purple: { badge: "bg-gradient-to-br from-purple-500/15 to-indigo-600/5 border-purple-500/20", icon: "text-purple-400" },
+  mono: { badge: "bg-white/10 border-white/15", icon: "text-white" },
 };
 
 // Consistent header treatment for every dashboard page: an icon badge to

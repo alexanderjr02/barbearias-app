@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, Store, Users, CreditCard, Sparkles,
   ScrollText, Settings, LogOut, ChevronLeft, ChevronRight, Shield,
-  Activity, LifeBuoy, Megaphone, Bell,
+  Activity, LifeBuoy, Megaphone, Bell, UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/apiClient";
@@ -58,12 +58,16 @@ const navGroups = [
 ];
 
 // Platform-admin equivalent of components/layout/Sidebar.tsx — same
-// structural shape (fixed width, collapsible, logout) but purple/indigo
-// accent so /admin never gets visually confused with a gestor's own
-// (amber-branded) dashboard, even mid-navigation. Grouped by function, and
-// groups marked superAdminOnly are hidden entirely for a SUPPORT_ADMIN
-// session — purely a UI convenience, the real boundary is each API route's
-// requireSuperAdminSession() vs requireAnyAdminSession() check.
+// structural shape (fixed width, collapsible, logout).
+//
+// Paleta preto e branco, sem cor de marca: o /admin é ferramenta de operação,
+// não vitrine. Branco só onde há significado (o item ativo, a ação principal)
+// faz a hierarquia aparecer sozinha, e o contraste com o painel do gestor —
+// que é âmbar — continua evidente à distância, sem precisar de roxo.
+//
+// Grupos marcados superAdminOnly somem para uma sessão SUPPORT_ADMIN — puro
+// conforto de interface, a fronteira real é o requireSuperAdminSession() vs
+// requireAnyAdminSession() de cada rota.
 export function AdminSidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -79,14 +83,14 @@ export function AdminSidebar() {
   return (
     <aside style={{ width: w, minWidth: w }} className="fixed left-0 top-0 h-screen flex flex-col transition-all duration-300 z-40 bg-zinc-950 border-r border-zinc-800/60">
       <div className={cn("flex items-center h-16 border-b border-zinc-800/60 flex-shrink-0 px-4", collapsed ? "justify-center" : "gap-3")}>
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
-          <Shield className="w-4 h-4 text-white" />
+        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+          <Shield className="w-4 h-4 text-zinc-950" />
         </div>
         {!collapsed && (
           <div>
-            <span className="text-base font-black text-white tracking-tight">CORT<span className="text-purple-400">IX</span></span>
+            <span className="text-base font-black text-white tracking-tight">CORTIX</span>
             <div className="flex items-center gap-1 -mt-0.5">
-              <span className="text-xs text-purple-400 font-medium">{isSuperAdmin || !me ? "Admin" : "Suporte"}</span>
+              <span className="text-xs text-zinc-500 font-medium">{isSuperAdmin || !me ? "Admin" : "Suporte"}</span>
             </div>
           </div>
         )}
@@ -104,9 +108,9 @@ export function AdminSidebar() {
                   <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined}
                     className={cn("relative flex items-center rounded-lg transition-all duration-150",
                       collapsed ? "justify-center w-10 h-10 mx-auto" : "gap-3 px-3 py-2.5",
-                      isActive ? "bg-purple-500/15 text-purple-400" : "text-zinc-500 hover:bg-white/5 hover:text-zinc-200"
+                      isActive ? "bg-white/10 text-white" : "text-zinc-500 hover:bg-white/5 hover:text-zinc-200"
                     )}>
-                    {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-purple-400 rounded-r-full" />}
+                    {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-white rounded-r-full" />}
                     <Icon className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
                     {!collapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
                   </Link>
@@ -118,9 +122,15 @@ export function AdminSidebar() {
       </nav>
 
       <div className="px-2 pb-3 border-t border-zinc-800/60 pt-3 space-y-0.5">
+        <Link href="/admin/account" title={collapsed ? "Minha conta" : undefined} className={cn("flex items-center rounded-lg transition-all",
+          pathname.startsWith("/admin/account") ? "bg-white/10 text-white" : "text-zinc-500 hover:bg-white/5 hover:text-zinc-200",
+          collapsed ? "justify-center w-10 h-10 mx-auto" : "gap-3 px-3 py-2.5")}>
+          <UserCog className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
+          {!collapsed && <span className="text-sm font-medium">Minha conta</span>}
+        </Link>
         {(isSuperAdmin || !me) && (
           <Link href="/admin/settings" className={cn("flex items-center rounded-lg transition-all",
-            pathname.startsWith("/admin/settings") ? "bg-purple-500/15 text-purple-400" : "text-zinc-500 hover:bg-white/5 hover:text-zinc-200",
+            pathname.startsWith("/admin/settings") ? "bg-white/10 text-white" : "text-zinc-500 hover:bg-white/5 hover:text-zinc-200",
             collapsed ? "justify-center w-10 h-10 mx-auto" : "gap-3 px-3 py-2.5")}>
             <Settings className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
             {!collapsed && <span className="text-sm font-medium">Configurações</span>}

@@ -17,7 +17,7 @@ import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 const PLAN_LABELS: Record<string, { label: string; icon: typeof Check; color: string; bg: string }> = {
   FREE: { label: "Starter", icon: Check, color: "text-zinc-400", bg: "bg-zinc-700 text-zinc-300 border-zinc-600" },
   PRO: { label: "Pro", icon: Zap, color: "text-amber-400", bg: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-  ENTERPRISE: { label: "White Label", icon: Crown, color: "text-purple-400", bg: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  ENTERPRISE: { label: "White Label", icon: Crown, color: "text-white", bg: "bg-white/15 text-white border-white/20" },
 };
 
 const INVOICE_STATUS: Record<string, { label: string; color: string }> = {
@@ -41,7 +41,7 @@ interface DashboardData {
   alerts: { failedInvoices: number; suspendedBarbershops: number; pendingWhiteLabel: number; openTickets: number };
 }
 
-function KpiCard({ title, value, icon: Icon, iconColor = "text-purple-400", sub }: {
+function KpiCard({ title, value, icon: Icon, iconColor = "text-white", sub }: {
   title: string; value: string; icon: LucideIcon; iconColor?: string; sub?: string;
 }) {
   return (
@@ -109,7 +109,7 @@ export default function AdminDashboardPage() {
         icon={Shield}
         title="Painel Administrativo"
         subtitle="Visão geral de toda a plataforma CORTIX"
-        accent="purple"
+        accent="mono"
       />
 
       {isLoading || !data ? (
@@ -173,7 +173,7 @@ export default function AdminDashboardPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-white">Últimas barbearias cadastradas</h3>
-                <Link href="/admin/barbershops" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
+                <Link href="/admin/barbershops" className="text-xs text-white hover:text-zinc-200 flex items-center gap-1">
                   Ver todas <ArrowUpRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -204,7 +204,7 @@ export default function AdminDashboardPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-white">Faturas recentes</h3>
-                <Link href="/admin/billing" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
+                <Link href="/admin/billing" className="text-xs text-white hover:text-zinc-200 flex items-center gap-1">
                   Ver todas <ArrowUpRight className="w-3 h-3" />
                 </Link>
               </div>

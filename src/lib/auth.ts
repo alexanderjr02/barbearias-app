@@ -15,6 +15,13 @@ export interface SessionPayload {
   name: string;
   email: string;
   barbershopId: string | null;
+  /**
+   * Presente só quando esta sessão é uma impersonação: o id do admin que a
+   * abriu. É o que sustenta as três coisas que impersonação segura exige —
+   * a faixa de aviso na tela (ninguém age achando que é o dono), o caminho de
+   * volta, e o rastro de quem entrou onde.
+   */
+  imp?: string;
 }
 
 function getSecretKey() {

@@ -92,7 +92,7 @@ export default function AdminSupportPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <PageHeader icon={LifeBuoy} title="Suporte" subtitle="Chamados abertos por todas as barbearias da plataforma" accent="purple" />
+      <PageHeader icon={LifeBuoy} title="Suporte" subtitle="Chamados abertos por todas as barbearias da plataforma" accent="mono" />
 
       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4 h-[calc(100vh-220px)] min-h-[500px]">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col overflow-hidden">
@@ -104,7 +104,7 @@ export default function AdminSupportPage() {
                 placeholder="Buscar..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                className="w-full pl-8 pr-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/30"
               />
             </div>
             <div className="flex gap-1 flex-wrap">
@@ -112,7 +112,7 @@ export default function AdminSupportPage() {
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={cn("px-2 py-1 text-[10px] font-medium rounded-md transition-all", statusFilter === s ? "bg-purple-500/20 border border-purple-500/40 text-purple-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400")}
+                  className={cn("px-2 py-1 text-[10px] font-medium rounded-md transition-all", statusFilter === s ? "bg-white/15 border border-white/20 text-white" : "bg-zinc-800 border border-zinc-700 text-zinc-400")}
                 >
                   {s === "ALL" ? "Todos" : STATUS_INFO[s]?.label ?? s}
                 </button>
@@ -127,7 +127,7 @@ export default function AdminSupportPage() {
               <button
                 key={t.id}
                 onClick={() => setSelectedId(t.id)}
-                className={cn("w-full text-left px-4 py-3 hover:bg-white/2 transition-colors", selectedId === t.id && "bg-purple-500/10")}
+                className={cn("w-full text-left px-4 py-3 hover:bg-white/2 transition-colors", selectedId === t.id && "bg-white/10")}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="text-xs font-semibold text-zinc-300 truncate">{t.barbershopName}</span>
@@ -158,7 +158,7 @@ export default function AdminSupportPage() {
                 <select
                   value={detail.status}
                   onChange={(e) => changeStatus(e.target.value)}
-                  className="text-xs bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-zinc-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="text-xs bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-zinc-300 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   {Object.entries(STATUS_INFO).map(([value, info]) => (
                     <option key={value} value={value}>{info.label}</option>
@@ -168,9 +168,9 @@ export default function AdminSupportPage() {
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {detail.messages.map((m) => (
-                  <div key={m.id} className={cn("max-w-[80%] rounded-2xl px-4 py-3", m.isAdmin ? "bg-purple-500/10 border border-purple-500/20 ml-auto" : "bg-zinc-800 mr-auto")}>
+                  <div key={m.id} className={cn("max-w-[80%] rounded-2xl px-4 py-3", m.isAdmin ? "bg-white/10 border border-white/20 ml-auto" : "bg-zinc-800 mr-auto")}>
                     <div className="flex items-center gap-1.5 mb-1">
-                      {m.isAdmin && <ShieldCheck className="w-3 h-3 text-purple-400" />}
+                      {m.isAdmin && <ShieldCheck className="w-3 h-3 text-white" />}
                       <span className="text-xs font-semibold text-zinc-300">{m.authorName}</span>
                       <span className="text-[10px] text-zinc-600">{formatDateTime(m.createdAt)}</span>
                     </div>
@@ -185,9 +185,9 @@ export default function AdminSupportPage() {
                   onChange={(e) => setReply(e.target.value)}
                   rows={2}
                   placeholder="Responder..."
-                  className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/30 resize-none"
                 />
-                <button onClick={sendReply} disabled={sending || !reply.trim()} className="px-4 bg-purple-500/20 border border-purple-500/40 text-purple-400 rounded-lg font-bold disabled:opacity-50 flex items-center gap-2">
+                <button onClick={sendReply} disabled={sending || !reply.trim()} className="px-4 bg-white/15 border border-white/20 text-white rounded-lg font-bold disabled:opacity-50 flex items-center gap-2">
                   <Send className="w-4 h-4" />
                 </button>
               </div>

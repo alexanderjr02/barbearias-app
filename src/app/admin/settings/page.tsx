@@ -14,7 +14,7 @@ type Pricing = { price: number; appointmentsLimit: number | null; staffLimit: nu
 const PLAN_META: Record<Plan, { label: string; icon: typeof Check; cls: string }> = {
   FREE: { label: "Starter", icon: Check, cls: "text-zinc-400" },
   PRO: { label: "Pro", icon: Zap, cls: "text-amber-400" },
-  ENTERPRISE: { label: "White Label", icon: Crown, cls: "text-purple-400" },
+  ENTERPRISE: { label: "White Label", icon: Crown, cls: "text-white" },
 };
 
 function PlanCard({ plan, pricing, onSave }: { plan: Plan; pricing: Pricing; onSave: (p: Plan, data: Pricing) => Promise<void> }) {
@@ -59,7 +59,7 @@ function PlanCard({ plan, pricing, onSave }: { plan: Plan; pricing: Pricing; onS
           step={1}
           value={price}
           onChange={(e) => setPrice(Number(e.target.value))}
-          className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
         />
       </div>
 
@@ -67,7 +67,7 @@ function PlanCard({ plan, pricing, onSave }: { plan: Plan; pricing: Pricing; onS
         <div className="flex items-center justify-between mb-1.5">
           <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Limite de agendamentos/mês</label>
           <label className="flex items-center gap-1.5 text-xs text-zinc-400">
-            <input type="checkbox" checked={appointmentsUnlimited} onChange={(e) => setAppointmentsUnlimited(e.target.checked)} className="accent-purple-500" />
+            <input type="checkbox" checked={appointmentsUnlimited} onChange={(e) => setAppointmentsUnlimited(e.target.checked)} className="accent-white" />
             Ilimitado
           </label>
         </div>
@@ -77,7 +77,7 @@ function PlanCard({ plan, pricing, onSave }: { plan: Plan; pricing: Pricing; onS
             min={1}
             value={appointmentsLimit}
             onChange={(e) => setAppointmentsLimit(Number(e.target.value))}
-            className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
           />
         )}
       </div>
@@ -86,7 +86,7 @@ function PlanCard({ plan, pricing, onSave }: { plan: Plan; pricing: Pricing; onS
         <div className="flex items-center justify-between mb-1.5">
           <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Limite de barbeiros</label>
           <label className="flex items-center gap-1.5 text-xs text-zinc-400">
-            <input type="checkbox" checked={staffUnlimited} onChange={(e) => setStaffUnlimited(e.target.checked)} className="accent-purple-500" />
+            <input type="checkbox" checked={staffUnlimited} onChange={(e) => setStaffUnlimited(e.target.checked)} className="accent-white" />
             Ilimitado
           </label>
         </div>
@@ -96,7 +96,7 @@ function PlanCard({ plan, pricing, onSave }: { plan: Plan; pricing: Pricing; onS
             min={1}
             value={staffLimit}
             onChange={(e) => setStaffLimit(Number(e.target.value))}
-            className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
           />
         )}
       </div>
@@ -104,7 +104,7 @@ function PlanCard({ plan, pricing, onSave }: { plan: Plan; pricing: Pricing; onS
       <button
         onClick={handleSave}
         disabled={saving}
-        className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-500/15 border border-purple-500/30 text-purple-400 text-sm font-semibold rounded-lg hover:bg-purple-500/25 transition-colors disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/10 border border-white/20 text-white text-sm font-semibold rounded-lg hover:bg-white/15 transition-colors disabled:opacity-50"
       >
         <Save className="w-4 h-4" /> {saving ? "Salvando..." : saved ? "Salvo!" : "Salvar"}
       </button>
@@ -187,7 +187,7 @@ function TwoFactorSection() {
         <button
           onClick={startEnroll}
           disabled={busy}
-          className="flex items-center gap-2 px-3.5 py-2 bg-purple-500/15 border border-purple-500/30 text-purple-400 text-sm font-semibold rounded-lg hover:bg-purple-500/25 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3.5 py-2 bg-white/10 border border-white/20 text-white text-sm font-semibold rounded-lg hover:bg-white/15 transition-colors disabled:opacity-50"
         >
           <ShieldCheck className="w-4 h-4" /> Ativar 2FA
         </button>
@@ -220,7 +220,7 @@ function TwoFactorSection() {
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             placeholder="000000"
-            className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-center text-lg font-mono tracking-[0.3em] focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full h-11 px-4 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-center text-lg font-mono tracking-[0.3em] focus:outline-none focus:ring-2 focus:ring-white/30"
           />
           <div className="flex gap-2">
             <button
@@ -233,7 +233,7 @@ function TwoFactorSection() {
             <button
               type="submit"
               disabled={busy || code.length < 6}
-              className="flex-1 py-2 text-xs font-semibold text-purple-400 bg-purple-500/15 border border-purple-500/30 rounded-lg hover:bg-purple-500/25 transition-colors disabled:opacity-50"
+              className="flex-1 py-2 text-xs font-semibold text-white bg-white/10 border border-white/20 rounded-lg hover:bg-white/15 transition-colors disabled:opacity-50"
             >
               Confirmar e ativar
             </button>
@@ -260,7 +260,7 @@ function NpsSection() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3"><Smile className="w-5 h-5 text-purple-400" /></div>
+          <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-3"><Smile className="w-5 h-5 text-white" /></div>
           <p className="text-2xl font-black text-white">{data?.npsScore ?? "—"}</p>
           <p className="text-sm text-zinc-500">NPS</p>
         </div>
@@ -311,7 +311,7 @@ function BackupSection() {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 max-w-lg space-y-4">
       <div className="flex items-center gap-2">
-        <DatabaseBackup className="w-4 h-4 text-purple-400" />
+        <DatabaseBackup className="w-4 h-4 text-white" />
         <h3 className="text-sm font-bold text-white">Backup do banco de dados</h3>
       </div>
       <p className="text-xs text-zinc-500">
@@ -320,7 +320,7 @@ function BackupSection() {
       <button
         onClick={download}
         disabled={downloading}
-        className="flex items-center gap-2 px-3.5 py-2 bg-purple-500/15 border border-purple-500/30 text-purple-400 text-sm font-semibold rounded-lg hover:bg-purple-500/25 transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 px-3.5 py-2 bg-white/10 border border-white/20 text-white text-sm font-semibold rounded-lg hover:bg-white/15 transition-colors disabled:opacity-50"
       >
         <Download className="w-4 h-4" /> {downloading ? "Baixando..." : "Baixar backup agora"}
       </button>
@@ -373,7 +373,7 @@ function NetworkPricingSection() {
             min={0}
             value={extraValue}
             onChange={(e) => setExtra(Number(e.target.value))}
-            className="mt-1 w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-purple-500/50"
+            className="mt-1 w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-white/20"
           />
         </div>
         <div>
@@ -383,7 +383,7 @@ function NetworkPricingSection() {
             min={0}
             value={setupValue}
             onChange={(e) => setSetup(Number(e.target.value))}
-            className="mt-1 w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-purple-500/50"
+            className="mt-1 w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-white/20"
           />
           <p className="text-[11px] text-zinc-600 mt-1">
             {setupValue > 0
@@ -395,7 +395,7 @@ function NetworkPricingSection() {
       <button
         onClick={save}
         disabled={saving}
-        className="h-9 px-4 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+        className="h-9 px-4 bg-white hover:bg-zinc-200 text-zinc-950 text-sm font-semibold rounded-lg transition disabled:opacity-50"
       >
         {saving ? "Salvando…" : "Salvar preços de rede"}
       </button>
@@ -420,7 +420,7 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <PageHeader icon={Settings} title="Configurações" subtitle="Preços de planos e segurança da plataforma" accent="purple" />
+      <PageHeader icon={Settings} title="Configurações" subtitle="Preços de planos e segurança da plataforma" accent="mono" />
 
       <div className="flex gap-2 border-b border-zinc-800">
         {[
@@ -434,7 +434,7 @@ export default function AdminSettingsPage() {
             onClick={() => setTab(t.id)}
             className={cn(
               "px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
-              tab === t.id ? "border-purple-500 text-purple-400" : "border-transparent text-zinc-500 hover:text-zinc-300"
+              tab === t.id ? "border-white text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"
             )}
           >
             {t.label}

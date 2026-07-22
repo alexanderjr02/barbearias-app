@@ -3,7 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, Store, Crown, Zap, Check, DollarSign, HeartPulse } from "lucide-react";
+import { ArrowLeft, ExternalLink, Store, Crown, Zap, Check, DollarSign, HeartPulse, Eye, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
 import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
@@ -11,7 +11,7 @@ import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 const PLAN_BADGE: Record<string, { label: string; icon: typeof Check; cls: string }> = {
   FREE: { label: "Starter", icon: Check, cls: "bg-zinc-700 text-zinc-300 border-zinc-600" },
   PRO: { label: "Pro", icon: Zap, cls: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-  ENTERPRISE: { label: "White Label", icon: Crown, cls: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  ENTERPRISE: { label: "White Label", icon: Crown, cls: "bg-white/15 text-white border-white/20" },
 };
 
 const INVOICE_STATUS: Record<string, { label: string; color: string }> = {
@@ -52,6 +52,7 @@ export default function AdminBarbershopDetailPage({ params }: { params: Promise<
   const [changingPlan, setChangingPlan] = useState(false);
   const [refundingInvoiceId, setRefundingInvoiceId] = useState<string | null>(null);
   const [refundReason, setRefundReason] = useState("");
+  const [entering, setEntering] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-barbershop", id],
@@ -74,6 +75,19 @@ export default function AdminBarbershopDetailPage({ params }: { params: Promise<
     if (!data) return;
     await apiPatch(`/api/admin/barbershops/${id}`, { isActive: !data.isActive });
     invalidate();
+  };
+
+  // Entra no painel com os olhos do dono. Recarrega de verdade em vez de
+  // navegar pelo roteador: a sessão trocou no cookie, e todo dado em cache na
+  // página é da conta de admin.
+  const impersonate = async () => {
+    setEntering(true);
+    try {
+      const res = await apiPost<{ redirectTo: string }>("/api/admin/impersonate", { barbershopId: id });
+      window.location.href = res.redirectTo ?? "/dashboard";
+    } catch {
+      setEntering(false);
+    }
   };
 
   const submitRefund = async (invoiceId: string) => {
@@ -106,11 +120,21 @@ export default function AdminBarbershopDetailPage({ params }: { params: Promise<
         icon={Store}
         title={data.name}
         subtitle={`${data.city ?? "—"}${data.state ? `, ${data.state}` : ""}`}
-        accent="purple"
+        accent="mono"
         action={
-          <a href={`/booking/${data.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:text-purple-300">
-            <ExternalLink className="w-4 h-4" /> Ver página pública
-          </a>
+          <div className="flex items-center gap-3">
+            <a href={`/booking/${data.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition-colors">
+              <ExternalLink className="w-4 h-4" /> Ver página pública
+            </a>
+            <button
+              onClick={impersonate}
+              disabled={entering}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-zinc-200 disabled:opacity-60"
+            >
+              {entering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+              Entrar como o gestor
+            </button>
+          </div>
         }
       />
 
@@ -131,7 +155,7 @@ export default function AdminBarbershopDetailPage({ params }: { params: Promise<
               <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border", badge.cls)}>
                 <BadgeIcon className="w-3 h-3" /> {badge.label}
               </span>
-              <button onClick={() => setChangingPlan(true)} className="text-xs text-zinc-500 hover:text-purple-400 transition-colors">alterar</button>
+              <button onClick={() => setChangingPlan(true)} className="text-xs text-zinc-500 hover:text-white transition-colors">alterar</button>
             </div>
           )}
         </div>
@@ -203,12 +227,12 @@ export default function AdminBarbershopDetailPage({ params }: { params: Promise<
       </div>
 
       {data.whiteLabelRequest && (
-        <div className="bg-zinc-900 border border-purple-500/20 rounded-xl p-5 flex items-center justify-between">
+        <div className="bg-zinc-900 border border-white/20 rounded-xl p-5 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-white">Solicitação White Label</h3>
             <p className="text-xs text-zinc-500 mt-0.5">Status atual: {data.whiteLabelRequest.status}</p>
           </div>
-          <Link href="/admin/white-label" className="text-xs text-purple-400 hover:text-purple-300">Gerenciar →</Link>
+          <Link href="/admin/white-label" className="text-xs text-white hover:text-zinc-200">Gerenciar →</Link>
         </div>
       )}
 

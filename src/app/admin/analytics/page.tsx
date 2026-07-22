@@ -31,8 +31,8 @@ const PLAN_LABEL: Record<string, string> = { FREE: "Starter", PRO: "Pro", ENTERP
 function KpiCard({ title, value, sub }: { title: string; value: string; sub?: string }) {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-      <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3">
-        <Users className="w-5 h-5 text-purple-400" />
+      <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-3">
+        <Users className="w-5 h-5 text-white" />
       </div>
       <p className="text-2xl font-black text-white">{value}</p>
       <p className="text-sm text-zinc-500 mt-0.5">{title}</p>
@@ -53,7 +53,7 @@ export default function AdminAnalyticsPage() {
         icon={Activity}
         title="Analytics"
         subtitle="Usuários ativos e uso do chatbot — dado real desde que essa tela entrou no ar"
-        accent="purple"
+        accent="mono"
       />
 
       {isLoading || !data ? (
@@ -127,7 +127,7 @@ export default function AdminAnalyticsPage() {
           {/* Retention cohorts */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-purple-400" />
+              <TrendingUp className="w-4 h-4 text-white" />
               <h3 className="text-base font-bold text-white">Retenção por cohort</h3>
             </div>
             <p className="text-xs text-zinc-500 mb-5">% de barbearias de cada mês de cadastro que fizeram login em cada mês seguinte — só é significativo a partir de agora.</p>
@@ -180,7 +180,7 @@ export default function AdminAnalyticsPage() {
                         <span className="text-zinc-300 font-semibold">{step.count} · {pct}%</span>
                       </div>
                       <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full" style={{ width: `${pct}%` }} />
+                        <div className="h-full bg-white rounded-full" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );

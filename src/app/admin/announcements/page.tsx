@@ -65,9 +65,9 @@ export default function AdminAnnouncementsPage() {
         icon={Megaphone}
         title="Avisos"
         subtitle="Comunicados que aparecem no sininho do painel dos gestores"
-        accent="purple"
+        accent="mono"
         action={
-          <button onClick={() => setCreateOpen(true)} className="flex items-center gap-2 px-3.5 py-2 bg-purple-500/15 border border-purple-500/30 text-purple-400 text-sm font-semibold rounded-lg hover:bg-purple-500/25 transition-colors">
+          <button onClick={() => setCreateOpen(true)} className="flex items-center gap-2 px-3.5 py-2 bg-white/10 border border-white/20 text-white text-sm font-semibold rounded-lg hover:bg-white/15 transition-colors">
             <Plus className="w-4 h-4" /> Novo aviso
           </button>
         }

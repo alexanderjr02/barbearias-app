@@ -87,9 +87,9 @@ export default function AdminUsersPage() {
         icon={Users}
         title="Usuários"
         subtitle="Todos os usuários da plataforma, de qualquer barbearia"
-        accent="purple"
+        accent="mono"
         action={
-          <button onClick={() => setCreateOpen(true)} className="flex items-center gap-2 px-3.5 py-2 bg-purple-500/15 border border-purple-500/30 text-purple-400 text-sm font-semibold rounded-lg hover:bg-purple-500/25 transition-colors">
+          <button onClick={() => setCreateOpen(true)} className="flex items-center gap-2 px-3.5 py-2 bg-white/10 border border-white/20 text-white text-sm font-semibold rounded-lg hover:bg-white/15 transition-colors">
             <UserPlus className="w-4 h-4" /> Novo administrador
           </button>
         }
@@ -139,7 +139,7 @@ export default function AdminUsersPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full pl-9 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            className="w-full pl-9 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/30"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -152,7 +152,7 @@ export default function AdminUsersPage() {
               }}
               className={cn(
                 "px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
-                roleFilter === f ? "bg-purple-500/20 border border-purple-500/40 text-purple-400" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300"
+                roleFilter === f ? "bg-white/15 border border-white/20 text-white" : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-300"
               )}
             >
               {f === "ALL" ? "Todos" : ROLE_LABELS[f]}
@@ -187,7 +187,7 @@ export default function AdminUsersPage() {
                     <p className="text-xs text-zinc-500">{u.email}</p>
                   </td>
                   <td className="px-4 py-4">
-                    <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", u.role === "SUPER_ADMIN" ? "bg-purple-500/20 text-purple-400" : u.role === "SUPPORT_ADMIN" ? "bg-indigo-500/20 text-indigo-400" : "bg-zinc-800 text-zinc-400")}>
+                    <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", u.role === "SUPER_ADMIN" ? "bg-white text-zinc-950" : u.role === "SUPPORT_ADMIN" ? "bg-white/15 text-white" : "bg-zinc-800 text-zinc-400")}>
                       {ROLE_LABELS[u.role] ?? u.role}
                     </span>
                   </td>
@@ -203,7 +203,7 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    <button onClick={() => toggleActive(u)} className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
+                    <button onClick={() => toggleActive(u)} className="text-xs text-white hover:text-zinc-200 transition-colors">
                       {u.isActive ? "Desativar" : "Reativar"}
                     </button>
                   </td>
