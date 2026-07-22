@@ -9,6 +9,7 @@ import { toast } from "@/lib/toast";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 interface ApiClient {
   id: string;
@@ -233,11 +234,11 @@ export default function ClientsPage() {
           </div>
           <div>
             <label className={labelCls}>Nascimento</label>
-            <input
+            <DatePicker
               name="dateOfBirth"
-              type="date"
               max={new Date().toISOString().slice(0, 10)}
-              className={`${fieldCls} [color-scheme:dark]`}
+              placeholder="Escolher data"
+              clearable
             />
           </div>
         </div>

@@ -9,6 +9,7 @@ import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal"
 import { PhotoUpload } from "@/components/dashboard/PhotoUpload";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StaffScheduleModal } from "@/components/dashboard/StaffScheduleModal";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 interface ApiStaff {
   id: string;
@@ -208,7 +209,7 @@ export default function StaffPage() {
             </div>
             <div>
               <label className={labelCls}>Admissão</label>
-              <input name="hireDate" type="date" defaultValue={editing?.hireDate ? editing.hireDate.slice(0, 10) : ""} className={fieldCls} />
+              <DatePicker name="hireDate" defaultValue={editing?.hireDate ? editing.hireDate.slice(0, 10) : ""} placeholder="Escolher data" clearable />
             </div>
           </div>
           <div>

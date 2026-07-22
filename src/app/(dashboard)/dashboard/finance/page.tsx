@@ -14,6 +14,7 @@ import { FinancialCockpit } from "@/components/dashboard/FinancialCockpit";
 import { DailyCashPanel } from "@/components/dashboard/DailyCashPanel";
 import { RecurringExpensesPanel } from "@/components/dashboard/RecurringExpensesPanel";
 import { TipPayoutsPanel } from "@/components/dashboard/TipPayoutsPanel";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 interface ApiTransaction {
   id: string;
@@ -160,7 +161,7 @@ export default function FinancePage() {
           </div>
           <div>
             <label className={labelCls}>Data</label>
-            <input name="date" type="date" className={fieldCls} />
+            <DatePicker name="date" placeholder="Hoje" />
           </div>
         </div>
         <div>

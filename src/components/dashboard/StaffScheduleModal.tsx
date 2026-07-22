@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, Clock, CalendarOff, Plus, Trash2, Loader2, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/apiClient";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 interface Props {
   staffId: string;
@@ -218,12 +219,15 @@ export function StaffScheduleModal({ staffId, staffName, onClose }: Props) {
                 <div className="flex items-end gap-2 flex-wrap">
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">Data</label>
-                    <input
-                      type="date"
-                      value={blockDate}
-                      onChange={(e) => setBlockDate(e.target.value)}
-                      className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    />
+                    <div className="w-[160px]">
+                      <DatePicker
+                        value={blockDate}
+                        onChange={setBlockDate}
+                        min={new Date().toISOString().slice(0, 10)}
+                        placeholder="Escolher dia"
+                        className="h-9"
+                      />
+                    </div>
                   </div>
                   <div className="flex-1 min-w-[140px]">
                     <label className="block text-xs text-zinc-500 mb-1">Motivo (opcional)</label>

@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 const PLAN_LABEL: Record<string, string> = { FREE: "Starter", PRO: "Pro", ENTERPRISE: "White Label" };
 const STATUS_INFO: Record<string, { label: string; color: string }> = {
@@ -291,9 +292,15 @@ export default function AdminBillingPage() {
         <div className="px-5 py-4 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-sm font-bold text-white">Faturas</h3>
           <div className="flex flex-wrap items-center gap-2">
-            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 focus:outline-none focus:ring-2 focus:ring-white/30" />
+            <div className="w-[150px]">
+              <DatePicker accent="mono" clearable placeholder="De" value={dateFrom}
+                onChange={(v) => { setDateFrom(v); setPage(1); }} className="h-9 text-xs" />
+            </div>
             <span className="text-xs text-zinc-600">até</span>
-            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 focus:outline-none focus:ring-2 focus:ring-white/30" />
+            <div className="w-[150px]">
+              <DatePicker accent="mono" clearable placeholder="Até" value={dateTo} min={dateFrom || undefined}
+                onChange={(v) => { setDateTo(v); setPage(1); }} className="h-9 text-xs" />
+            </div>
             {["ALL", "PAID", "PENDING", "FAILED", "REFUNDED"].map((s) => (
               <button
                 key={s}

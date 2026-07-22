@@ -8,6 +8,7 @@ import { Eye, EyeOff, X } from "lucide-react";
 import { registerClientSchema } from "@/lib/validation";
 import { redirectTo, formatPhoneBR } from "@/lib/utils";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 export default function RegisterClientPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +19,7 @@ export default function RegisterClientPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(registerClientSchema),
@@ -68,7 +70,8 @@ export default function RegisterClientPage() {
     }
   };
 
-  // Native <input type="date"> caps out at "today" — nobody's born in the future.
+  // Teto no dia de hoje — ninguém nasce no futuro. O calendário desabilita as
+  // datas acima disso em vez de deixar escolher e reclamar depois.
   const maxDob = new Date().toISOString().slice(0, 10);
 
   return (
@@ -123,8 +126,17 @@ export default function RegisterClientPage() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Nascimento</label>
-            <input type="date" max={maxDob} {...register("dateOfBirth")}
-              className="w-full h-12 px-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm [color-scheme:dark]" />
+            {/* O react-hook-form não enxerga um componente próprio como enxerga
+                um <input>, então o valor é empurrado com setValue. O
+                shouldValidate limpa o erro na hora em que a data é escolhida,
+                em vez de deixar a mensagem vermelha na tela até o envio. */}
+            <DatePicker
+              value={watch("dateOfBirth") ?? ""}
+              onChange={(v) => setValue("dateOfBirth", v, { shouldValidate: true })}
+              max={maxDob}
+              placeholder="Escolher data"
+              className="h-12 rounded-2xl bg-zinc-900"
+            />
             {errors.dateOfBirth && <p className="text-xs text-red-400 mt-1.5">{errors.dateOfBirth.message}</p>}
           </div>
         </div>
