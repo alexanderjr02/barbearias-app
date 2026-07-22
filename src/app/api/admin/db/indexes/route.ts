@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { requireSuperAdminSession } from "@/lib/apiAuth";
 
@@ -31,6 +32,29 @@ const INDEXES: { name: string; sql: string }[] = [
   { name: "Staff_barbershopId_idx", sql: `CREATE INDEX IF NOT EXISTS "Staff_barbershopId_idx" ON "Staff"("barbershopId")` },
 ];
 
+/**
+ * Sessão de super admin OU o segredo de emergência.
+ *
+ * O segredo existe para o exato problema que travou esta migração: só o super
+ * admin pode acionar, e ele perdeu a senha justo quando o e-mail de
+ * recuperação parou de chegar. Mesma variável de
+ * /api/admin/recovery/reset-link — uma chave de emergência, não duas. Sem
+ * `ADMIN_RECOVERY_SECRET` configurado, este caminho não existe e continua
+ * valendo só a sessão.
+ */
+async function autorizado(request: NextRequest): Promise<boolean> {
+  if (await requireSuperAdminSession()) return true;
+
+  const expected = process.env.ADMIN_RECOVERY_SECRET;
+  if (!expected || expected.length < 24) return false;
+
+  const provided = request.headers.get("x-admin-recovery-secret") ?? "";
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
 async function existingIndexes(): Promise<string[]> {
   const rows = (await prisma.$queryRawUnsafe(
     `SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
@@ -39,9 +63,8 @@ async function existingIndexes(): Promise<string[]> {
 }
 
 /** Só mostra o estado — não altera nada. */
-export async function GET() {
-  const session = await requireSuperAdminSession();
-  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+export async function GET(request: NextRequest) {
+  if (!(await autorizado(request))) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
 
   const present = await existingIndexes();
   const missing = INDEXES.filter((i) => !present.includes(i.name)).map((i) => i.name);
@@ -49,9 +72,8 @@ export async function GET() {
 }
 
 /** Aplica o que falta. Repetir é inofensivo. */
-export async function POST() {
-  const session = await requireSuperAdminSession();
-  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+export async function POST(request: NextRequest) {
+  if (!(await autorizado(request))) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
 
   const before = await existingIndexes();
   const created: string[] = [];
