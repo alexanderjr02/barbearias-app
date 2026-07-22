@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, Store, Users, CreditCard, Sparkles,
   ScrollText, Settings, LogOut, ChevronLeft, ChevronRight, Shield,
-  Activity, LifeBuoy, Megaphone, Bell, UserCog,
+  Activity, LifeBuoy, Megaphone, Bell, UserCog, Ticket, HeartPulse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/apiClient";
@@ -24,6 +24,7 @@ const navGroups = [
     items: [
       { label: "Barbearias", href: "/admin/barbershops", icon: Store },
       { label: "Usuários", href: "/admin/users", icon: Users },
+      { label: "Cupons", href: "/admin/coupons", icon: Ticket },
     ],
   },
   {
@@ -51,6 +52,7 @@ const navGroups = [
     label: "Sistema",
     superAdminOnly: true,
     items: [
+      { label: "Saúde do sistema", href: "/admin/health", icon: HeartPulse },
       { label: "Auditoria", href: "/admin/audit-log", icon: ScrollText },
       { label: "Notificações", href: "/admin/notifications", icon: Bell },
     ],

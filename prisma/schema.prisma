@@ -73,6 +73,7 @@ model User {
   referralsMade    Referral[] @relation("ReferralsMade")
   referralsReceived Referral[] @relation("ReferralsReceived")
   pushSubscriptions PushSubscription[]
+  coupons          Coupon[]  @relation("CouponCreator")
 }
 
 // Assinatura de Web Push de UM aparelho de UM usuário. É o que faz o celular
@@ -159,6 +160,16 @@ model Barbershop {
   chatbotWelcome  String?
   isActive        Boolean  @default(true)
   plan            String   @default("FREE")
+  // Ate quando o plano vale. null = sem prazo (o normal de quem paga
+  // assinatura, e tambem o vitalicio de cortesia). Serve para o cupom de 12
+  // meses expirar sozinho em vez de virar vitalicio por esquecimento.
+  planExpiresAt   DateTime?
+  // Conta de cortesia: nao paga. Sem esta marca o faturamento mente — cortesia
+  // entraria na conta como assinante e o numero de receita ficaria maior do
+  // que a realidade.
+  isComplimentary Boolean  @default(false)
+  // De onde veio a cortesia: o cupom usado, ou "admin" quando foi criada a mao.
+  compReason      String?
   // Mercado Pago recurring subscription (preapproval) that pays for `plan`.
   // Set when the gestor completes checkout; status mirrors MP
   // (authorized/paused/cancelled). Null on the free tier.
@@ -241,6 +252,8 @@ model Barbershop {
 
   // O @unique de ownerId dava índice de graça; sem ele, listar as unidades de
   // um dono viraria varredura de tabela.
+  couponRedemptions CouponRedemption[]
+
   @@index([ownerId])
 }
 
@@ -1096,4 +1109,52 @@ model RecurringExpense {
   updatedAt     DateTime @updatedAt
 
   @@index([barbershopId, isActive])
+}
+
+// Cupom de acesso — como uma barbearia entra sem passar pela tela de pagamento.
+//
+// Existe porque a venda real acontece fora do site: fecha-se no WhatsApp, num
+// evento, num piloto. Sem isto o unico caminho de entrada e o autocadastro
+// pagando, e todo acordo combinado por fora vira trabalho manual no banco.
+//
+// "Vitalicio" e so um caso particular de `durationDays = null`. Modelar como
+// duracao (e nao como um sim/nao de vitalicio) e o que permite dar 30 dias de
+// teste e 12 meses de cortesia com a mesma peca — e o que impede o vitalicio
+// de ser a unica opcao por falta de alternativa.
+model Coupon {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  plan         String    @default("ENTERPRISE")
+  // null = sem prazo (vitalicio). Em dias para caber teste curto e cortesia
+  // longa na mesma coluna.
+  durationDays Int?
+  // Quantas barbearias podem usar. null = ilimitado.
+  maxUses      Int?
+  usedCount    Int       @default(0)
+  // Prazo do proprio cupom (diferente do prazo do plano que ele concede): ate
+  // quando ele pode ser resgatado.
+  expiresAt    DateTime?
+  isActive     Boolean   @default(true)
+  note         String?
+  createdById  String
+  createdBy    User      @relation("CouponCreator", fields: [createdById], references: [id])
+  redemptions  CouponRedemption[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
+// Quem usou cada cupom. Separado do contador para a pergunta "a quem eu dei
+// cortesia?" ter resposta — um numero nao responde isso.
+model CouponRedemption {
+  id           String     @id @default(cuid())
+  couponId     String
+  coupon       Coupon     @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([couponId, barbershopId])
+  @@index([barbershopId])
 }

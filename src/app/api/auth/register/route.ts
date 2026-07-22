@@ -7,6 +7,7 @@ import { setSessionCookies } from "@/lib/sessionCookies";
 import { getClientIp, isSecureRequest } from "@/lib/requestIp";
 import { registerOwnerSchema, firstFieldError } from "@/lib/validation";
 import { rateLimit } from "@/lib/rateLimit";
+import { checarCupom, consumirCupom, mensagemDoErro } from "@/lib/coupons";
 
 const PLAN_BY_FORM_VALUE: Record<string, string> = {
   starter: "FREE",
@@ -73,6 +74,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Já existe uma barbearia cadastrada com esse CNPJ" }, { status: 409 });
     }
 
+    // Cupom: confere ANTES de criar qualquer coisa. Se o código não presta, a
+    // pessoa precisa saber agora — não depois de já existir uma conta no plano
+    // errado que alguém vai ter que consertar à mão.
+    const couponCode = typeof body.couponCode === "string" ? body.couponCode.trim() : "";
+    let grant = null;
+    if (couponCode) {
+      const check = await checarCupom(couponCode);
+      if (!check.ok) return NextResponse.json({ error: mensagemDoErro(check.error) }, { status: 400 });
+      grant = check.grant;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Transaction: a User with no Barbershop (or vice versa) is a broken
@@ -93,11 +105,18 @@ export async function POST(request: NextRequest) {
           instagram: instagram || null,
           cnpj,
           ownerId: user.id,
-          plan: PLAN_BY_FORM_VALUE[plan ?? ""] ?? "FREE",
+          // O cupom manda: quem chegou com codigo entra no plano que o codigo
+          // concede, nao no que escolheu na tela.
+          plan: grant?.plan ?? PLAN_BY_FORM_VALUE[plan ?? ""] ?? "FREE",
+          planExpiresAt: grant?.planExpiresAt ?? null,
+          isComplimentary: Boolean(grant),
+          compReason: grant?.compReason ?? null,
         },
       });
       return { user, barbershop };
     });
+
+    if (grant) await consumirCupom(grant.couponId, barbershop.id);
 
     const session = { sub: user.id, role: "OWNER" as const, name: user.name, email: user.email, barbershopId: barbershop.id };
     const accessToken = await signAccessToken(session);
@@ -110,7 +129,12 @@ export async function POST(request: NextRequest) {
     );
     setSessionCookies(response, accessToken, refreshToken, isSecureRequest(request));
     return response;
-  } catch {
+  } catch (error) {
+    // Sem este log, um 500 aqui é indepurável: a pessoa vê "erro ao criar
+    // conta" e nós não vemos nada. A mensagem para fora continua genérica, que
+    // é o certo — quem tenta cadastrar não precisa (nem deve) saber o que
+    // quebrou por dentro.
+    console.error("[register]", error);
     return NextResponse.json({ error: "Erro ao criar conta" }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { logAdminAction } from "@/lib/audit";
 import { recordPlanChangeInvoice, PLANS, type PlatformPlan } from "@/lib/billing";
 import { getBarbershopHealth } from "@/lib/health";
 import { notify } from "@/lib/notifications";
+import { cnpjSchema, slugSchema, optionalStateSchema } from "@/lib/validation";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireSuperAdminSession();
@@ -52,13 +53,62 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Barbearia não encontrada" }, { status: 404 });
   }
 
-  const data: { plan?: string; isActive?: boolean } = {};
+  const data: Record<string, unknown> = {};
   if (typeof body.plan === "string" && PLANS.includes(body.plan as PlatformPlan)) {
     data.plan = body.plan;
   }
   if (typeof body.isActive === "boolean") {
     data.isActive = body.isActive;
   }
+
+  // Edição do cadastro. Antes só dava para trocar plano e ativar/suspender —
+  // um nome errado ou um CNPJ trocado exigiam ir no banco. Cada campo é
+  // validado com o MESMO schema do cadastro público: regra de dado que muda
+  // conforme a porta de entrada não é regra, é sugestão.
+  const textos: [string, string, number][] = [
+    ["name", "name", 120],
+    ["city", "city", 80],
+    ["address", "address", 160],
+    ["phone", "phone", 20],
+    ["whatsapp", "whatsapp", 20],
+  ];
+  for (const [campo, destino, max] of textos) {
+    if (typeof body[campo] === "string") {
+      const v = body[campo].trim();
+      if (v.length > max) return NextResponse.json({ error: `Campo ${campo} muito longo` }, { status: 400 });
+      data[destino] = v || null;
+    }
+  }
+  if (typeof body.state === "string") {
+    const parsed = optionalStateSchema.safeParse(body.state);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "UF inválida" }, { status: 400 });
+    data.state = parsed.data || null;
+  }
+  if (typeof body.cnpj === "string" && body.cnpj.trim()) {
+    const parsed = cnpjSchema.safeParse(body.cnpj);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "CNPJ inválido" }, { status: 400 });
+    const dono = await prisma.barbershop.findFirst({ where: { cnpj: parsed.data, id: { not: id } }, select: { id: true } });
+    if (dono) return NextResponse.json({ error: "Outra barbearia já usa esse CNPJ" }, { status: 409 });
+    data.cnpj = parsed.data;
+  }
+  if (typeof body.slug === "string" && body.slug.trim()) {
+    const parsed = slugSchema.safeParse(body.slug);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Link inválido" }, { status: 400 });
+    const usado = await prisma.barbershop.findFirst({ where: { slug: parsed.data, id: { not: id } }, select: { id: true } });
+    if (usado) return NextResponse.json({ error: "Esse link já está em uso" }, { status: 409 });
+    data.slug = parsed.data;
+  }
+
+  // Cortesia e validade do plano — o que o cupom concede, editável à mão.
+  if (typeof body.isComplimentary === "boolean") data.isComplimentary = body.isComplimentary;
+  if (typeof body.compReason === "string") data.compReason = body.compReason.trim() || null;
+  if (body.planExpiresAt === null) data.planExpiresAt = null;
+  else if (typeof body.planExpiresAt === "string" && body.planExpiresAt) {
+    const d = new Date(body.planExpiresAt);
+    if (Number.isNaN(d.getTime())) return NextResponse.json({ error: "Data de validade inválida" }, { status: 400 });
+    data.planExpiresAt = d;
+  }
+
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "Nada para atualizar" }, { status: 400 });
   }
@@ -88,4 +138,48 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   return NextResponse.json(barbershop);
+}
+
+// DELETE /api/admin/barbershops/[id] — apaga a barbearia e tudo que pende
+// dela (agendamentos, clientes, financeiro) via cascade do banco.
+//
+// Irreversível e sem lixeira, então tem duas travas:
+//  1. exige ?confirm=<slug> na URL. Digitar o link da barbearia é o mesmo
+//     padrão do GitHub para apagar repositório — obriga a ler o que se está
+//     apagando em vez de confirmar no automático;
+//  2. recusa barbearia ATIVA. Para apagar, suspenda antes. Assim nenhuma
+//     operação em funcionamento some com um clique errado.
+//
+// O DONO não é apagado junto: ele é um User, pode ter outras barbearias, e
+// apagar pessoa por tabela errada é como se perde histórico.
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireSuperAdminSession();
+  if (!session) return denyAdmin();
+  const { id } = await params;
+
+  const shop = await prisma.barbershop.findUnique({
+    where: { id },
+    select: { id: true, name: true, slug: true, isActive: true, _count: { select: { appointments: true } } },
+  });
+  if (!shop) return NextResponse.json({ error: "Barbearia não encontrada" }, { status: 404 });
+
+  if (shop.isActive) {
+    return NextResponse.json({ error: "Suspenda a barbearia antes de apagar — é a trava que impede apagar operação em funcionamento." }, { status: 409 });
+  }
+  if (request.nextUrl.searchParams.get("confirm") !== shop.slug) {
+    return NextResponse.json({ error: `Confirme digitando o link da barbearia: ${shop.slug}` }, { status: 400 });
+  }
+
+  // Registra ANTES de apagar: depois do delete não há mais o que descrever.
+  await logAdminAction({
+    actorId: session.sub,
+    action: "barbershop.deleted",
+    targetType: "Barbershop",
+    targetId: id,
+    metadata: { name: shop.name, slug: shop.slug, agendamentos: shop._count.appointments },
+  });
+
+  await prisma.barbershop.delete({ where: { id } });
+
+  return NextResponse.json({ ok: true, message: `"${shop.name}" foi apagada.` });
 }
