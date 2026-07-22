@@ -312,10 +312,16 @@ function BackupSection() {
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 max-w-lg space-y-4">
       <div className="flex items-center gap-2">
         <DatabaseBackup className="w-4 h-4 text-white" />
-        <h3 className="text-sm font-bold text-white">Backup do banco de dados</h3>
+        <h3 className="text-sm font-bold text-white">Exportar dados</h3>
       </div>
-      <p className="text-xs text-zinc-500">
-        Baixa uma cópia completa do banco SQLite atual. Não existe backup automático agendado (sem infraestrutura de cron nesta versão) — use este botão quando quiser garantir uma cópia de segurança.
+      <p className="text-xs leading-relaxed text-zinc-500">
+        Baixa os dados de negócio em JSON — barbearias, usuários, agendamentos, financeiro, cupons e faturas.
+        Serve para auditoria, migração e para consultar como as coisas estavam numa data. Não inclui senhas nem
+        chaves de integração.
+      </p>
+      <p className="text-xs leading-relaxed text-amber-400/90">
+        Isto não é recuperação de desastre. Para restaurar o banco inteiro depois de um acidente, use o backup
+        point-in-time do próprio Turso.
       </p>
       <button
         onClick={download}
