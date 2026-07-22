@@ -165,9 +165,17 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
             }
             final categories = categoryTotals.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-              children: [
+            // ANTES: ListView(children: [...tudo...]). Isso constroi TODAS as
+            // linhas de lancamento de uma vez, sem reciclagem de viewport —
+            // com muito lancamento o quadro cai e a rolagem parece pular.
+            // Agora o cabecalho e um sliver e os lancamentos sao construidos
+            // sob demanda, so o que esta na tela.
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
                 const RiseIn(child: FinanceCockpitCard()),
                 const SizedBox(height: 12),
                 const RiseIn(delay: Duration(milliseconds: 60), child: DailyCashCard()),
@@ -294,9 +302,18 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                 const SizedBox(height: 20),
                 Text('Últimos lançamentos', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
                 const SizedBox(height: 10),
-                if (f.transactions.isEmpty)
-                  Text('Nenhum lançamento manual registrado ainda.', style: TextStyle(color: palette.textFaint)),
-                ...f.transactions.map((t) => Dismissible(
+                      if (f.transactions.isEmpty)
+                        Text('Nenhum lançamento manual registrado ainda.', style: TextStyle(color: palette.textFaint)),
+                    ]),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
+                  sliver: SliverList.builder(
+                    itemCount: f.transactions.length,
+                    itemBuilder: (context, i) {
+                      final t = f.transactions[i];
+                      return Dismissible(
                       key: ValueKey(t.id),
                       direction: DismissDirection.endToStart,
                       confirmDismiss: (_) => _confirmDelete(t),
@@ -338,7 +355,11 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                           ),
                         ],
                       ),
-                    ))),
+                      ),
+                      );
+                    },
+                  ),
+                ),
               ],
             );
           },

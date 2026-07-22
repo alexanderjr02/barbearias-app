@@ -93,7 +93,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   Map<String, dynamic> _chatbot = {
     'enabled': true,
     'name': 'Assistente',
-    'welcomeMessage': 'Olá! 👋 Como posso te ajudar hoje?',
+    'welcomeMessage': 'Olá! Como posso te ajudar hoje?',
     'address': '',
     'hours': '',
     'whatsapp': {'enabled': false, 'phone': '', 'autoFrom': '09:00', 'autoTo': '18:00', 'token': ''},
@@ -447,38 +447,16 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
           }).toList(),
         ),
         const SizedBox(height: 24),
-        Text('Preview da página de agendamento', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-        const SizedBox(height: 12),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Column(
-            children: [
-              Container(
-                height: 48,
-                color: _color,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Text(_nameCtrl.text.isEmpty ? 'Sua barbearia' : _nameCtrl.text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-              Container(
-                color: palette.surfaceAlt,
-                padding: const EdgeInsets.all(16),
-                width: double.infinity,
-                child: Column(
-                  children: [
-                    Text('Sua página personalizada de agendamento', style: TextStyle(color: palette.textFaint, fontSize: 12)),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(color: _color, borderRadius: BorderRadius.circular(10)),
-                      child: const Text('Agendar horário', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        Text('Como o cliente vê o seu app', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+        const SizedBox(height: 4),
+        Text('Esta é a tela de entrada que o cliente abre pelo seu link. Sua cor e sua logo aparecem aqui.',
+            style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+        const SizedBox(height: 14),
+        // Prévia REAL: espelha a tela de entrada do app (auth/login_screen.dart)
+        // — a única em que a marca da barbearia aparece para o cliente. Antes
+        // aqui havia uma "página de agendamento" que não existe assim, o mesmo
+        // erro de prévia que enganava na web.
+        _AppEntryPreview(color: _color, logoUrl: resolveAssetUrl(_logo), shopName: _nameCtrl.text, palette: palette),
         const SizedBox(height: 20),
         _saveButton(onPressed: _saveColor, busy: _savingColor, saved: _savedColor, label: 'Salvar aparência', accent: accent),
       ],
@@ -859,5 +837,93 @@ class _InlineTextFieldState extends State<_InlineTextField> {
   @override
   Widget build(BuildContext context) {
     return CortixField(controller: _controller, hint: widget.hint, maxLines: widget.maxLines);
+  }
+}
+
+/// Prévia da tela de entrada do app do cliente — a mesma de
+/// auth/login_screen.dart, a única em que a marca da barbearia aparece para
+/// ele. Reage à cor e à logo escolhidas na aba de aparência, ao vivo.
+class _AppEntryPreview extends StatelessWidget {
+  final Color color;
+  final String? logoUrl;
+  final String shopName;
+  final AppPalette palette;
+
+  const _AppEntryPreview({required this.color, required this.logoUrl, required this.shopName, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    final nome = shopName.trim().isEmpty ? 'Sua Barbearia' : shopName.trim();
+    final onColor = contrastingTextColor(color);
+
+    return Center(
+      // Moldura de aparelho, para deixar claro que é o APP, não a tela atual.
+      child: Container(
+        width: 220,
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF18181B),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: const Color(0xFF27272A), width: 2),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(23),
+          child: Container(
+            color: const Color(0xFF0B0A0F),
+            padding: const EdgeInsets.fromLTRB(20, 26, 20, 22),
+            child: Column(
+              children: [
+                Container(width: 36, height: 4, decoration: BoxDecoration(color: const Color(0xFF27272A), borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 22),
+                // Logo: a imagem da barbearia, ou um quadrado na cor da marca
+                // com a tesoura enquanto não há logo — igual ao app.
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(15),
+                    image: logoUrl != null ? DecorationImage(image: NetworkImage(logoUrl!), fit: BoxFit.cover) : null,
+                  ),
+                  child: logoUrl == null ? Icon(Icons.content_cut_rounded, color: onColor, size: 24) : null,
+                ),
+                const SizedBox(height: 14),
+                const Text('Bem-vindo de volta', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 3),
+                Text('Entre na sua conta $nome',
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                const SizedBox(height: 18),
+                _fakeField('E-mail'),
+                const SizedBox(height: 8),
+                _fakeField('Senha'),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(11)),
+                  child: Text('Entrar', style: TextStyle(color: onColor, fontSize: 12.5, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _fakeField(String label) {
+    return Container(
+      width: double.infinity,
+      height: 34,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Text(label, style: const TextStyle(color: Colors.white38, fontSize: 11)),
+    );
   }
 }
