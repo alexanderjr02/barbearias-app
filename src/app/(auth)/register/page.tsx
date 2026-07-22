@@ -84,11 +84,14 @@ function RegisterForm() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(registerOwnerSchema),
+    // Nome, e-mail e telefone podem vir preenchidos da landing: lá a pessoa
+    // já escolheu o plano e digitou o contato. Pedir de novo o que ela acabou
+    // de dar é a forma mais rápida de perder alguém que já disse sim.
     defaultValues: {
-      name: "",
-      email: "",
+      name: searchParams.get("nome") ?? "",
+      email: searchParams.get("email") ?? "",
       password: "",
-      phone: "",
+      phone: searchParams.get("telefone") ?? "",
       barbershopName: "",
       barbershopSlug: "",
       city: "",
@@ -143,7 +146,7 @@ function RegisterForm() {
   }, [barbershopSlug, step]);
 
   const planOptions = [
-    { value: "starter", label: "Essencial", price: "R$ 50/mês", description: "Agenda, gorjeta e fidelidade — até 3 barbeiros" },
+    { value: "starter", label: "Essencial", price: "R$ 50/mês", description: "Agenda, gorjeta e fidelidade. Até 3 barbeiros." },
     { value: "pro", label: "Pro", price: "R$ 250/mês", description: "Copiloto com IA, financeiro e assinatura" },
     { value: "white-label", label: "White Label", price: "R$ 897/mês", description: "App próprio com a sua marca" },
   ];
@@ -387,7 +390,7 @@ function RegisterForm() {
                 </p>
               ) : slugStatus === "taken" ? (
                 <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
-                  <X className="w-3 h-3" /> Esse link já está em uso — tente outro
+                  <X className="w-3 h-3" /> Esse link já está em uso. Tente outro
                 </p>
               ) : (
                 barbershopSlug && (
@@ -416,7 +419,7 @@ function RegisterForm() {
                   {...register("state")}
                   className="h-12 w-20 px-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm appearance-none text-center"
                 >
-                  <option value="">—</option>
+                  <option value="">UF</option>
                   {UFS.map((uf) => (
                     <option key={uf} value={uf}>{uf}</option>
                   ))}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, EyeOff, ShieldCheck, Sparkles, Check } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, Check } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { redirectTo } from "@/lib/utils";
 
@@ -98,15 +98,15 @@ export default function LoginPage() {
   if (pendingToken) {
     return (
       <div className="w-full max-w-md">
-        <div className="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center mb-5">
-          <ShieldCheck className="w-6 h-6 text-purple-400" />
+        <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-5">
+          <ShieldCheck className="w-6 h-6 text-white" />
         </div>
-        <h1 className="text-3xl font-black text-white mb-1">Verificação em duas etapas</h1>
+        <h1 className="text-[28px] font-bold tracking-tight text-white mb-1.5">Verificação em duas etapas</h1>
         <p className="text-zinc-500 text-sm mb-8">Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
 
         <form onSubmit={handleVerifyCode} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Código</label>
+            <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">Código</label>
             <input
               type="text"
               inputMode="numeric"
@@ -116,16 +116,16 @@ export default function LoginPage() {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
-              className="w-full h-14 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-700 text-center text-2xl font-mono tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/60 transition-all"
+              className="w-full h-14 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-700 text-center text-2xl font-mono tracking-[0.4em] focus:outline-none focus:ring-2 focus:border-white/40 transition-all"
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading || code.length < 6}
-            className="w-full h-12 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm shadow-lg shadow-purple-500/20"
+            className="w-full h-12 bg-white text-zinc-950 font-semibold rounded-xl hover:bg-zinc-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
-            {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Verificar →"}
+            {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Verificar"}
           </button>
 
           <button
@@ -152,11 +152,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-4 rounded-full bg-amber-500/10 border border-amber-500/20">
-        <Sparkles className="w-3 h-3 text-amber-400" />
-        <span className="text-[11px] font-semibold text-amber-400">Painel do gestor</span>
-      </div>
-      <h1 className="text-3xl font-black text-white mb-1 font-display">Bem-vindo de volta</h1>
+      <h1 className="text-[28px] font-bold tracking-tight text-white mb-1.5">Bem-vindo de volta</h1>
       <p className="text-zinc-500 text-sm mb-1">
         É dono de barbearia e não tem conta?{" "}
         <Link href="/register" className="text-amber-400 hover:text-amber-300 font-medium transition-colors">
@@ -184,7 +180,7 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+          <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
             E-mail
           </label>
           <input
@@ -194,12 +190,12 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
-            className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+            className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">
+          <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
             Senha
           </label>
           <div className="relative">
@@ -210,7 +206,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-12 px-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+              className="w-full h-11 px-3.5 pr-11 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
             />
             <button
               type="button"
@@ -241,12 +237,12 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full h-12 bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-900 font-bold rounded-2xl hover:from-amber-400 hover:to-amber-300 transition-all disabled:opacity-60 flex items-center justify-center gap-2 text-sm shadow-lg shadow-amber-500/20 mt-2"
+          className="w-full h-12 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm mt-2"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
           ) : (
-            "Entrar na conta →"
+            "Entrar"
           )}
         </button>
       </form>
@@ -256,12 +252,6 @@ export default function LoginPage() {
           <p className="text-xs text-red-400 text-center">{error}</p>
         </div>
       )}
-
-      <div className="mt-6 p-4 bg-amber-500/5 border border-amber-500/15 rounded-2xl">
-        <p className="text-xs text-zinc-500 text-center">
-          <span className="text-amber-400 font-semibold">Demo:</span> demo@cortix.app / demo123456
-        </p>
-      </div>
     </div>
   );
 }
