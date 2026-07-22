@@ -179,7 +179,31 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     metadata: { name: shop.name, slug: shop.slug, agendamentos: shop._count.appointments },
   });
 
-  await prisma.barbershop.delete({ where: { id } });
+  try {
+    await prisma.$transaction(async (tx: typeof prisma) => {
+      // Os agendamentos saem PRIMEIRO, e isso não é detalhe: Appointment
+      // aponta para Staff e Service SEM cascade (Restrict, o padrão do
+      // Prisma). Ao apagar a barbearia, o banco tenta remover barbeiros,
+      // serviços e agendamentos de uma vez — se o barbeiro sair antes do
+      // agendamento que o referencia, o Restrict barra tudo e a exclusão
+      // falha inteira.
+      //
+      // Foi exatamente por isso que uma barbearia recém-criada apagava e uma
+      // com histórico não: a primeira não tinha agendamento nenhum para
+      // disparar o bloqueio. Review e Tip penduram no Appointment com
+      // cascade, então somem junto.
+      await tx.appointment.deleteMany({ where: { barbershopId: id } });
+      await tx.barbershop.delete({ where: { id } });
+    });
+  } catch (error) {
+    // Sem este bloco a rota estourava um 500 sem corpo, e a tela mostrava só
+    // "Erro na requisição" — que não diz nada a quem está tentando resolver.
+    console.error("[barbershop.delete]", error);
+    return NextResponse.json(
+      { error: "Não consegui apagar: algum registro ainda depende desta barbearia. O erro foi registrado no log do servidor." },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ ok: true, message: `"${shop.name}" foi apagada.` });
 }
