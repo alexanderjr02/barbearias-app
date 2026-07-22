@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Store, Crown, Zap, Check, DollarSign, HeartPulse, Eye, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { BarbershopActions } from "@/components/admin/BarbershopActions";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
 import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 
@@ -276,6 +277,14 @@ export default function AdminBarbershopDetailPage({ params }: { params: Promise<
           ))}
         </div>
       </div>
+
+      <BarbershopActions
+        id={data.id}
+        slug={data.slug}
+        name={data.name}
+        ownerEmail={data.owner.email}
+        isActive={data.isActive}
+      />
     </div>
   );
 }
