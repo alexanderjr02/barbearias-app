@@ -300,6 +300,7 @@ model Notification {
   @@index([barbershopId])
   @@index([clientId])
   @@index([read])
+  @@index([barbershopId, createdAt])
 }
 
 model Staff {
@@ -334,6 +335,7 @@ model Staff {
   reviews       Review[]
   tips          Tip[]
   preferredBy   BarbershopClient[] @relation("PreferredClients")
+  @@index([barbershopId])
 }
 
 model Service {
@@ -357,6 +359,7 @@ model Service {
   updatedAt     DateTime @updatedAt
 
   appointments  Appointment[]
+  @@index([barbershopId])
 }
 
 model Appointment {
@@ -397,6 +400,12 @@ model Appointment {
 
   review        Review?
   tip           Tip?
+  // A agenda: quase toda leitura é "loja X no período Y". Sem isto, a maior
+  // tabela do sistema era varrida inteira a cada consulta.
+  @@index([barbershopId, date])
+  @@index([barbershopId, status])
+  @@index([clientId, date])
+  @@index([staffId, date])
 }
 
 // A digital tip (gorjeta via PIX) a client leaves for the barber after a
@@ -459,6 +468,7 @@ model AutopilotLog {
   createdAt      DateTime   @default(now())
 
   @@index([barbershopId])
+  @@index([barbershopId, createdAt])
 }
 
 // Per-call AI usage/cost meter — the margin guardrail. Every model call the
@@ -541,6 +551,7 @@ model Product {
   barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  @@index([barbershopId])
 }
 
 model FinancialTransaction {
@@ -555,6 +566,7 @@ model FinancialTransaction {
   barbershopId  String
   barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
+  @@index([barbershopId, date])
 }
 
 model WorkingHour {
@@ -605,6 +617,7 @@ model ChatMessage {
   barbershopId  String
   barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
+  @@index([barbershopId, createdAt])
 }
 
 model RefreshToken {

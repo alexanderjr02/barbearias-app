@@ -34,6 +34,34 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 ano — mesmo raciocínio do
 // localStorage, um cookie é lido pelo SERVIDOR na primeira requisição, então
 // funciona mesmo sem o JavaScript ainda ter rodado.
 
+// Cache de instância: a mesma função quente atende muitas aberturas seguidas,
+// e nome/cor/plano de uma barbearia praticamente não mudam. Sem isto, TODA
+// abertura do app custava uma chamada HTTP pra outra aplicação + uma query no
+// banco antes do primeiro byte (medido: 380–760ms). Com 100 mil barbearias o
+// custo por abertura é o mesmo, mas multiplicado pelo tráfego — é o caminho
+// mais quente do sistema inteiro.
+//
+// TTL curto de propósito: o gestor que troca o nome ou a cor vê o efeito em
+// menos de um minuto, sem precisar de invalidação explícita.
+const SHOP_TTL_MS = 60 * 1000;
+const SHOP_CACHE_MAX = 500; // teto de memória por instância
+const shopCache = new Map();
+
+function cachedShop(slug) {
+  const hit = shopCache.get(slug);
+  if (!hit || Date.now() > hit.expires) return undefined;
+  return hit.shop;
+}
+
+function rememberShop(slug, shop) {
+  // Descarta o mais antigo quando estoura: com muitas barbearias, uma
+  // instância não pode guardar todas.
+  if (shopCache.size >= SHOP_CACHE_MAX) {
+    shopCache.delete(shopCache.keys().next().value);
+  }
+  shopCache.set(slug, { shop, expires: Date.now() + SHOP_TTL_MS });
+}
+
 module.exports = async (req, res) => {
   const queryShop = typeof req.query.shop === "string" ? req.query.shop.trim() : "";
   const slug = queryShop || (req.cookies && req.cookies[COOKIE_NAME]) || "";
@@ -42,22 +70,32 @@ module.exports = async (req, res) => {
   let shop = null;
 
   if (slug) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 4000);
-      const r = await fetch(
-        `${DASHBOARD_ORIGIN}/api/v1/barbershop?slug=${encodeURIComponent(slug)}`,
-        { signal: controller.signal }
-      );
-      clearTimeout(timeout);
-      if (r.ok) {
-        const body = await r.json();
-        shop = body && (body.data || body);
+    const cached = cachedShop(slug);
+    if (cached !== undefined) {
+      // `null` também é cacheado: slug inexistente é o caso do link errado
+      // circulando por aí, e ele não pode bater no banco a cada abertura.
+      shop = cached;
+    } else {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        const r = await fetch(
+          `${DASHBOARD_ORIGIN}/api/v1/barbershop?slug=${encodeURIComponent(slug)}`,
+          { signal: controller.signal }
+        );
+        clearTimeout(timeout);
+        if (r.ok) {
+          const body = await r.json();
+          shop = body && (body.data || body);
+          rememberShop(slug, shop || null);
+        } else if (r.status === 404) {
+          rememberShop(slug, null);
+        }
+      } catch {
+        // Sem rede/timeout/barbearia removida: cai pra marca padrão em vez de
+        // derrubar a página — é sempre melhor abrir o app com a marca genérica
+        // do que não abrir. Não cacheia: falha de rede é passageira.
       }
-    } catch {
-      // Sem rede/timeout/barbearia removida: cai pra marca padrão em vez de
-      // derrubar a página — é sempre melhor abrir o app com a marca genérica
-      // do que não abrir.
     }
   }
 

@@ -1,4 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
+  "headers": [
+    {
+      "// canvaskit": "Só muda quando a versão do Flutter muda — é o pedaço mais pesado e o mais estável. Cache longo.",
+      "source": "/canvaskit/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
+    },
+    {
+      "// bundle e assets": "O Flutter NÃO põe hash no nome do main.dart.js, então cache imutável travaria todo mundo numa versão velha. max-age curto + stale-while-revalidate: a abertura é instantânea (serve do cache) e a versão nova desce em segundo plano, valendo na próxima abertura.",
+      "source": "/(main.dart.js|assets/.*|icons/.*|favicon.png|manifest.json)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" }]
+    },
+    {
+      "// bootstrap": "Fica fresco de propósito: é ele que aponta pro resto, e tem 11KB. É o ponto por onde uma versão nova entra.",
+      "source": "/flutter_bootstrap.js",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    }
+  ]
 }
