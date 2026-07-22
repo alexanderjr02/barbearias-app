@@ -12,10 +12,10 @@ interface Message {
 }
 
 const INSIGHTS = [
-  "💡 Sua receita esta semana está **12% acima** da média. Considere abrir mais horários no sábado!",
-  "📊 **3 clientes** não visitam há mais de 30 dias. Envie uma campanha de reativação para recuperá-los.",
-  "⭐ João Silva tem a **maior avaliação** da equipe (4.9). Considere uma comissão bônus para motivar!",
-  "🎯 O serviço **Corte + Barba** representa 35% da receita. Vale criar uma promoção para impulsioná-lo.",
+  "Sua receita esta semana está **12% acima** da média. Considere abrir mais horários no sábado!",
+  "**3 clientes** não visitam há mais de 30 dias. Envie uma campanha de reativação para recuperá-los.",
+  "João Silva tem a **maior avaliação** da equipe (4.9). Considere uma comissão bônus para motivar!",
+  "O serviço **Corte + Barba** representa 35% da receita. Vale criar uma promoção para impulsioná-lo.",
 ];
 
 const RESPONSES: { keywords: string[]; answer: string }[] = [
@@ -25,35 +25,35 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["relatório", "receita", "financeiro", "dinheiro", "quanto ganhei"],
-    answer: "Seus números desta semana:\n\n💰 **Receita:** R$ 4.540\n📅 **Agendamentos:** 85\n🎯 **Ticket médio:** R$ 53\n📈 **Crescimento:** +12% vs semana anterior\n\nPara análises mais detalhadas, acesse **Relatórios** no menu lateral (plano Pro).\n\nQuer que eu explique como interpretar os dados?",
+    answer: "Seus números desta semana:\n\n**Receita:** R$ 4.540\n**Agendamentos:** 85\n**Ticket médio:** R$ 53\n**Crescimento:** +12% vs semana anterior\n\nPara análises mais detalhadas, acesse **Relatórios** no menu lateral (plano Pro).\n\nQuer que eu explique como interpretar os dados?",
   },
   {
     keywords: ["cliente", "clientes", "vip", "fidelidade"],
-    answer: "Sobre seus clientes:\n\n👥 **342 clientes** ativos no total\n⭐ **28 VIPs** (>10 visitas ou >R$ 500 gastos)\n🆕 **7 novos** este mês\n🔄 **91.8%** de taxa de retenção\n\n**Dica:** Configure automações de aniversário e reativação em **Marketing** para aumentar o retorno!",
+    answer: "Sobre seus clientes:\n\n**342 clientes** ativos no total\n**28 VIPs** (>10 visitas ou >R$ 500 gastos)\n**7 novos** este mês\n**91.8%** de taxa de retenção\n\n**Dica:** Configure automações de aniversário e reativação em **Marketing** para aumentar o retorno!",
   },
   {
     keywords: ["barbeiro", "equipe", "funcionário", "comissão", "adicionar"],
-    answer: "Para gerenciar sua equipe:\n\n1. Acesse **Equipe** no menu lateral\n2. Clique em **Adicionar barbeiro**\n3. Configure nome, especialidades e % de comissão\n\nNo plano **Starter** você pode ter até 3 barbeiros. No **Pro**, até 10. No **White Label**, ilimitados!\n\n📊 Dica: Acompanhe a performance de cada barbeiro na aba de **Relatórios**.",
+    answer: "Para gerenciar sua equipe:\n\n1. Acesse **Equipe** no menu lateral\n2. Clique em **Adicionar barbeiro**\n3. Configure nome, especialidades e % de comissão\n\nNo plano **Starter** você pode ter até 3 barbeiros. No **Pro**, até 10. No **White Label**, ilimitados!\n\nDica: Acompanhe a performance de cada barbeiro na aba de **Relatórios**.",
   },
   {
     keywords: ["chatbot", "bot", "automatizar", "mensagem", "whatsapp"],
-    answer: "Seu chatbot pode ser personalizado no **plano Pro**:\n\n1. Vá em ⚙️ **Configurações**\n2. Acesse a aba **Chatbot**\n3. Edite o nome, mensagem de boas-vindas e FAQs\n4. Configure a integração com **WhatsApp Business**\n\nO chatbot responde automaticamente 24/7 tanto no app quanto no WhatsApp dos seus clientes!",
+    answer: "Seu chatbot pode ser personalizado no **plano Pro**:\n\n1. Vá em **Configurações**\n2. Acesse a aba **Chatbot**\n3. Edite o nome, mensagem de boas-vindas e FAQs\n4. Configure a integração com **WhatsApp Business**\n\nO chatbot responde automaticamente 24/7 tanto no app quanto no WhatsApp dos seus clientes!",
   },
   {
     keywords: ["serviço", "serviços", "adicionar serviço", "preço", "valor"],
-    answer: "Para gerenciar serviços:\n\n1. Acesse **Serviços** no menu lateral\n2. Clique em **Novo serviço**\n3. Defina nome, categoria, duração e preço\n4. Ative/desative serviços conforme necessário\n\n💡 Dica: Crie combos (ex: Corte + Barba) com preço diferenciado para aumentar o ticket médio!",
+    answer: "Para gerenciar serviços:\n\n1. Acesse **Serviços** no menu lateral\n2. Clique em **Novo serviço**\n3. Defina nome, categoria, duração e preço\n4. Ative/desative serviços conforme necessário\n\nDica: Crie combos (ex: Corte + Barba) com preço diferenciado para aumentar o ticket médio!",
   },
   {
     keywords: ["marketing", "campanha", "promoção", "email", "sms"],
-    answer: "Para criar campanhas de marketing:\n\n1. Acesse **Marketing** no menu lateral\n2. Escolha o tipo: WhatsApp, Email ou SMS\n3. Selecione o público (todos, VIPs, inativos)\n4. Escreva a mensagem e agende o envio\n\n🎯 Automações disponíveis:\n• Lembrete 24h antes\n• Mensagem de aniversário\n• Reativação de clientes inativos",
+    answer: "Para criar campanhas de marketing:\n\n1. Acesse **Marketing** no menu lateral\n2. Escolha o tipo: WhatsApp, Email ou SMS\n3. Selecione o público (todos, VIPs, inativos)\n4. Escreva a mensagem e agende o envio\n\nAutomações disponíveis:\n• Lembrete 24h antes\n• Mensagem de aniversário\n• Reativação de clientes inativos",
   },
   {
     keywords: ["plano", "upgrade", "pro", "premium", "assinar"],
-    answer: "Você está no **plano Essencial**.\n\nUpgrade para o **Pro (R$ 250/mês)** e desbloqueie:\n✅ Copiloto com IA (fecha o mês, acha onde você perde dinheiro)\n✅ Financeiro completo, metas e comissões\n✅ Controle de estoque\n✅ Fidelização e clube de assinatura\n✅ Até 10 barbeiros\n✅ Suporte prioritário\n\nClique em **Fazer upgrade** no menu lateral para assinar com 14 dias grátis!",
+    answer: "Você está no **plano Essencial**.\n\nUpgrade para o **Pro (R$ 250/mês)** e desbloqueie:\nCopiloto com IA (fecha o mês, acha onde você perde dinheiro)\nFinanceiro completo, metas e comissões\nControle de estoque\nFidelização e clube de assinatura\nAté 10 barbeiros\nSuporte prioritário\n\nClique em **Fazer upgrade** no menu lateral para assinar com 14 dias grátis!",
   },
   {
     keywords: ["estoque", "produto", "compras"],
-    answer: "Para gerenciar o estoque:\n\n1. Acesse **Estoque** no menu lateral\n2. Adicione produtos com código, preço e quantidade mínima\n3. O sistema alerta automaticamente quando o estoque estiver baixo\n\n⚠️ Você tem **3 produtos** com estoque abaixo do mínimo. Acesse Estoque para ver quais são!",
+    answer: "Para gerenciar o estoque:\n\n1. Acesse **Estoque** no menu lateral\n2. Adicione produtos com código, preço e quantidade mínima\n3. O sistema alerta automaticamente quando o estoque estiver baixo\n\nVocê tem **3 produtos** com estoque abaixo do mínimo. Acesse Estoque para ver quais são!",
   },
   {
     keywords: ["configuração", "configurar", "cor", "logo", "aparência"],
@@ -61,7 +61,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
 ];
 
-const DEFAULT = "Não entendi exatamente, mas posso ajudar com:\n\n📅 **Agendamentos** — como criar e gerenciar\n📊 **Relatórios** — análise da receita\n👥 **Clientes** — VIPs e fidelidade\n✂️ **Serviços** — cadastro e preços\n💬 **Chatbot** — personalização\n📣 **Marketing** — campanhas\n\nPergunta algo específico!";
+const DEFAULT = "Não entendi exatamente, mas posso ajudar com:\n\n**Agendamentos** — como criar e gerenciar\n**Relatórios** — análise da receita\n**Clientes** — VIPs e fidelidade\n**Serviços** — cadastro e preços\n**Chatbot** — personalização\n**Marketing** — campanhas\n\nPergunta algo específico!";
 
 function getResponse(text: string): string {
   const lower = text.toLowerCase();
@@ -99,7 +99,7 @@ export function AdminChatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     id: "0", role: "bot",
-    content: `Olá! 👋 Sou seu assistente de gestão.\n\n${pickRandom(INSIGHTS)}\n\nComo posso te ajudar hoje?`,
+    content: `Olá! Sou seu assistente de gestão.\n\n${pickRandom(INSIGHTS)}\n\nComo posso te ajudar hoje?`,
   }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);

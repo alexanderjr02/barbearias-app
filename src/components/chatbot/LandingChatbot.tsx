@@ -14,7 +14,7 @@ interface Message {
 const RESPONSES: { keywords: string[]; answer: string }[] = [
   {
     keywords: ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite", "tudo bem", "e ai", "e aí"],
-    answer: "Olá! 👋 Que bom te ver por aqui.\n\nPosso te ajudar com:\n\n• **Planos e preços**\n• **Funcionalidades** do sistema\n• **WhatsApp** e integrações\n• Como **começar** hoje mesmo\n\nO que você quer saber?",
+    answer: "Olá! Que bom te ver por aqui.\n\nPosso te ajudar com:\n\n• **Planos e preços**\n• **Funcionalidades** do sistema\n• **WhatsApp** e integrações\n• Como **começar** hoje mesmo\n\nO que você quer saber?",
   },
   {
     keywords: ["preço", "valor", "quanto", "custa", "plano", "planos", "mensalidade", "assinatura"],
@@ -26,15 +26,15 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["funcionalidade", "recurso", "o que faz", "features", "o que tem", "inclui", "sistema faz"],
-    answer: "O CORTIX cobre o essencial da gestão de uma barbearia:\n\n✂️ **Agendamento online** — página personalizada 24/7\n📅 **Agenda com visão diária, semanal e mensal** — veja toda a equipe de uma vez ou filtre por barbeiro\n💬 **Chatbot** no site (e no WhatsApp nos planos Pro/White Label)\n💰 **Financeiro** — receitas, despesas e comissões\n📊 **Relatórios** de faturamento e performance da equipe\n👥 **Clientes** — histórico, avaliações e programa de pontos/fidelidade (Bronze, Prata, Ouro)\n👨‍💼 **Equipe** — controle de barbeiros, comissões e agenda de cada um\n📱 **App para barbeiro e cliente** — agenda, ganhos e avaliações para o barbeiro; histórico, cancelamento/remarcação e avaliação de atendimento para o cliente\n📦 **Estoque** de produtos, com foto de cada item\n\nQuer ver a demonstração ao vivo?",
+    answer: "O CORTIX cobre o essencial da gestão de uma barbearia:\n\n**Agendamento online** — página personalizada 24/7\n**Agenda com visão diária, semanal e mensal** — veja toda a equipe de uma vez ou filtre por barbeiro\n**Chatbot** no site (e no WhatsApp nos planos Pro/White Label)\n**Financeiro** — receitas, despesas e comissões\n**Relatórios** de faturamento e performance da equipe\n**Clientes** — histórico, avaliações e programa de pontos/fidelidade (Bronze, Prata, Ouro)\n**Equipe** — controle de barbeiros, comissões e agenda de cada um\n**App para barbeiro e cliente** — agenda, ganhos e avaliações para o barbeiro; histórico, cancelamento/remarcação e avaliação de atendimento para o cliente\n**Estoque** de produtos, com foto de cada item\n\nQuer ver a demonstração ao vivo?",
   },
   {
     keywords: ["app", "aplicativo", "celular", "download", "baixar"],
-    answer: "Sim! Além do painel web para o gestor, o barbeiro tem um app próprio com:\n\n📅 Agenda do dia\n💰 Ganhos — receita, comissão e ticket médio do mês\n⭐ Avaliações recebidas dos clientes\n👤 Histórico de cada cliente ao tocar no agendamento\n\nE o cliente tem um app para:\n\n📖 Ver histórico de agendamentos e o saldo de pontos\n🔁 Cancelar ou remarcar um horário\n⭐ Avaliar o atendimento depois de concluído\n\nO app com a marca 100% personalizada da sua barbearia — que o cliente instala na tela do celular pelo seu link, sem passar por loja de aplicativo — é exclusivo do plano **White Label**.",
+    answer: "Sim! Além do painel web para o gestor, o barbeiro tem um app próprio com:\n\nAgenda do dia\nGanhos — receita, comissão e ticket médio do mês\nAvaliações recebidas dos clientes\nHistórico de cada cliente ao tocar no agendamento\n\nE o cliente tem um app para:\n\nVer histórico de agendamentos e o saldo de pontos\nCancelar ou remarcar um horário\nAvaliar o atendimento depois de concluído\n\nO app com a marca 100% personalizada da sua barbearia — que o cliente instala na tela do celular pelo seu link, sem passar por loja de aplicativo — é exclusivo do plano **White Label**.",
   },
   {
     keywords: ["avaliação", "avaliações", "nota", "review", "reviews", "estrela", "estrelas"],
-    answer: "Depois que um atendimento é concluído, o cliente pode avaliar o barbeiro com estrelas (1 a 5) e um comentário opcional, direto pelo app.\n\nA nota média de cada barbeiro aparece:\n\n⭐ No painel do gestor, na aba **Equipe**\n⭐ No app do barbeiro, na aba **Ganhos**\n\nCada agendamento só pode ser avaliado uma vez.",
+    answer: "Depois que um atendimento é concluído, o cliente pode avaliar o barbeiro com estrelas (1 a 5) e um comentário opcional, direto pelo app.\n\nA nota média de cada barbeiro aparece:\n\nNo painel do gestor, na aba **Equipe**\nNo app do barbeiro, na aba **Ganhos**\n\nCada agendamento só pode ser avaliado uma vez.",
   },
   {
     keywords: ["cancelar horário", "remarcar", "reagendar", "desmarcar", "mudar horário", "trocar horário"],
@@ -42,11 +42,11 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["agenda", "calendário", "visão semanal", "visão mensal", "mês", "semana"],
-    answer: "A agenda do painel do gestor tem 3 visões:\n\n📋 **Lista** — busca e filtro por status\n📆 **Semana** — grade por horário, ideal para ver a ocupação do dia a dia\n🗓️ **Mês** — visão panorâmica de todos os agendamentos\n\nEm qualquer visão dá para filtrar por barbeiro específico. O barbeiro também acompanha a própria agenda direto pelo app dele.",
+    answer: "A agenda do painel do gestor tem 3 visões:\n\n**Lista** — busca e filtro por status\n**Semana** — grade por horário, ideal para ver a ocupação do dia a dia\n**Mês** — visão panorâmica de todos os agendamentos\n\nEm qualquer visão dá para filtrar por barbeiro específico. O barbeiro também acompanha a própria agenda direto pelo app dele.",
   },
   {
     keywords: ["ponto", "pontos", "fidelidade", "fidelização", "cashback", "recompensa"],
-    answer: "O programa de fidelidade do CORTIX funciona por pontos:\n\n🥉 **Bronze** — 0 a 500 pontos\n🥈 **Prata** — 501 a 1.500 pontos (5% de desconto)\n🥇 **Ouro** — a partir de 1.501 pontos (10% de desconto)\n\nOs pontos são creditados automaticamente quando um atendimento é concluído, e o gestor pode configurar quantos pontos valem por real gasto. Disponível a partir do plano **Pro**.",
+    answer: "O programa de fidelidade do CORTIX funciona por pontos:\n\n**Bronze** — 0 a 500 pontos\n**Prata** — 501 a 1.500 pontos (5% de desconto)\n**Ouro** — a partir de 1.501 pontos (10% de desconto)\n\nOs pontos são creditados automaticamente quando um atendimento é concluído, e o gestor pode configurar quantos pontos valem por real gasto. Disponível a partir do plano **Pro**.",
   },
   {
     keywords: ["whatsapp", "integração", "api", "mensagem automática"],
@@ -54,7 +54,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["teste", "grátis", "free", "trial", "experimentar", "começar", "cadastro", "cadastrar"],
-    answer: "Você pode começar agora mesmo:\n\n**Plano Essencial** — R$ 50/mês, sem contrato de fidelidade.\n**Planos Pro e White Label** — 14 dias de teste grátis, sem cartão de crédito.\n\n👉 Clique em **Começar grátis** no topo da página para criar sua conta em menos de 2 minutos.\n\nPrecisa de ajuda durante o cadastro?",
+    answer: "Você pode começar agora mesmo:\n\n**Plano Essencial** — R$ 50/mês, sem contrato de fidelidade.\n**Planos Pro e White Label** — 14 dias de teste grátis, sem cartão de crédito.\n\nClique em **Começar grátis** no topo da página para criar sua conta em menos de 2 minutos.\n\nPrecisa de ajuda durante o cadastro?",
   },
   {
     keywords: ["cancelar", "fidelidade", "contrato", "multa"],
@@ -62,19 +62,19 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["cardápio", "configurar", "personalizar", "logo", "cor", "aparência"],
-    answer: "Cada barbearia tem sua identidade visual no CORTIX:\n\n🎨 Cores, logo e capa personalizadas (planos Pro e White Label)\n🔗 URL própria — ex: cortix.app/sua-barbearia\n⚙️ Serviços, preços e horários configuráveis\n\nTudo pelo painel, sem precisar de programação.",
+    answer: "Cada barbearia tem sua identidade visual no CORTIX:\n\nCores, logo e capa personalizadas (planos Pro e White Label)\nURL própria — ex: cortix.app/sua-barbearia\nServiços, preços e horários configuráveis\n\nTudo pelo painel, sem precisar de programação.",
   },
   {
     keywords: ["suporte", "ajuda", "problema", "contato", "falar", "vendas", "comercial"],
-    answer: "Estamos aqui para ajudar! 🙋\n\n📧 **Email:** suporte@cortix.app\n💬 **WhatsApp:** (11) 99999-0000\n\nNo plano **Pro**, o suporte é prioritário. No **White Label**, você tem atendimento dedicado.\n\nO que mais posso ajudar?",
+    answer: "Estamos aqui para ajudar! \n\n**Email:** suporte@cortix.app\n**WhatsApp:** (11) 99999-0000\n\nNo plano **Pro**, o suporte é prioritário. No **White Label**, você tem atendimento dedicado.\n\nO que mais posso ajudar?",
   },
   {
     keywords: ["segurança", "dados", "lgpd", "privacidade", "criptografia"],
-    answer: "Levamos a segurança a sério:\n\n🔒 Conexões criptografadas (SSL)\n🛡️ Tratamento de dados alinhado à LGPD\n☁️ Backup automático\n\nNenhum dado de clientes é compartilhado com terceiros.",
+    answer: "Levamos a segurança a sério:\n\nConexões criptografadas (SSL)\nTratamento de dados alinhado à LGPD\nBackup automático\n\nNenhum dado de clientes é compartilhado com terceiros.",
   },
   {
     keywords: ["múltiplas", "unidades", "franquia", "rede", "várias"],
-    answer: "Para redes de barbearia, o plano **White Label** (R$ 897/mês + R$ 149 por unidade) foi feito para isso:\n\n🏪 App instalável com a marca da sua rede — o cliente adiciona na tela do celular\n📊 Painel da rede: compare suas lojas lado a lado\n🤖 Copiloto que responde \"qual unidade está puxando o faturamento pra baixo?\"\n👔 Sem marca do CORTIX em lugar nenhum\n👥 Barbeiros e unidades ilimitados\n\nFale com nossa equipe comercial: **vendas@cortix.app**",
+    answer: "Para redes de barbearia, o plano **White Label** (R$ 897/mês + R$ 149 por unidade) foi feito para isso:\n\nApp instalável com a marca da sua rede — o cliente adiciona na tela do celular\nPainel da rede: compare suas lojas lado a lado\nCopiloto que responde \"qual unidade está puxando o faturamento pra baixo?\"\nSem marca do CORTIX em lugar nenhum\nBarbeiros e unidades ilimitados\n\nFale com nossa equipe comercial: **vendas@cortix.app**",
   },
   {
     keywords: ["quanto tempo", "implanta", "implementar", "migrar", "trocar de sistema", "demora"],
@@ -82,7 +82,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
 ];
 
-const DEFAULT_RESPONSE = "Ainda não tenho uma resposta pronta pra essa pergunta específica. 🙏\n\nPosso te ajudar com:";
+const DEFAULT_RESPONSE = "Ainda não tenho uma resposta pronta pra essa pergunta específica. \n\nPosso te ajudar com:";
 
 const QUICK_QUESTIONS = [
   "Quais são os planos?",
@@ -129,7 +129,7 @@ export function LandingChatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     id: "0", role: "bot",
-    content: "Olá! 👋 Sou o assistente do **CORTIX**.\n\nPosso te ajudar com informações sobre planos, funcionalidades e como começar. O que você quer saber?",
+    content: "Olá! Sou o assistente do **CORTIX**.\n\nPosso te ajudar com informações sobre planos, funcionalidades e como começar. O que você quer saber?",
   }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);

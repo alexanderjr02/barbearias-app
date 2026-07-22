@@ -306,7 +306,7 @@ function PhonePreview({ cfg, stamps, saving }: { cfg: Config; stamps: number; sa
                     </div>
                     <p className="mt-3.5 text-[11px] text-zinc-400">
                       {remaining === 0 ? (
-                        <span className="font-semibold text-amber-300">Cartela completa! Prêmio liberado 🎉</span>
+                        <span className="font-semibold text-amber-300">Cartela completa! Prêmio liberado </span>
                       ) : (
                         <>Faltam <span className="font-semibold text-white">{remaining}</span> {remaining === 1 ? "corte" : "cortes"} para ganhar{" "}
                           <span className="font-semibold text-amber-300">{cfg.stampRewardLabel || "seu prêmio"}</span></>

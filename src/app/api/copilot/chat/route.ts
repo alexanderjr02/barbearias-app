@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   const shop = await prisma.barbershop.findUnique({ where: { id: session.barbershopId }, select: { plan: true } });
   if (!planHasAI(shop?.plan)) {
     return NextResponse.json({
-      reply: "O Copiloto faz parte do plano Pro. Faça upgrade pra desbloquear seu assistente de negócio com IA. 🚀",
+      reply: "O Copiloto faz parte do plano Pro. Faça upgrade pra desbloquear seu assistente de negócio com IA.",
       aiPowered: false,
       locked: true,
       note: "Recurso do plano Pro",

@@ -23,7 +23,7 @@ export interface ChatbotConfig {
 
 const DEFAULT_CONFIG: ChatbotConfig = {
   name: "Assistente",
-  welcomeMessage: "Olá! 👋 Como posso te ajudar hoje?\n\nPosso responder sobre horários, serviços, preços e agendamentos!",
+  welcomeMessage: "Olá! Como posso te ajudar hoje?\n\nPosso responder sobre horários, serviços, preços e agendamentos!",
   primaryColor: "#D4AF37",
   faqItems: [],
   whatsapp: "(11) 99999-9999",
@@ -37,32 +37,32 @@ function buildResponder(config: ChatbotConfig) {
     {
       question: "horário funcionamento hora abre fecha quando",
       answer: config.hours
-        ? `⏰ Nosso horário de funcionamento:\n\n${config.hours}\n\nPrecisa agendar? Clique em qualquer serviço acima!`
+        ? `Nosso horário de funcionamento:\n\n${config.hours}\n\nPrecisa agendar? Clique em qualquer serviço acima!`
         : "Por favor, entre em contato para saber nosso horário de funcionamento.",
     },
     {
       question: "endereço localização onde fica bairro rua",
       answer: config.address
-        ? `📍 Estamos em:\n\n${config.address}\n\nComo posso te ajudar mais?`
+        ? `Estamos em:\n\n${config.address}\n\nComo posso te ajudar mais?`
         : "Nosso endereço está disponível no site.",
     },
     {
       question: "whatsapp contato telefone ligar falar",
       answer: config.whatsapp
-        ? `📱 Entre em contato pelo WhatsApp:\n\n**${config.whatsapp}**\n\nOu clique no botão do WhatsApp para falar diretamente conosco!`
+        ? `Entre em contato pelo WhatsApp:\n\n**${config.whatsapp}**\n\nOu clique no botão do WhatsApp para falar diretamente conosco!`
         : "Use o botão de contato para falar com a gente.",
     },
     {
       question: "cancelar cancela desmarca agendamento muda",
-      answer: "Para cancelar ou reagendar, entre em contato pelo WhatsApp com pelo menos 2 horas de antecedência. Sem problema! 😊",
+      answer: "Para cancelar ou reagendar, entre em contato pelo WhatsApp com pelo menos 2 horas de antecedência. Sem problema!",
     },
     {
       question: "pagamento pagar forma pix cartão dinheiro",
-      answer: "Aceitamos:\n\n💳 Cartão de débito e crédito\n💰 PIX\n💵 Dinheiro\n\nPagamento na hora, ao final do serviço!",
+      answer: "Aceitamos:\n\nCartão de débito e crédito\nPIX\nDinheiro\n\nPagamento na hora, ao final do serviço!",
     },
     {
       question: "criança infantil filho menino",
-      answer: "Sim, atendemos crianças! 👦\n\nCorte infantil disponível com barbeiros experientes. Recomendamos agendar com antecedência, especialmente aos fins de semana.",
+      answer: "Sim, atendemos crianças! \n\nCorte infantil disponível com barbeiros experientes. Recomendamos agendar com antecedência, especialmente aos fins de semana.",
     },
   ];
 
@@ -71,7 +71,7 @@ function buildResponder(config: ChatbotConfig) {
     const match = allFaq.find(item =>
       item.question.split(" ").some(k => lower.includes(k))
     );
-    return match?.answer ?? "Desculpe, não entendi sua pergunta. 😅\n\nVocê pode perguntar sobre:\n• Horários de funcionamento\n• Endereço\n• Serviços e preços\n• Formas de pagamento\n• Como agendar\n\nOu entre em contato pelo WhatsApp!";
+    return match?.answer ?? "Desculpe, não entendi sua pergunta. \n\nVocê pode perguntar sobre:\n• Horários de funcionamento\n• Endereço\n• Serviços e preços\n• Formas de pagamento\n• Como agendar\n\nOu entre em contato pelo WhatsApp!";
   };
 }
 

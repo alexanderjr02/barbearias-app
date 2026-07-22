@@ -199,7 +199,7 @@ export function BookingWizard({ shop }: { shop: Shop }) {
               <span className="text-amber-400 font-bold">{formatCurrency(selectedService?.price || 0)}</span>
             </div>
           </div>
-          <p className="text-sm text-zinc-500 mb-6">Você receberá a confirmação no WhatsApp. 📱</p>
+          <p className="text-sm text-zinc-500 mb-6">Você receberá a confirmação no WhatsApp. </p>
           <Link
             href="/"
             className="inline-block px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl"
@@ -507,7 +507,7 @@ export function BookingWizard({ shop }: { shop: Shop }) {
             {shop.phone && (
               <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{shop.phone}</span>
             )}
-            {shop.instagram && <span className="flex items-center gap-1.5">📸 @{shop.instagram.replace(/^@/, "")}</span>}
+            {shop.instagram && <span className="flex items-center gap-1.5">@{shop.instagram.replace(/^@/, "")}</span>}
           </div>
           <p className="text-center text-xs text-zinc-800 mt-4">
             Powered by <span className="text-zinc-700 font-bold">CORTIX</span>

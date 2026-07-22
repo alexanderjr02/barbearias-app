@@ -47,12 +47,12 @@ const ICONS: Record<string, typeof TrendingUp> = {
 // One-tap shortcuts to the Copiloto's heaviest superpowers — the "10 segundos
 // que valem horas" commands, for gestores who'd rather tap than type.
 const POWER_CHIPS: { icon: string; label: string; prompt: string }[] = [
-  { icon: "💸", label: "Onde perco dinheiro", prompt: "Onde estou perdendo dinheiro? Me dá o plano." },
-  { icon: "🧮", label: "Fecha o mês", prompt: "Fecha o meu mês: faturamento, comissão de cada barbeiro e lucro." },
-  { icon: "🧩", label: "Otimiza a agenda", prompt: "Otimiza minha agenda de hoje: onde tem tempo morto?" },
-  { icon: "🔮", label: "E se subir 10%", prompt: "E se eu subir os preços em 10%? Simula o impacto." },
-  { icon: "📅", label: "Escala da semana", prompt: "Monta a escala da semana pela demanda real." },
-  { icon: "⭐", label: "Responder avaliações", prompt: "Como está minha reputação? Me ajuda a responder as avaliações." },
+  { icon: "", label: "Onde perco dinheiro", prompt: "Onde estou perdendo dinheiro? Me dá o plano." },
+  { icon: "", label: "Fecha o mês", prompt: "Fecha o meu mês: faturamento, comissão de cada barbeiro e lucro." },
+  { icon: "", label: "Otimiza a agenda", prompt: "Otimiza minha agenda de hoje: onde tem tempo morto?" },
+  { icon: "", label: "E se subir 10%", prompt: "E se eu subir os preços em 10%? Simula o impacto." },
+  { icon: "", label: "Escala da semana", prompt: "Monta a escala da semana pela demanda real." },
+  { icon: "", label: "Responder avaliações", prompt: "Como está minha reputação? Me ajuda a responder as avaliações." },
 ];
 
 // The Copiloto — a business assistant surfaced as an always-reachable floating
@@ -342,7 +342,7 @@ export function FloatingCopilotWidget() {
               <div className="px-4 py-6">
                 {briefing?.locked ? (
                   <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-3.5 text-sm text-amber-200">
-                    🔒 O Copiloto faz parte do plano <b>Pro</b>. Faça upgrade pra desbloquear.
+                    O Copiloto faz parte do plano <b>Pro</b>. Faça upgrade pra desbloquear.
                   </div>
                 ) : (
                   <>
@@ -434,7 +434,7 @@ export function FloatingCopilotWidget() {
                             disabled={!!busyAction}
                             className="flex items-center gap-1.5 rounded-full bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-black transition hover:bg-amber-400 disabled:opacity-60"
                           >
-                            {busyAction === a.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <span>⚡</span>} {a.label}
+                            {busyAction === a.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <span></span>} {a.label}
                           </button>
                         ))}
                       </div>

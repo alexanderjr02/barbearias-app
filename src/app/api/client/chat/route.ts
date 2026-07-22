@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       reply = `Oi${user?.name ? `, ${user.name.split(" ")[0]}` : ""}! Tive um probleminha agora. Pode repetir?`;
     }
   } else {
-    reply = `Oi${user?.name ? `, ${user.name.split(" ")[0]}` : ""}! 👋 Posso te ajudar a agendar, ver serviços ou seus horários. O que você precisa?`;
+    reply = `Oi${user?.name ? `, ${user.name.split(" ")[0]}` : ""}! Posso te ajudar a agendar, ver serviços ou seus horários. O que você precisa?`;
   }
 
   await prisma.chatMessage.create({ data: { content: reply, role: "BOT", sessionId: sessionKey, barbershopId } });

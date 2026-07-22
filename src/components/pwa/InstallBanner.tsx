@@ -103,9 +103,9 @@ export function InstallBanner() {
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 {[
-                  { icon: "📱", label: "Funciona offline" },
-                  { icon: "🔔", label: "Notificações" },
-                  { icon: "⚡", label: "Acesso rápido" },
+                  { icon: "", label: "Funciona offline" },
+                  { icon: "", label: "Notificações" },
+                  { icon: "", label: "Acesso rápido" },
                 ].map(f => (
                   <div key={f.label} className="bg-zinc-800 rounded-lg p-2">
                     <span className="text-lg">{f.icon}</span>
@@ -139,7 +139,7 @@ export function InstallBanner() {
                 </div>
               ))}
               <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-2.5 flex items-start gap-2 mt-2">
-                <span className="text-amber-400 text-xs">💡</span>
+                <span className="text-amber-400 text-xs"></span>
                 <p className="text-xs text-zinc-400">Use o <strong className="text-zinc-300">Safari</strong> para instalar — outros navegadores não suportam.</p>
               </div>
             </div>
@@ -149,9 +149,9 @@ export function InstallBanner() {
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 {[
-                  { icon: "📱", label: "Funciona offline" },
-                  { icon: "🔔", label: "Notificações" },
-                  { icon: "⚡", label: "Acesso rápido" },
+                  { icon: "", label: "Funciona offline" },
+                  { icon: "", label: "Notificações" },
+                  { icon: "", label: "Acesso rápido" },
                 ].map(f => (
                   <div key={f.label} className="bg-zinc-800 rounded-lg p-2">
                     <span className="text-lg">{f.icon}</span>

@@ -807,9 +807,9 @@ export async function simulatedReply(role: CopilotRole, barbershopId: string, st
       if (!staffId) return "Não achei seu perfil de barbeiro.";
       const n = await nextClient(staffId);
       if (!n) return "Você não tem próximo cliente na agenda.";
-      const bits = [`Próximo: ${n.name} às ${n.time} (${n.service ?? "serviço"})${n.rating ? `, ⭐${n.rating.toFixed(1)}` : ""}${n.visits ? `, ${n.visits} visitas` : ""}.`];
+      const bits = [`Próximo: ${n.name} às ${n.time} (${n.service ?? "serviço"})${n.rating ? `, ${n.rating.toFixed(1)}` : ""}${n.visits ? `, ${n.visits} visitas` : ""}.`];
       if (n.recipe?.recipeMachine || n.recipe?.recipeFinish) bits.push(`Receita do último: ${[n.recipe.recipeMachine, n.recipe.recipeFinish, n.recipe.recipeProducts].filter(Boolean).join(" · ")}.`);
-      if (n.birthdayInDays != null) bits.push(n.birthdayInDays === 0 ? "É aniversário dele hoje — manda um parabéns! 🎉" : `Aniversário em ${n.birthdayInDays} dia(s).`);
+      if (n.birthdayInDays != null) bits.push(n.birthdayInDays === 0 ? "É aniversário dele hoje — manda um parabéns!" : `Aniversário em ${n.birthdayInDays} dia(s).`);
       if (n.upsell) bits.push(n.upsell);
       return bits.join(" ");
     }
@@ -823,13 +823,13 @@ export async function simulatedReply(role: CopilotRole, barbershopId: string, st
   }
   if (has("sumi", "sumido", "não volta", "nao volta", "perdi", "churn", "inativ")) {
     const c = await churnedClients(barbershopId);
-    if (!c.length) return "Boa notícia: nenhum cliente sumido há mais de 45 dias. 👏";
+    if (!c.length) return "Boa notícia: nenhum cliente sumido há mais de 45 dias.";
     const top = c.slice(0, 5).map((x) => `${x.name} (${x.daysSince}d)`).join(", ");
     return `${c.length} clientes sumidos (+45 dias). Top: ${top}. Toque em "Chamar de volta" no painel pra avisar quem tem conta.`;
   }
   if (has("vazio", "livre", "buraco", "horário", "horario", "agenda")) {
     const e = await emptySlotsToday(barbershopId);
-    if (!e.totalFree) return "Sua agenda de hoje está cheia. 🔥";
+    if (!e.totalFree) return "Sua agenda de hoje está cheia.";
     return `${e.totalFree} horários livres hoje: ${e.perStaff.map((s) => `${s.name.split(" ")[0]} (${s.free.slice(0, 4).join(", ")})`).join("; ")}.`;
   }
   if (has("melhor cliente", "top cliente", "fiel", "melhores clientes")) {
@@ -840,7 +840,7 @@ export async function simulatedReply(role: CopilotRole, barbershopId: string, st
   if (has("barbeiro", "equipe", "ranking", "profissional")) {
     const b = await barberLeaderboard(barbershopId);
     if (!b.length) return "Nenhum barbeiro com atendimento no mês ainda.";
-    return "No mês: " + b.map((x) => `${x.name} — ${money(x.revenue)} (${x.count}x${x.avgRating ? `, ⭐${x.avgRating.toFixed(1)}` : ""})`).join("; ");
+    return "No mês: " + b.map((x) => `${x.name} — ${money(x.revenue)} (${x.count}x${x.avgRating ? `, ${x.avgRating.toFixed(1)}` : ""})`).join("; ");
   }
   if (has("estoque", "produto", "acabando", "repor")) {
     const s = await lowStock(barbershopId);
@@ -893,7 +893,7 @@ export async function copilotGreeting(
     if (b.emptyToday > 0) probs.push(`${b.emptyToday} horários livres hoje`);
     if (b.tomorrowUnconfirmed > 0) probs.push(`${b.tomorrowUnconfirmed} agendamentos de amanhã sem confirmar`);
     if (probs.length) bits.push(`Atenção: ${probs.join(", ")}. Quer que eu ajude a resolver?`);
-    else bits.push("Tá tudo em dia por aqui. 👏");
+    else bits.push("Tá tudo em dia por aqui.");
     fallback = bits.join(" ");
   }
 
@@ -917,7 +917,7 @@ export async function copilotGreeting(
 }
 
 export function copilotSuggestions(role: CopilotRole): string[] {
-  if (role === "BARBER") return ["🎙️ Briefing do meu próximo cliente", "Quanto vou receber esse mês?", "Meus clientes sumidos"];
+  if (role === "BARBER") return ["Briefing do meu próximo cliente", "Quanto vou receber esse mês?", "Meus clientes sumidos"];
   return ["Onde estou perdendo dinheiro?", "Fecha o meu mês", "Otimiza minha agenda de hoje", "E se eu subir os preços 10%?", "Monta a escala da semana"];
 }
 

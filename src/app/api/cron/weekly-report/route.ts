@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         `Faturamento (7 dias): ${money(rev.thisWeek)}${delta}.`,
         `No mês: ${money(rev.monthRevenue)} em ${rev.monthCount} atendimentos (ticket médio ${money(rev.avgTicket)}).`,
         topBarber ? `Destaque: ${topBarber.name} — ${money(topBarber.revenue)} (${topBarber.count} atendimentos).` : "",
-        churned.length > 0 ? `${churned.length} clientes sumidos há +45 dias — vale chamar de volta.` : "Nenhum cliente sumido. 👏",
+        churned.length > 0 ? `${churned.length} clientes sumidos há +45 dias — vale chamar de volta.` : "Nenhum cliente sumido.",
       ].filter(Boolean);
       const bodyText = lines.join(" ");
 

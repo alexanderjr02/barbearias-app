@@ -14,22 +14,22 @@ interface Message {
 
 const BOT_RESPONSES: Record<string, string[]> = {
   greeting: [
-    "Olá! 👋 Bem-vindo à nossa barbearia! Sou o assistente virtual. Como posso ajudar você hoje?",
+    "Olá! Bem-vindo à nossa barbearia! Sou o assistente virtual. Como posso ajudar você hoje?",
   ],
   horario: [
-    "Nosso horário de funcionamento é:\n\n🕐 Segunda a Sexta: 9h às 20h\n🕐 Sábado: 9h às 18h\n🕐 Domingo: 10h às 16h",
+    "Nosso horário de funcionamento é:\n\nSegunda a Sexta: 9h às 20h\nSábado: 9h às 18h\nDomingo: 10h às 16h",
   ],
   servico: [
-    "Temos os seguintes serviços:\n\n✂️ Corte de Cabelo - R$ 35\n🪒 Barba - R$ 25\n✂️🪒 Corte + Barba - R$ 55\n💆 Tratamento Capilar - R$ 45\n\nQuer agendar algum serviço?",
+    "Temos os seguintes serviços:\n\nCorte de Cabelo - R$ 35\nBarba - R$ 25\nCorte + Barba - R$ 55\nTratamento Capilar - R$ 45\n\nQuer agendar algum serviço?",
   ],
   agendar: [
-    "Para agendar, você pode:\n\n1️⃣ Usar nossa agenda online (botão 'Agendar' no site)\n2️⃣ Ligar para nós: (11) 99999-9999\n3️⃣ Nos chamar no WhatsApp\n\nQuer que eu te ajude a fazer o agendamento agora?",
+    "Para agendar, você pode:\n\nUsar nossa agenda online (botão 'Agendar' no site)\nLigar para nós: (11) 99999-9999\nNos chamar no WhatsApp\n\nQuer que eu te ajude a fazer o agendamento agora?",
   ],
   preco: [
-    "Nossos preços:\n\n✂️ Corte simples: R$ 35\n✂️ Corte degradê: R$ 45\n🪒 Barba: R$ 25\n✂️🪒 Combo corte + barba: R$ 55\n💆 Tratamento: R$ 45\n\nTodos os serviços incluem lavagem e finalização!",
+    "Nossos preços:\n\nCorte simples: R$ 35\nCorte degradê: R$ 45\nBarba: R$ 25\nCombo corte + barba: R$ 55\nTratamento: R$ 45\n\nTodos os serviços incluem lavagem e finalização!",
   ],
   default: [
-    "Entendi! Para mais informações, você pode:\n\n📞 Nos ligar: (11) 99999-9999\n💬 WhatsApp: (11) 99999-9999\n📍 Nos visitar: Rua das Barbearias, 123\n\nOu clique em 'Agendar' para marcar seu horário agora mesmo!",
+    "Entendi! Para mais informações, você pode:\n\nNos ligar: (11) 99999-9999\nWhatsApp: (11) 99999-9999\nNos visitar: Rua das Barbearias, 123\n\nOu clique em 'Agendar' para marcar seu horário agora mesmo!",
   ],
 };
 
@@ -68,7 +68,7 @@ export function ChatbotWidget() {
       id: "1",
       role: "bot",
       content:
-        "Olá! 👋 Sou o assistente virtual da barbearia. Como posso te ajudar hoje?",
+        "Olá! Sou o assistente virtual da barbearia. Como posso te ajudar hoje?",
       timestamp: new Date(),
     },
   ]);

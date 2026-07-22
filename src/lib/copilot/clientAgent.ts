@@ -113,17 +113,17 @@ export async function clientProactiveOpener(barbershopId: string, clientId: stri
     if (slot) {
       suggestion = { dateKey: slot.dateKey, time: slot.time, service: rhythm.usualService.name, staff: rhythm.usualStaff.name };
       facts = `O cliente costuma cortar a cada ${rhythm.avgCadenceDays ?? "≈25"} dias e já faz ${rhythm.daysSince} dias desde o último. O de sempre: ${rhythm.usualService.name} com ${rhythm.usualStaff.name}. Próximo horário livre parecido: ${prettyDate(slot.dateKey)} às ${slot.time}.`;
-      fallback = `Opa${hi}! 👋 Já faz ${rhythm.daysSince} dias do seu último corte — tá quase na hora. Achei ${prettyDate(slot.dateKey)} às ${slot.time} com o ${rhythm.usualStaff.name.split(" ")[0]}, no seu ${rhythm.usualService.name} de sempre. Quer que eu marque?`;
+      fallback = `Opa${hi}! Já faz ${rhythm.daysSince} dias do seu último corte — tá quase na hora. Achei ${prettyDate(slot.dateKey)} às ${slot.time} com o ${rhythm.usualStaff.name.split(" ")[0]}, no seu ${rhythm.usualService.name} de sempre. Quer que eu marque?`;
     } else {
       facts = `Cliente está na hora do corte (${rhythm.daysSince} dias), mas não achei horário livre nos próximos dias com ${rhythm.usualStaff.name}.`;
-      fallback = `Opa${hi}! 👋 Tá na hora do corte (${rhythm.daysSince} dias). A agenda do ${rhythm.usualStaff.name.split(" ")[0]} tá cheia nos próximos dias — quer que eu procure outro dia ou outro barbeiro?`;
+      fallback = `Opa${hi}! Tá na hora do corte (${rhythm.daysSince} dias). A agenda do ${rhythm.usualStaff.name.split(" ")[0]} tá cheia nos próximos dias — quer que eu procure outro dia ou outro barbeiro?`;
     }
   } else if (rhythm.visits > 0) {
     facts = `Cliente com ${rhythm.visits} visita(s), última há ${rhythm.daysSince} dias. Ainda não está na hora do corte.`;
-    fallback = `Oi${hi}! 👋 Tô aqui pra quando precisar marcar, ver seus horários ou tirar dúvida. É só chamar. 😉`;
+    fallback = `Oi${hi}! Tô aqui pra quando precisar marcar, ver seus horários ou tirar dúvida. É só chamar.`;
   } else {
     facts = "Cliente novo, sem histórico ainda.";
-    fallback = `Oi${hi}! 👋 Sou seu assistente. Posso marcar seu horário, indicar um corte ou tirar dúvidas. Bora começar?`;
+    fallback = `Oi${hi}! Sou seu assistente. Posso marcar seu horário, indicar um corte ou tirar dúvidas. Bora começar?`;
   }
 
   if (!assistantEnabled()) return { greeting: fallback, proactive: !!suggestion, suggestion };
