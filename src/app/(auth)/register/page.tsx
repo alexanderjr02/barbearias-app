@@ -5,14 +5,17 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Check, X, AtSign, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
 import { registerOwnerSchema } from "@/lib/validation";
-import { slugify, redirectTo, formatPhoneBR, formatCNPJ, formatCEP } from "@/lib/utils";
+import { slugify, redirectTo, formatPhoneBR, formatCNPJ } from "@/lib/utils";
 import { z } from "zod";
 
 type FormValues = z.infer<typeof registerOwnerSchema>;
 
-const STEP_1_FIELDS = ["name", "email", "password", "phone"] as const;
+const PASSOS = ["Escolha o plano", "Seus dados", "Sua barbearia"] as const;
+
+// Os campos validados ao sair da etapa de dados pessoais.
+const CAMPOS_DADOS = ["name", "email", "password", "phone"] as const;
 
 const UFS = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
@@ -111,7 +114,7 @@ function RegisterForm() {
   // the server on every keystroke. Only fires on a well-formed slug; a stale
   // in-flight request is aborted when the value changes again.
   useEffect(() => {
-    if (step !== 2) return;
+    if (step !== 3) return;
     const s = (barbershopSlug ?? "").trim();
     if (!s) {
       setSlugStatus("idle");
@@ -145,9 +148,17 @@ function RegisterForm() {
     { value: "white-label", label: "White Label", price: "R$ 897/mês", description: "App próprio com a sua marca" },
   ];
 
-  const goToStep2 = async () => {
-    const valid = await trigger(STEP_1_FIELDS);
-    if (valid) setStep(2);
+  const planoEscolhido = planOptions.find((p) => p.value === plan);
+
+  // Avancar: da etapa do plano nao ha o que validar (sempre ha um escolhido);
+  // da etapa de dados, valida antes de deixar seguir.
+  const avancar = async () => {
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
+    const valido = await trigger(CAMPOS_DADOS);
+    if (valido) setStep(3);
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -190,18 +201,34 @@ function RegisterForm() {
           já ligada a alguém. */}
       <div className="mb-6" />
 
-      {/* Progresso: duas barras e uma legenda, em vez de dois círculos
-          numerados ligados por um fio. Barra diz "quanto falta" sem o leitor
-          ter que interpretar ícone, e some do caminho quando não é o assunto. */}
+      {/* Progresso: barras e legenda, em vez de círculos numerados ligados por
+          um fio. Barra diz "quanto falta" sem exigir que o leitor interprete
+          ícone. */}
       <div className="mb-7">
         <div className="flex gap-1.5">
-          <span className="h-1 flex-1 rounded-full bg-amber-500" />
-          <span className={`h-1 flex-1 rounded-full transition-colors ${step >= 2 ? "bg-amber-500" : "bg-zinc-800"}`} />
+          {[1, 2, 3].map((n) => (
+            <span key={n} className={`h-1 flex-1 rounded-full transition-colors ${step >= n ? "bg-amber-500" : "bg-zinc-800"}`} />
+          ))}
         </div>
         <p className="mt-2 text-xs text-zinc-500">
-          Etapa {step} de 2 · <span className="text-zinc-300">{step === 1 ? "Seus dados" : "Sua barbearia"}</span>
+          Etapa {step} de 3 · <span className="text-zinc-300">{PASSOS[step - 1]}</span>
         </p>
       </div>
+
+      {/* O plano escolhido acompanha as etapas seguintes. Quem está preenchendo
+          CNPJ já esqueceu o que escolheu três telas atrás — e é justamente o
+          que ele está comprando. */}
+      {step > 1 && planoEscolhido && (
+        <div className="mb-5 flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/60 px-3.5 py-2.5">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white">{planoEscolhido.label}</p>
+            <p className="text-xs text-zinc-500">{planoEscolhido.price}</p>
+          </div>
+          <button type="button" onClick={() => setStep(1)} className="shrink-0 text-xs font-medium text-amber-400 transition-colors hover:text-amber-300">
+            trocar
+          </button>
+        </div>
+      )}
 
       {/* O botão do Google saiu daqui de propósito. Uma conta criada por ele
           nasce sempre como CLIENTE (ver /api/auth/google), então o dono que
@@ -213,6 +240,41 @@ function RegisterForm() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {step === 1 ? (
+          /* O plano vem PRIMEIRO porque é decisão de compra, não de cadastro:
+             ninguém digita CNPJ sem saber quanto vai pagar. Deixá-lo no fim de
+             um formulário longo faz a pessoa descobrir o preço depois de já ter
+             investido dez minutos — e é aí que ela desiste. */
+          <div className="space-y-2">
+            {planOptions.map((p) => {
+              const escolhido = plan === p.value;
+              return (
+                <label key={p.value} className="block cursor-pointer">
+                  <input type="radio" value={p.value} checked={escolhido} onChange={() => setValue("plan", p.value)} className="sr-only peer" />
+                  <div className={`rounded-xl border p-4 transition-colors ${escolhido ? "border-amber-500 bg-amber-500/[0.07]" : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-700"}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-white">{p.label}</span>
+                          {p.value === "pro" && (
+                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-zinc-200">mais escolhido</span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs leading-relaxed text-zinc-500">{p.description}</p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-semibold text-white">{p.price}</p>
+                        {escolhido && <Check className="ml-auto mt-1 h-4 w-4 text-amber-400" />}
+                      </div>
+                    </div>
+                  </div>
+                </label>
+              );
+            })}
+            <p className="pt-1 text-xs leading-relaxed text-zinc-600">
+              Dá para trocar de plano depois, a qualquer momento, sem perder nada.
+            </p>
+          </div>
+        ) : step === 2 ? (
           <>
             <div>
               <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
@@ -362,49 +424,6 @@ function RegisterForm() {
                 {errors.state && <p className="text-xs text-red-400 mt-1.5">{errors.state.message}</p>}
               </div>
             </div>
-            <div className="grid grid-cols-[7rem_1fr] gap-3">
-              <div>
-                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-                  CEP <span className="text-zinc-600 normal-case font-normal">(opcional)</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="00000-000"
-                  {...register("zipCode", { onChange: (e) => setValue("zipCode", formatCEP(e.target.value)) })}
-                  className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
-                />
-                {errors.zipCode && <p className="text-xs text-red-400 mt-1.5">{errors.zipCode.message}</p>}
-              </div>
-              <div>
-                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-                  Endereço <span className="text-zinc-600 normal-case font-normal">(opcional)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Rua, número, bairro"
-                  {...register("address")}
-                  className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
-                />
-                {errors.address && <p className="text-xs text-red-400 mt-1.5">{errors.address.message}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-                  Instagram <span className="text-zinc-600 normal-case font-normal">(opcional)</span>
-                </label>
-                <div className="relative">
-                  <AtSign className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
-                  <input
-                    type="text"
-                    placeholder="suabarbearia"
-                    {...register("instagram")}
-                    className="w-full h-12 pl-10 pr-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
-                  />
-                </div>
-                {errors.instagram && <p className="text-xs text-red-400 mt-1.5">{errors.instagram.message}</p>}
-              </div>
               <div>
                 <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   CNPJ <span className="text-amber-400/80 normal-case font-normal">(obrigatório)</span>
@@ -418,54 +437,30 @@ function RegisterForm() {
                 />
                 {errors.cnpj && <p className="text-xs text-red-400 mt-1.5">{errors.cnpj.message}</p>}
               </div>
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-                Plano
-              </label>
-              <div className="grid gap-2">
-                {planOptions.map((p) => (
-                  <label key={p.value} className="cursor-pointer">
-                    <input
-                      type="radio"
-                      value={p.value}
-                      checked={plan === p.value}
-                      onChange={() => setValue("plan", p.value)}
-                      className="sr-only peer"
-                    />
-                    <div className="flex items-center justify-between gap-3 p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-left transition-colors hover:border-zinc-700 peer-checked:border-amber-500 peer-checked:bg-amber-500/[0.07]">
-                      <div>
-                        <div className="text-sm font-semibold text-white">{p.label}</div>
-                        <div className="text-xs text-zinc-500 mt-0.5">{p.description}</div>
-                      </div>
-                      <div className="text-sm font-semibold text-white whitespace-nowrap">{p.price}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
           </>
         )}
 
         <button
-          type={step === 1 ? "button" : "submit"}
-          onClick={step === 1 ? goToStep2 : undefined}
-          disabled={isLoading || (step === 2 && slugStatus === "taken")}
+          type={step === 3 ? "submit" : "button"}
+          onClick={step === 3 ? undefined : avancar}
+          disabled={isLoading || (step === 3 && slugStatus === "taken")}
           className="w-full h-12 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:hover:bg-amber-500 flex items-center justify-center gap-2 text-sm"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
           ) : step === 1 ? (
+            `Continuar com o ${planoEscolhido?.label ?? "plano"}`
+          ) : step === 2 ? (
             "Continuar"
           ) : (
             "Criar minha barbearia"
           )}
         </button>
 
-        {step === 2 && (
+        {step > 1 && (
           <button
             type="button"
-            onClick={() => setStep(1)}
+            onClick={() => setStep(step - 1)}
             className="w-full text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             ← Voltar
