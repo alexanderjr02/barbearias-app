@@ -63,6 +63,15 @@ function main() {
   }
 
   // 2. Fonte da função + vercel.json (versionados em git, mão).
+  //
+  // Sobre o cache declarado no vercel.json (o formato não aceita comentário):
+  // o Flutter NÃO põe hash no nome do main.dart.js, então cache imutável
+  // travaria todo mundo numa versão velha para sempre. Por isso max-age curto
+  // + stale-while-revalidate: a abertura serve do cache na hora e a versão
+  // nova desce em segundo plano, valendo na abertura seguinte. O canvaskit
+  // ganha prazo maior porque só muda quando a versão do Flutter muda, e o
+  // flutter_bootstrap.js fica sem cache de propósito — ele é a porta de
+  // entrada por onde uma versão nova é descoberta.
   copyRecursive(SRC, OUT);
 
   // 3. index.html vira um molde embutido na função — não um arquivo servido.
