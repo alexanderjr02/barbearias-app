@@ -5,9 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Check, X, MapPin, Sparkles, AtSign, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Check, X, MapPin, Sparkles, AtSign, Loader2, Scissors } from "lucide-react";
 import { registerOwnerSchema } from "@/lib/validation";
-import { slugify, redirectTo, formatPhoneBR, formatCNPJ, formatCEP, getInitials } from "@/lib/utils";
+import { slugify, redirectTo, formatPhoneBR, formatCNPJ, formatCEP } from "@/lib/utils";
 import { z } from "zod";
 
 type FormValues = z.infer<typeof registerOwnerSchema>;
@@ -503,18 +503,19 @@ function RegisterForm() {
 }
 
 /**
- * Prévia da página pública de agendamento.
+ * Prévia do app da barbearia — um aparelho, não um cartão.
  *
- * Ela foi reescrita para ESPELHAR a tela real (booking/[slug]/BookingWizard).
- * A versão anterior mostrava coisas que não existem lá: cinco estrelas
- * douradas, um selo verde "Aberto" e um endereço em `cortix.app` — domínio que
- * nem resolve. Prévia que promete o que o produto não entrega não é vitrine, é
- * pegadinha: o dono se cadastra esperando uma coisa e abre o link achando que
- * quebrou.
+ * Ela mostra a PRIMEIRA tela que o cliente vê ao abrir o link: a entrada do
+ * app, que é o único lugar onde o nome da barbearia aparece de fato para ele
+ * (`Entre na sua conta <marca>`, em auth/login_screen.dart). Depois de entrar,
+ * o cliente vê a home com o nome DELE, não o da barbearia — por isso a
+ * entrada é o retrato certo aqui.
  *
- * O que a tela real tem, e agora a prévia também: foto de capa, logo quadrada
- * na cor da marca com as iniciais, nome, cidade, e a primeira etapa do
- * agendamento — escolher o serviço.
+ * Duas versões anteriores erraram por inventar: a primeira mostrava cinco
+ * estrelas e um selo "Aberto" que não existem; a segunda copiou a página web
+ * de agendamento, que também não é o que o cliente usa. Esta espelha o app
+ * mobile, tela por tela: logo arredondada na cor da marca, "Bem-vindo de
+ * volta", a linha com o nome da barbearia, e os botões de entrar.
  */
 function LivePreview({ name, slug, city, state }: { name?: string; slug?: string; city?: string; state?: string }) {
   const displayName = name?.trim() || "Sua Barbearia";
@@ -522,54 +523,57 @@ function LivePreview({ name, slug, city, state }: { name?: string; slug?: string
   const location = [city?.trim(), state?.trim()].filter(Boolean).join(", ");
 
   return (
-    <div className="mb-1 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
-      <div className="mb-2.5 flex items-center gap-1.5 px-1">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Sua página de agendamento</span>
-      </div>
+    <div className="mb-1">
+      <p className="mb-2.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+        O app que seu cliente vai abrir
+      </p>
 
-      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
-        {/* Capa: a mesma imagem padrão que a página real usa enquanto a
-            barbearia não envia a dela. */}
-        <div className="relative h-16">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/landing/shop-interior.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-zinc-950/55" />
-        </div>
+      <div className="flex justify-center">
+        {/* Moldura do aparelho */}
+        <div className="w-[184px] rounded-[26px] border-[6px] border-zinc-800 bg-zinc-950 p-0 shadow-2xl shadow-black/50">
+          <div className="relative overflow-hidden rounded-[20px] bg-zinc-950">
+            {/* Entalhe */}
+            <div className="mx-auto mt-1.5 h-1 w-10 rounded-full bg-zinc-800" />
 
-        <div className="px-4 pb-3">
-          {/* Logo sobreposta à capa, como na tela real. */}
-          <div className="-mt-6 flex items-end gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-base font-black text-zinc-950 ring-4 ring-zinc-950">
-              {hasName ? getInitials(displayName) : "✂"}
-            </div>
-            <div className="min-w-0 flex-1 pb-0.5">
-              <p className={`truncate text-sm font-black ${hasName ? "text-white" : "text-zinc-600"}`}>{displayName}</p>
+            <div className="px-4 pb-4 pt-6 text-center">
+              {/* Logo: no app é um quadrado arredondado na cor da marca com a
+                  tesoura, trocado pela logo assim que a barbearia envia uma. */}
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500">
+                <Scissors className="h-5 w-5 text-zinc-950" />
+              </div>
+
+              <p className="mt-3 text-[13px] font-extrabold leading-tight text-white">Bem-vindo de volta</p>
+              <p className={`mt-1 truncate text-[10px] ${hasName ? "text-zinc-400" : "text-zinc-600"}`}>
+                Entre na sua conta {displayName}
+              </p>
+
+              {/* Os mesmos botões da tela real. */}
+              <div className="mt-4 space-y-1.5">
+                <div className="flex h-7 items-center justify-center gap-1.5 rounded-xl border border-zinc-800 text-[9px] font-medium text-zinc-400">
+                  Continuar com Google
+                </div>
+                <div className="h-7 rounded-xl border border-zinc-800" />
+                <div className="h-7 rounded-xl border border-zinc-800" />
+                <div className="flex h-7 items-center justify-center rounded-xl bg-amber-500 text-[9px] font-bold text-zinc-950">
+                  Entrar
+                </div>
+              </div>
+
               {location && (
-                <p className="flex items-center gap-1 truncate text-[10px] text-zinc-400">
+                <p className="mt-3 flex items-center justify-center gap-1 truncate text-[9px] text-zinc-600">
                   <MapPin className="h-2.5 w-2.5 shrink-0" /> {location}
                 </p>
               )}
             </div>
           </div>
-
-          {/* Primeira etapa real do agendamento: escolher o serviço. */}
-          <p className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-600">Escolha o serviço</p>
-          <div className="mt-1.5 space-y-1.5">
-            {["Corte", "Corte + Barba"].map((s) => (
-              <div key={s} className="flex items-center justify-between rounded-lg border border-zinc-800 px-2.5 py-1.5">
-                <span className="text-[11px] text-zinc-300">{s}</span>
-                <span className="text-[10px] text-zinc-600">a definir</span>
-              </div>
-            ))}
-          </div>
-          <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">
-            Os serviços e preços que você cadastrar depois aparecem aqui.
-          </p>
         </div>
       </div>
 
-      <p className="mt-2 truncate px-1 text-center text-[10px] text-zinc-600">
+      <p className="mt-3 truncate px-1 text-center text-[10px] text-zinc-600">
         {baseDeAgendamento()}<span className="text-zinc-400">{slug || "sua-barbearia"}</span>
+      </p>
+      <p className="mt-1 px-1 text-center text-[10px] leading-relaxed text-zinc-600">
+        Sua logo e sua cor entram depois, em Aparência — e trocam esta tela inteira.
       </p>
     </div>
   );

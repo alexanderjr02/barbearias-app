@@ -163,12 +163,11 @@ export default function LoginPage() {
           Cadastre-se grátis
         </Link>
       </p>
-      <p className="text-zinc-600 text-xs mb-8">
-        É cliente?{" "}
-        <Link href="/register/cliente" className="text-amber-400/80 hover:text-amber-300 font-medium transition-colors">
-          Crie sua conta de cliente
-        </Link>
-      </p>
+      {/* Cliente não cria conta por aqui. Esta é a entrada do gestor; a conta
+          do cliente nasce no app da barbearia dele, junto com o primeiro
+          agendamento e já ligada a alguém. Conta de cliente criada solta no
+          site não tem barbearia, não tem agenda e não leva a lugar nenhum. */}
+      <div className="mb-8" />
 
       {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
         <>
