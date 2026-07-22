@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 
 // GET /api/admin/white-label — every ENTERPRISE barbershop, lazily
 // backfilling a REQUESTED row for any shop that was already on this plan
@@ -8,7 +8,7 @@ import { requireSuperAdminSession } from "@/lib/apiAuth";
 export async function GET() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const enterpriseShops = await prisma.barbershop.findMany({

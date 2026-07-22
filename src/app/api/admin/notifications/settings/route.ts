@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { NOTIFICATION_TYPES } from "@/lib/notifications";
 
 export async function GET() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const rows = await prisma.notificationSetting.findMany();
@@ -18,7 +18,7 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const body = await request.json().catch(() => null);

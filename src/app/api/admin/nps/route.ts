@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 
 export async function GET() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const responses = await prisma.npsResponse.findMany({

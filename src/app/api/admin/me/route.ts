@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { requireAnyAdminSession } from "@/lib/apiAuth";
+import { requireAnyAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { signAccessToken } from "@/lib/auth";
 import { setAccessCookie } from "@/lib/sessionCookies";
 import { isSecureRequest, getClientIp } from "@/lib/requestIp";
@@ -15,7 +15,7 @@ import { logAdminAction } from "@/lib/audit";
 export async function GET() {
   const session = await requireAnyAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
   return NextResponse.json({ name: session.name, email: session.email, role: session.role });
 }
@@ -26,7 +26,7 @@ export async function GET() {
 // quem consegue trocá-lo consegue tomá-la. Trocar só o nome, não — é inócuo.
 export async function PATCH(request: NextRequest) {
   const session = await requireAnyAdminSession();
-  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+  if (!session) return denyAdmin();
 
   const body = (await request.json().catch(() => null)) as { name?: string; email?: string; currentPassword?: string } | null;
   if (!body) return NextResponse.json({ error: "Corpo da requisição inválido" }, { status: 400 });

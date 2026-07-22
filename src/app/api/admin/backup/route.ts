@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 
 // GET /api/admin/backup — downloads the current SQLite database file
@@ -10,7 +10,7 @@ import { logAdminAction } from "@/lib/audit";
 export async function GET() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const dbPath = path.join(process.cwd(), "dev.db");

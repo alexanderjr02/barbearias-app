@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAnyAdminSession } from "@/lib/apiAuth";
+import { requireAnyAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { getPlanPricing, ensureMonthlyRenewals, PLANS } from "@/lib/billing";
 
 export async function GET() {
   const session = await requireAnyAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   await ensureMonthlyRenewals();

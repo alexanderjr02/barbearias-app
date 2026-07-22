@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 
 const AUDIENCES = ["ALL", "FREE", "PRO", "ENTERPRISE"] as const;
@@ -8,7 +8,7 @@ const AUDIENCES = ["ALL", "FREE", "PRO", "ENTERPRISE"] as const;
 export async function GET() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
   const announcements = await prisma.platformAnnouncement.findMany({
     orderBy: { createdAt: "desc" },
@@ -30,7 +30,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const body = await request.json().catch(() => null);

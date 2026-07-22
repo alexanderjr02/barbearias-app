@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 import { ensureMonthlyRenewals } from "@/lib/billing";
 
@@ -9,7 +9,7 @@ import { ensureMonthlyRenewals } from "@/lib/billing";
 export async function POST() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const created = await ensureMonthlyRenewals();

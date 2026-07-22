@@ -39,8 +39,18 @@ function tryRefresh(): Promise<boolean> {
 
 async function withAuth<T>(doFetch: () => Promise<Response>): Promise<T> {
   let res = await doFetch();
-  if (res.status === 401 && (await tryRefresh())) {
-    res = await doFetch();
+  if (res.status === 401) {
+    if (await tryRefresh()) {
+      res = await doFetch();
+    } else {
+      // Renovar falhou: a sessão acabou de verdade. Sem isto o clique
+      // simplesmente não fazia nada — nem erro, nem tela nova — e a pessoa
+      // ficava clicando num painel morto sem entender por quê.
+      // A checagem de rota evita laço em quem já está na tela de entrada.
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+    }
   }
   return handle<T>(res);
 }

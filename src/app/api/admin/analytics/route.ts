@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAnyAdminSession } from "@/lib/apiAuth";
+import { requireAnyAdminSession, denyAdmin } from "@/lib/apiAuth";
 import {
   getActiveUserCounts, getDailyActiveTrend, getChatbotUsage,
   getRetentionCohorts, getActivationFunnel, getPlanLimitUsage, getNewIpLogins,
@@ -8,7 +8,7 @@ import {
 export async function GET() {
   const session = await requireAnyAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const [activeUsers, dailyTrend, chatbot, retentionCohorts, activationFunnel, planLimitUsage, newIpLogins] = await Promise.all([

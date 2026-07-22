@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 import { generateSecret, buildOtpAuthUri, verifyCode } from "@/lib/twoFactor";
 
@@ -8,7 +8,7 @@ import { generateSecret, buildOtpAuthUri, verifyCode } from "@/lib/twoFactor";
 export async function GET() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
   const user = await prisma.user.findUnique({ where: { id: session.sub }, select: { twoFactorEnabled: true } });
   return NextResponse.json({ enabled: user?.twoFactorEnabled ?? false });
@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const secret = generateSecret();
@@ -33,7 +33,7 @@ export async function POST() {
 export async function PATCH(request: NextRequest) {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const body = await request.json().catch(() => null);
@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE() {
   const session = await requireSuperAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   await prisma.user.update({ where: { id: session.sub }, data: { twoFactorEnabled: false, twoFactorSecret: null } });

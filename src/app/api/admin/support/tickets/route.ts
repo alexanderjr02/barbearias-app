@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAnyAdminSession } from "@/lib/apiAuth";
+import { requireAnyAdminSession, denyAdmin } from "@/lib/apiAuth";
 
 // GET /api/admin/support/tickets?status=&search=
 export async function GET(request: NextRequest) {
   const session = await requireAnyAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+    return denyAdmin();
   }
 
   const { searchParams } = new URL(request.url);

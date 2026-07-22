@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { requireAnyAdminSession } from "@/lib/apiAuth";
+import { requireAnyAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { passwordSchema } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 import { getClientIp } from "@/lib/requestIp";
@@ -17,7 +17,7 @@ import { getClientIp } from "@/lib/requestIp";
 // é o que impede uma aba esquecida aberta de virar troca de dono da conta.
 export async function POST(request: NextRequest) {
   const session = await requireAnyAdminSession();
-  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+  if (!session) return denyAdmin();
 
   const body = (await request.json().catch(() => null)) as { currentPassword?: string; newPassword?: string } | null;
   const currentPassword = typeof body?.currentPassword === "string" ? body.currentPassword : "";

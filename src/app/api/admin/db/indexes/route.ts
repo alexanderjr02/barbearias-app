@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 
 // GET/POST /api/admin/db/indexes — mostra e aplica os índices de escala.
 //
@@ -64,7 +64,7 @@ async function existingIndexes(): Promise<string[]> {
 
 /** Só mostra o estado — não altera nada. */
 export async function GET(request: NextRequest) {
-  if (!(await autorizado(request))) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+  if (!(await autorizado(request))) return denyAdmin();
 
   const present = await existingIndexes();
   const missing = INDEXES.filter((i) => !present.includes(i.name)).map((i) => i.name);
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
 /** Aplica o que falta. Repetir é inofensivo. */
 export async function POST(request: NextRequest) {
-  if (!(await autorizado(request))) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+  if (!(await autorizado(request))) return denyAdmin();
 
   const before = await existingIndexes();
   const created: string[] = [];

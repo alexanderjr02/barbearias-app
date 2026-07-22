@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSuperAdminSession } from "@/lib/apiAuth";
+import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { signAccessToken } from "@/lib/auth";
 import { setAccessCookie } from "@/lib/sessionCookies";
 import { isSecureRequest, getClientIp } from "@/lib/requestIp";
@@ -26,7 +26,7 @@ import { logAdminAction } from "@/lib/audit";
 // Só SUPER_ADMIN. Suporte (SUPPORT_ADMIN) não entra na conta de ninguém.
 export async function POST(request: NextRequest) {
   const session = await requireSuperAdminSession();
-  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 403 });
+  if (!session) return denyAdmin();
 
   const body = (await request.json().catch(() => null)) as { barbershopId?: string } | null;
   const barbershopId = typeof body?.barbershopId === "string" ? body.barbershopId : "";
