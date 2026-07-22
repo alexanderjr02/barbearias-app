@@ -213,7 +213,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
     try {
       await _repository.joinWaitlist(shop.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(behavior: SnackBarBehavior.floating, content: Text('Você entrou na fila! Avisamos se abrir um horário. 🔔')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(behavior: SnackBarBehavior.floating, content: Text('Você entrou na fila! Avisamos se abrir um horário.')));
       }
     } catch (_) {
       if (mounted) {

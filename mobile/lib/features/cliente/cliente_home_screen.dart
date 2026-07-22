@@ -438,7 +438,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text('Hora do corte? ✂️', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                                            Text('Hora do corte?', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
                                             const SizedBox(height: 2),
                                             Text('Você costuma cortar a cada ${(suggestion.cadenceDays / 7).round()} semana(s) — já faz ${suggestion.daysSince} dias.', style: TextStyle(color: palette.textSecondary, fontSize: 11.5)),
                                           ],
@@ -1236,7 +1236,7 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
                       Expanded(
                         child: Text(
                           _queue!.ahead == 0
-                              ? 'Você é o próximo! 🔥'
+                              ? 'Você é o próximo!'
                               : '${_queue!.position}º na fila · ~${_queue!.etaMinutes} min de espera',
                           style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 12.5),
                         ),
@@ -1264,7 +1264,7 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
-                    inProgress ? 'Aproveite o corte! ✂️' : 'Você já fez check-in. Aguarde ser chamado.',
+                    inProgress ? 'Aproveite o corte!' : 'Você já fez check-in. Aguarde ser chamado.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 13),
                   ),

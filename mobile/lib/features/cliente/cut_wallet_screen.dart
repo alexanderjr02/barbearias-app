@@ -81,7 +81,7 @@ class _CutWalletScreenState extends State<CutWalletScreen> {
       final bytes = await _repository.downloadBytes(url);
       await SharePlus.instance.share(ShareParams(
         files: [XFile.fromData(bytes, mimeType: 'image/jpeg', name: 'meu-corte.jpg')],
-        text: 'Corte novo! 💈',
+        text: 'Corte novo!',
       ));
     } catch (_) {
       if (mounted) AppToast.error(context, 'Não foi possível compartilhar');

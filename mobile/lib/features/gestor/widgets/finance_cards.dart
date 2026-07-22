@@ -226,7 +226,7 @@ class _FinanceCockpitCardState extends State<FinanceCockpitCard> {
                       iconColor: const Color(0xFF3B82F6),
                       label: 'Projeção',
                       value: _brl0(projection),
-                      sub: projectionPct >= 100 ? 'bate a meta 🎯' : '${projectionPct.round()}% da meta',
+                      sub: projectionPct >= 100 ? 'bate a meta' : '${projectionPct.round()}% da meta',
                       subColor: projectionPct >= 100 ? const Color(0xFF10B981) : palette.textFaint,
                     ),
                   ),
@@ -240,7 +240,7 @@ class _FinanceCockpitCardState extends State<FinanceCockpitCard> {
                       value: o.monthExpenses == 0
                           ? '—'
                           : covered
-                              ? 'Coberto ✓'
+                              ? 'Coberto'
                               : _brl0((o.monthExpenses - o.monthRevenue).clamp(0, double.infinity)),
                       sub: o.monthExpenses == 0
                           ? 'lance despesas'

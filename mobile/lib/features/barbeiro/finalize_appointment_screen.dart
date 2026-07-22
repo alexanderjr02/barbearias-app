@@ -146,7 +146,7 @@ class _FinalizeAppointmentScreenState extends State<FinalizeAppointmentScreen> {
         notes: _notes.text.trim(),
       );
       if (mounted) {
-        AppToast.success(context, 'Atendimento concluído ✂️');
+        AppToast.success(context, 'Atendimento concluído');
         Navigator.of(context).pop(true);
       }
     } catch (e) {

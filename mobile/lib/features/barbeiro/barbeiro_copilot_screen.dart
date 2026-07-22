@@ -29,7 +29,7 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
   final FlutterTts _tts = FlutterTts();
   bool _speak = false;
   final List<_Msg> _messages = [];
-  List<String> _suggestions = const ['🎙️ Briefing do meu próximo cliente', 'Quanto vou receber esse mês?', 'Meus clientes sumidos'];
+  List<String> _suggestions = const ['Briefing do meu próximo cliente', 'Quanto vou receber esse mês?', 'Meus clientes sumidos'];
   bool _sending = false;
   bool _greetingLoading = true;
   String? _conversationId;
@@ -185,7 +185,7 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
                   const SizedBox(height: 14),
                   Text('Seu copiloto pessoal', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
                   const SizedBox(height: 6),
-                  Text('Peça o briefing do seu próximo cliente (avaliação, preferências, receita do último corte, aniversário e dica de venda), veja seus ganhos ou quem sumiu. Ative a voz 🔊 pra ouvir o briefing antes de atender.', style: TextStyle(color: palette.textFaint, fontSize: 13, height: 1.4)),
+                  Text('Peça o briefing do seu próximo cliente (avaliação, preferências, receita do último corte, aniversário e dica de venda), veja seus ganhos ou quem sumiu. Ative a voz pra ouvir o briefing antes de atender.', style: TextStyle(color: palette.textFaint, fontSize: 13, height: 1.4)),
                 ],
                 ..._messages.asMap().entries.map((e) => _Bubble(msg: e.value, palette: palette, accent: accent, animate: e.value.role == 'assistant' && e.key == _messages.length - 1)),
                 if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando seu resumo…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),

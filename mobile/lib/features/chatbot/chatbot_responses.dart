@@ -10,7 +10,7 @@ class ChatbotResponse {
 const List<ChatbotResponse> chatbotResponses = [
   ChatbotResponse(
     ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'tudo bem'],
-    'Olá! 👋 Posso te ajudar a marcar um horário, ver seus pontos ou tirar dúvidas rápidas. O que você precisa?',
+    'Olá! Posso te ajudar a marcar um horário, ver seus pontos ou tirar dúvidas rápidas. O que você precisa?',
   ),
   ChatbotResponse(
     ['marcar', 'agendar', 'agendamento', 'horário', 'horario', 'reservar'],
@@ -38,12 +38,12 @@ const List<ChatbotResponse> chatbotResponses = [
   ),
   ChatbotResponse(
     ['obrigado', 'obrigada', 'valeu', 'ok', 'blz'],
-    'Disponha! Qualquer coisa é só chamar por aqui. ✂️',
+    'Disponha! Qualquer coisa é só chamar por aqui.',
   ),
 ];
 
 const String chatbotDefaultResponse =
-    'Ainda não sei responder isso direito 🙏 Mas posso ajudar com: marcar horário, cancelar/remarcar, pontos de fidelidade e avaliações.';
+    'Ainda não sei responder isso direito. Mas posso ajudar com: marcar horário, cancelar/remarcar, pontos de fidelidade e avaliações.';
 
 const List<String> chatbotQuickReplies = [
   'Como marcar um horário?',

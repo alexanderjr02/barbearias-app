@@ -294,7 +294,7 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               children: [
                 // ---- Saudação + Briefing ----
-                Text('${_greeting()} 👋', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 22)),
+                Text('${_greeting()}', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 22)),
                 const SizedBox(height: 2),
                 Text(
                   (_loadingBriefing || _locked || _cards.isEmpty) ? 'Seu copiloto de gestão.' : 'O que precisa da sua atenção hoje:',
@@ -319,7 +319,7 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(14)),
-                    child: Text('Tudo em dia por aqui. 👌', style: TextStyle(color: palette.textFaint)),
+                    child: Text('Tudo em dia por aqui.', style: TextStyle(color: palette.textFaint)),
                   )
                 else
                   ..._cards.map((c) => _BriefingCardTile(
@@ -425,12 +425,12 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
   }
 
   static const _defaultSuggestions = [
-    '💸 Onde estou perdendo dinheiro?',
-    '🧮 Fecha o meu mês',
-    '🧩 Otimiza minha agenda de hoje',
-    '🔮 E se eu subir os preços 10%?',
-    '📅 Monta a escala da semana',
-    '⭐ Me ajuda a responder as avaliações',
+    'Onde estou perdendo dinheiro?',
+    'Fecha o meu mês',
+    'Otimiza minha agenda de hoje',
+    'E se eu subir os preços 10%?',
+    'Monta a escala da semana',
+    'Me ajuda a responder as avaliações',
   ];
 }
 

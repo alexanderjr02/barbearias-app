@@ -39,7 +39,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
   bool _open = false;
   bool _typing = false;
   final _messages = <_ChatMsg>[
-    _ChatMsg('Oi! 👋 Sou o assistente da sua barbearia. Posso ajudar a marcar horário, ver seus pontos ou tirar dúvidas rápidas.', true),
+    _ChatMsg('Oi! Sou o assistente da sua barbearia. Posso ajudar a marcar horário, ver seus pontos ou tirar dúvidas rápidas.', true),
   ];
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
@@ -156,7 +156,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
         _messages.add(_ChatMsg('', false, imageUrl: url));
         _typing = false;
         _messages.add(_ChatMsg(
-          'Guardei sua referência na Carteira de Cortes! 📸 Na hora de agendar, é só escolher essa foto que o barbeiro vê exatamente o corte que você quer. Quer marcar um horário?',
+          'Guardei sua referência na Carteira de Cortes! Na hora de agendar, é só escolher essa foto que o barbeiro vê exatamente o corte que você quer. Quer marcar um horário?',
           true,
         ));
       });
@@ -196,7 +196,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
       if (mounted) {
         setState(() {
           _typing = false;
-          _messages.add(_ChatMsg('Não consegui analisar seu corte agora. Tenta de novo? 📸', true));
+          _messages.add(_ChatMsg('Não consegui analisar seu corte agora. Tenta de novo?', true));
         });
       }
     }
@@ -400,7 +400,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(color: accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(20), border: Border.all(color: accent.withValues(alpha: 0.5))),
                           alignment: Alignment.center,
-                          child: Text('✂️ Meu corte ideal', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                          child: Text('Meu corte ideal', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w700)),
                         ),
                       );
                     }

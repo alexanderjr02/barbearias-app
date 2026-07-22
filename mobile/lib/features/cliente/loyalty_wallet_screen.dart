@@ -279,7 +279,7 @@ class _StampCard extends StatelessWidget {
                   children: [
                     Text(
                       done
-                          ? 'Cartela completa! 🎉'
+                          ? 'Cartela completa!'
                           : left == 1
                               ? 'Falta 1 corte'
                               : 'Faltam $left cortes',

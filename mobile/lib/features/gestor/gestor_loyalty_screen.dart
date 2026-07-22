@@ -397,7 +397,7 @@ class _WalletPreview extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 remaining == 0
-                    ? 'Cartela completa! Prêmio liberado 🎉'
+                    ? 'Cartela completa! Prêmio liberado'
                     : 'Faltam $remaining ${remaining == 1 ? "corte" : "cortes"} para ganhar '
                         '${cfg.stampRewardLabel.isEmpty ? "seu prêmio" : cfg.stampRewardLabel}',
                 style: TextStyle(

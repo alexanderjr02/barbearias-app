@@ -214,7 +214,7 @@ class _ThankYou extends StatelessWidget {
               child: Icon(Icons.favorite_rounded, color: accent, size: 40),
             ),
             const SizedBox(height: 18),
-            Text('Obrigado! 💈', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 22)),
+            Text('Obrigado!', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 22)),
             const SizedBox(height: 8),
             Text('Sua gorjeta de R\$ ${amount.toStringAsFixed(2)} pra $barberName foi registrada.', textAlign: TextAlign.center, style: TextStyle(color: palette.textFaint, fontSize: 14, height: 1.5)),
             const SizedBox(height: 24),
