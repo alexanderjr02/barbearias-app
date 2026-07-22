@@ -5,10 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Check, X, Star, MapPin, CalendarCheck, Sparkles, AtSign, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Check, X, MapPin, Sparkles, AtSign, Loader2 } from "lucide-react";
 import { registerOwnerSchema } from "@/lib/validation";
 import { slugify, redirectTo, formatPhoneBR, formatCNPJ, formatCEP, getInitials } from "@/lib/utils";
-import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { z } from "zod";
 
 type FormValues = z.infer<typeof registerOwnerSchema>;
@@ -50,6 +49,17 @@ export default function RegisterPage() {
       <RegisterForm />
     </Suspense>
   );
+}
+
+// O endereco de agendamento sai do dominio em que a pagina esta rodando.
+// Estava escrito "cortix.app/" fixo no codigo — um dominio que NAO EXISTE
+// (o DNS nao resolve). Toda barbearia que se cadastrou leu, no proprio
+// cadastro, uma promessa de endereco falso. Derivar do runtime faz isso
+// acompanhar producao, preview e desenvolvimento sem ninguem lembrar de
+// atualizar.
+function baseDeAgendamento(): string {
+  if (typeof window === "undefined") return "";
+  return `${window.location.host}/booking/`;
 }
 
 function RegisterForm() {
@@ -173,12 +183,12 @@ function RegisterForm() {
           Entrar
         </Link>
       </p>
-      <p className="text-zinc-600 text-xs mb-6">
-        É cliente e quer agendar horários?{" "}
-        <Link href="/register/cliente" className="text-amber-400/80 hover:text-amber-300 font-medium transition-colors">
-          Crie sua conta de cliente
-        </Link>
-      </p>
+      {/* Não convidamos cliente a criar conta aqui. Conta de cliente sem
+          barbearia não leva a lugar nenhum: ele se cadastra, cai na página
+          inicial e não tem o que fazer. Quem agenda chega pelo link da
+          barbearia — é lá que a conta dele nasce junto com o agendamento,
+          já ligada a alguém. */}
+      <div className="mb-6" />
 
       {/* Steps */}
       <div className="flex items-center gap-2 mb-7">
@@ -197,40 +207,13 @@ function RegisterForm() {
         </div>
       </div>
 
-      {step === 1 && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-        <>
-          <GoogleSignInButton
-            text="signup_with"
-            onSuccess={async (idToken) => {
-              setServerError(null);
-              setIsLoading(true);
-              const response = await fetch("/api/auth/google", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idToken }),
-              });
-              const data = await response.json();
-              if (!response.ok) {
-                setServerError(data.error);
-                setIsLoading(false);
-                return;
-              }
-              // A brand new Google sign-in always becomes a CLIENT (see
-              // /api/auth/google) — an owner still needs to fill in the
-              // barbershop form below, Google can't supply that.
-              redirectTo(data.user.role === "CLIENT" ? "/" : "/dashboard");
-            }}
-          />
-          <p className="text-[11px] text-zinc-600 text-center mt-2 mb-5">
-            Entrar com Google aqui cria uma conta de <strong className="text-zinc-500">cliente</strong>. Para dono de barbearia, preencha o formulário abaixo.
-          </p>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-zinc-800" />
-            <span className="text-xs text-zinc-600">ou preencha seus dados</span>
-            <div className="flex-1 h-px bg-zinc-800" />
-          </div>
-        </>
-      )}
+      {/* O botão do Google saiu daqui de propósito. Uma conta criada por ele
+          nasce sempre como CLIENTE (ver /api/auth/google), então o dono que
+          clicasse ganhava a conta errada e caía na página inicial sem
+          barbearia nenhuma — e ainda tinha que voltar e preencher tudo. Um
+          atalho que leva ao lugar errado é pior que não ter atalho. Abrir
+          barbearia exige nome, CNPJ e endereço, coisas que o Google não
+          fornece; não há atalho real a oferecer aqui. */}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {step === 1 ? (
@@ -322,7 +305,7 @@ function RegisterForm() {
               </label>
               <div className="flex items-center">
                 <span className="h-12 px-3 bg-zinc-800/80 border border-zinc-700 border-r-0 rounded-l-2xl text-zinc-400 text-sm flex items-center whitespace-nowrap">
-                  cortix.app/
+                  {baseDeAgendamento()}
                 </span>
                 <input
                   type="text"
@@ -344,7 +327,7 @@ function RegisterForm() {
                 </p>
               ) : slugStatus === "available" ? (
                 <p className="text-xs text-emerald-500 mt-1.5 flex items-center gap-1">
-                  <Check className="w-3 h-3" /> Disponível! Seus clientes agendam em cortix.app/{barbershopSlug}
+                  <Check className="w-3 h-3" /> Disponível! Seus clientes agendam em {baseDeAgendamento()}{barbershopSlug}
                 </p>
               ) : slugStatus === "taken" ? (
                 <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
@@ -519,66 +502,75 @@ function RegisterForm() {
   );
 }
 
-// The signature moment: while the owner fills in step 2, their public booking
-// page materializes in real time — name, location and shareable link — so they
-// see exactly what a client will see before the account even exists.
+/**
+ * Prévia da página pública de agendamento.
+ *
+ * Ela foi reescrita para ESPELHAR a tela real (booking/[slug]/BookingWizard).
+ * A versão anterior mostrava coisas que não existem lá: cinco estrelas
+ * douradas, um selo verde "Aberto" e um endereço em `cortix.app` — domínio que
+ * nem resolve. Prévia que promete o que o produto não entrega não é vitrine, é
+ * pegadinha: o dono se cadastra esperando uma coisa e abre o link achando que
+ * quebrou.
+ *
+ * O que a tela real tem, e agora a prévia também: foto de capa, logo quadrada
+ * na cor da marca com as iniciais, nome, cidade, e a primeira etapa do
+ * agendamento — escolher o serviço.
+ */
 function LivePreview({ name, slug, city, state }: { name?: string; slug?: string; city?: string; state?: string }) {
   const displayName = name?.trim() || "Sua Barbearia";
   const hasName = Boolean(name?.trim());
   const location = [city?.trim(), state?.trim()].filter(Boolean).join(", ");
 
   return (
-    <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/[0.07] to-transparent p-3 mb-1">
-      <div className="flex items-center gap-1.5 mb-2.5 px-1">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-        </span>
-        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Prévia ao vivo</span>
-        <span className="text-[10px] text-zinc-600">— é assim que seus clientes verão</span>
+    <div className="mb-1 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
+      <div className="mb-2.5 flex items-center gap-1.5 px-1">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Sua página de agendamento</span>
       </div>
 
-      <div className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 shadow-xl">
-        {/* Cover */}
-        <div className="h-14 bg-gradient-to-r from-amber-600/50 via-amber-500/30 to-zinc-900 relative">
-          <div className="absolute -bottom-5 left-4 w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-900 font-black text-lg shadow-lg ring-4 ring-zinc-950">
-            {hasName ? getInitials(displayName) : "✂"}
-          </div>
+      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
+        {/* Capa: a mesma imagem padrão que a página real usa enquanto a
+            barbearia não envia a dela. */}
+        <div className="relative h-16">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/landing/shop-interior.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-zinc-950/55" />
         </div>
-        <div className="pt-7 pb-3 px-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className={`font-black text-sm truncate transition-colors ${hasName ? "text-white" : "text-zinc-600"}`}>
-                {displayName}
-              </p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
-                  {[0, 1, 2, 3, 4].map((i) => <Star key={i} className="w-2.5 h-2.5 fill-current" />)}
-                  <span className="text-zinc-500 ml-0.5">Novo</span>
-                </span>
-                {location && (
-                  <span className="flex items-center gap-0.5 text-[10px] text-zinc-500 truncate">
-                    <MapPin className="w-2.5 h-2.5" /> {location}
-                  </span>
-                )}
+
+        <div className="px-4 pb-3">
+          {/* Logo sobreposta à capa, como na tela real. */}
+          <div className="-mt-6 flex items-end gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-base font-black text-zinc-950 ring-4 ring-zinc-950">
+              {hasName ? getInitials(displayName) : "✂"}
+            </div>
+            <div className="min-w-0 flex-1 pb-0.5">
+              <p className={`truncate text-sm font-black ${hasName ? "text-white" : "text-zinc-600"}`}>{displayName}</p>
+              {location && (
+                <p className="flex items-center gap-1 truncate text-[10px] text-zinc-400">
+                  <MapPin className="h-2.5 w-2.5 shrink-0" /> {location}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Primeira etapa real do agendamento: escolher o serviço. */}
+          <p className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-600">Escolha o serviço</p>
+          <div className="mt-1.5 space-y-1.5">
+            {["Corte", "Corte + Barba"].map((s) => (
+              <div key={s} className="flex items-center justify-between rounded-lg border border-zinc-800 px-2.5 py-1.5">
+                <span className="text-[11px] text-zinc-300">{s}</span>
+                <span className="text-[10px] text-zinc-600">a definir</span>
               </div>
-            </div>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
-              Aberto
-            </span>
+            ))}
           </div>
-
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex-1 h-8 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 flex items-center justify-center gap-1.5 text-[11px] font-bold text-zinc-900">
-              <CalendarCheck className="w-3.5 h-3.5" /> Agendar horário
-            </div>
-          </div>
-
-          <p className="mt-2 text-center text-[10px] text-zinc-600 truncate">
-            cortix.app/<span className="text-zinc-400">{slug || "sua-barbearia"}</span>
+          <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">
+            Os serviços e preços que você cadastrar depois aparecem aqui.
           </p>
         </div>
       </div>
+
+      <p className="mt-2 truncate px-1 text-center text-[10px] text-zinc-600">
+        {baseDeAgendamento()}<span className="text-zinc-400">{slug || "sua-barbearia"}</span>
+      </p>
     </div>
   );
 }
