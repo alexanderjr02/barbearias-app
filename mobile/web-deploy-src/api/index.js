@@ -19,8 +19,14 @@
 const template = require('./_template.js');
 
 const DASHBOARD_ORIGIN = 'https://cortix-pied.vercel.app';
-const DEFAULT_NAME = 'Cortix';
+const DEFAULT_NAME = 'CORTIX';
 const DEFAULT_THEME_COLOR = '#0B0A0F';
+// O app INSTALADO com a cara da barbearia (nome e ícone na tela de início) é
+// o que se compra no plano mais caro — sem isso qualquer barbearia, até no
+// FREE, saía com app próprio e o ENTERPRISE não valia nada. A marca DENTRO do
+// app (cores, logo nas telas) continua valendo pra todo mundo: ela é o
+// multi-inquilino normal, não o white-label.
+const WHITE_LABEL_PLAN = 'ENTERPRISE';
 const COOKIE_NAME = 'cortix_shop';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 ano — mesmo raciocínio do
 // localStorage que isto substitui: guarda a barbearia pra quem volta sem
@@ -55,11 +61,21 @@ module.exports = async (req, res) => {
     }
   }
 
-  const name = (shop && shop.name) || DEFAULT_NAME;
+  // Só o plano mais caro leva a identidade do app instalado. Quem não tem
+  // instala o CORTIX padrão — mesmo abrindo pelo link da barbearia.
+  const whiteLabel = !!shop && shop.plan === WHITE_LABEL_PLAN;
+
+  const name = (whiteLabel && shop.name) || DEFAULT_NAME;
+  // A cor acompanha a barbearia em qualquer plano: ela pinta a barra de status
+  // enquanto se navega, e tem que combinar com o que o app mostra por dentro.
   const themeColor = (shop && shop.primaryColor) || DEFAULT_THEME_COLOR;
-  const iconUrl = slug
+  const iconUrl = whiteLabel
     ? `${DASHBOARD_ORIGIN}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=180`
-    : `${appOrigin}/brand-icon.jpg`;
+    : `${appOrigin}/icons/Icon-180.png`;
+  // O manifesto dinâmico vale pra QUALQUER plano quando há barbearia: é o
+  // start_url dele que carrega o ?shop= e faz o app instalado abrir na
+  // barbearia certa. Quem não é ENTERPRISE recebe dele o nome e os ícones do
+  // CORTIX — mesma casca, barbearia certa.
   const manifestUrl = slug
     ? `${DASHBOARD_ORIGIN}/api/brand/manifest?slug=${encodeURIComponent(slug)}&app=${encodeURIComponent(appOrigin)}`
     : `${appOrigin}/manifest.json`;

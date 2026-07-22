@@ -42,23 +42,45 @@ export async function GET(request: NextRequest) {
   const api = request.nextUrl.origin;
   const icon = (size: number) => `${api}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=${size}`;
 
-  const manifest = {
-    name: shop.name,
-    short_name: shop.name.length > 12 ? shop.name.split(/\s+/)[0] : shop.name,
-    description: `Agende seu horário na ${shop.name}.`,
-    // O slug vive aqui: é o que sobrevive à instalação.
-    start_url: `${origin}/?shop=${encodeURIComponent(slug)}`,
-    scope: `${origin}/`,
-    display: "standalone",
-    orientation: "portrait",
-    background_color: "#0B0A0F",
-    theme_color: shop.primaryColor || "#F59E0B",
-    icons: [
-      { src: icon(192), sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: icon(512), sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: icon(512), sizes: "512x512", type: "image/png", purpose: "maskable" },
-    ],
-  };
+  // App com a cara da barbearia é o que se compra no plano mais caro. Abaixo
+  // dele o app instalado é o CORTIX — mas o start_url continua levando o slug,
+  // senão o atalho abriria "uma barbearia qualquer" em vez da dele.
+  const whiteLabel = shop.plan === "ENTERPRISE";
+
+  const manifest = whiteLabel
+    ? {
+        name: shop.name,
+        short_name: shop.name.length > 12 ? shop.name.split(/\s+/)[0] : shop.name,
+        description: `Agende seu horário na ${shop.name}.`,
+        // O slug vive aqui: é o que sobrevive à instalação.
+        start_url: `${origin}/?shop=${encodeURIComponent(slug)}`,
+        scope: `${origin}/`,
+        display: "standalone",
+        orientation: "portrait",
+        background_color: "#0B0A0F",
+        theme_color: shop.primaryColor || "#F59E0B",
+        icons: [
+          { src: icon(192), sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: icon(512), sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: icon(512), sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      }
+    : {
+        name: "CORTIX",
+        short_name: "CORTIX",
+        description: "Agende seu horário na barbearia.",
+        start_url: `${origin}/?shop=${encodeURIComponent(slug)}`,
+        scope: `${origin}/`,
+        display: "standalone",
+        orientation: "portrait",
+        background_color: "#09090b",
+        theme_color: "#D4AF37",
+        icons: [
+          { src: `${origin}/icons/Icon-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: `${origin}/icons/Icon-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: `${origin}/icons/Icon-maskable-512.png`, sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      };
 
   return NextResponse.json(manifest, {
     headers: {

@@ -30,11 +30,18 @@ export async function GET(request: NextRequest) {
 
   const shop = await prisma.barbershop.findUnique({
     where: { slug },
-    select: { logo: true, primaryColor: true, name: true },
+    select: { logo: true, primaryColor: true, name: true, plan: true },
   });
 
   if (!shop) {
     return NextResponse.json({ error: "Barbearia não encontrada" }, { status: 404 });
+  }
+
+  // Ícone com a marca da barbearia é o plano mais caro. A trava vive aqui
+  // também (e não só em quem monta a URL) pra regra valer mesmo se alguém
+  // chamar a rota direto.
+  if (shop.plan !== "ENTERPRISE") {
+    return NextResponse.json({ error: "Recurso do plano Enterprise" }, { status: 403 });
   }
 
   const bg = /^#[0-9a-f]{6}$/i.test(shop.primaryColor ?? "") ? shop.primaryColor! : "#F59E0B";
