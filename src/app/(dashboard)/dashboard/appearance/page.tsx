@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Palette, Upload, Sparkles, Check, Wand2, Loader2, ImageIcon, Bell, Calendar, Scissors, Film, Blend, ZoomIn, Activity, Ban, Plus } from "lucide-react";
+import { Palette, Upload, Sparkles, Check, Wand2, Loader2, ImageIcon, Bell, Calendar, Scissors, Film, Blend, ZoomIn, Activity, Ban, Plus, Mail, Lock, RotateCcw, AlertTriangle } from "lucide-react";
 import { apiGet, apiPatch, apiUpload } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -47,6 +47,21 @@ function rgbToHex(r: number, g: number, b: number) {
 function contrastText(hex: string) {
   const { r, g, b } = hexToRgb(hex);
   return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#000000" : "#ffffff";
+}
+// Contraste WCAG entre duas cores (1 a 21). Serve pra avisar quando a cor
+// escolhida some no fundo — a marca do gestor não pode deixar o texto ilegível.
+function relLuminance(hex: string) {
+  const { r, g, b } = hexToRgb(hex);
+  const f = (c: number) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function contrastRatio(a: string, b: string) {
+  const la = relLuminance(a);
+  const lb = relLuminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 function extractPalette(url: string): Promise<string[]> {
   return new Promise((resolve) => {
@@ -178,6 +193,23 @@ export default function AppearancePage() {
   const loginField = hasMedia ? "rgba(255,255,255,0.12)" : p.field;
   const rangeStyle = { accentColor: accent } as React.CSSProperties;
   const mediaAnim = bgEffect === "zoom" ? "anim-zoom" : "scale-110";
+  // Aviso de legibilidade: a cor da marca também vira TEXTO (link "Esqueceu a
+  // senha?", "Criar conta", número de pontos). Se ela some no fundo, avisa.
+  const lowContrast = contrastRatio(accent, p.bg) < 3;
+
+  const resetDefaults = () => {
+    setAccent("#D4AF37");
+    setMode("dark");
+    setPreset("midnight");
+    setBgType("gradient");
+    setBgVideo("");
+    setBgDim(35);
+    setBgBlur(0);
+    setBgGradient(true);
+    setBgEffect("none");
+    setTagline("Sua barbearia, no estilo certo.");
+    toast.success("Voltou ao padrão CORTIX. Salve para aplicar.");
+  };
 
   return (
     <div className="space-y-6">
@@ -188,7 +220,7 @@ export default function AppearancePage() {
         .anim-pulse { animation: cortix-pg 3.5s ease-in-out infinite; }
       `}</style>
 
-      <PageHeader icon={Palette} title="Aparência do app" subtitle="Personalize com a sua marca — sem deixar feio, nunca" />
+      <PageHeader icon={Palette} title="Aparência do app" subtitle="Personalize com a sua marca, sem deixar feio nunca" />
 
       <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
         {/* Controls */}
@@ -251,6 +283,14 @@ export default function AppearancePage() {
               </label>
               <span className="text-xs text-zinc-500 ml-1 font-mono">{accent.toUpperCase()}</span>
             </div>
+            {lowContrast && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.07] p-2.5">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
+                <p className="text-[11px] leading-relaxed text-amber-200/90">
+                  Essa cor tem pouco contraste com o fundo {mode === "light" ? "claro" : "escuro"} — links e textos na cor da marca podem ficar difíceis de ler. Um tom mais {mode === "light" ? "escuro" : "claro"} lê melhor.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Background & effects */}
@@ -326,10 +366,15 @@ export default function AppearancePage() {
             </div>
           </section>
 
-          <button onClick={() => save.mutate()} disabled={save.isPending} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50">
-            {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            Salvar aparência
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => save.mutate()} disabled={save.isPending} className="flex items-center gap-2 px-6 py-3 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-colors disabled:opacity-50">
+              {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              Salvar aparência
+            </button>
+            <button onClick={resetDefaults} className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-zinc-400 rounded-xl border border-zinc-800 hover:border-zinc-700 hover:text-white transition-colors">
+              <RotateCcw className="w-4 h-4" /> Restaurar padrão
+            </button>
+          </div>
         </div>
 
         {/* Live phone preview */}
@@ -369,7 +414,7 @@ export default function AppearancePage() {
                   <p className="text-[11px] mt-1 text-center" style={{ color: loginMuted }}>{tagline}</p>
                   <div className="w-full mt-5 space-y-2">
                     <div className="h-8 rounded-xl flex items-center justify-center gap-2 text-[11px] font-medium" style={{ background: "#fff", color: "#111" }}>
-                      <span className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-500 to-red-500" /> Continuar com Google
+                      <span className="text-[12px] font-bold" style={{ color: "#4285F4" }}>G</span> Continuar com Google
                     </div>
                     <div className="h-8 rounded-xl flex items-center justify-center text-[11px] font-medium" style={{ background: hasMedia ? "rgba(255,255,255,0.12)" : p.surface, color: loginText, border: `1px solid ${hasMedia ? "rgba(255,255,255,0.15)" : p.border}` }}>
                       Continuar com Apple
@@ -379,8 +424,8 @@ export default function AppearancePage() {
                       <span className="text-[10px]" style={{ color: loginMuted }}>ou</span>
                       <span className="flex-1 h-px" style={{ background: hasMedia ? "rgba(255,255,255,0.2)" : p.border }} />
                     </div>
-                    <div className="h-8 rounded-xl flex items-center px-3 text-[11px]" style={{ background: loginField, color: loginMuted }}>E-mail</div>
-                    <div className="h-8 rounded-xl flex items-center px-3 text-[11px]" style={{ background: loginField, color: loginMuted }}>Senha</div>
+                    <div className="h-8 rounded-xl flex items-center gap-2 px-3 text-[11px]" style={{ background: loginField, color: loginMuted }}><Mail className="w-3 h-3" /> E-mail</div>
+                    <div className="h-8 rounded-xl flex items-center gap-2 px-3 text-[11px]" style={{ background: loginField, color: loginMuted }}><Lock className="w-3 h-3" /> Senha</div>
                     <div className="text-right"><span className="text-[10px] font-medium" style={{ color: hasMedia ? "#fff" : accent }}>Esqueceu a senha?</span></div>
                     <div className="h-9 rounded-xl flex items-center justify-center text-xs font-bold" style={{ background: accent, color: onAccent, boxShadow: `0 8px 22px ${accent}55` }}>Entrar</div>
                   </div>
@@ -388,55 +433,60 @@ export default function AppearancePage() {
                 </div>
               </div>
             ) : (
-              /* Home — faithful to the real client app */
+              /* Início — fiel ao app do cliente (cliente_home_screen.dart): um
+                 banner de capa com a saudação por cima, depois os cards. A
+                 capa só aparece com fundo "Imagem" (é assim no app real:
+                 brandCover exige bgType image). */
               <div className="w-full h-full flex flex-col relative" style={{ background: p.bg, color: p.text }}>
-                <div className="px-4 pt-9 pb-2 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs" style={{ color: p.muted }}>Boa tarde,</p>
-                    <p className="text-lg font-black leading-tight">Você</p>
-                  </div>
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: p.field, color: p.muted }}>V</div>
-                </div>
-                {/* Next appointment card */}
-                <div className="px-4 mt-2">
-                  <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}bb)` }}>
-                    <p className="text-[10px] font-black tracking-wide" style={{ color: onAccent, opacity: 0.85 }}>PRÓXIMO · EM 2H</p>
-                    <p className="text-base font-black mt-1" style={{ color: onAccent }}>{name}</p>
-                    <p className="text-[11px]" style={{ color: onAccent, opacity: 0.85 }}>Corte + Barba · com Rafael</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs font-bold" style={{ color: onAccent }}>Hoje · 15:30</span>
-                      <span className="text-[11px]" style={{ color: onAccent, opacity: 0.8 }}>R$ 55,00</span>
+                {/* Banner de capa + saudação */}
+                <div className="relative h-[132px] shrink-0">
+                  {bgType === "image" && cover ? (
+                    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${cover})` }} />
+                  ) : (
+                    <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${accent}2e, ${p.bg})` }} />
+                  )}
+                  {/* Escurece o pé do banner pra saudação ficar legível, igual ao app */}
+                  <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${p.bg}, transparent 70%)` }} />
+                  <div className="relative z-10 h-full flex items-end px-4 pb-3 pt-9">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px]" style={{ color: p.muted }}>Boa tarde,</p>
+                      <p className="text-xl font-black leading-tight truncate">Lucas</p>
                     </div>
-                    <div className="flex gap-2 mt-3">
-                      <span className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg" style={{ background: onAccent === "#000000" ? "#00000018" : "#ffffff22", color: onAccent }}>Cancelar</span>
-                      <span className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg" style={{ background: onAccent === "#000000" ? "#00000030" : "#ffffff33", color: onAccent }}>Remarcar</span>
+                    <Bell className="w-4 h-4 mb-1 mr-2" style={{ color: p.text }} />
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: p.field, color: p.muted }}>L</div>
+                  </div>
+                </div>
+
+                <div className="px-4 -mt-1 flex-1 overflow-hidden">
+                  {/* Próximo agendamento — sem gradiente, cor da marca cheia */}
+                  <div className="rounded-2xl p-3.5" style={{ background: accent }}>
+                    <p className="text-[9px] font-black tracking-wide" style={{ color: onAccent, opacity: 0.8 }}>PRÓXIMO · EM 2H</p>
+                    <p className="text-sm font-black mt-0.5" style={{ color: onAccent }}>Corte + Barba</p>
+                    <p className="text-[10px]" style={{ color: onAccent, opacity: 0.85 }}>com Rafael · Hoje 15:30</p>
+                    <div className="flex gap-2 mt-2.5">
+                      <span className="flex-1 text-center text-[10px] font-semibold py-1.5 rounded-lg" style={{ background: onAccent === "#000000" ? "#00000018" : "#ffffff22", color: onAccent }}>Cancelar</span>
+                      <span className="flex-1 text-center text-[10px] font-semibold py-1.5 rounded-lg" style={{ background: onAccent === "#000000" ? "#00000030" : "#ffffff33", color: onAccent }}>Remarcar</span>
+                    </div>
+                  </div>
+
+                  {/* Fidelidade */}
+                  <p className="mt-4 text-xs font-semibold" style={{ color: p.muted }}>Minha fidelidade</p>
+                  <div className="mt-2 rounded-2xl p-3.5 flex items-center justify-between" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div>
+                      <p className="text-[10px]" style={{ color: p.muted }}>Meus pontos · Ouro</p>
+                      <p className="text-lg font-black leading-tight" style={{ color: accent }}>240</p>
+                    </div>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: `${accent}22` }}>
+                      <Scissors className="w-4 h-4" style={{ color: accent }} />
                     </div>
                   </div>
                 </div>
-                {/* Points strip */}
-                <div className="px-4 mt-3 flex gap-3">
-                  <div className="flex-1 rounded-xl p-3" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                    <p className="text-[10px]" style={{ color: p.muted }}>Meus pontos</p>
-                    <p className="text-base font-black" style={{ color: accent }}>240</p>
-                  </div>
-                  <div className="flex-1 rounded-xl p-3" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                    <p className="text-[10px]" style={{ color: p.muted }}>Assinatura</p>
-                    <p className="text-sm font-bold">Clube VIP</p>
-                  </div>
-                </div>
-                <p className="px-4 mt-4 text-xs font-semibold" style={{ color: p.muted }}>Meus agendamentos</p>
-                <div className="px-4 mt-1 flex-1">
-                  <div className="flex items-center gap-3 py-2.5 border-b" style={{ borderColor: p.border }}>
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${accent}22` }}><Scissors className="w-4 h-4" style={{ color: accent }} /></div>
-                    <div className="flex-1"><p className="text-xs font-semibold">Corte</p><p className="text-[10px]" style={{ color: p.muted }}>12 mar · 10:00</p></div>
-                    <Calendar className="w-4 h-4" style={{ color: p.muted }} />
-                  </div>
-                </div>
-                {/* FAB */}
+
+                {/* FAB + navegação */}
                 <div className="absolute bottom-16 right-4 h-10 px-4 rounded-full flex items-center gap-1.5 text-sm font-bold shadow-lg" style={{ background: accent, color: onAccent }}>
                   <Plus className="w-4 h-4" /> Agendar
                 </div>
-                <div className="h-14 border-t flex items-center justify-around px-6" style={{ borderColor: p.border, background: p.surface }}>
+                <div className="h-14 border-t flex items-center justify-around px-6 shrink-0" style={{ borderColor: p.border, background: p.surface }}>
                   <Calendar className="w-5 h-5" style={{ color: accent }} />
                   <Scissors className="w-5 h-5" style={{ color: p.muted }} />
                   <Bell className="w-5 h-5" style={{ color: p.muted }} />
@@ -444,7 +494,7 @@ export default function AppearancePage() {
               </div>
             )}
           </div>
-          <p className="text-center text-xs text-zinc-600 mt-4">Prévia em tempo real — igual ao app</p>
+          <p className="text-center text-xs text-zinc-600 mt-4">Prévia em tempo real, igual ao app do cliente</p>
         </div>
       </div>
     </div>
