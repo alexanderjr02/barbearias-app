@@ -1199,6 +1199,12 @@ model Lead {
   lastSeenAt  DateTime  @default(now())
   scheduledAt DateTime?
   showedAt    DateTime?
+
+  // Onda 3: eventos de conversão já devolvidos à Meta (Conversions API), para
+  // não mandar o mesmo duas vezes. Só se aplica a leads de anúncio (CTWA).
+  metaScheduleSentAt DateTime?
+  metaPurchaseSentAt DateTime?
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

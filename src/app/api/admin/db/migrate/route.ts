@@ -128,6 +128,19 @@ const STEPS: Step[] = [
       `CREATE UNIQUE INDEX "Lead_barbershopId_phoneKey_key" ON "Lead"("barbershopId", "phoneKey")`,
     ],
   },
+  {
+    // Onda 3: colunas de controle dos eventos ja devolvidos a Meta (CAPI).
+    // ADD COLUMN nulo e aditivo — nao move dado. Separado do CREATE acima para
+    // funcionar mesmo se a tabela Lead ja tiver sido criada sem estas colunas.
+    name: "Lead.metaScheduleSentAt",
+    applied: () => columnExists("Lead", "metaScheduleSentAt"),
+    sql: [`ALTER TABLE "Lead" ADD COLUMN "metaScheduleSentAt" DATETIME`],
+  },
+  {
+    name: "Lead.metaPurchaseSentAt",
+    applied: () => columnExists("Lead", "metaPurchaseSentAt"),
+    sql: [`ALTER TABLE "Lead" ADD COLUMN "metaPurchaseSentAt" DATETIME`],
+  },
 ];
 
 /** Mesma chave de emergencia das outras rotas de destravamento. */

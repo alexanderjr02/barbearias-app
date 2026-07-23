@@ -182,6 +182,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       await advanceLead(appointment.barbershopId, appointment.clientPhone, "SHOWED", {
         clientId: appointment.clientId,
         showedAt: new Date(),
+        value: appointment.totalPrice,
       });
     } catch (e) {
       console.error("[appointments] advanceLead SHOWED", e);

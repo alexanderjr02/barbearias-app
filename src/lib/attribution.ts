@@ -1,5 +1,6 @@
 import { prisma } from "./db";
 import { normalizePhone, phoneKey } from "./phone";
+import { sendCtwaEvent } from "./metaCapi";
 
 // Bloco de origem que a Meta anexa à PRIMEIRA mensagem de uma conversa iniciada
 // por anúncio clique-pro-WhatsApp. Vem em value.messages[0].referral. O payload
@@ -102,6 +103,8 @@ export async function advanceLead(
     clientId?: string | null;
     scheduledAt?: Date;
     showedAt?: Date;
+    // Valor do atendimento (para o evento Purchase da Meta, quando compareceu).
+    value?: number;
     // Origem de um link/QR rastreado (ex.: agendou pela pagina publica vinda de
     // um QR do Google). Aplica atribuicao de primeiro toque, igual ao WhatsApp.
     origin?: { channel?: string | null; campaign?: string | null };
@@ -115,7 +118,7 @@ export async function advanceLead(
 
   const existing = await prisma.lead.findUnique({
     where: { barbershopId_phoneKey: { barbershopId, phoneKey: key } },
-    select: { id: true, stage: true, channel: true },
+    select: { id: true, stage: true, channel: true, ctwaClid: true },
   });
 
   if (!existing) {
@@ -152,4 +155,50 @@ export async function advanceLead(
       ...(extra?.showedAt ? { showedAt: extra.showedAt } : {}),
     },
   });
+
+  // Onda 3: devolve o evento de conversão à Meta (CAPI), só para lead de anúncio
+  // (CTWA) com click id. Best-effort — inerte sem credenciais.
+  if (existing.channel === "CTWA" && existing.ctwaClid) {
+    await syncMetaConversions(existing.id, { value: extra?.value }).catch((e) =>
+      console.error("[attribution] syncMetaConversions", e),
+    );
+  }
+}
+
+// Devolve à Meta os eventos de conversão pendentes de um lead de anúncio (CTWA),
+// sem repetir (os campos meta*SentAt guardam o que já foi). Best-effort: uma
+// falha aqui nunca afeta agendamento nem atendimento.
+export async function syncMetaConversions(leadId: string, opts?: { value?: number }): Promise<void> {
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+    select: {
+      channel: true,
+      ctwaClid: true,
+      scheduledAt: true,
+      showedAt: true,
+      metaScheduleSentAt: true,
+      metaPurchaseSentAt: true,
+    },
+  });
+  if (!lead || lead.channel !== "CTWA" || !lead.ctwaClid) return;
+
+  const patch: { metaScheduleSentAt?: Date; metaPurchaseSentAt?: Date } = {};
+
+  if (lead.scheduledAt && !lead.metaScheduleSentAt) {
+    const r = await sendCtwaEvent({ eventName: "Schedule", ctwaClid: lead.ctwaClid, eventTimeMs: lead.scheduledAt.getTime() });
+    if (r.ok) patch.metaScheduleSentAt = new Date();
+  }
+  if (lead.showedAt && !lead.metaPurchaseSentAt) {
+    const r = await sendCtwaEvent({
+      eventName: "Purchase",
+      ctwaClid: lead.ctwaClid,
+      eventTimeMs: lead.showedAt.getTime(),
+      value: opts?.value,
+    });
+    if (r.ok) patch.metaPurchaseSentAt = new Date();
+  }
+
+  if (patch.metaScheduleSentAt || patch.metaPurchaseSentAt) {
+    await prisma.lead.update({ where: { id: leadId }, data: patch });
+  }
 }
