@@ -196,7 +196,7 @@ export default function ReportsPage() {
             {/* Upgrade overlay */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 text-center max-w-md shadow-2xl">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-amber-500/25">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-amber-500/25">
                   <BarChart3 className="w-8 h-8 text-black" />
                 </div>
                 <h2 className="text-xl font-black text-white mb-2">Relatórios Avançados</h2>
@@ -213,7 +213,7 @@ export default function ReportsPage() {
                   ))}
                 </div>
                 <button onClick={() => setUpgradeOpen(true)}
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-all">
+                  className="w-full py-3 bg-amber-500 text-black font-bold rounded-xl hover:opacity-90 transition-all">
                   Desbloquear relatórios →
                 </button>
               </div>
@@ -564,7 +564,7 @@ export default function ReportsPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-black",
-                        i === 0 ? "bg-gradient-to-br from-amber-400 to-amber-600" : "bg-zinc-700 text-zinc-300"
+                        i === 0 ? "bg-amber-500" : "bg-zinc-700 text-zinc-300"
                       )}>
                         {s.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                       </div>
@@ -577,7 +577,7 @@ export default function ReportsPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 max-w-[80px] h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full"
+                        <div className="h-full bg-amber-500 rounded-full"
                           style={{ width: `${s.pct}%` }} />
                       </div>
                       <span className="text-xs text-zinc-500">{s.pct}%</span>
