@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Palette, Upload, Sparkles, Check, Wand2, Loader2, ImageIcon, Bell, Calendar, Scissors, Film, Blend, ZoomIn, Activity, Ban, Plus, Mail, Lock, RotateCcw, AlertTriangle } from "lucide-react";
+import { Palette, Upload, Sparkles, Check, Wand2, Loader2, ImageIcon, Bell, Scissors, Film, Blend, ZoomIn, Activity, Ban, Plus, Mail, Lock, RotateCcw, AlertTriangle, Bot, Home, Gift, Award, SlidersHorizontal, User } from "lucide-react";
 import { apiGet, apiPatch, apiUpload } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -172,8 +172,11 @@ export default function AppearancePage() {
       apiPatch("/api/barbershop", {
         name, appTagline: tagline, primaryColor: accent, themeMode: mode, themePreset: preset,
         bgType, bgVideo, bgDim, bgBlur, bgGradient, bgEffect,
-        ...(logo ? { logo } : {}),
-        ...(cover ? { coverImage: cover } : {}),
+        // String vazia (não ausência) para o servidor conseguir LIMPAR: quando
+        // o gestor remove a logo/capa no reset, precisa apagar de verdade, não
+        // só deixar de enviar.
+        logo: logo ?? "",
+        coverImage: cover ?? "",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["barbershop"] });
@@ -208,6 +211,12 @@ export default function AppearancePage() {
     setBgGradient(true);
     setBgEffect("none");
     setTagline("Sua barbearia, no estilo certo.");
+    // Restaurar o padrão é voltar à CORTIX de fábrica — inclui tirar a logo e
+    // a capa da barbearia, senão "padrão" ainda ficava com a marca de quem
+    // estava editando.
+    setLogo(null);
+    setCover(null);
+    setSuggested([]);
     toast.success("Voltou ao padrão CORTIX. Salve para aplicar.");
   };
 
@@ -482,14 +491,24 @@ export default function AppearancePage() {
                   </div>
                 </div>
 
-                {/* FAB + navegação */}
-                <div className="absolute bottom-16 right-4 h-10 px-4 rounded-full flex items-center gap-1.5 text-sm font-bold shadow-lg" style={{ background: accent, color: onAccent }}>
+                {/* Dois FABs, como no app real: o assistente à esquerda e o
+                    Agendar à direita. */}
+                <div className="absolute bottom-[74px] left-4 h-11 w-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: accent, color: onAccent }}>
+                  <Bot className="w-5 h-5" />
+                </div>
+                <div className="absolute bottom-[74px] right-4 h-11 px-4 rounded-full flex items-center gap-1.5 text-sm font-bold shadow-lg" style={{ background: accent, color: onAccent }}>
                   <Plus className="w-4 h-4" /> Agendar
                 </div>
-                <div className="h-14 border-t flex items-center justify-around px-6 shrink-0" style={{ borderColor: p.border, background: p.surface }}>
-                  <Calendar className="w-5 h-5" style={{ color: accent }} />
-                  <Scissors className="w-5 h-5" style={{ color: p.muted }} />
-                  <Bell className="w-5 h-5" style={{ color: p.muted }} />
+                {/* Barra flutuante com 6 itens, igual ao app. */}
+                <div className="absolute inset-x-3 bottom-3">
+                  <div className="rounded-2xl flex items-center justify-around px-3 py-2.5 shadow-lg" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div className="flex items-center gap-1 rounded-lg px-2 py-1" style={{ background: `${accent}1f` }}><Home className="w-[18px] h-[18px]" style={{ color: accent }} /></div>
+                    <Scissors className="w-[18px] h-[18px]" style={{ color: p.muted }} />
+                    <Gift className="w-[18px] h-[18px]" style={{ color: p.muted }} />
+                    <Award className="w-[18px] h-[18px]" style={{ color: p.muted }} />
+                    <SlidersHorizontal className="w-[18px] h-[18px]" style={{ color: p.muted }} />
+                    <User className="w-[18px] h-[18px]" style={{ color: p.muted }} />
+                  </div>
                 </div>
               </div>
             )}

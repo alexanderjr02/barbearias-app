@@ -92,6 +92,11 @@ export async function PATCH(request: NextRequest) {
   for (const field of PROFILE_FIELDS) {
     if (typeof body[field] === "string") data[field] = body[field];
   }
+  // Logo e capa: string vazia significa "remover" (o botão Restaurar padrão da
+  // aparência). Guardar "" deixaria o app tentando carregar uma imagem vazia e
+  // mostrando ícone quebrado — null some limpo.
+  if (typeof body.logo === "string") data.logo = body.logo.trim() || null;
+  if (typeof body.coverImage === "string") data.coverImage = body.coverImage.trim() || null;
   // Connecting/disconnecting a payment provider is money-sensitive — owner only.
   if (session.role === "OWNER" && typeof body.paymentApiKey === "string") {
     const key = body.paymentApiKey.trim();
