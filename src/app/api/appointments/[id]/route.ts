@@ -5,6 +5,7 @@ import { runLoyaltyOnCompletion } from "@/lib/loyalty";
 import { notifyBarbershop, notifyClient } from "@/lib/gestorNotifications";
 import { onSlotOpened } from "@/lib/copilot/autopilot";
 import { validateRequestedSlot } from "@/lib/scheduling";
+import { advanceLead } from "@/lib/attribution";
 
 const VALID_STATUSES = ["SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"];
 
@@ -174,6 +175,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   if (body.status === "COMPLETED" && appointment.status !== "COMPLETED") {
     await runLoyaltyOnCompletion(id);
+    // Atribuição (Onda 1): compareceu → avança o funil do lead para SHOWED. É a
+    // etapa que separa "o anúncio traz gente" de "a gente que chega vira
+    // cliente". Best-effort: nunca quebra a conclusão do atendimento.
+    try {
+      await advanceLead(appointment.barbershopId, appointment.clientPhone, "SHOWED", {
+        clientId: appointment.clientId,
+        showedAt: new Date(),
+      });
+    } catch (e) {
+      console.error("[appointments] advanceLead SHOWED", e);
+    }
   }
 
   if (isOwnClientCancelling) {

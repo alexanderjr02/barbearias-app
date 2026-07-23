@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import {
   DollarSign, TrendingUp, Calendar,
-  BarChart3, Percent,
+  BarChart3, Percent, AlertCircle,
   type LucideIcon,
 } from "lucide-react";
 import { usePlan } from "@/context/PlanContext";
@@ -30,6 +30,25 @@ interface ReportsResponse {
   staffPerformance: { name: string; appointments: number; revenue: number; commission: number; pct: number }[];
   retention: { name: string; novos: number; retornantes: number }[];
 }
+
+interface AttributionResponse {
+  range: "week" | "month";
+  totals: { contacts: number; identified: number; unidentified: number; unidentifiedPct: number; novos: number; recorrentes: number };
+  funnel: { contacts: number; scheduled: number; showed: number; schedRate: number; showRate: number };
+  byChannel: { channel: string; label: string; contacts: number; scheduled: number; showed: number; novos: number; conversionPct: number }[];
+  byCampaign: { campaign: string; channel: string; contacts: number; showed: number }[];
+}
+
+// Cor por canal — verde do WhatsApp para o anúncio (canal principal), cinza
+// neutro para "não identificado" (não competimos por atenção com o desconhecido).
+const CHANNEL_COLORS: Record<string, string> = {
+  CTWA: "#25D366",
+  GOOGLE: "#3B82F6",
+  GBP: "#8B5CF6",
+  REFERRAL: "#F59E0B",
+  ORGANIC: "#10B981",
+  UNKNOWN: "#71717a",
+};
 
 interface TooltipPayloadEntry {
   name: string;
@@ -90,6 +109,14 @@ export default function ReportsPage() {
     queryFn: () => apiGet<ReportsResponse>(`/api/dashboard/reports?range=${range}`),
     enabled: canSeeReports,
   });
+  const { data: attribution } = useQuery({
+    queryKey: ["dashboard-attribution", range],
+    queryFn: () => apiGet<AttributionResponse>(`/api/dashboard/attribution?range=${range}`),
+    enabled: canSeeReports,
+  });
+  const funnel = attribution?.funnel;
+  const byChannel = attribution?.byChannel ?? [];
+  const maxContacts = byChannel.reduce((m, c) => Math.max(m, c.contacts), 0);
 
   const data = reports?.series ?? [];
   const servicesData = reports?.servicesDistribution ?? [];
@@ -265,6 +292,59 @@ export default function ReportsPage() {
               <Bar dataKey="novos" name="Novos" fill="#3B82F6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Origem dos clientes (Atribuição) */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h3 className="text-base font-bold text-white">Origem dos clientes</h3>
+            <p className="text-xs text-zinc-500 mt-0.5">De onde vieram os contatos {range === "week" ? "dos últimos 7 dias" : "dos últimos 30 dias"}</p>
+          </div>
+          <span className="text-xs text-zinc-400 bg-zinc-800 px-2.5 py-1 rounded-full">{attribution?.totals.contacts ?? 0} contatos</span>
+        </div>
+
+        {/* Funil: chegou → agendou → compareceu */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[
+            { label: "Chegaram", value: funnel?.contacts ?? 0, pct: null as number | null },
+            { label: "Agendaram", value: funnel?.scheduled ?? 0, pct: funnel?.schedRate ?? 0 },
+            { label: "Compareceram", value: funnel?.showed ?? 0, pct: funnel?.showRate ?? 0 },
+          ].map((step) => (
+            <div key={step.label} className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-4 text-center">
+              <p className="text-2xl font-black text-white">{step.value}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">{step.label}</p>
+              {step.pct !== null && <p className="text-[11px] text-amber-400 mt-1">{step.pct}% do passo anterior</p>}
+            </div>
+          ))}
+        </div>
+
+        {/* Contatos por canal */}
+        <div className="space-y-3">
+          {byChannel.length === 0 ? (
+            <p className="text-sm text-zinc-500 text-center py-6">
+              Ainda sem contatos rastreados no período. Assim que chegar mensagem de anúncio (clique-pro-WhatsApp) ou link rastreado, a origem aparece aqui.
+            </p>
+          ) : byChannel.map((c) => (
+            <div key={c.channel}>
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-zinc-300 font-medium">{c.label}</span>
+                <span className="text-zinc-500">{c.contacts} contatos · {c.showed} compareceram · <span className="text-zinc-300">{c.conversionPct}%</span></span>
+              </div>
+              <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: `${maxContacts > 0 ? (c.contacts / maxContacts) * 100 : 0}%`, backgroundColor: CHANNEL_COLORS[c.channel] ?? "#71717a" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Rodapé de honestidade — sempre visível */}
+        <div className="mt-6 pt-4 border-t border-zinc-800 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            <span className="text-amber-300 font-semibold">{attribution?.totals.unidentifiedPct ?? 0}%</span> dos contatos estão com <span className="text-zinc-300">origem não identificada</span> — e nunca os distribuímos entre as campanhas por estimativa. Um número honesto vale mais do que um número inflado.
+          </p>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { validateRequestedSlot } from "@/lib/scheduling";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
 import { sendBookingConfirmation } from "@/lib/whatsapp";
 import { appointmentLimitError } from "@/lib/planLimits";
+import { advanceLead } from "@/lib/attribution";
 
 // GET /api/appointments?barbershopId=xxx&staffId=yyy&from=YYYY-MM-DD&to=YYYY-MM-DD
 // staffId optional (a gestor viewing a single barber's agenda). from/to are
@@ -139,6 +140,19 @@ export async function POST(request: NextRequest) {
         barbershop: { select: { name: true } },
       },
     });
+
+    // Atribuição (Onda 1): o cliente agendou → avança o funil do lead. Se ele
+    // nunca passou pelo WhatsApp (ex.: agendou na página pública), o lead nasce
+    // aqui como UNKNOWN para o funil não ficar cego. Best-effort: nunca quebra
+    // o agendamento.
+    try {
+      await advanceLead(barbershopId, clientPhone, "SCHEDULED", {
+        clientId: selfBookingClientId,
+        scheduledAt: appointment.date,
+      });
+    } catch (e) {
+      console.error("[appointments] advanceLead SCHEDULED", e);
+    }
 
     // A staff member booking a walk-in never notifies themselves — only a
     // client (logged in or guest) creating their own appointment does.

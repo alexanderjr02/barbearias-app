@@ -8,6 +8,7 @@ import { appointmentLimitError } from "@/lib/planLimits";
 import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
 import { onSlotOpened } from "@/lib/copilot/autopilot";
 import { recordAiUsage } from "@/lib/ai/usage";
+import { advanceLead } from "@/lib/attribution";
 import {
   revenueSummary,
   churnedClients,
@@ -435,6 +436,13 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
         data: { barbershopId, staffId: staff.id, serviceId: svc.id, date: new Date(dateKey), startTime: time, endTime, clientName: String(input.clientName ?? "").trim(), clientPhone: String(input.clientPhone ?? "").trim(), totalPrice: service?.price ?? 0, status: "SCHEDULED" },
       });
       if (userId) await recordUndoable(barbershopId, userId, name, `Agendamento de ${appt.clientName} em ${dateKey} às ${time}`, { kind: "appointment_created", appointmentId: appt.id });
+      // Atribuição (Onda 1): walk-in agendado pelo gestor também entra no funil
+      // (origem UNKNOWN — é uma fatia honesta de "não identificado"). Best-effort.
+      try {
+        await advanceLead(barbershopId, String(input.clientPhone ?? ""), "SCHEDULED", { scheduledAt: new Date(dateKey) });
+      } catch (e) {
+        console.error("[copilot] advanceLead SCHEDULED", e);
+      }
       return `Agendado! ${svc.name} com ${staff.name} em ${dateKey} às ${time}. Código: ${appt.id.slice(-6).toUpperCase()}.`;
     }
     case "find_appointments": {

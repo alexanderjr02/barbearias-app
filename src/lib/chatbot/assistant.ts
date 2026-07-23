@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, shopNow, OCCUPYING_STATUSES } from "@/lib/scheduling";
 import { appointmentLimitError } from "@/lib/planLimits";
 import { recordAiUsage } from "@/lib/ai/usage";
+import { advanceLead } from "@/lib/attribution";
 
 // The client-facing assistant is HIGH VOLUME and LOW STAKES (book/answer), so
 // it defaults to a cheaper model to protect margin. Override with ASSISTANT_MODEL,
@@ -153,6 +154,13 @@ async function runTool(barbershopId: string, name: string, input: Record<string,
         status: "SCHEDULED",
       },
     });
+    // Atribuição (Onda 1): fecha o ciclo — o lead que chegou pelo WhatsApp
+    // (possivelmente de um anúncio) agora agendou. Best-effort.
+    try {
+      await advanceLead(barbershopId, String(input.clientPhone ?? ""), "SCHEDULED", { scheduledAt: new Date(dateKey) });
+    } catch (e) {
+      console.error("[assistant] advanceLead SCHEDULED", e);
+    }
     return `Agendado com sucesso! ${service.name} com ${staff.name} em ${dateKey} às ${time}. Código: ${appt.id.slice(-6).toUpperCase()}.`;
   }
 

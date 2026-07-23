@@ -241,6 +241,7 @@ model Barbershop {
   stampCards      StampCard[]
   loyaltyRewards  LoyaltyReward[]
   referrals       Referral[]
+  leads           Lead[]
   whatsappConnection WhatsappConnection?
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
@@ -1157,4 +1158,51 @@ model CouponRedemption {
 
   @@unique([couponId, barbershopId])
   @@index([barbershopId])
+}
+
+// Lead / contato de marketing. Nasce no PRIMEIRO contato (mensagem de WhatsApp),
+// ANTES de existir agendamento — é o que permite medir o funil inteiro e provar
+// de qual anúncio veio cada cliente novo. Sem ele, quem manda mensagem e não
+// marca simplesmente não existe para o sistema, e a taxa de conversão fica
+// invisível.
+//
+// Atribuição de PRIMEIRO TOQUE: `channel` e os campos de anúncio são gravados na
+// criação e nunca sobrescritos por um contato orgânico posterior (senão a
+// campanha perderia o crédito). É uma fonte de verdade SEPARADA do `howFoundUs`
+// manual do BarbershopClient — uma é automática, a outra é o que o balcão digita.
+model Lead {
+  id           String     @id @default(cuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  // `phone` = canônico com DDI (exibição/E.164). `phoneKey` = últimos 8 dígitos,
+  // a MESMA chave que o resto do app usa para casar cliente — é o eixo do
+  // "novo vs. recorrente" e o que torna o upsert idempotente.
+  phone    String
+  phoneKey String
+  name     String?
+
+  // Origem (primeiro toque). `channel` é a dimensão-mestra do relatório.
+  channel    String  @default("UNKNOWN") // CTWA | GOOGLE | GBP | ORGANIC | REFERRAL | UNKNOWN
+  campaign   String? // nome/id da campanha, quando identificável
+  ctwaClid   String? // click id do clique-pro-WhatsApp — chave p/ devolver evento à Meta (Onda 3)
+  sourceId   String? // referral.source_id — id do anúncio
+  sourceUrl  String? // referral.source_url
+  adHeadline String? // referral.headline — título do anúncio
+
+  // Funil. Cada data marca a passagem de etapa para calcular conversão.
+  stage       String  @default("NEW") // NEW | SCHEDULED | SHOWED | RETURNING | LOST
+  isNewClient Boolean @default(true)  // no 1º contato, este telefone já era cliente?
+  clientId    String? // vínculo com a conta do cliente quando ele agenda/cadastra
+
+  capturedAt  DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  scheduledAt DateTime?
+  showedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([barbershopId, phoneKey])
+  @@index([barbershopId, channel])
+  @@index([barbershopId, capturedAt])
 }

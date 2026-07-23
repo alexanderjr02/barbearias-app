@@ -5,6 +5,7 @@ import { runAssistant, assistantEnabled, type ChatTurn } from "@/lib/chatbot/ass
 import { runCopilot } from "@/lib/chatbot/copilot";
 import { planHasAI } from "@/lib/billing";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
+import { captureWhatsappLead, type WaReferral } from "@/lib/attribution";
 
 // WhatsApp Cloud API webhook — the inbound half of the 24/7 assistant. The
 // outbound sender already lives in src/lib/whatsapp.ts; this receives client
@@ -41,6 +42,9 @@ interface WaMessage {
   from?: string;
   type?: string;
   text?: { body?: string };
+  // Origem do anúncio clique-pro-WhatsApp. A Meta anexa este bloco à 1ª mensagem
+  // da conversa; o payload já chegava aqui — só não era lido.
+  referral?: WaReferral;
 }
 
 export async function POST(request: NextRequest) {
@@ -90,6 +94,17 @@ export async function POST(request: NextRequest) {
     const fromDigits = from.replace(/\D/g, "").slice(-8);
     const ownerDigits = (shop?.owner?.phone ?? "").replace(/\D/g, "").slice(-8);
     const isGestor = ownerDigits.length >= 8 && fromDigits === ownerDigits;
+
+    // Atribuição (Onda 1): registra/atualiza o lead com a origem do anúncio
+    // (referral clique-pro-WhatsApp). Só para cliente — o gestor operando por
+    // WhatsApp não é lead. Best-effort: nunca deve impedir a resposta nem o ACK.
+    if (!isGestor) {
+      try {
+        await captureWhatsappLead(barbershopId, from, message.referral);
+      } catch (e) {
+        console.error("[whatsapp webhook] lead capture", e);
+      }
+    }
 
     let reply: string;
     if (assistantEnabled() && planHasAI(shop?.plan)) {
