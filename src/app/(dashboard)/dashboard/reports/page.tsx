@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import {
   DollarSign, TrendingUp, Calendar,
-  BarChart3, Percent, AlertCircle,
+  BarChart3, Percent, AlertCircle, Printer, Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { usePlan } from "@/context/PlanContext";
@@ -16,7 +16,8 @@ import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { apiGet } from "@/lib/apiClient";
+import { apiGet, apiPatch } from "@/lib/apiClient";
+import { toast } from "@/lib/toast";
 
 const PERIODS: { label: string; range: "week" | "month" }[] = [
   { label: "Esta semana", range: "week" },
@@ -32,11 +33,31 @@ interface ReportsResponse {
 }
 
 interface AttributionResponse {
-  range: "week" | "month";
+  period: string;
+  shop: { name: string; logo: string | null; primaryColor: string };
   totals: { contacts: number; identified: number; unidentified: number; unidentifiedPct: number; novos: number; recorrentes: number; attributedRevenue: number };
   funnel: { contacts: number; scheduled: number; showed: number; schedRate: number; showRate: number };
+  cost: { spend: number; perContact: number; perScheduled: number; perNewClient: number; roas: number };
   byChannel: { channel: string; label: string; contacts: number; scheduled: number; showed: number; novos: number; revenue: number; conversionPct: number }[];
-  byCampaign: { campaign: string; channel: string; contacts: number; showed: number; revenue: number }[];
+  byCampaign: { campaign: string; channel: string; label: string; contacts: number; novos: number; showed: number; revenue: number }[];
+}
+
+const MONTH_NAMES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+function recentMonths(n = 12): { value: string; label: string }[] {
+  const out: { value: string; label: string }[] = [];
+  const now = new Date();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    out.push({
+      value: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`,
+      label: `${MONTH_NAMES[d.getUTCMonth()]} ${d.getUTCFullYear()}`,
+    });
+  }
+  return out;
+}
+function monthLabelOf(period: string): string {
+  const [y, m] = period.split("-").map(Number);
+  return `${MONTH_NAMES[m - 1] ?? ""} ${y}`;
 }
 
 // Cor por canal — verde do WhatsApp para o anúncio (canal principal), cinza
@@ -101,8 +122,15 @@ function KpiCard({ title, value, icon: Icon, iconColor = "text-amber-400", sub }
 
 export default function ReportsPage() {
   const { can } = usePlan();
+  const queryClient = useQueryClient();
   const [range, setRange] = useState<"week" | "month">("month");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  // O relatório de atribuição é por MÊS de competência (é o que a agência
+  // entrega ao cliente), independente do toggle operacional acima.
+  const months = recentMonths(12);
+  const [month, setMonth] = useState(months[0].value);
+  const [spendInput, setSpendInput] = useState("");
 
   const canSeeReports = can("advanced_reports");
   const { data: reports } = useQuery({
@@ -111,13 +139,24 @@ export default function ReportsPage() {
     enabled: canSeeReports,
   });
   const { data: attribution } = useQuery({
-    queryKey: ["dashboard-attribution", range],
-    queryFn: () => apiGet<AttributionResponse>(`/api/dashboard/attribution?range=${range}`),
+    queryKey: ["dashboard-attribution", month],
+    queryFn: () => apiGet<AttributionResponse>(`/api/dashboard/attribution?month=${month}`),
     enabled: canSeeReports,
   });
   const funnel = attribution?.funnel;
+  const cost = attribution?.cost;
   const byChannel = attribution?.byChannel ?? [];
+  const byCampaign = attribution?.byCampaign ?? [];
   const maxContacts = byChannel.reduce((m, c) => Math.max(m, c.contacts), 0);
+
+  const saveSpend = useMutation({
+    mutationFn: (amount: number) => apiPatch(`/api/dashboard/attribution`, { period: month, amount }),
+    onSuccess: () => {
+      toast.success("Investimento salvo");
+      queryClient.invalidateQueries({ queryKey: ["dashboard-attribution", month] });
+    },
+    onError: () => toast.error("Não consegui salvar o investimento"),
+  });
 
   const data = reports?.series ?? [];
   const servicesData = reports?.servicesDistribution ?? [];
@@ -298,14 +337,20 @@ export default function ReportsPage() {
 
       {/* Origem dos clientes (Atribuição) */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div>
             <h3 className="text-base font-bold text-white">Origem dos clientes</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">De onde vieram os contatos {range === "week" ? "dos últimos 7 dias" : "dos últimos 30 dias"}</p>
+            <p className="text-xs text-zinc-500 mt-0.5">De onde veio cada contato e quanto cada campanha gerou</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-400 bg-zinc-800 px-2.5 py-1 rounded-full">{attribution?.totals.contacts ?? 0} contatos</span>
-            <span className="text-xs text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full">{formatCurrency(attribution?.totals.attributedRevenue ?? 0)} atribuído</span>
+            <select value={month} onChange={(e) => { setMonth(e.target.value); setSpendInput(""); }}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-zinc-200 px-2.5 py-1.5 outline-none focus:border-amber-500/50">
+              {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+            <button onClick={() => window.print()}
+              className="flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-bold text-zinc-200 hover:bg-zinc-700 transition-colors">
+              <Printer className="w-3.5 h-3.5" /> PDF
+            </button>
           </div>
         </div>
 
@@ -324,11 +369,49 @@ export default function ReportsPage() {
           ))}
         </div>
 
+        {/* Novos + faturamento + custo por cliente novo + retorno */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
+            <p className="text-[11px] text-zinc-500">Clientes novos</p>
+            <p className="text-lg font-black text-white">{attribution?.totals.novos ?? 0}</p>
+          </div>
+          <div className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
+            <p className="text-[11px] text-zinc-500">Faturamento atribuído</p>
+            <p className="text-lg font-black text-amber-400">{formatCurrency(attribution?.totals.attributedRevenue ?? 0)}</p>
+          </div>
+          <div className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
+            <p className="text-[11px] text-zinc-500">Custo por cliente novo</p>
+            <p className="text-lg font-black text-white">{cost && cost.perNewClient > 0 ? formatCurrency(cost.perNewClient) : "—"}</p>
+          </div>
+          <div className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
+            <p className="text-[11px] text-zinc-500">Retorno (ROAS)</p>
+            <p className="text-lg font-black text-white">{cost && cost.roas > 0 ? `${cost.roas}x` : "—"}</p>
+          </div>
+        </div>
+
+        {/* Verba investida — a agência informa (não vem do sistema) */}
+        <div className="flex flex-wrap items-end gap-2 mb-6 bg-zinc-800/30 border border-zinc-800 rounded-xl p-3">
+          <Wallet className="w-4 h-4 text-amber-400 mb-1.5" />
+          <div>
+            <label className="text-[11px] text-zinc-500 block">Quanto foi investido em {monthLabelOf(month)}?</label>
+            <input type="number" inputMode="decimal" value={spendInput} onChange={(e) => setSpendInput(e.target.value)}
+              placeholder={cost && cost.spend > 0 ? String(cost.spend) : "0,00"}
+              className="mt-1 block w-40 bg-zinc-950/60 border border-zinc-800 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-amber-500/50" />
+          </div>
+          <button
+            onClick={() => { const v = Number(spendInput.replace(",", ".")); if (Number.isFinite(v) && v >= 0) saveSpend.mutate(v); }}
+            disabled={saveSpend.isPending || spendInput.trim() === ""}
+            className="rounded-lg bg-amber-500/15 text-amber-300 px-3 py-1.5 text-xs font-bold hover:bg-amber-500/25 disabled:opacity-40 transition-colors">
+            {saveSpend.isPending ? "Salvando…" : "Salvar"}
+          </button>
+          {cost && cost.spend > 0 && <span className="text-[11px] text-zinc-500 mb-2">Atual: {formatCurrency(cost.spend)}</span>}
+        </div>
+
         {/* Contatos por canal */}
         <div className="space-y-3">
           {byChannel.length === 0 ? (
             <p className="text-sm text-zinc-500 text-center py-6">
-              Ainda sem contatos rastreados no período. Assim que chegar mensagem de anúncio (clique-pro-WhatsApp) ou link rastreado, a origem aparece aqui.
+              Ainda sem contatos rastreados em {monthLabelOf(month)}. Assim que chegar mensagem de anúncio (clique-pro-WhatsApp) ou link rastreado, a origem aparece aqui.
             </p>
           ) : byChannel.map((c) => (
             <div key={c.channel}>
@@ -343,6 +426,39 @@ export default function ReportsPage() {
           ))}
         </div>
 
+        {/* Por campanha */}
+        {byCampaign.length > 0 && (
+          <div className="mt-6">
+            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Por campanha</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-zinc-600">
+                    <th className="py-1.5 pr-3 font-medium">Campanha</th>
+                    <th className="py-1.5 px-3 font-medium">Canal</th>
+                    <th className="py-1.5 px-3 font-medium text-right">Contatos</th>
+                    <th className="py-1.5 px-3 font-medium text-right">Novos</th>
+                    <th className="py-1.5 px-3 font-medium text-right">Compareceram</th>
+                    <th className="py-1.5 pl-3 font-medium text-right">Faturamento</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/70">
+                  {byCampaign.map((c) => (
+                    <tr key={`${c.channel}-${c.campaign}`} className="text-zinc-300">
+                      <td className="py-2 pr-3 font-medium">{c.campaign}</td>
+                      <td className="py-2 px-3 text-zinc-500">{c.label}</td>
+                      <td className="py-2 px-3 text-right">{c.contacts}</td>
+                      <td className="py-2 px-3 text-right">{c.novos}</td>
+                      <td className="py-2 px-3 text-right">{c.showed}</td>
+                      <td className="py-2 pl-3 text-right text-amber-400">{formatCurrency(c.revenue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Rodapé de honestidade — sempre visível */}
         <div className="mt-6 pt-4 border-t border-zinc-800 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
@@ -351,6 +467,78 @@ export default function ReportsPage() {
           </p>
         </div>
       </div>
+
+      {/* Relatório imprimível com a marca da barbearia (botão PDF acima) */}
+      <div className="attribution-print">
+        <div style={{ display: "flex", alignItems: "center", gap: 12, borderBottom: `3px solid ${attribution?.shop.primaryColor ?? "#F59E0B"}`, paddingBottom: 12, marginBottom: 16 }}>
+          {attribution?.shop.logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={attribution.shop.logo} alt="" style={{ height: 48, width: 48, objectFit: "contain" }} />
+          ) : null}
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{attribution?.shop.name || "Barbearia"}</h1>
+            <p style={{ fontSize: 13, color: "#555", margin: 0 }}>Relatório de Marketing — {monthLabelOf(month)}</p>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+          {([
+            ["Chegaram", String(funnel?.contacts ?? 0)],
+            ["Agendaram", String(funnel?.scheduled ?? 0)],
+            ["Compareceram", String(funnel?.showed ?? 0)],
+            ["Clientes novos", String(attribution?.totals.novos ?? 0)],
+            ["Faturamento atribuído", formatCurrency(attribution?.totals.attributedRevenue ?? 0)],
+            ["Investimento", cost && cost.spend > 0 ? formatCurrency(cost.spend) : "—"],
+            ["Custo por cliente novo", cost && cost.perNewClient > 0 ? formatCurrency(cost.perNewClient) : "—"],
+            ["Retorno (ROAS)", cost && cost.roas > 0 ? `${cost.roas}x` : "—"],
+          ] as [string, string][]).map(([k, v]) => (
+            <div key={k} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
+              <div style={{ fontSize: 11, color: "#666" }}>{k}</div>
+              <div style={{ fontSize: 16, fontWeight: 800 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, marginBottom: 16 }}>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>
+              <th style={{ padding: "6px 8px" }}>Campanha</th>
+              <th style={{ padding: "6px 8px" }}>Canal</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>Contatos</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>Novos</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>Compareceram</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>Faturamento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byCampaign.length === 0 ? (
+              <tr><td colSpan={6} style={{ padding: 8, color: "#888" }}>Sem campanhas rastreadas no mês.</td></tr>
+            ) : byCampaign.map((c) => (
+              <tr key={`p-${c.channel}-${c.campaign}`} style={{ borderBottom: "1px solid #eee" }}>
+                <td style={{ padding: "6px 8px" }}>{c.campaign}</td>
+                <td style={{ padding: "6px 8px" }}>{c.label}</td>
+                <td style={{ padding: "6px 8px", textAlign: "right" }}>{c.contacts}</td>
+                <td style={{ padding: "6px 8px", textAlign: "right" }}>{c.novos}</td>
+                <td style={{ padding: "6px 8px", textAlign: "right" }}>{c.showed}</td>
+                <td style={{ padding: "6px 8px", textAlign: "right" }}>{formatCurrency(c.revenue)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p style={{ fontSize: 11, color: "#666", borderTop: "1px solid #ccc", paddingTop: 8 }}>
+          {attribution?.totals.unidentifiedPct ?? 0}% dos contatos estão com origem não identificada — e não foram distribuídos entre as campanhas por estimativa.
+        </p>
+      </div>
+
+      <style jsx global>{`
+        .attribution-print { display: none; }
+        @media print {
+          body * { visibility: hidden; }
+          .attribution-print, .attribution-print * { visibility: visible; }
+          .attribution-print { display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 24px; color: #111; background: #fff; }
+        }
+      `}</style>
 
       {/* Staff Performance Table */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl">

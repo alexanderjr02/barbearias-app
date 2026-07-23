@@ -141,6 +141,24 @@ const STEPS: Step[] = [
     applied: () => columnExists("Lead", "metaPurchaseSentAt"),
     sql: [`ALTER TABLE "Lead" ADD COLUMN "metaPurchaseSentAt" DATETIME`],
   },
+  {
+    // Verba de trafego por mes (custo por cliente novo / ROI no relatorio de
+    // atribuicao). Tabela nova, aditiva.
+    name: "CampaignSpend",
+    applied: () => tableExists("CampaignSpend"),
+    sql: [
+      `CREATE TABLE "CampaignSpend" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "barbershopId" TEXT NOT NULL,
+        "period" TEXT NOT NULL,
+        "amount" REAL NOT NULL DEFAULT 0,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL,
+        CONSTRAINT "CampaignSpend_barbershopId_fkey" FOREIGN KEY ("barbershopId") REFERENCES "Barbershop" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+      )`,
+      `CREATE UNIQUE INDEX "CampaignSpend_barbershopId_period_key" ON "CampaignSpend"("barbershopId", "period")`,
+    ],
+  },
 ];
 
 /** Mesma chave de emergencia das outras rotas de destravamento. */

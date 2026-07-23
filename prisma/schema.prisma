@@ -242,6 +242,7 @@ model Barbershop {
   loyaltyRewards  LoyaltyReward[]
   referrals       Referral[]
   leads           Lead[]
+  campaignSpend   CampaignSpend[]
   whatsappConnection WhatsappConnection?
 
   // Platform-admin fields (see AGENTS.md admin panel notes).
@@ -1211,4 +1212,20 @@ model Lead {
   @@unique([barbershopId, phoneKey])
   @@index([barbershopId, channel])
   @@index([barbershopId, capturedAt])
+}
+
+// Verba de tráfego informada pela agência, por mês. Existe porque o custo por
+// cliente novo e o ROI só fazem sentido com o quanto foi investido — e esse
+// número não vem do sistema (a verba é recarregada pela própria barbearia/
+// agência na Meta). Um registro por mês (period = "YYYY-MM").
+model CampaignSpend {
+  id           String     @id @default(cuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  period       String // "YYYY-MM" (mês de competência do investimento)
+  amount       Float      @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([barbershopId, period])
 }

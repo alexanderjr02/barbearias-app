@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
-import { startOfUtcDay, addUtcDays } from "@/lib/dateRange";
+import { startOfUtcMonth, addUtcMonths } from "@/lib/dateRange";
 import { phoneKey } from "@/lib/phone";
 
-// Relatório de ATRIBUIÇÃO (Onda 1): de onde vieram os contatos e como avançaram
-// no funil. Endpoint SEPARADO do /dashboard/reports (operacional) de propósito —
-// prestação de contas de marketing é outra pergunta ("de onde veio o resultado")
-// e não deve poluir nem arriscar o relatório que já funciona.
+// Relatório de ATRIBUIÇÃO: de onde vieram os contatos, como avançaram no funil,
+// quanto geraram e — informando a verba — quanto custou cada cliente novo.
+// Endpoint SEPARADO do /dashboard/reports (operacional) de propósito.
 //
-// Coorte por `capturedAt` dentro do período; o funil conta quantos DESSES
-// contatos agendaram/compareceram (via scheduledAt/showedAt, gravados pelo
-// advanceLead). Faturamento atribuído fica para a Onda 2.
+// Coorte por MÊS de competência (capturedAt no mês); o funil conta quantos
+// DESSES contatos agendaram/compareceram. Faturamento casado pela chave de
+// telefone (últimos-8), a mesma do resto do app.
 
 const CHANNEL_LABELS: Record<string, string> = {
   CTWA: "Anúncio (clique-pro-WhatsApp)",
@@ -23,28 +22,48 @@ const CHANNEL_LABELS: Record<string, string> = {
   UNKNOWN: "Não identificado",
 };
 
+const MONTH_RE = /^\d{4}-\d{2}$/;
+
+function monthBounds(param: string | null): { period: string; start: Date; end: Date } {
+  const now = new Date();
+  let start: Date;
+  if (param && MONTH_RE.test(param)) {
+    const [y, m] = param.split("-").map(Number);
+    start = new Date(Date.UTC(y, m - 1, 1));
+  } else {
+    start = startOfUtcMonth(now);
+  }
+  const end = addUtcMonths(start, 1);
+  const period = `${start.getUTCFullYear()}-${String(start.getUTCMonth() + 1).padStart(2, "0")}`;
+  return { period, start, end };
+}
+
 export async function GET(request: NextRequest) {
   const session = await requireBarbershopSession();
   if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const range = request.nextUrl.searchParams.get("range") === "week" ? "week" : "month";
   const barbershopId = session.barbershopId;
-  const now = new Date();
-  // week = últimos 7 dias; month = últimos 30 dias (janela móvel).
-  const rangeStart = range === "week" ? addUtcDays(startOfUtcDay(now), -6) : addUtcDays(startOfUtcDay(now), -29);
+  const { period, start, end } = monthBounds(request.nextUrl.searchParams.get("month"));
 
-  const [leads, completed] = await Promise.all([
+  const [leads, completed, spendRow, shop] = await Promise.all([
     prisma.lead.findMany({
-      where: { barbershopId, capturedAt: { gte: rangeStart } },
+      where: { barbershopId, capturedAt: { gte: start, lt: end } },
       select: { channel: true, campaign: true, isNewClient: true, scheduledAt: true, showedAt: true, phoneKey: true },
     }),
-    // Faturamento do período para atribuir por canal. Casamos pela chave de
-    // últimos-8 (a mesma do lead). Só conta o que foi realmente concluído.
     prisma.appointment.findMany({
-      where: { barbershopId, status: "COMPLETED", date: { gte: rangeStart } },
+      where: { barbershopId, status: "COMPLETED", date: { gte: start, lt: end } },
       select: { clientPhone: true, totalPrice: true },
+    }),
+    prisma.campaignSpend.findUnique({
+      where: { barbershopId_period: { barbershopId, period } },
+      select: { amount: true },
+    }),
+    // Marca da barbearia — reaproveitada no PDF do relatório mensal.
+    prisma.barbershop.findUnique({
+      where: { id: barbershopId },
+      select: { name: true, logo: true, primaryColor: true },
     }),
   ]);
 
@@ -64,7 +83,7 @@ export async function GET(request: NextRequest) {
   let attributedRevenue = 0;
 
   const channelMap = new Map<string, { contacts: number; scheduled: number; showed: number; novos: number; revenue: number }>();
-  const campaignMap = new Map<string, { campaign: string; channel: string; contacts: number; showed: number; revenue: number }>();
+  const campaignMap = new Map<string, { campaign: string; channel: string; contacts: number; novos: number; showed: number; revenue: number }>();
 
   for (const l of leads) {
     if (l.scheduledAt) scheduled += 1;
@@ -85,8 +104,9 @@ export async function GET(request: NextRequest) {
 
     if (l.campaign) {
       const key = `${l.channel}|${l.campaign}`;
-      const cc = campaignMap.get(key) ?? { campaign: l.campaign, channel: l.channel, contacts: 0, showed: 0, revenue: 0 };
+      const cc = campaignMap.get(key) ?? { campaign: l.campaign, channel: l.channel, contacts: 0, novos: 0, showed: 0, revenue: 0 };
       cc.contacts += 1;
+      if (l.isNewClient) cc.novos += 1;
       if (l.showedAt) cc.showed += 1;
       cc.revenue += rev;
       campaignMap.set(key, cc);
@@ -107,12 +127,28 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => b.contacts - a.contacts);
 
   const byCampaign = Array.from(campaignMap.values())
-    .map((c) => ({ ...c, revenue: Math.round(c.revenue) }))
+    .map((c) => ({
+      ...c,
+      label: CHANNEL_LABELS[c.channel] ?? c.channel,
+      revenue: Math.round(c.revenue),
+    }))
     .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 8);
+    .slice(0, 12);
+
+  // Custo por resultado — só faz sentido com a verba informada.
+  const spend = spendRow?.amount ?? 0;
+  const cost = {
+    spend,
+    perContact: total > 0 && spend > 0 ? Math.round((spend / total) * 100) / 100 : 0,
+    perScheduled: scheduled > 0 && spend > 0 ? Math.round((spend / scheduled) * 100) / 100 : 0,
+    perNewClient: novos > 0 && spend > 0 ? Math.round((spend / novos) * 100) / 100 : 0,
+    // ROAS: quantos reais de faturamento atribuído para cada real investido.
+    roas: spend > 0 ? Math.round((attributedRevenue / spend) * 100) / 100 : 0,
+  };
 
   return NextResponse.json({
-    range,
+    period,
+    shop: { name: shop?.name ?? "", logo: shop?.logo ?? null, primaryColor: shop?.primaryColor ?? "#F59E0B" },
     totals: {
       contacts: total,
       identified: total - unidentified,
@@ -129,7 +165,29 @@ export async function GET(request: NextRequest) {
       schedRate: total > 0 ? Math.round((scheduled / total) * 100) : 0,
       showRate: scheduled > 0 ? Math.round((showed / scheduled) * 100) : 0,
     },
+    cost,
     byChannel,
     byCampaign,
   });
+}
+
+// Informar/atualizar a verba investida num mês. É a agência quem preenche (a
+// verba é recarregada por ela na Meta e não passa pelo sistema).
+export async function PATCH(request: NextRequest) {
+  const session = await requireBarbershopSession();
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+  const body = await request.json().catch(() => null);
+  const period = typeof body?.period === "string" && MONTH_RE.test(body.period) ? body.period : null;
+  const amount = Number(body?.amount);
+  if (!period || !Number.isFinite(amount) || amount < 0) {
+    return NextResponse.json({ error: "Informe o mês (YYYY-MM) e um valor válido." }, { status: 400 });
+  }
+  await prisma.campaignSpend.upsert({
+    where: { barbershopId_period: { barbershopId: session.barbershopId, period } },
+    create: { barbershopId: session.barbershopId, period, amount },
+    update: { amount },
+  });
+  return NextResponse.json({ ok: true });
 }
