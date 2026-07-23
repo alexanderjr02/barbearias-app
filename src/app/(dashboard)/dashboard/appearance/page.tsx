@@ -265,15 +265,22 @@ export default function AppearancePage() {
               </button>
               <div className="flex-1">
                 <p className="text-sm text-zinc-300">Envie a logo da barbearia</p>
-                <p className="text-xs text-zinc-500 mt-0.5">PNG/JPG. A cor de destaque é sugerida a partir dela.</p>
-                {suggested.length > 0 && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[11px] text-zinc-500">da logo:</span>
-                    {suggested.map((c) => (
-                      <button key={c} onClick={() => setAccent(c)} className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${accent.toLowerCase() === c.toLowerCase() ? "border-white" : "border-transparent"}`} style={{ background: c }} title={c} />
-                    ))}
-                  </div>
-                )}
+                <p className="text-xs text-zinc-500 mt-0.5">PNG/JPG. A cor de destaque é sugerida a partir dela. Sem logo, o app usa o símbolo do CORTIX na sua cor.</p>
+                <div className="flex items-center gap-3 mt-2">
+                  {suggested.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-zinc-500">da logo:</span>
+                      {suggested.map((c) => (
+                        <button key={c} onClick={() => setAccent(c)} className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${accent.toLowerCase() === c.toLowerCase() ? "border-white" : "border-transparent"}`} style={{ background: c }} title={c} />
+                      ))}
+                    </div>
+                  )}
+                  {logo && (
+                    <button onClick={() => { setLogo(null); setSuggested([]); }} className="text-[11px] font-medium text-zinc-500 hover:text-red-400 transition-colors">
+                      Remover logo
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             <input ref={logoInput} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload("logo", e.target.files[0])} />

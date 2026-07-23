@@ -97,6 +97,31 @@ export async function PATCH(request: NextRequest) {
   // mostrando ícone quebrado — null some limpo.
   if (typeof body.logo === "string") data.logo = body.logo.trim() || null;
   if (typeof body.coverImage === "string") data.coverImage = body.coverImage.trim() || null;
+
+  // Blindagem dos campos de APARÊNCIA. O loop acima aceita qualquer string;
+  // aqui a gente garante que o que chega no app é sempre válido, senão uma
+  // cor inventada ou um bgType errado vira app quebrado (e o manifesto do PWA
+  // com cor invalida). Valor ruim é ignorado, não salvo.
+  if (typeof body.primaryColor === "string") {
+    const c = body.primaryColor.trim();
+    if (/^#[0-9a-fA-F]{3}$/.test(c) || /^#[0-9a-fA-F]{6}$/.test(c)) data.primaryColor = c.toUpperCase();
+    else delete data.primaryColor;
+  }
+  if (typeof body.secondaryColor === "string") {
+    const c = body.secondaryColor.trim();
+    if (!(/^#[0-9a-fA-F]{3}$/.test(c) || /^#[0-9a-fA-F]{6}$/.test(c))) delete data.secondaryColor;
+  }
+  if ("bgType" in body && !["gradient", "image", "video"].includes(body.bgType)) delete data.bgType;
+  if ("bgEffect" in body && !["none", "zoom", "pulse"].includes(body.bgEffect)) delete data.bgEffect;
+  if ("themeMode" in body && !["light", "dark"].includes(body.themeMode)) delete data.themeMode;
+  // Nome nunca pode ficar vazio (o app mostraria uma barra em branco); teto
+  // pra não estourar layout.
+  if (typeof body.name === "string") {
+    const n = body.name.trim();
+    if (n.length < 1 || n.length > 120) delete data.name;
+    else data.name = n;
+  }
+  if (typeof body.appTagline === "string") data.appTagline = body.appTagline.trim().slice(0, 140) || null;
   // Connecting/disconnecting a payment provider is money-sensitive — owner only.
   if (session.role === "OWNER" && typeof body.paymentApiKey === "string") {
     const key = body.paymentApiKey.trim();
@@ -121,8 +146,11 @@ export async function PATCH(request: NextRequest) {
   if (typeof body.pointsPerReal === "number" && body.pointsPerReal >= 0) {
     data.pointsPerReal = body.pointsPerReal;
   }
-  for (const nf of ["bgDim", "bgBlur"] as const) {
-    if (typeof body[nf] === "number" && body[nf] >= 0) data[nf] = body[nf];
+  // Escurecer e desfoque com teto: um bgBlur gigante (ex.: 9999) borra o fundo
+  // até virar um borrão só, e um bgDim > 100 apaga a tela. Trava no que o
+  // editor oferece.
+  for (const [nf, max] of [["bgDim", 80], ["bgBlur", 16]] as const) {
+    if (typeof body[nf] === "number" && body[nf] >= 0) data[nf] = Math.min(Math.round(body[nf]), max);
   }
   if (typeof body.bgGradient === "boolean") data.bgGradient = body.bgGradient;
   // Auto-piloto (automações).

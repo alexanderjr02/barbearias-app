@@ -108,7 +108,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   // Image URLs come back relative (e.g. "/uploads/x.jpg"); the app needs the
   // full host to load them.
   String? _abs(String? url) {
-    if (url == null || url.isEmpty || url.startsWith('http')) return url;
+    // String vazia = SEM asset → null, não "". Antes retornava "", e o login
+    // tentava carregar NetworkImage("") — o tile ficava só com a cor, sem a
+    // tesoura de fallback. É o bug de "removi a logo e sumiu tudo".
+    if (url == null || url.isEmpty) return null;
+    if (url.startsWith('http')) return url;
     const base = String.fromEnvironment('API_BASE_URL', defaultValue: '');
     final origin = base.contains('/api') ? base.substring(0, base.indexOf('/api')) : base;
     return '$origin$url';

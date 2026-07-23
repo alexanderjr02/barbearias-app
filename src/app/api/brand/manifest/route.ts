@@ -35,12 +35,18 @@ export async function GET(request: NextRequest) {
 
   const shop = await prisma.barbershop.findUnique({
     where: { slug },
-    select: { name: true, primaryColor: true, plan: true },
+    select: { name: true, primaryColor: true, plan: true, logo: true, updatedAt: true },
   });
   if (!shop) return NextResponse.json({ error: "Barbearia não encontrada" }, { status: 404 });
 
   const api = request.nextUrl.origin;
-  const icon = (size: number) => `${api}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=${size}`;
+  // Cache-busting pelo updatedAt: quando o gestor troca a logo, o updatedAt
+  // muda, a URL do ícone muda, e o navegador/aparelho busca o ícone novo em
+  // vez do que ficou preso no cache (era o bug de "troquei a logo e o ícone do
+  // app continuou o antigo"). Sem isto, a URL é idêntica e o ícone velho fica
+  // até o cache expirar (1h) — e o ícone JÁ INSTALADO nunca troca.
+  const v = shop.updatedAt.getTime();
+  const icon = (size: number) => `${api}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=${size}&v=${v}`;
 
   // App com a cara da barbearia é o que se compra no plano mais caro. Abaixo
   // dele o app instalado é o CORTIX — mas o start_url continua levando o slug,

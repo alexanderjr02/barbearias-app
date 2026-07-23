@@ -107,8 +107,12 @@ module.exports = async (req, res) => {
   // A cor acompanha a barbearia em qualquer plano: ela pinta a barra de status
   // enquanto se navega, e tem que combinar com o que o app mostra por dentro.
   const themeColor = (shop && shop.primaryColor) || DEFAULT_THEME_COLOR;
+  // Cache-busting pelo updatedAt da barbearia: sem isto, trocar a logo não
+  // mudava a URL do ícone, e o apple-touch-icon ficava preso no cache (e o
+  // ícone já salvo na tela de início nunca trocava).
+  const iconVersion = shop && shop.updatedAt ? `&v=${new Date(shop.updatedAt).getTime()}` : "";
   const iconUrl = whiteLabel
-    ? `${DASHBOARD_ORIGIN}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=180`
+    ? `${DASHBOARD_ORIGIN}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=180${iconVersion}`
     : `${appOrigin}/icons/Icon-180.png`;
   // O manifesto dinâmico vale pra QUALQUER plano quando há barbearia: é o
   // start_url dele que carrega o ?shop= e faz o app instalado abrir na
