@@ -70,14 +70,18 @@ class AppPalette {
     scrim: Colors.black45,
   );
 
+  // Claro moderno: neutro e limpo, no lugar do bege amarelado de antes (que
+  // dava cara datada). Fundo levemente frio, cartão branco puro, cinzas
+  // neutros e alto contraste no texto — o padrão de app premium (Apple, Linear)
+  // em vez de "papel envelhecido".
   static const light = AppPalette(
-    bg: Color(0xFFF7F4EF),
+    bg: Color(0xFFF4F4F6),
     surface: Colors.white,
-    surfaceAlt: Color(0xFFF0EAE0),
-    textPrimary: Color(0xFF1B1712),
-    textSecondary: Color(0xFF5B5349),
-    textFaint: Color(0xFF938A7C),
-    border: Color(0x143D2E18),
+    surfaceAlt: Color(0xFFECECEF),
+    textPrimary: Color(0xFF17151A),
+    textSecondary: Color(0xFF616068),
+    textFaint: Color(0xFF9B9AA2),
+    border: Color(0x0F17151A),
     scrim: Colors.black26,
   );
 

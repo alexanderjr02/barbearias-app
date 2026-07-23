@@ -727,10 +727,11 @@ class _ThemeModeSelector extends StatelessWidget {
     final controller = context.watch<ThemeController>();
     final palette = AppPalette.of(context);
     final accent = Theme.of(context).colorScheme.primary;
+    // Só Claro e Escuro — sem "Sistema". Duas opções são uma escolha clara;
+    // "seguir o sistema" confundia mais do que ajudava.
     final options = [
       (ThemeMode.light, 'Claro', Icons.light_mode_rounded),
       (ThemeMode.dark, 'Escuro', Icons.dark_mode_rounded),
-      (ThemeMode.system, 'Sistema', Icons.smartphone_rounded),
     ];
 
     return Container(
