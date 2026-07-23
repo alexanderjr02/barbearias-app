@@ -624,6 +624,124 @@ class ReportsData {
       );
 }
 
+/// Atribuição de marketing (Origem dos clientes) — de onde veio cada contato,
+/// como avançou no funil, quanto gerou e, com a verba, quanto custou.
+class AttributionChannel {
+  final String channel;
+  final String label;
+  final int contacts;
+  final int showed;
+  final int novos;
+  final double revenue;
+  final int conversionPct;
+
+  AttributionChannel({
+    required this.channel,
+    required this.label,
+    required this.contacts,
+    required this.showed,
+    required this.novos,
+    required this.revenue,
+    required this.conversionPct,
+  });
+
+  factory AttributionChannel.fromJson(Map<String, dynamic> j) => AttributionChannel(
+        channel: j['channel'] ?? 'UNKNOWN',
+        label: j['label'] ?? '',
+        contacts: j['contacts'] ?? 0,
+        showed: j['showed'] ?? 0,
+        novos: j['novos'] ?? 0,
+        revenue: (j['revenue'] as num?)?.toDouble() ?? 0,
+        conversionPct: j['conversionPct'] ?? 0,
+      );
+}
+
+class AttributionCampaign {
+  final String campaign;
+  final String label;
+  final int contacts;
+  final int novos;
+  final int showed;
+  final double revenue;
+
+  AttributionCampaign({
+    required this.campaign,
+    required this.label,
+    required this.contacts,
+    required this.novos,
+    required this.showed,
+    required this.revenue,
+  });
+
+  factory AttributionCampaign.fromJson(Map<String, dynamic> j) => AttributionCampaign(
+        campaign: j['campaign'] ?? '',
+        label: j['label'] ?? '',
+        contacts: j['contacts'] ?? 0,
+        novos: j['novos'] ?? 0,
+        showed: j['showed'] ?? 0,
+        revenue: (j['revenue'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+class AttributionData {
+  final String period;
+  final int contacts;
+  final int novos;
+  final int unidentifiedPct;
+  final double attributedRevenue;
+  final int funnelContacts;
+  final int funnelScheduled;
+  final int funnelShowed;
+  final int schedRate;
+  final int showRate;
+  final double spend;
+  final double perNewClient;
+  final double roas;
+  final List<AttributionChannel> byChannel;
+  final List<AttributionCampaign> byCampaign;
+
+  AttributionData({
+    required this.period,
+    required this.contacts,
+    required this.novos,
+    required this.unidentifiedPct,
+    required this.attributedRevenue,
+    required this.funnelContacts,
+    required this.funnelScheduled,
+    required this.funnelShowed,
+    required this.schedRate,
+    required this.showRate,
+    required this.spend,
+    required this.perNewClient,
+    required this.roas,
+    required this.byChannel,
+    required this.byCampaign,
+  });
+
+  factory AttributionData.fromJson(Map<String, dynamic> json) {
+    final t = (json['totals'] as Map<String, dynamic>?) ?? {};
+    final f = (json['funnel'] as Map<String, dynamic>?) ?? {};
+    final c = (json['cost'] as Map<String, dynamic>?) ?? {};
+    return AttributionData(
+      period: json['period'] ?? '',
+      contacts: t['contacts'] ?? 0,
+      novos: t['novos'] ?? 0,
+      unidentifiedPct: t['unidentifiedPct'] ?? 0,
+      attributedRevenue: (t['attributedRevenue'] as num?)?.toDouble() ?? 0,
+      funnelContacts: f['contacts'] ?? 0,
+      funnelScheduled: f['scheduled'] ?? 0,
+      funnelShowed: f['showed'] ?? 0,
+      schedRate: f['schedRate'] ?? 0,
+      showRate: f['showRate'] ?? 0,
+      spend: (c['spend'] as num?)?.toDouble() ?? 0,
+      perNewClient: (c['perNewClient'] as num?)?.toDouble() ?? 0,
+      roas: (c['roas'] as num?)?.toDouble() ?? 0,
+      byChannel: (json['byChannel'] as List? ?? []).map((e) => AttributionChannel.fromJson(e as Map<String, dynamic>)).toList(),
+      byCampaign: (json['byCampaign'] as List? ?? []).map((e) => AttributionCampaign.fromJson(e as Map<String, dynamic>)).toList(),
+    );
+  }
+}
+
 class SubscriptionVisit {
   final String date;
   final String service;
@@ -1178,6 +1296,15 @@ class GestorRepository {
   Future<ReportsData> reports({String range = 'month'}) async {
     final data = await ApiClient.instance.get('/dashboard/reports', query: {'range': range});
     return ReportsData.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<AttributionData> attribution({required String month}) async {
+    final data = await ApiClient.instance.get('/dashboard/attribution', query: {'month': month});
+    return AttributionData.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> saveSpend({required String period, required double amount}) async {
+    await ApiClient.instance.patch('/dashboard/attribution', data: {'period': period, 'amount': amount});
   }
 
   Future<List<GestorAppointment>> appointments(String barbershopId, {String? from, String? to, String? staffId}) async {

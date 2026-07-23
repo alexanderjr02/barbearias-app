@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/cortix_theme.dart';
+import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
 import 'widgets/revenue_chart_card.dart';
 
@@ -250,6 +251,8 @@ class _GestorReportsScreenState extends State<GestorReportsScreen> {
                         ),
                       ),
                     )),
+                const SizedBox(height: 24),
+                const _AttributionSection(),
               ],
             );
           },
@@ -328,6 +331,338 @@ class _Legend extends StatelessWidget {
         const SizedBox(width: 5),
         Text(label, style: TextStyle(color: palette.textFaint, fontSize: 11)),
       ],
+    );
+  }
+}
+
+const _monthNamesFull = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
+/// Origem dos clientes (atribuição) — espelha a seção do web. Por mês: funil,
+/// clientes novos, faturamento, custo por cliente novo e retorno, contatos por
+/// canal, por campanha, e o rodapé honesto de "origem não identificada".
+class _AttributionSection extends StatefulWidget {
+  const _AttributionSection();
+
+  @override
+  State<_AttributionSection> createState() => _AttributionSectionState();
+}
+
+class _AttributionSectionState extends State<_AttributionSection> {
+  final _repo = GestorRepository();
+  late String _month;
+  late Future<AttributionData> _future;
+  final _spendCtrl = TextEditingController();
+  bool _saving = false;
+
+  List<MapEntry<String, String>> get _months {
+    final now = DateTime.now();
+    return List.generate(12, (i) {
+      final d = DateTime(now.year, now.month - i, 1);
+      final value = '${d.year}-${d.month.toString().padLeft(2, '0')}';
+      return MapEntry(value, '${_monthNamesFull[d.month - 1]} ${d.year}');
+    });
+  }
+
+  String _labelOf(String period) {
+    final parts = period.split('-');
+    final m = int.tryParse(parts.length > 1 ? parts[1] : '') ?? 1;
+    return '${_monthNamesFull[(m - 1).clamp(0, 11)]} ${parts.first}';
+  }
+
+  Color _channelColor(String channel, Color accent) {
+    switch (channel) {
+      case 'CTWA':
+        return const Color(0xFF25D366);
+      case 'GOOGLE':
+        return const Color(0xFF3B82F6);
+      case 'GBP':
+        return const Color(0xFF8B5CF6);
+      case 'INSTAGRAM':
+        return const Color(0xFFE1306C);
+      case 'REFERRAL':
+        return accent;
+      case 'ORGANIC':
+        return const Color(0xFF10B981);
+      default:
+        return const Color(0xFF71717A);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _month = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    _future = _repo.attribution(month: _month);
+  }
+
+  @override
+  void dispose() {
+    _spendCtrl.dispose();
+    super.dispose();
+  }
+
+  void _load() => setState(() => _future = _repo.attribution(month: _month));
+
+  Future<void> _saveSpend() async {
+    final v = double.tryParse(_spendCtrl.text.trim().replaceAll(',', '.'));
+    if (v == null || v < 0) return;
+    setState(() => _saving = true);
+    try {
+      await _repo.saveSpend(period: _month, amount: v);
+      if (!mounted) return;
+      _spendCtrl.clear();
+      AppToast.success(context, 'Investimento salvo');
+      _load();
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'Não consegui salvar');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final accent = Theme.of(context).colorScheme.primary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text('Origem dos clientes', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(10)),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _month,
+                  isDense: true,
+                  dropdownColor: palette.surface,
+                  style: TextStyle(color: palette.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w600),
+                  icon: Icon(Icons.expand_more_rounded, color: palette.textSecondary, size: 18),
+                  items: _months.map((m) => DropdownMenuItem(value: m.key, child: Text(m.value))).toList(),
+                  onChanged: (v) {
+                    if (v == null || v == _month) return;
+                    setState(() => _month = v);
+                    _load();
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        FutureBuilder<AttributionData>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: CircularProgressIndicator()));
+            }
+            if (snap.hasError) {
+              return Text('Não consegui carregar a origem dos clientes.', style: TextStyle(color: palette.textFaint, fontSize: 12));
+            }
+            final a = snap.data!;
+            final maxContacts = a.byChannel.fold<int>(0, (m, c) => c.contacts > m ? c.contacts : m);
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: _FunnelTile(label: 'Chegaram', value: '${a.funnelContacts}', sub: null, palette: palette, accent: accent)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _FunnelTile(label: 'Agendaram', value: '${a.funnelScheduled}', sub: '${a.schedRate}%', palette: palette, accent: accent)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _FunnelTile(label: 'Compareceram', value: '${a.funnelShowed}', sub: '${a.showRate}%', palette: palette, accent: accent)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(child: _MiniStat(label: 'Clientes novos', value: '${a.novos}', palette: palette)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _MiniStat(label: 'Faturamento', value: 'R\$ ${a.attributedRevenue.toStringAsFixed(0)}', valueColor: accent, palette: palette)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: _MiniStat(label: 'Custo/cliente novo', value: a.perNewClient > 0 ? 'R\$ ${a.perNewClient.toStringAsFixed(2)}' : '—', palette: palette)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _MiniStat(label: 'Retorno (ROAS)', value: a.roas > 0 ? '${a.roas.toStringAsFixed(2)}x' : '—', palette: palette)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(14)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Quanto foi investido em ${_labelOf(_month)}?', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _spendCtrl,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: palette.textPrimary, fontSize: 14),
+                              decoration: InputDecoration(
+                                hintText: a.spend > 0 ? a.spend.toStringAsFixed(2) : '0,00',
+                                hintStyle: TextStyle(color: palette.textFaint),
+                                isDense: true,
+                                filled: true,
+                                fillColor: palette.surfaceAlt,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: _saving ? null : _saveSpend,
+                            style: ElevatedButton.styleFrom(backgroundColor: accent.withValues(alpha: 0.18), foregroundColor: accent, elevation: 0),
+                            child: Text(_saving ? 'Salvando…' : 'Salvar'),
+                          ),
+                        ],
+                      ),
+                      if (a.spend > 0)
+                        Padding(padding: const EdgeInsets.only(top: 6), child: Text('Atual: R\$ ${a.spend.toStringAsFixed(2)}', style: TextStyle(color: palette.textFaint, fontSize: 11))),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (a.byChannel.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Text('Ainda sem contatos rastreados neste mês. Assim que chegar mensagem de anúncio ou link rastreado, a origem aparece aqui.', style: TextStyle(color: palette.textFaint, fontSize: 12)),
+                  )
+                else
+                  ...a.byChannel.map((c) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(c.label, style: TextStyle(color: palette.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                                Text('${c.contacts} · ${c.showed} vieram · R\$ ${c.revenue.toStringAsFixed(0)}', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: maxContacts > 0 ? (c.contacts / maxContacts).clamp(0.0, 1.0) : 0,
+                                minHeight: 5,
+                                backgroundColor: palette.surfaceAlt,
+                                valueColor: AlwaysStoppedAnimation(_channelColor(c.channel, accent)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                if (a.byCampaign.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text('POR CAMPANHA', style: TextStyle(color: palette.textFaint, fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
+                  const SizedBox(height: 8),
+                  ...a.byCampaign.map((c) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(11),
+                        decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(12)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(child: Text(c.campaign, style: TextStyle(color: palette.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                                Text('R\$ ${c.revenue.toStringAsFixed(0)}', style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text('${c.label} · ${c.contacts} contatos · ${c.novos} novos · ${c.showed} vieram', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+                          ],
+                        ),
+                      )),
+                ],
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(11),
+                  decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(12)),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline_rounded, size: 15, color: accent),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text('${a.unidentifiedPct}% dos contatos estão com origem não identificada — e nunca os distribuímos entre as campanhas por estimativa.', style: TextStyle(color: palette.textFaint, fontSize: 11, height: 1.35))),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _FunnelTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final String? sub;
+  final AppPalette palette;
+  final Color accent;
+
+  const _FunnelTile({required this.label, required this.value, required this.sub, required this.palette, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(14)),
+      child: Column(
+        children: [
+          Text(value, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: palette.textFaint, fontSize: 10.5), textAlign: TextAlign.center),
+          if (sub != null) Padding(padding: const EdgeInsets.only(top: 3), child: Text(sub!, style: TextStyle(color: accent, fontSize: 10))),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final AppPalette palette;
+
+  const _MiniStat({required this.label, required this.value, this.valueColor, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(color: palette.textFaint, fontSize: 10.5)),
+          const SizedBox(height: 3),
+          Text(value, style: TextStyle(color: valueColor ?? palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15), overflow: TextOverflow.ellipsis),
+        ],
+      ),
     );
   }
 }
