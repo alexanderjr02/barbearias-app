@@ -33,10 +33,10 @@ interface ReportsResponse {
 
 interface AttributionResponse {
   range: "week" | "month";
-  totals: { contacts: number; identified: number; unidentified: number; unidentifiedPct: number; novos: number; recorrentes: number };
+  totals: { contacts: number; identified: number; unidentified: number; unidentifiedPct: number; novos: number; recorrentes: number; attributedRevenue: number };
   funnel: { contacts: number; scheduled: number; showed: number; schedRate: number; showRate: number };
-  byChannel: { channel: string; label: string; contacts: number; scheduled: number; showed: number; novos: number; conversionPct: number }[];
-  byCampaign: { campaign: string; channel: string; contacts: number; showed: number }[];
+  byChannel: { channel: string; label: string; contacts: number; scheduled: number; showed: number; novos: number; revenue: number; conversionPct: number }[];
+  byCampaign: { campaign: string; channel: string; contacts: number; showed: number; revenue: number }[];
 }
 
 // Cor por canal — verde do WhatsApp para o anúncio (canal principal), cinza
@@ -302,7 +302,10 @@ export default function ReportsPage() {
             <h3 className="text-base font-bold text-white">Origem dos clientes</h3>
             <p className="text-xs text-zinc-500 mt-0.5">De onde vieram os contatos {range === "week" ? "dos últimos 7 dias" : "dos últimos 30 dias"}</p>
           </div>
-          <span className="text-xs text-zinc-400 bg-zinc-800 px-2.5 py-1 rounded-full">{attribution?.totals.contacts ?? 0} contatos</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-400 bg-zinc-800 px-2.5 py-1 rounded-full">{attribution?.totals.contacts ?? 0} contatos</span>
+            <span className="text-xs text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full">{formatCurrency(attribution?.totals.attributedRevenue ?? 0)} atribuído</span>
+          </div>
         </div>
 
         {/* Funil: chegou → agendou → compareceu */}
@@ -330,7 +333,7 @@ export default function ReportsPage() {
             <div key={c.channel}>
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="text-zinc-300 font-medium">{c.label}</span>
-                <span className="text-zinc-500">{c.contacts} contatos · {c.showed} compareceram · <span className="text-zinc-300">{c.conversionPct}%</span></span>
+                <span className="text-zinc-500">{c.contacts} contatos · {c.showed} compareceram · <span className="text-zinc-300">{c.conversionPct}%</span> · <span className="text-amber-400">{formatCurrency(c.revenue)}</span></span>
               </div>
               <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all" style={{ width: `${maxContacts > 0 ? (c.contacts / maxContacts) * 100 : 0}%`, backgroundColor: CHANNEL_COLORS[c.channel] ?? "#71717a" }} />
