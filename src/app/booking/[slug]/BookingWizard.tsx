@@ -81,7 +81,7 @@ function StepIndicator({ current }: { current: Step }) {
   );
 }
 
-export function BookingWizard({ shop }: { shop: Shop }) {
+export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel?: string; campaign?: string }) {
   const [step, setStep] = useState<Step>("service");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
@@ -160,6 +160,10 @@ export function BookingWizard({ shop }: { shop: Shop }) {
           clientPhone,
           clientEmail: clientEmail.trim() || undefined,
           totalPrice: selectedService.price,
+          // Origem do link rastreado (?ch=/&c=), quando houver — vira a origem
+          // do lead para o relatório de atribuição.
+          channel,
+          campaign,
         }),
       });
       if (!res.ok) {

@@ -45,6 +45,7 @@ const CHANNEL_COLORS: Record<string, string> = {
   CTWA: "#25D366",
   GOOGLE: "#3B82F6",
   GBP: "#8B5CF6",
+  INSTAGRAM: "#E1306C",
   REFERRAL: "#F59E0B",
   ORGANIC: "#10B981",
   UNKNOWN: "#71717a",

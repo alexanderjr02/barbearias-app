@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import QRCode from "qrcode";
-import { Share2, Copy, Printer, Search, MessageCircle, Loader2, Check, QrCode } from "lucide-react";
+import { Share2, Copy, Printer, Search, MessageCircle, Loader2, Check, QrCode, Link2 } from "lucide-react";
 import { apiGet } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -18,14 +18,44 @@ interface InviteData {
   clients: { id: string; name: string; phone: string; stamps: number }[];
 }
 
+const CAMPAIGN_CHANNELS = [
+  { value: "GOOGLE", label: "Google" },
+  { value: "GBP", label: "Google Meu Negócio" },
+  { value: "INSTAGRAM", label: "Instagram" },
+  { value: "REFERRAL", label: "Indicação" },
+  { value: "ORGANIC", label: "Outro" },
+];
+
 export default function ConvitePage() {
   const [search, setSearch] = useState("");
   const [qr, setQr] = useState<string | null>(null);
   const [sent, setSent] = useState<Set<string>>(new Set());
 
+  // Links por campanha: origem que viaja no link até o agendamento e vira a
+  // origem do lead (relatório de atribuição). O booking mora nesta mesma origem
+  // web, por isso usamos window.location.origin (não o APP_URL do app Flutter).
+  const [origin, setOrigin] = useState("");
+  const [campChannel, setCampChannel] = useState("GOOGLE");
+  const [campName, setCampName] = useState("");
+  const [campQr, setCampQr] = useState<string | null>(null);
+  const [campCopied, setCampCopied] = useState(false);
+  useEffect(() => setOrigin(window.location.origin), []);
+
   const { data } = useQuery({ queryKey: ["invite"], queryFn: () => apiGet<InviteData>("/api/invite") });
 
   const installUrl = data ? `${APP_URL}/?shop=${data.shop.slug}` : "";
+
+  const campaignSlug = campName
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const campaignLink =
+    data && origin
+      ? `${origin}/booking/${data.shop.slug}?ch=${campChannel}${campaignSlug ? `&c=${campaignSlug}` : ""}`
+      : "";
 
   // useEffect e não useMemo: gerar o QR é efeito colateral (setState), e o
   // useMemo não garante execução — serve para calcular valor, não para agir.
@@ -35,6 +65,16 @@ export default function ConvitePage() {
       .then(setQr)
       .catch(() => setQr(null));
   }, [installUrl]);
+
+  useEffect(() => {
+    if (!campaignLink) {
+      setCampQr(null);
+      return;
+    }
+    QRCode.toDataURL(campaignLink, { width: 640, margin: 1, errorCorrectionLevel: "M" })
+      .then(setCampQr)
+      .catch(() => setCampQr(null));
+  }, [campaignLink]);
 
   if (!data) {
     return (
@@ -227,6 +267,90 @@ export default function ConvitePage() {
               })}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Links por campanha (atribuição) */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10">
+            <Link2 className="h-4.5 w-4.5 text-amber-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">Links por campanha</h3>
+            <p className="text-xs text-zinc-600">Crie um link por canal e descubra de onde vêm os agendamentos</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_200px]">
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-zinc-500">Canal</label>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {CAMPAIGN_CHANNELS.map((ch) => (
+                  <button
+                    key={ch.value}
+                    onClick={() => setCampChannel(ch.value)}
+                    className={cn(
+                      "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                      campChannel === ch.value
+                        ? "border-amber-500/50 bg-amber-500/10 text-amber-300"
+                        : "border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    )}
+                  >
+                    {ch.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-zinc-500">Nome da campanha (opcional)</label>
+              <input
+                value={campName}
+                onChange={(e) => setCampName(e.target.value)}
+                placeholder="ex.: promo-julho, bio-instagram"
+                className="mt-1.5 w-full rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-amber-500/50"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-zinc-500">Seu link rastreado</label>
+              <div className="mt-1.5 flex items-center gap-2">
+                <p className="flex-1 truncate rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-400">
+                  {campaignLink || "…"}
+                </p>
+                <button
+                  onClick={() => {
+                    if (!campaignLink) return;
+                    navigator.clipboard.writeText(campaignLink);
+                    setCampCopied(true);
+                    toast.success("Link da campanha copiado");
+                    setTimeout(() => setCampCopied(false), 1500);
+                  }}
+                  className="flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-zinc-800 px-3 py-2 text-xs font-bold text-zinc-200 transition-colors hover:bg-zinc-700"
+                >
+                  {campCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {campCopied ? "Copiado" : "Copiar"}
+                </button>
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-zinc-600">
+                Use este link na bio do Instagram, no Google Meu Negócio ou onde divulgar. Todo agendamento que
+                vier por ele é marcado com este canal no relatório de Origem dos clientes.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-white p-3">
+            {campQr ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={campQr} alt="QR da campanha" className="mx-auto w-full max-w-[180px]" />
+            ) : (
+              <div className="flex h-[180px] items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

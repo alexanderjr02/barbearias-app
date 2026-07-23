@@ -60,13 +60,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function BookingPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BookingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const { slug } = await params;
+  // Origem de um link/QR rastreado por campanha (?ch=canal&c=campanha). Viaja
+  // até o POST do agendamento para virar a origem do lead (atribuição).
+  const sp = await searchParams;
+  const channel = typeof sp.ch === "string" ? sp.ch : undefined;
+  const campaign = typeof sp.c === "string" ? sp.c : undefined;
   const shop = await getShop(slug);
   if (!shop) notFound();
   return (
     <>
-      <BookingWizard shop={shop} />
+      <BookingWizard shop={shop} channel={channel} campaign={campaign} />
       {/* Sem este convite o app com a marca da barbearia praticamente não é
           instalado no iPhone, onde o processo é manual e escondido. */}
       <InstallAppPrompt shopName={shop.name} color={shop.primaryColor} slug={shop.slug} />

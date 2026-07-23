@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
       clientEmail,
       totalPrice,
       referencePhoto,
+      channel,
+      campaign,
     } = body;
 
     if (!barbershopId || !staffId || !serviceId || !date || !startTime || !clientName || !clientPhone) {
@@ -149,6 +151,9 @@ export async function POST(request: NextRequest) {
       await advanceLead(barbershopId, clientPhone, "SCHEDULED", {
         clientId: selfBookingClientId,
         scheduledAt: appointment.date,
+        // Origem vinda de um link/QR rastreado (pagina publica). So chega aqui
+        // quando o link tinha ?ch=/?c=; caso contrario fica UNKNOWN.
+        origin: channel || campaign ? { channel, campaign } : undefined,
       });
     } catch (e) {
       console.error("[appointments] advanceLead SCHEDULED", e);

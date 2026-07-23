@@ -17,6 +17,7 @@ const CHANNEL_LABELS: Record<string, string> = {
   CTWA: "Anúncio (clique-pro-WhatsApp)",
   GOOGLE: "Google",
   GBP: "Google Meu Negócio",
+  INSTAGRAM: "Instagram",
   REFERRAL: "Indicação",
   ORGANIC: "Orgânico",
   UNKNOWN: "Não identificado",
