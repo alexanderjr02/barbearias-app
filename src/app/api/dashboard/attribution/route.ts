@@ -29,7 +29,9 @@ function monthBounds(param: string | null): { period: string; start: Date; end: 
   let start: Date;
   if (param && MONTH_RE.test(param)) {
     const [y, m] = param.split("-").map(Number);
-    start = new Date(Date.UTC(y, m - 1, 1));
+    // Valida o mês (1–12): o regex sozinho aceita "1999-13", que o Date rolaria
+    // silenciosamente para o ano seguinte. Mês fora do intervalo → mês atual.
+    start = m >= 1 && m <= 12 ? new Date(Date.UTC(y, m - 1, 1)) : startOfUtcMonth(now);
   } else {
     start = startOfUtcMonth(now);
   }
