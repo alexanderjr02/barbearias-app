@@ -109,6 +109,40 @@ export async function recoverOriginFromText(barbershopId: string, from: string, 
   return channel;
 }
 
+const WEEKLY_CHANNEL_LABEL: Record<string, string> = {
+  CTWA: "Anúncio (WhatsApp)",
+  GOOGLE: "Google",
+  GBP: "Google Meu Negócio",
+  INSTAGRAM: "Instagram",
+  REFERRAL: "Indicação",
+  ORGANIC: "Orgânico",
+};
+
+// Resumo de atribuição dos últimos 7 dias, para o relatório semanal do Copiloto
+// (#4). Só conta contatos com origem identificada — o "não identificado" não
+// vira linha de marketing.
+export async function weeklyAttributionSummary(
+  barbershopId: string,
+): Promise<{ identified: number; novos: number; top: { label: string; contacts: number } | null }> {
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const leads = await prisma.lead.findMany({
+    where: { barbershopId, capturedAt: { gte: since }, channel: { not: "UNKNOWN" } },
+    select: { channel: true, isNewClient: true },
+  });
+  let novos = 0;
+  const byChannel = new Map<string, number>();
+  for (const l of leads) {
+    if (l.isNewClient) novos += 1;
+    byChannel.set(l.channel, (byChannel.get(l.channel) ?? 0) + 1);
+  }
+  const top = [...byChannel.entries()].sort((a, b) => b[1] - a[1])[0];
+  return {
+    identified: leads.length,
+    novos,
+    top: top ? { label: WEEKLY_CHANNEL_LABEL[top[0]] ?? top[0], contacts: top[1] } : null,
+  };
+}
+
 // Ordem do funil. Só avançamos PARA A FRENTE — reprocessar um agendamento não
 // pode fazer um lead que já compareceu voltar para "agendou".
 const STAGE_RANK: Record<string, number> = { NEW: 0, SCHEDULED: 1, SHOWED: 2, RETURNING: 3, LOST: 0 };

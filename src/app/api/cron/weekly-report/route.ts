@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cronSecretFrom } from "@/lib/cronAuth";
 import { prisma } from "@/lib/db";
 import { revenueSummary, churnedClients, barberLeaderboard } from "@/lib/copilot/insights";
+import { weeklyAttributionSummary } from "@/lib/attribution";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
 import { sendMail } from "@/lib/mailer";
 
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   for (const shop of shops) {
     try {
-      const [rev, churned, barbers] = await Promise.all([revenueSummary(shop.id), churnedClients(shop.id), barberLeaderboard(shop.id)]);
+      const [rev, churned, barbers, attr] = await Promise.all([revenueSummary(shop.id), churnedClients(shop.id), barberLeaderboard(shop.id), weeklyAttributionSummary(shop.id)]);
       const delta = rev.weekDeltaPercent == null ? "" : ` (${rev.weekDeltaPercent >= 0 ? "+" : ""}${rev.weekDeltaPercent.toFixed(0)}% vs semana anterior)`;
       const topBarber = barbers[0];
 
@@ -33,6 +34,10 @@ export async function GET(request: NextRequest) {
         `Faturamento (7 dias): ${money(rev.thisWeek)}${delta}.`,
         `No mês: ${money(rev.monthRevenue)} em ${rev.monthCount} atendimentos (ticket médio ${money(rev.avgTicket)}).`,
         topBarber ? `Destaque: ${topBarber.name} — ${money(topBarber.revenue)} (${topBarber.count} atendimentos).` : "",
+        // Atribuição (#4): de onde vieram os contatos rastreados na semana.
+        attr.identified > 0
+          ? `Marketing: ${attr.identified} ${attr.identified === 1 ? "contato veio" : "contatos vieram"} de canais rastreados${attr.top ? ` (destaque ${attr.top.label}: ${attr.top.contacts})` : ""}, ${attr.novos} ${attr.novos === 1 ? "cliente novo" : "clientes novos"}.`
+          : "",
         churned.length > 0 ? `${churned.length} clientes sumidos há +45 dias — vale chamar de volta.` : "Nenhum cliente sumido.",
       ].filter(Boolean);
       const bodyText = lines.join(" ");
