@@ -70,9 +70,13 @@ export async function GET(request: NextRequest) {
     if (!res.ok) throw new Error(`logo respondeu ${res.status}`);
     const input = Buffer.from(await res.arrayBuffer());
 
-    // "contain" e não "cover": a logo inteira aparece, com sobra preenchida
-    // pela cor da marca. Com "cover" o iOS voltaria a cortar as bordas.
+    // .trim() primeiro: remove a MARGEM da própria logo (transparente ou de cor
+    // uniforme) antes de encaixar — é o que tira a "moldura" que aparecia quando
+    // a imagem enviada já vinha com espaço em volta. Depois "contain" (não
+    // "cover", que cortaria a marca): a logo inteira aparece, e só a sobra por
+    // formato não-quadrado é preenchida com a cor da marca.
     const png = await sharp(input)
+      .trim()
       .resize(size, size, { fit: "contain", background: bg })
       .flatten({ background: bg })
       .png()

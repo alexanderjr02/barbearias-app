@@ -47,6 +47,11 @@ export async function GET(request: NextRequest) {
   const barbershopId = session.barbershopId;
   const { period, start, end } = monthBounds(request.nextUrl.searchParams.get("month"));
 
+  // Blindagem: qualquer falha (client Prisma desatualizado, tabela ausente,
+  // query) devolve um relatório VAZIO em vez de 500 — a tela mostra o estado
+  // "sem contatos" e o usuário nunca leva os toasts vermelhos de "erro na
+  // requisição". Um relatório vazio é melhor que uma tela quebrada.
+  try {
   const [leads, completed, noShows, spendRow, shop] = await Promise.all([
     prisma.lead.findMany({
       where: { barbershopId, capturedAt: { gte: start, lt: end } },
@@ -197,6 +202,18 @@ export async function GET(request: NextRequest) {
     byChannel,
     byCampaign,
   });
+  } catch (err) {
+    console.error("[attribution]", err);
+    return NextResponse.json({
+      period,
+      shop: { name: "", logo: null, primaryColor: "#F59E0B" },
+      totals: { contacts: 0, identified: 0, unidentified: 0, unidentifiedPct: 0, novos: 0, recorrentes: 0, attributedRevenue: 0, attributedLtv: 0 },
+      funnel: { contacts: 0, scheduled: 0, showed: 0, noShow: 0, schedRate: 0, showRate: 0, noShowRate: 0 },
+      cost: { spend: 0, perContact: 0, perScheduled: 0, perNewClient: 0, roas: 0, roasLtv: 0 },
+      byChannel: [],
+      byCampaign: [],
+    });
+  }
 }
 
 // Informar/atualizar a verba investida num mês. É a agência quem preenche (a
