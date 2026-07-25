@@ -221,7 +221,7 @@ function textFrom(content: Anthropic.ContentBlock[]): string {
 /** Runs the agentic tool loop and returns the assistant's final reply text.
  * `clientContext`, when provided (logged-in client), personalizes the bot so it
  * greets by name, remembers past visits/preferences and pre-fills bookings. */
-export async function runAssistant(barbershopId: string, history: ChatTurn[], clientContext?: string): Promise<string> {
+export async function runAssistant(barbershopId: string, history: ChatTurn[], clientContext?: string, askOrigin = false): Promise<string> {
   const client = getAnthropic();
 
   const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true, faqText: true, chatbotName: true } });
@@ -256,7 +256,7 @@ Regras:
 - Quando NÃO houver horário no dia desejado, ofereça a fila de espera (join_waitlist) além de sugerir outro dia.
 - Faça upsell com naturalidade: se o cliente marcar só corte, ofereça o combo corte + barba quando existir; nunca force.
 - Se a resposta estiver nas informações da barbearia acima, use-a.
-- Se algo não for possível (horário ocupado, fora do expediente), explique com gentileza e ofereça alternativas.
+- Se algo não for possível (horário ocupado, fora do expediente), explique com gentileza e ofereça alternativas.${askOrigin ? "\n- Você ainda não sabe como este cliente chegou até a barbearia. Se for natural na conversa (ex.: logo após ajudar ou agendar), pergunte UMA única vez, de forma leve, como ele conheceu a gente (Instagram, Google, indicação de um amigo, passou na frente...). Não insista se ele não responder." : ""}
 - Respostas curtas, no máximo alguns parágrafos.`;
 
   const messages: Anthropic.MessageParam[] = history.slice(-20).map((m) => ({ role: m.role, content: m.content }));

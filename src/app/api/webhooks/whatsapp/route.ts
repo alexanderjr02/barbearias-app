@@ -5,7 +5,7 @@ import { runAssistant, assistantEnabled, type ChatTurn } from "@/lib/chatbot/ass
 import { runCopilot } from "@/lib/chatbot/copilot";
 import { planHasAI } from "@/lib/billing";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
-import { captureWhatsappLead, type WaReferral } from "@/lib/attribution";
+import { captureWhatsappLead, recoverOriginFromText, type WaReferral } from "@/lib/attribution";
 
 // WhatsApp Cloud API webhook — the inbound half of the 24/7 assistant. The
 // outbound sender already lives in src/lib/whatsapp.ts; this receives client
@@ -98,9 +98,14 @@ export async function POST(request: NextRequest) {
     // Atribuição (Onda 1): registra/atualiza o lead com a origem do anúncio
     // (referral clique-pro-WhatsApp). Só para cliente — o gestor operando por
     // WhatsApp não é lead. Best-effort: nunca deve impedir a resposta nem o ACK.
+    // originChannel guarda a origem atual do lead (após recuperar pelo texto),
+    // para o assistente decidir se pergunta "como nos conheceu?".
+    let originChannel: string | null = null;
     if (!isGestor) {
       try {
         await captureWhatsappLead(barbershopId, from, message.referral);
+        // Recupera a origem quando o cliente diz como chegou (Onda 3, #3).
+        originChannel = await recoverOriginFromText(barbershopId, from, text);
       } catch (e) {
         console.error("[whatsapp webhook] lead capture", e);
       }
@@ -120,7 +125,7 @@ export async function POST(request: NextRequest) {
           const res = await runCopilot("GESTOR", barbershopId, null, history);
           reply = res.reply + (res.actions.length ? `\n\n(Toque nas ações no painel/app: ${res.actions.map((a) => a.label).join(", ")})` : "");
         } else {
-          reply = await runAssistant(barbershopId, history);
+          reply = await runAssistant(barbershopId, history, undefined, originChannel === "UNKNOWN");
         }
       } catch {
         reply = "Tive um probleminha aqui agora. Pode repetir daqui a pouco?";

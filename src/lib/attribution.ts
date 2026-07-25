@@ -75,6 +75,40 @@ export async function captureWhatsappLead(
   });
 }
 
+// Classificador conservador de "como nos conheceu" a partir do texto da mensagem.
+// Só reage a sinais fortes — falso positivo aqui é raro e, no pior caso, só
+// rotula um lead que estava "não identificado". Devolve o canal ou null.
+export function classifyOrigin(text: string): string | null {
+  const t = text.toLowerCase();
+  if (/google meu neg[oó]cio|meu neg[oó]cio|\bmaps\b|no mapa|google maps/.test(t)) return "GBP";
+  if (/instagram|\binsta\b|\big\b|pela bio|na bio|stories|story/.test(t)) return "INSTAGRAM";
+  if (/\bgoogle\b|pesquisei no google|pesquisando|busquei/.test(t)) return "GOOGLE";
+  if (/indica[cç][aã]o|indicad|me indicou|um amigo|meu amigo|conhecid[oa] indicou|recomend/.test(t)) return "REFERRAL";
+  if (/passei na frente|passando na frente|vi a placa|vi a loja|vi de frente|aqui da rua|do bairro/.test(t)) return "ORGANIC";
+  return null;
+}
+
+// Recupera a origem de um lead ainda "não identificado" a partir do que o
+// cliente escreveu (resposta a "como nos conheceu?"). NUNCA sobrescreve uma
+// origem já conhecida (ex.: veio de anúncio). Devolve o canal atual do lead
+// (após eventual recuperação), ou null se não há lead — o webhook usa isso para
+// decidir se o assistente deve perguntar.
+export async function recoverOriginFromText(barbershopId: string, from: string, text: string): Promise<string | null> {
+  const key = phoneKey(from);
+  if (!key) return null;
+  const lead = await prisma.lead.findUnique({
+    where: { barbershopId_phoneKey: { barbershopId, phoneKey: key } },
+    select: { id: true, channel: true },
+  });
+  if (!lead) return null;
+  if (lead.channel !== "UNKNOWN") return lead.channel;
+
+  const channel = classifyOrigin(text);
+  if (!channel) return "UNKNOWN";
+  await prisma.lead.update({ where: { id: lead.id }, data: { channel } });
+  return channel;
+}
+
 // Ordem do funil. Só avançamos PARA A FRENTE — reprocessar um agendamento não
 // pode fazer um lead que já compareceu voltar para "agendou".
 const STAGE_RANK: Record<string, number> = { NEW: 0, SCHEDULED: 1, SHOWED: 2, RETURNING: 3, LOST: 0 };
