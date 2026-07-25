@@ -124,23 +124,30 @@ const WEEKLY_CHANNEL_LABEL: Record<string, string> = {
 export async function weeklyAttributionSummary(
   barbershopId: string,
 ): Promise<{ identified: number; novos: number; top: { label: string; contacts: number } | null }> {
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const leads = await prisma.lead.findMany({
-    where: { barbershopId, capturedAt: { gte: since }, channel: { not: "UNKNOWN" } },
-    select: { channel: true, isNewClient: true },
-  });
-  let novos = 0;
-  const byChannel = new Map<string, number>();
-  for (const l of leads) {
-    if (l.isNewClient) novos += 1;
-    byChannel.set(l.channel, (byChannel.get(l.channel) ?? 0) + 1);
+  const empty = { identified: 0, novos: 0, top: null };
+  try {
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const leads = await prisma.lead.findMany({
+      where: { barbershopId, capturedAt: { gte: since }, channel: { not: "UNKNOWN" } },
+      select: { channel: true, isNewClient: true },
+    });
+    let novos = 0;
+    const byChannel = new Map<string, number>();
+    for (const l of leads) {
+      if (l.isNewClient) novos += 1;
+      byChannel.set(l.channel, (byChannel.get(l.channel) ?? 0) + 1);
+    }
+    const top = [...byChannel.entries()].sort((a, b) => b[1] - a[1])[0];
+    return {
+      identified: leads.length,
+      novos,
+      top: top ? { label: WEEKLY_CHANNEL_LABEL[top[0]] ?? top[0], contacts: top[1] } : null,
+    };
+  } catch {
+    // Se a tabela Lead ainda não existe no Turso (migração pendente) ou a query
+    // falha, o relatório semanal NÃO pode quebrar por causa disso.
+    return empty;
   }
-  const top = [...byChannel.entries()].sort((a, b) => b[1] - a[1])[0];
-  return {
-    identified: leads.length,
-    novos,
-    top: top ? { label: WEEKLY_CHANNEL_LABEL[top[0]] ?? top[0], contacts: top[1] } : null,
-  };
 }
 
 // Ordem do funil. Só avançamos PARA A FRENTE — reprocessar um agendamento não
