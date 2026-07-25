@@ -663,6 +663,7 @@ class AttributionCampaign {
   final int novos;
   final int showed;
   final double revenue;
+  final double ltv;
 
   AttributionCampaign({
     required this.campaign,
@@ -671,6 +672,7 @@ class AttributionCampaign {
     required this.novos,
     required this.showed,
     required this.revenue,
+    required this.ltv,
   });
 
   factory AttributionCampaign.fromJson(Map<String, dynamic> j) => AttributionCampaign(
@@ -680,6 +682,7 @@ class AttributionCampaign {
         novos: j['novos'] ?? 0,
         showed: j['showed'] ?? 0,
         revenue: (j['revenue'] as num?)?.toDouble() ?? 0,
+        ltv: (j['ltv'] as num?)?.toDouble() ?? 0,
       );
 }
 
@@ -689,14 +692,18 @@ class AttributionData {
   final int novos;
   final int unidentifiedPct;
   final double attributedRevenue;
+  final double attributedLtv;
   final int funnelContacts;
   final int funnelScheduled;
   final int funnelShowed;
+  final int noShow;
   final int schedRate;
   final int showRate;
+  final int noShowRate;
   final double spend;
   final double perNewClient;
   final double roas;
+  final double roasLtv;
   final List<AttributionChannel> byChannel;
   final List<AttributionCampaign> byCampaign;
 
@@ -706,14 +713,18 @@ class AttributionData {
     required this.novos,
     required this.unidentifiedPct,
     required this.attributedRevenue,
+    required this.attributedLtv,
     required this.funnelContacts,
     required this.funnelScheduled,
     required this.funnelShowed,
+    required this.noShow,
     required this.schedRate,
     required this.showRate,
+    required this.noShowRate,
     required this.spend,
     required this.perNewClient,
     required this.roas,
+    required this.roasLtv,
     required this.byChannel,
     required this.byCampaign,
   });
@@ -728,14 +739,18 @@ class AttributionData {
       novos: t['novos'] ?? 0,
       unidentifiedPct: t['unidentifiedPct'] ?? 0,
       attributedRevenue: (t['attributedRevenue'] as num?)?.toDouble() ?? 0,
+      attributedLtv: (t['attributedLtv'] as num?)?.toDouble() ?? 0,
       funnelContacts: f['contacts'] ?? 0,
       funnelScheduled: f['scheduled'] ?? 0,
       funnelShowed: f['showed'] ?? 0,
+      noShow: f['noShow'] ?? 0,
       schedRate: f['schedRate'] ?? 0,
       showRate: f['showRate'] ?? 0,
+      noShowRate: f['noShowRate'] ?? 0,
       spend: (c['spend'] as num?)?.toDouble() ?? 0,
       perNewClient: (c['perNewClient'] as num?)?.toDouble() ?? 0,
       roas: (c['roas'] as num?)?.toDouble() ?? 0,
+      roasLtv: (c['roasLtv'] as num?)?.toDouble() ?? 0,
       byChannel: (json['byChannel'] as List? ?? []).map((e) => AttributionChannel.fromJson(e as Map<String, dynamic>)).toList(),
       byCampaign: (json['byCampaign'] as List? ?? []).map((e) => AttributionCampaign.fromJson(e as Map<String, dynamic>)).toList(),
     );

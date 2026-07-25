@@ -35,11 +35,11 @@ interface ReportsResponse {
 interface AttributionResponse {
   period: string;
   shop: { name: string; logo: string | null; primaryColor: string };
-  totals: { contacts: number; identified: number; unidentified: number; unidentifiedPct: number; novos: number; recorrentes: number; attributedRevenue: number };
-  funnel: { contacts: number; scheduled: number; showed: number; schedRate: number; showRate: number };
-  cost: { spend: number; perContact: number; perScheduled: number; perNewClient: number; roas: number };
+  totals: { contacts: number; identified: number; unidentified: number; unidentifiedPct: number; novos: number; recorrentes: number; attributedRevenue: number; attributedLtv: number };
+  funnel: { contacts: number; scheduled: number; showed: number; noShow: number; schedRate: number; showRate: number; noShowRate: number };
+  cost: { spend: number; perContact: number; perScheduled: number; perNewClient: number; roas: number; roasLtv: number };
   byChannel: { channel: string; label: string; contacts: number; scheduled: number; showed: number; novos: number; revenue: number; conversionPct: number }[];
-  byCampaign: { campaign: string; channel: string; label: string; contacts: number; novos: number; showed: number; revenue: number }[];
+  byCampaign: { campaign: string; channel: string; label: string; contacts: number; novos: number; showed: number; revenue: number; ltv: number }[];
 }
 
 const MONTH_NAMES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -369,6 +369,13 @@ export default function ReportsPage() {
           ))}
         </div>
 
+        {/* No-show: separa "o anúncio não presta" de "marcaram e faltaram" */}
+        {(funnel?.noShow ?? 0) > 0 && (
+          <p className="text-xs text-zinc-500 -mt-4 mb-6 text-center">
+            <span className="text-zinc-300 font-semibold">{funnel?.noShow}</span> não compareceram · {funnel?.noShowRate}% dos que agendaram
+          </p>
+        )}
+
         {/* Novos + faturamento + custo por cliente novo + retorno */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <div className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
@@ -378,6 +385,7 @@ export default function ReportsPage() {
           <div className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
             <p className="text-[11px] text-zinc-500">Faturamento atribuído</p>
             <p className="text-lg font-black text-amber-400">{formatCurrency(attribution?.totals.attributedRevenue ?? 0)}</p>
+            {(attribution?.totals.attributedLtv ?? 0) > 0 && <p className="text-[10px] text-zinc-600 mt-0.5">LTV {formatCurrency(attribution?.totals.attributedLtv ?? 0)}</p>}
           </div>
           <div className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
             <p className="text-[11px] text-zinc-500">Custo por cliente novo</p>
@@ -386,6 +394,7 @@ export default function ReportsPage() {
           <div className="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
             <p className="text-[11px] text-zinc-500">Retorno (ROAS)</p>
             <p className="text-lg font-black text-white">{cost && cost.roas > 0 ? `${cost.roas}x` : "—"}</p>
+            {cost && cost.roasLtv > 0 && <p className="text-[10px] text-zinc-600 mt-0.5">{cost.roasLtv}x no LTV</p>}
           </div>
         </div>
 
@@ -429,7 +438,8 @@ export default function ReportsPage() {
         {/* Por campanha */}
         {byCampaign.length > 0 && (
           <div className="mt-6">
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Por campanha</h4>
+            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Por campanha</h4>
+            <p className="text-[10px] text-zinc-600 mb-2">Faturamento = este mês · LTV = todo o histórico dos clientes que a campanha trouxe</p>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -439,7 +449,8 @@ export default function ReportsPage() {
                     <th className="py-1.5 px-3 font-medium text-right">Contatos</th>
                     <th className="py-1.5 px-3 font-medium text-right">Novos</th>
                     <th className="py-1.5 px-3 font-medium text-right">Compareceram</th>
-                    <th className="py-1.5 pl-3 font-medium text-right">Faturamento</th>
+                    <th className="py-1.5 px-3 font-medium text-right">Faturamento</th>
+                    <th className="py-1.5 pl-3 font-medium text-right">LTV</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/70">
@@ -450,7 +461,8 @@ export default function ReportsPage() {
                       <td className="py-2 px-3 text-right">{c.contacts}</td>
                       <td className="py-2 px-3 text-right">{c.novos}</td>
                       <td className="py-2 px-3 text-right">{c.showed}</td>
-                      <td className="py-2 pl-3 text-right text-amber-400">{formatCurrency(c.revenue)}</td>
+                      <td className="py-2 px-3 text-right text-zinc-300">{formatCurrency(c.revenue)}</td>
+                      <td className="py-2 pl-3 text-right text-amber-400 font-semibold">{formatCurrency(c.ltv)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -486,11 +498,13 @@ export default function ReportsPage() {
             ["Chegaram", String(funnel?.contacts ?? 0)],
             ["Agendaram", String(funnel?.scheduled ?? 0)],
             ["Compareceram", String(funnel?.showed ?? 0)],
+            ["Não vieram", String(funnel?.noShow ?? 0)],
             ["Clientes novos", String(attribution?.totals.novos ?? 0)],
             ["Faturamento atribuído", formatCurrency(attribution?.totals.attributedRevenue ?? 0)],
+            ["LTV atribuído", formatCurrency(attribution?.totals.attributedLtv ?? 0)],
             ["Investimento", cost && cost.spend > 0 ? formatCurrency(cost.spend) : "—"],
             ["Custo por cliente novo", cost && cost.perNewClient > 0 ? formatCurrency(cost.perNewClient) : "—"],
-            ["Retorno (ROAS)", cost && cost.roas > 0 ? `${cost.roas}x` : "—"],
+            ["Retorno (ROAS)", cost && cost.roas > 0 ? `${cost.roas}x${cost.roasLtv > 0 ? ` (${cost.roasLtv}x LTV)` : ""}` : "—"],
           ] as [string, string][]).map(([k, v]) => (
             <div key={k} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
               <div style={{ fontSize: 11, color: "#666" }}>{k}</div>
@@ -508,11 +522,12 @@ export default function ReportsPage() {
               <th style={{ padding: "6px 8px", textAlign: "right" }}>Novos</th>
               <th style={{ padding: "6px 8px", textAlign: "right" }}>Compareceram</th>
               <th style={{ padding: "6px 8px", textAlign: "right" }}>Faturamento</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>LTV</th>
             </tr>
           </thead>
           <tbody>
             {byCampaign.length === 0 ? (
-              <tr><td colSpan={6} style={{ padding: 8, color: "#888" }}>Sem campanhas rastreadas no mês.</td></tr>
+              <tr><td colSpan={7} style={{ padding: 8, color: "#888" }}>Sem campanhas rastreadas no mês.</td></tr>
             ) : byCampaign.map((c) => (
               <tr key={`p-${c.channel}-${c.campaign}`} style={{ borderBottom: "1px solid #eee" }}>
                 <td style={{ padding: "6px 8px" }}>{c.campaign}</td>
@@ -521,6 +536,7 @@ export default function ReportsPage() {
                 <td style={{ padding: "6px 8px", textAlign: "right" }}>{c.novos}</td>
                 <td style={{ padding: "6px 8px", textAlign: "right" }}>{c.showed}</td>
                 <td style={{ padding: "6px 8px", textAlign: "right" }}>{formatCurrency(c.revenue)}</td>
+                <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700 }}>{formatCurrency(c.ltv)}</td>
               </tr>
             ))}
           </tbody>

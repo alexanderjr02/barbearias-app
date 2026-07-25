@@ -483,12 +483,17 @@ class _AttributionSectionState extends State<_AttributionSection> {
                     Expanded(child: _FunnelTile(label: 'Compareceram', value: '${a.funnelShowed}', sub: '${a.showRate}%', palette: palette, accent: accent)),
                   ],
                 ),
+                if (a.noShow > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text('${a.noShow} não compareceram · ${a.noShowRate}% dos que agendaram', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+                  ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
                     Expanded(child: _MiniStat(label: 'Clientes novos', value: '${a.novos}', palette: palette)),
                     const SizedBox(width: 8),
-                    Expanded(child: _MiniStat(label: 'Faturamento', value: 'R\$ ${a.attributedRevenue.toStringAsFixed(0)}', valueColor: accent, palette: palette)),
+                    Expanded(child: _MiniStat(label: 'Faturamento', value: 'R\$ ${a.attributedRevenue.toStringAsFixed(0)}', sub: a.attributedLtv > 0 ? 'LTV R\$ ${a.attributedLtv.toStringAsFixed(0)}' : null, valueColor: accent, palette: palette)),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -496,7 +501,7 @@ class _AttributionSectionState extends State<_AttributionSection> {
                   children: [
                     Expanded(child: _MiniStat(label: 'Custo/cliente novo', value: a.perNewClient > 0 ? 'R\$ ${a.perNewClient.toStringAsFixed(2)}' : '—', palette: palette)),
                     const SizedBox(width: 8),
-                    Expanded(child: _MiniStat(label: 'Retorno (ROAS)', value: a.roas > 0 ? '${a.roas.toStringAsFixed(2)}x' : '—', palette: palette)),
+                    Expanded(child: _MiniStat(label: 'Retorno (ROAS)', value: a.roas > 0 ? '${a.roas.toStringAsFixed(2)}x' : '—', sub: a.roasLtv > 0 ? '${a.roasLtv.toStringAsFixed(2)}x no LTV' : null, palette: palette)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -585,11 +590,11 @@ class _AttributionSectionState extends State<_AttributionSection> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(child: Text(c.campaign, style: TextStyle(color: palette.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
-                                Text('R\$ ${c.revenue.toStringAsFixed(0)}', style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.bold)),
+                                Text('LTV R\$ ${c.ltv.toStringAsFixed(0)}', style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.bold)),
                               ],
                             ),
                             const SizedBox(height: 3),
-                            Text('${c.label} · ${c.contacts} contatos · ${c.novos} novos · ${c.showed} vieram', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+                            Text('${c.label} · ${c.contacts} contatos · ${c.novos} novos · ${c.showed} vieram · R\$ ${c.revenue.toStringAsFixed(0)} no mês', style: TextStyle(color: palette.textFaint, fontSize: 11)),
                           ],
                         ),
                       )),
@@ -645,10 +650,11 @@ class _FunnelTile extends StatelessWidget {
 class _MiniStat extends StatelessWidget {
   final String label;
   final String value;
+  final String? sub;
   final Color? valueColor;
   final AppPalette palette;
 
-  const _MiniStat({required this.label, required this.value, this.valueColor, required this.palette});
+  const _MiniStat({required this.label, required this.value, this.sub, this.valueColor, required this.palette});
 
   @override
   Widget build(BuildContext context) {
@@ -661,6 +667,7 @@ class _MiniStat extends StatelessWidget {
           Text(label, style: TextStyle(color: palette.textFaint, fontSize: 10.5)),
           const SizedBox(height: 3),
           Text(value, style: TextStyle(color: valueColor ?? palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15), overflow: TextOverflow.ellipsis),
+          if (sub != null) Text(sub!, style: TextStyle(color: palette.textFaint, fontSize: 9.5)),
         ],
       ),
     );

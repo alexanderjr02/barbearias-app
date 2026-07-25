@@ -47,14 +47,22 @@ export async function GET(request: NextRequest) {
   const barbershopId = session.barbershopId;
   const { period, start, end } = monthBounds(request.nextUrl.searchParams.get("month"));
 
-  const [leads, completed, spendRow, shop] = await Promise.all([
+  const [leads, completed, noShows, spendRow, shop] = await Promise.all([
     prisma.lead.findMany({
       where: { barbershopId, capturedAt: { gte: start, lt: end } },
       select: { channel: true, campaign: true, isNewClient: true, scheduledAt: true, showedAt: true, phoneKey: true },
     }),
+    // TODAS as concluídas (sem filtro de data) para o LTV por campanha (#2); a
+    // receita do mês é derivada filtrando a data em memória — mesmo padrão do
+    // relatório operacional, que já carrega o histórico de agendamentos.
     prisma.appointment.findMany({
-      where: { barbershopId, status: "COMPLETED", date: { gte: start, lt: end } },
-      select: { clientPhone: true, totalPrice: true },
+      where: { barbershopId, status: "COMPLETED" },
+      select: { clientPhone: true, totalPrice: true, date: true },
+    }),
+    // Faltas do mês (#5 no-show): quem agendou e não apareceu.
+    prisma.appointment.findMany({
+      where: { barbershopId, status: "NO_SHOW", date: { gte: start, lt: end } },
+      select: { clientPhone: true },
     }),
     prisma.campaignSpend.findUnique({
       where: { barbershopId_period: { barbershopId, period } },
@@ -67,32 +75,45 @@ export async function GET(request: NextRequest) {
     }),
   ]);
 
-  // Receita concluída no período, somada por chave de telefone.
+  // Receita do mês (revenueByKey) e faturamento de TODO o histórico por cliente
+  // (ltvByKey, base do LTV por campanha), numa passada só.
   const revenueByKey = new Map<string, number>();
+  const ltvByKey = new Map<string, number>();
   for (const a of completed) {
     const k = phoneKey(a.clientPhone);
     if (!k) continue;
-    revenueByKey.set(k, (revenueByKey.get(k) ?? 0) + a.totalPrice);
+    ltvByKey.set(k, (ltvByKey.get(k) ?? 0) + a.totalPrice);
+    if (a.date >= start && a.date < end) revenueByKey.set(k, (revenueByKey.get(k) ?? 0) + a.totalPrice);
+  }
+  const noShowKeys = new Set<string>();
+  for (const a of noShows) {
+    const k = phoneKey(a.clientPhone);
+    if (k) noShowKeys.add(k);
   }
 
   const total = leads.length;
   let scheduled = 0;
   let showed = 0;
+  let noShow = 0;
   let unidentified = 0;
   let novos = 0;
   let attributedRevenue = 0;
+  let attributedLtv = 0;
 
   const channelMap = new Map<string, { contacts: number; scheduled: number; showed: number; novos: number; revenue: number }>();
-  const campaignMap = new Map<string, { campaign: string; channel: string; contacts: number; novos: number; showed: number; revenue: number }>();
+  const campaignMap = new Map<string, { campaign: string; channel: string; contacts: number; novos: number; showed: number; revenue: number; ltv: number }>();
 
   for (const l of leads) {
     if (l.scheduledAt) scheduled += 1;
     if (l.showedAt) showed += 1;
+    if (noShowKeys.has(l.phoneKey)) noShow += 1;
     if (l.channel === "UNKNOWN") unidentified += 1;
     if (l.isNewClient) novos += 1;
 
     const rev = revenueByKey.get(l.phoneKey) ?? 0;
+    const ltv = ltvByKey.get(l.phoneKey) ?? 0;
     attributedRevenue += rev;
+    attributedLtv += ltv;
 
     const c = channelMap.get(l.channel) ?? { contacts: 0, scheduled: 0, showed: 0, novos: 0, revenue: 0 };
     c.contacts += 1;
@@ -104,11 +125,12 @@ export async function GET(request: NextRequest) {
 
     if (l.campaign) {
       const key = `${l.channel}|${l.campaign}`;
-      const cc = campaignMap.get(key) ?? { campaign: l.campaign, channel: l.channel, contacts: 0, novos: 0, showed: 0, revenue: 0 };
+      const cc = campaignMap.get(key) ?? { campaign: l.campaign, channel: l.channel, contacts: 0, novos: 0, showed: 0, revenue: 0, ltv: 0 };
       cc.contacts += 1;
       if (l.isNewClient) cc.novos += 1;
       if (l.showedAt) cc.showed += 1;
       cc.revenue += rev;
+      cc.ltv += ltv;
       campaignMap.set(key, cc);
     }
   }
@@ -131,8 +153,9 @@ export async function GET(request: NextRequest) {
       ...c,
       label: CHANNEL_LABELS[c.channel] ?? c.channel,
       revenue: Math.round(c.revenue),
+      ltv: Math.round(c.ltv),
     }))
-    .sort((a, b) => b.revenue - a.revenue)
+    .sort((a, b) => b.ltv - a.ltv)
     .slice(0, 12);
 
   // Custo por resultado — só faz sentido com a verba informada.
@@ -144,6 +167,8 @@ export async function GET(request: NextRequest) {
     perNewClient: novos > 0 && spend > 0 ? Math.round((spend / novos) * 100) / 100 : 0,
     // ROAS: quantos reais de faturamento atribuído para cada real investido.
     roas: spend > 0 ? Math.round((attributedRevenue / spend) * 100) / 100 : 0,
+    // ROAS de longo prazo: usa o LTV (todo o histórico dos clientes trazidos).
+    roasLtv: spend > 0 ? Math.round((attributedLtv / spend) * 100) / 100 : 0,
   };
 
   return NextResponse.json({
@@ -157,13 +182,16 @@ export async function GET(request: NextRequest) {
       novos,
       recorrentes: total - novos,
       attributedRevenue: Math.round(attributedRevenue),
+      attributedLtv: Math.round(attributedLtv),
     },
     funnel: {
       contacts: total,
       scheduled,
       showed,
+      noShow,
       schedRate: total > 0 ? Math.round((scheduled / total) * 100) : 0,
       showRate: scheduled > 0 ? Math.round((showed / scheduled) * 100) : 0,
+      noShowRate: scheduled > 0 ? Math.round((noShow / scheduled) * 100) : 0,
     },
     cost,
     byChannel,
