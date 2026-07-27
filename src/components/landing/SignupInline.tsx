@@ -1,73 +1,157 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, ArrowRight } from "lucide-react";
 
 /**
- * Cadastro na própria landing, como fazem as referências.
+ * Planos e cadastro na própria landing.
  *
  * Antes o botão levava para /register, e cada página a mais entre a decisão e
- * a conta é gente que some no caminho. Aqui a pessoa escolhe o plano, deixa
- * nome, e-mail e telefone, e cai já autenticada na etapa que falta. Os dados
- * da barbearia ficam para a etapa seguinte porque decidir e preencher CNPJ
+ * a conta é gente que some no caminho. Aqui a pessoa compara os planos, escolhe
+ * um, deixa nome, e-mail e telefone, e cai já com tudo preenchido na etapa que
+ * falta. Os dados da barbearia ficam para depois porque decidir e digitar CNPJ
  * são momentos diferentes.
+ *
+ * Os benefícios listados são os de verdade: saem de FEATURES_BY_PLAN
+ * (src/context/PlanContext.tsx) e dos limites de DEFAULT_PLAN_PRICING. Se um
+ * plano deixar de liberar algo lá, a lista aqui precisa mudar junto — prometer
+ * na landing o que o sistema bloqueia depois é o jeito mais rápido de perder
+ * um cliente que já pagou.
  */
 
-const PLANOS = [
-  { valor: "starter", nome: "Essencial", preco: "R$ 50", ciclo: "/mês", resumo: "Agenda, gorjeta e fidelidade. Até 3 barbeiros." },
-  { valor: "pro", nome: "Pro", preco: "R$ 250", ciclo: "/mês", resumo: "Copiloto com IA, financeiro completo e assinatura de clientes.", destaque: true },
-  { valor: "white-label", nome: "White Label", preco: "R$ 897", ciclo: "/mês", resumo: "App com a sua marca na loja, seu nome e sua cor." },
+type Plano = {
+  valor: string;
+  nome: string;
+  preco: string;
+  paraQuem: string;
+  herda?: string;
+  beneficios: string[];
+  destaque?: boolean;
+};
+
+const PLANOS: Plano[] = [
+  {
+    valor: "starter",
+    nome: "Essencial",
+    preco: "50",
+    paraQuem: "Para quem está organizando a casa",
+    beneficios: [
+      "Agenda online aberta 24 horas, com link próprio",
+      "Até 3 barbeiros na equipe",
+      "Agendamentos sem limite no mês",
+      "Confirmação e lembrete automáticos",
+      "Ficha do cliente com histórico de atendimento",
+      "Fidelidade por pontos e gorjeta pelo app",
+      "Página de agendamento com a sua identidade",
+    ],
+  },
+  {
+    valor: "pro",
+    nome: "Pro",
+    preco: "250",
+    paraQuem: "Para a barbearia que quer crescer",
+    herda: "Tudo do Essencial, mais:",
+    destaque: true,
+    beneficios: [
+      "Até 10 barbeiros na equipe",
+      "Copiloto com IA que chama o cliente sumido",
+      "Financeiro completo: entrada, saída e resultado",
+      "Comissão por barbeiro calculada sozinha",
+      "Relatórios avançados e exportação dos dados",
+      "Campanhas de marketing e recuperação de cliente",
+      "Chatbot no WhatsApp, com as suas respostas",
+      "Controle de estoque com alerta de reposição",
+    ],
+  },
+  {
+    valor: "white-label",
+    nome: "White Label",
+    preco: "897",
+    paraQuem: "Para rede e marca própria",
+    herda: "Tudo do Pro, mais:",
+    beneficios: [
+      "Barbeiros ilimitados",
+      "App com o seu nome, a sua logo e a sua cor",
+      "Assinatura de clientes: receita entrando todo mês",
+      "Várias unidades na mesma conta, cada uma com seu caixa",
+      "Sua marca em toda a experiência do cliente",
+    ],
+  },
 ];
 
 export function SignupInline() {
   const [plano, setPlano] = useState("pro");
-  const escolhido = PLANOS.find((p) => p.valor === plano);
+  const escolhido = PLANOS.find((p) => p.valor === plano) ?? PLANOS[1];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Escolha o plano e comece agora</h2>
-        <p className="mt-3 text-zinc-400">
-          Sem fidelidade e sem multa. Você troca de plano quando quiser, e leva seus dados se decidir sair.
-        </p>
+    <div>
+      <div className="grid gap-5 lg:grid-cols-3">
+        {PLANOS.map((p) => {
+          const ativo = plano === p.valor;
+          return (
+            <div
+              key={p.valor}
+              className={`lift relative flex flex-col rounded-2xl border-2 p-6 text-left ${
+                ativo
+                  ? "border-latao bg-white shadow-xl shadow-latao-escuro/15"
+                  : "border-porcelana-2 bg-white/60 hover:border-fumaca/50"
+              }`}
+            >
+              {p.destaque && (
+                <span className="absolute -top-3 left-6 rounded-full bg-vinho px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-porcelana">
+                  Mais escolhido
+                </span>
+              )}
 
-        <div className="mt-6 space-y-2.5">
-          {PLANOS.map((p) => {
-            const ativo = plano === p.valor;
-            return (
+              <h3 className="font-display text-3xl font-bold uppercase leading-none text-breu">{p.nome}</h3>
+              <p className="mt-1.5 text-[13px] text-breu/60">{p.paraQuem}</p>
+
+              <p className="mt-5 flex items-baseline gap-1">
+                <span className="text-lg font-semibold text-breu/50">R$</span>
+                <span className="font-display text-6xl font-bold leading-none tabular-nums text-breu">{p.preco}</span>
+                <span className="text-sm font-medium text-breu/50">/mês</span>
+              </p>
+
+              {p.herda && (
+                <p className="mt-5 border-t border-porcelana-2 pt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-latao-escuro">
+                  {p.herda}
+                </p>
+              )}
+
+              <ul className={`mb-8 space-y-2.5 ${p.herda ? "mt-3" : "mt-5 border-t border-porcelana-2 pt-5"}`}>
+                {p.beneficios.map((b) => (
+                  <li key={b} className="flex gap-2.5 text-[13px] leading-relaxed text-breu/80">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-latao-escuro" aria-hidden="true" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+
               <button
-                key={p.valor}
                 type="button"
                 onClick={() => setPlano(p.valor)}
-                className={`w-full rounded-xl border p-4 text-left transition-colors ${
-                  ativo ? "border-amber-500 bg-amber-500/[0.07]" : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700"
+                aria-pressed={ativo}
+                // `mt-auto` empurra o botão para a base: as listas têm tamanhos
+                // diferentes, e sem isso os três botões ficam em alturas
+                // diferentes, como se um plano estivesse desalinhado.
+                className={`mt-auto h-11 w-full rounded-xl pt-px text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-latao-escuro ${
+                  ativo
+                    ? "bg-breu text-porcelana"
+                    : "border border-breu/20 text-breu hover:border-breu/50 hover:bg-breu/5"
                 }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white">{p.nome}</span>
-                      {p.destaque && (
-                        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-zinc-200">
-                          mais escolhido
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 text-sm leading-relaxed text-zinc-500">{p.resumo}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <span className="font-semibold text-white">{p.preco}</span>
-                    <span className="text-xs text-zinc-500">{p.ciclo}</span>
-                    {ativo && <Check className="ml-auto mt-1 h-4 w-4 text-amber-400" />}
-                  </div>
-                </div>
+                {ativo ? "Plano escolhido" : `Escolher o ${p.nome}`}
               </button>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
 
-      <Formulario plano={plano} nomePlano={escolhido?.nome ?? ""} />
+      <p className="mt-5 text-center text-xs text-breu/50">
+        Sem fidelidade e sem multa. Você troca de plano quando quiser, e leva os seus dados se decidir sair.
+      </p>
+
+      <Formulario plano={plano} nomePlano={escolhido.nome} />
     </div>
   );
 }
@@ -92,11 +176,16 @@ function Formulario({ plano, nomePlano }: { plano: string; nomePlano: string }) 
   };
 
   return (
-    <form onSubmit={seguir} className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-      <p className="text-sm font-semibold text-white">Seus dados</p>
-      <p className="mt-1 text-xs text-zinc-500">Leva menos de um minuto.</p>
+    <form
+      onSubmit={seguir}
+      className="mx-auto mt-12 max-w-xl rounded-2xl border-2 border-breu/10 bg-white p-6 shadow-xl shadow-breu/5 sm:p-8"
+    >
+      <p className="font-display text-3xl font-bold uppercase leading-none text-breu">Criar a conta</p>
+      <p className="mt-2 text-sm text-breu/60">
+        Você escolheu o <span className="font-semibold text-breu">{nomePlano}</span>. Leva menos de um minuto.
+      </p>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-6 space-y-3">
         <Campo nome="nome" rotulo="Seu nome" tipo="text" exemplo="João Silva" />
         <Campo nome="email" rotulo="E-mail" tipo="email" exemplo="seu@email.com" />
         <Campo nome="telefone" rotulo="WhatsApp" tipo="tel" exemplo="(11) 99999-9999" />
@@ -105,13 +194,14 @@ function Formulario({ plano, nomePlano }: { plano: string; nomePlano: string }) 
       <button
         type="submit"
         disabled={enviando}
-        className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-500 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400 disabled:opacity-60"
+        className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-breu text-sm font-bold uppercase tracking-wider text-porcelana transition-colors hover:bg-breu-3 disabled:opacity-60"
       >
-        {enviando && <Loader2 className="h-4 w-4 animate-spin" />}
+        {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         Continuar com o {nomePlano}
+        {!enviando && <ArrowRight className="h-4 w-4" />}
       </button>
 
-      <p className="mt-3 text-center text-[11px] leading-relaxed text-zinc-600">
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-breu/50">
         Na próxima etapa você informa os dados da barbearia. Nada é cobrado sem a sua confirmação.
       </p>
     </form>
@@ -121,7 +211,7 @@ function Formulario({ plano, nomePlano }: { plano: string; nomePlano: string }) 
 function Campo({ nome, rotulo, tipo, exemplo }: { nome: string; rotulo: string; tipo: string; exemplo: string }) {
   return (
     <div>
-      <label htmlFor={`in-${nome}`} className="mb-1.5 block text-[13px] font-medium text-zinc-300">
+      <label htmlFor={`in-${nome}`} className="mb-1.5 block text-[13px] font-semibold text-breu/70">
         {rotulo}
       </label>
       <input
@@ -131,7 +221,7 @@ function Campo({ nome, rotulo, tipo, exemplo }: { nome: string; rotulo: string; 
         required
         placeholder={exemplo}
         autoComplete={nome === "email" ? "email" : nome === "telefone" ? "tel" : "name"}
-        className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 text-sm text-white placeholder:text-zinc-600 transition-colors focus:border-amber-500/70 focus:outline-none"
+        className="h-12 w-full rounded-xl border border-breu/15 bg-porcelana/60 px-3.5 text-sm text-breu placeholder:text-breu/35 transition-colors focus:border-latao-escuro focus:bg-white focus:outline-none"
       />
     </div>
   );

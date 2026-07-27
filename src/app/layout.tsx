@@ -3,9 +3,13 @@ import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
 
-// Body copy — Inter (clean, legible). Headlines — Sora (geometric, premium,
-// with more character than Inter for a barbershop brand). Both self-hosted by
-// next/font, so no external font request at runtime.
+// Tipografia do PRODUTO (painel, login, agendamento): Inter no texto e Sora
+// nos títulos. Neutras de propósito — quem passa o dia numa tela de gestão
+// precisa ler número e tabela, não ouvir a marca falar.
+//
+// A landing tem tipografia própria, carregada dentro da própria página
+// (src/app/page.tsx). Fica lá, e não aqui, para que a fonte de campanha não
+// seja baixada por quem só abriu o painel.
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const sora = Sora({
   subsets: ["latin"],

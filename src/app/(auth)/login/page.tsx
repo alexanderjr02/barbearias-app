@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, EyeOff, ShieldCheck, Check } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { redirectTo } from "@/lib/utils";
 
@@ -97,35 +97,47 @@ export default function LoginPage() {
 
   if (pendingToken) {
     return (
-      <div className="w-full max-w-md">
-        <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-5">
-          <ShieldCheck className="w-6 h-6 text-white" />
-        </div>
-        <h1 className="text-[28px] font-bold tracking-tight text-white mb-1.5">Verificação em duas etapas</h1>
-        <p className="text-zinc-500 text-sm mb-8">Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
+      <div className="w-full">
+        <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-latao/25 bg-latao/10">
+          <ShieldCheck className="h-6 w-6 text-latao" aria-hidden="true" />
+        </span>
+        <h1 className="font-display text-4xl font-bold uppercase leading-none text-porcelana">
+          Verificação em duas etapas
+        </h1>
+        <p className="mt-3 text-sm text-fumaca">
+          Digite o código de 6 dígitos do seu aplicativo autenticador.
+        </p>
 
-        <form onSubmit={handleVerifyCode} className="space-y-4">
+        <form onSubmit={handleVerifyCode} className="mt-7 space-y-4">
           <div>
-            <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">Código</label>
+            <label htmlFor="codigo-2fa" className="mb-1.5 block text-[13px] font-semibold text-porcelana/80">
+              Código
+            </label>
             <input
+              id="codigo-2fa"
+              name="codigo"
               type="text"
               inputMode="numeric"
+              autoComplete="one-time-code"
               autoFocus
               maxLength={6}
               required
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
-              className="w-full h-14 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-700 text-center text-2xl font-mono tracking-[0.4em] focus:outline-none focus:ring-2 focus:border-white/40 transition-all"
+              className="h-14 w-full rounded-2xl border border-breu-3 bg-breu-2 px-4 text-center font-mono text-2xl tracking-[0.4em] text-porcelana placeholder:text-fumaca/30 transition-colors focus:border-latao focus:outline-none"
             />
           </div>
+
+          <Erro mensagem={error} />
 
           <button
             type="submit"
             disabled={isLoading || code.length < 6}
-            className="w-full h-12 bg-white text-zinc-950 font-semibold rounded-xl hover:bg-zinc-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            aria-busy={isLoading}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-latao text-sm font-bold uppercase tracking-wider text-breu transition-colors hover:bg-latao-claro disabled:opacity-50"
           >
-            {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Verificar"}
+            {isLoading ? <Girando /> : "Verificar"}
           </button>
 
           <button
@@ -135,123 +147,131 @@ export default function LoginPage() {
               setCode("");
               setError(null);
             }}
-            className="w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="w-full text-xs text-fumaca transition-colors hover:text-porcelana"
           >
-            ← Voltar
+            Voltar para o login
           </button>
         </form>
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-            <p className="text-xs text-red-400 text-center">{error}</p>
-          </div>
-        )}
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md">
-      <h1 className="text-[28px] font-bold tracking-tight text-white mb-1.5">Bem-vindo de volta</h1>
-      <p className="text-zinc-500 text-sm mb-1">
-        É dono de barbearia e não tem conta?{" "}
-        <Link href="/register" className="text-amber-400 hover:text-amber-300 font-medium transition-colors">
-          Cadastre-se grátis
-        </Link>
-      </p>
+    <div className="w-full">
+      <h1 className="font-display text-4xl font-bold uppercase leading-none text-porcelana">
+        Bem-vindo de volta
+      </h1>
       {/* Cliente não cria conta por aqui. Esta é a entrada do gestor; a conta
           do cliente nasce no app da barbearia dele, junto com o primeiro
           agendamento e já ligada a alguém. Conta de cliente criada solta no
           site não tem barbearia, não tem agenda e não leva a lugar nenhum. */}
-      <div className="mb-8" />
+      <p className="mt-3 text-sm text-fumaca">
+        É dono de barbearia e não tem conta?{" "}
+        <Link href="/register" className="font-semibold text-latao transition-colors hover:text-latao-claro">
+          Criar a minha conta
+        </Link>
+      </p>
 
       {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
         <>
-          <div className="mb-5">
+          <div className="mt-7">
             <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signin_with" />
           </div>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-zinc-800" />
-            <span className="text-xs text-zinc-600">ou entre com e-mail</span>
-            <div className="flex-1 h-px bg-zinc-800" />
+          <div className="my-6 flex items-center gap-3">
+            <span className="h-px flex-1 bg-breu-3" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-fumaca/60">
+              ou entre com e-mail
+            </span>
+            <span className="h-px flex-1 bg-breu-3" />
           </div>
         </>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className={`space-y-4 ${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "" : "mt-7"}`}>
         <div>
-          <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+          <label htmlFor="email" className="mb-1.5 block text-[13px] font-semibold text-porcelana/80">
             E-mail
           </label>
           <input
+            id="email"
+            name="email"
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
-            className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
+            className="h-12 w-full rounded-xl border border-breu-3 bg-breu-2/70 px-3.5 text-sm text-porcelana placeholder:text-fumaca/40 transition-colors focus:border-latao focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-            Senha
-          </label>
+          <div className="mb-1.5 flex items-baseline justify-between gap-4">
+            <label htmlFor="senha" className="text-[13px] font-semibold text-porcelana/80">
+              Senha
+            </label>
+            <Link href="/forgot-password" className="text-xs text-latao transition-colors hover:text-latao-claro">
+              Esqueceu a senha?
+            </Link>
+          </div>
           <div className="relative">
             <input
+              id="senha"
+              name="senha"
               type={showPassword ? "text" : "password"}
               required
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-11 px-3.5 pr-11 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
+              className="h-12 w-full rounded-xl border border-breu-3 bg-breu-2/70 pl-3.5 pr-12 text-sm text-porcelana placeholder:text-fumaca/40 transition-colors focus:border-latao focus:outline-none"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              aria-pressed={showPassword}
+              className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-fumaca transition-colors hover:bg-breu-3 hover:text-porcelana"
             >
-              {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
-                <Eye className="w-5 h-5" />
-              )}
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
-          <div className="flex items-center justify-between mt-2.5">
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <input type="checkbox" defaultChecked className="peer sr-only" />
-              <span className="w-4 h-4 rounded border border-zinc-700 bg-zinc-900 flex items-center justify-center peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-colors">
-                <Check className="w-3 h-3 text-zinc-900 opacity-0 peer-checked:opacity-100" strokeWidth={3} />
-              </span>
-              <span className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">Manter conectado</span>
-            </label>
-            <Link href="/forgot-password" className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
-              Esqueceu a senha?
-            </Link>
-          </div>
         </div>
+
+        {/* Saiu daqui um "Manter conectado" que era só desenho: sem `name`, sem
+            estado e nunca enviado. A sessão já é longa por padrão (o refresh
+            token vive bem mais que o de acesso, ver src/lib/sessionCookies.ts),
+            então a caixa prometia escolha onde não havia nenhuma. */}
+
+        <Erro mensagem={error} />
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full h-12 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm mt-2"
+          aria-busy={isLoading}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-latao text-sm font-bold uppercase tracking-wider text-breu transition-colors hover:bg-latao-claro disabled:opacity-50"
         >
-          {isLoading ? (
-            <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            "Entrar"
-          )}
+          {isLoading ? <Girando /> : "Entrar"}
         </button>
       </form>
-
-      {error && (
-        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-          <p className="text-xs text-red-400 text-center">{error}</p>
-        </div>
-      )}
     </div>
   );
+}
+
+// O erro fica entre os campos e o botão, no caminho do olho de quem acabou de
+// clicar e voltou. `role="alert"` porque leitor de tela não vê texto vermelho
+// aparecer — precisa ouvir.
+function Erro({ mensagem }: { mensagem: string | null }) {
+  if (!mensagem) return null;
+  return (
+    <p role="alert" className="rounded-xl border border-vinho/50 bg-vinho/15 p-3 text-center text-xs text-porcelana">
+      {mensagem}
+    </p>
+  );
+}
+
+// O spinner antigo era branco num botão branco: invisível justamente no
+// momento em que serve para dizer "estou trabalhando".
+function Girando() {
+  return <span className="h-5 w-5 animate-spin rounded-full border-2 border-breu border-t-transparent" aria-hidden="true" />;
 }

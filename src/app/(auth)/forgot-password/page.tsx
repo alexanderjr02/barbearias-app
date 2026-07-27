@@ -40,14 +40,14 @@ export default function ForgotPasswordPage() {
         <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-5">
           <MailCheck className="w-6 h-6 text-emerald-400" />
         </div>
-        <h1 className="text-3xl font-black text-white mb-2">Verifique seu e-mail</h1>
-        <p className="text-zinc-500 text-sm leading-relaxed mb-8">
-          Se houver uma conta associada a <span className="text-zinc-300 font-medium">{email}</span>, enviamos um link para
+        <h1 className="font-display text-4xl font-bold uppercase leading-none text-porcelana mb-3">Verifique seu e-mail</h1>
+        <p className="text-fumaca text-sm leading-relaxed mb-8">
+          Se houver uma conta associada a <span className="text-porcelana/80 font-medium">{email}</span>, enviamos um link para
           redefinir a senha. O link expira em 1 hora. Não esqueça de olhar a caixa de spam.
         </p>
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-latao hover:text-latao-claro transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Voltar para o login
         </Link>
@@ -57,17 +57,17 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mb-5">
-        <KeyRound className="w-6 h-6 text-amber-400" />
+      <div className="w-12 h-12 rounded-2xl bg-latao/12 border border-latao/30 flex items-center justify-center mb-5">
+        <KeyRound className="w-6 h-6 text-latao" />
       </div>
-      <h1 className="text-3xl font-black text-white mb-1">Esqueceu a senha?</h1>
-      <p className="text-zinc-500 text-sm mb-8">
+      <h1 className="font-display text-4xl font-bold uppercase leading-none text-porcelana mb-3">Esqueceu a senha?</h1>
+      <p className="text-fumaca text-sm mb-8">
         Sem problema. Informe seu e-mail e enviaremos um link para você criar uma nova senha.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">E-mail</label>
+          <label className="block text-xs font-semibold text-fumaca uppercase tracking-wide mb-2">E-mail</label>
           <input
             type="email"
             required
@@ -76,17 +76,17 @@ export default function ForgotPasswordPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
-            className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm"
+            className="w-full h-12 px-4 bg-breu-2 border border-breu-3 rounded-2xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:ring-2 focus:ring-latao/50 focus:border-latao/60 transition-all text-sm"
           />
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full h-12 bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-900 font-bold rounded-2xl hover:from-amber-400 hover:to-amber-300 transition-all disabled:opacity-60 flex items-center justify-center gap-2 text-sm shadow-lg shadow-amber-500/20"
+          className="w-full h-12 bg-latao text-breu font-bold uppercase tracking-wider rounded-xl hover:bg-latao-claro transition-colors disabled:opacity-60 flex items-center justify-center gap-2 text-sm"
         >
           {isLoading ? (
-            <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-breu-3 border-t-transparent rounded-full animate-spin" />
           ) : (
             "Enviar link de redefinição →"
           )}
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
 
       <Link
         href="/login"
-        className="mt-6 inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+        className="mt-6 inline-flex items-center gap-2 text-sm text-fumaca hover:text-porcelana/80 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Voltar para o login
       </Link>

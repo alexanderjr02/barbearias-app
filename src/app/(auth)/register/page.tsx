@@ -29,7 +29,7 @@ const PASSWORD_RULES = [
 ] as const;
 
 function passwordStrength(password: string): { score: number; label: string; color: string } {
-  if (!password) return { score: -1, label: "", color: "bg-zinc-800" };
+  if (!password) return { score: -1, label: "", color: "bg-breu-3" };
   let score = 0;
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
@@ -188,12 +188,12 @@ function RegisterForm() {
 
   return (
     <div className="w-full max-w-md">
-      <h1 className="text-[28px] font-bold tracking-tight text-white mb-1.5">
-        Criar conta grátis
+      <h1 className="font-display text-4xl font-bold uppercase leading-none text-porcelana mb-3">
+        Criar a sua conta
       </h1>
-      <p className="text-zinc-500 text-sm mb-1">
+      <p className="text-fumaca text-sm mb-1">
         Já tem conta?{" "}
-        <Link href="/login" className="text-amber-400 hover:text-amber-300 font-medium transition-colors">
+        <Link href="/login" className="text-latao hover:text-latao-claro font-medium transition-colors">
           Entrar
         </Link>
       </p>
@@ -210,11 +210,11 @@ function RegisterForm() {
       <div className="mb-7">
         <div className="flex gap-1.5">
           {[1, 2, 3].map((n) => (
-            <span key={n} className={`h-1 flex-1 rounded-full transition-colors ${step >= n ? "bg-amber-500" : "bg-zinc-800"}`} />
+            <span key={n} className={`h-1 flex-1 rounded-full transition-colors ${step >= n ? "bg-latao" : "bg-breu-3"}`} />
           ))}
         </div>
-        <p className="mt-2 text-xs text-zinc-500">
-          Etapa {step} de 3 · <span className="text-zinc-300">{PASSOS[step - 1]}</span>
+        <p className="mt-2 text-xs text-fumaca">
+          Etapa {step} de 3 · <span className="text-porcelana/80">{PASSOS[step - 1]}</span>
         </p>
       </div>
 
@@ -222,12 +222,12 @@ function RegisterForm() {
           CNPJ já esqueceu o que escolheu três telas atrás — e é justamente o
           que ele está comprando. */}
       {step > 1 && planoEscolhido && (
-        <div className="mb-5 flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/60 px-3.5 py-2.5">
+        <div className="mb-5 flex items-center justify-between rounded-xl border border-breu-3 bg-breu-2/70 px-3.5 py-2.5">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white">{planoEscolhido.label}</p>
-            <p className="text-xs text-zinc-500">{planoEscolhido.price}</p>
+            <p className="text-sm font-semibold text-porcelana">{planoEscolhido.label}</p>
+            <p className="text-xs text-fumaca">{planoEscolhido.price}</p>
           </div>
-          <button type="button" onClick={() => setStep(1)} className="shrink-0 text-xs font-medium text-amber-400 transition-colors hover:text-amber-300">
+          <button type="button" onClick={() => setStep(1)} className="shrink-0 text-xs font-medium text-latao transition-colors hover:text-latao-claro">
             trocar
           </button>
         </div>
@@ -253,66 +253,66 @@ function RegisterForm() {
               return (
                 <label key={p.value} className="block cursor-pointer">
                   <input type="radio" value={p.value} checked={escolhido} onChange={() => setValue("plan", p.value)} className="sr-only peer" />
-                  <div className={`rounded-xl border p-4 transition-colors ${escolhido ? "border-amber-500 bg-amber-500/[0.07]" : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-700"}`}>
+                  <div className={`rounded-xl border p-4 transition-colors ${escolhido ? "border-latao bg-latao/[0.07]" : "border-breu-3 bg-breu-2/70 hover:border-breu-3"}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white">{p.label}</span>
+                          <span className="text-sm font-semibold text-porcelana">{p.label}</span>
                           {p.value === "pro" && (
-                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-zinc-200">mais escolhido</span>
+                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-porcelana">mais escolhido</span>
                           )}
                         </div>
-                        <p className="mt-1 text-xs leading-relaxed text-zinc-500">{p.description}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-fumaca">{p.description}</p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-sm font-semibold text-white">{p.price}</p>
-                        {escolhido && <Check className="ml-auto mt-1 h-4 w-4 text-amber-400" />}
+                        <p className="text-sm font-semibold text-porcelana">{p.price}</p>
+                        {escolhido && <Check className="ml-auto mt-1 h-4 w-4 text-latao" />}
                       </div>
                     </div>
                   </div>
                 </label>
               );
             })}
-            <p className="pt-1 text-xs leading-relaxed text-zinc-600">
+            <p className="pt-1 text-xs leading-relaxed text-fumaca/60">
               Dá para trocar de plano depois, a qualquer momento, sem perder nada.
             </p>
           </div>
         ) : step === 2 ? (
           <>
             <div>
-              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+              <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
                 Seu nome completo
               </label>
               <input type="text" autoComplete="name" placeholder="João Silva" {...register("name")}
-                className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm" />
+                className="w-full h-11 px-3.5 bg-breu-2/70 border border-breu-3 rounded-xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:border-latao transition-colors text-sm" />
               {errors.name && <p className="text-xs text-red-400 mt-1.5">{errors.name.message}</p>}
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+              <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
                 E-mail
               </label>
               <input type="email" autoComplete="email" placeholder="seu@email.com" {...register("email")}
-                className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm" />
+                className="w-full h-11 px-3.5 bg-breu-2/70 border border-breu-3 rounded-xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:border-latao transition-colors text-sm" />
               {errors.email && <p className="text-xs text-red-400 mt-1.5">{errors.email.message}</p>}
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+              <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
                 WhatsApp
               </label>
               <input type="tel" inputMode="numeric" autoComplete="tel" placeholder="(11) 99999-9999"
                 {...register("phone", { onChange: (e) => setValue("phone", formatPhoneBR(e.target.value)) })}
-                className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm" />
+                className="w-full h-11 px-3.5 bg-breu-2/70 border border-breu-3 rounded-xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:border-latao transition-colors text-sm" />
               {errors.phone && <p className="text-xs text-red-400 mt-1.5">{errors.phone.message}</p>}
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+              <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
                 Senha
               </label>
               <div className="relative">
                 <input type={showPassword ? "text" : "password"} autoComplete="new-password" placeholder="Crie uma senha forte" {...register("password")}
-                  className="w-full h-11 px-3.5 pr-11 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm" />
+                  className="w-full h-11 px-3.5 pr-11 bg-breu-2/70 border border-breu-3 rounded-xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:border-latao transition-colors text-sm" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-fumaca hover:text-porcelana/80 transition-colors">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
@@ -320,15 +320,15 @@ function RegisterForm() {
                 <>
                   <div className="mt-2 flex items-center gap-1.5">
                     {[0, 1, 2, 3].map((i) => (
-                      <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= strength.score ? strength.color : "bg-zinc-800"}`} />
+                      <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= strength.score ? strength.color : "bg-breu-3"}`} />
                     ))}
-                    <span className="text-[10px] text-zinc-500 ml-1 whitespace-nowrap">{strength.label}</span>
+                    <span className="text-[10px] text-fumaca ml-1 whitespace-nowrap">{strength.label}</span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                     {PASSWORD_RULES.map((rule) => {
                       const ok = rule.test(password);
                       return (
-                        <span key={rule.label} className={`inline-flex items-center gap-1 text-[11px] transition-colors ${ok ? "text-emerald-400" : "text-zinc-600"}`}>
+                        <span key={rule.label} className={`inline-flex items-center gap-1 text-[11px] transition-colors ${ok ? "text-emerald-400" : "text-fumaca/60"}`}>
                           {ok ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />} {rule.label}
                         </span>
                       );
@@ -343,7 +343,7 @@ function RegisterForm() {
           <>
 
             <div>
-              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+              <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
                 Nome da barbearia
               </label>
               <input
@@ -354,16 +354,16 @@ function RegisterForm() {
                     if (!slugEdited) setValue("barbershopSlug", slugify(e.target.value), { shouldValidate: true });
                   },
                 })}
-                className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
+                className="w-full h-11 px-3.5 bg-breu-2/70 border border-breu-3 rounded-xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:border-latao transition-colors text-sm"
               />
               {errors.barbershopName && <p className="text-xs text-red-400 mt-1.5">{errors.barbershopName.message}</p>}
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+              <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
                 Link de agendamento
               </label>
               <div className="flex items-center">
-                <span className="h-11 px-3 bg-zinc-900 border border-zinc-800 border-r-0 rounded-l-xl text-zinc-500 text-xs flex items-center whitespace-nowrap">
+                <span className="h-11 px-3 bg-breu-2 border border-breu-3 border-r-0 rounded-l-xl text-fumaca text-xs flex items-center whitespace-nowrap">
                   {baseDeAgendamento()}
                 </span>
                 <input
@@ -375,13 +375,13 @@ function RegisterForm() {
                       setValue("barbershopSlug", slugify(e.target.value));
                     },
                   })}
-                  className="flex-1 min-w-0 h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-r-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
+                  className="flex-1 min-w-0 h-11 px-3.5 bg-breu-2/70 border border-breu-3 rounded-r-xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:border-latao transition-colors text-sm"
                 />
               </div>
               {errors.barbershopSlug ? (
                 <p className="text-xs text-red-400 mt-1.5">{errors.barbershopSlug.message}</p>
               ) : slugStatus === "checking" ? (
-                <p className="text-xs text-zinc-500 mt-1.5 flex items-center gap-1">
+                <p className="text-xs text-fumaca mt-1.5 flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" /> Verificando disponibilidade…
                 </p>
               ) : slugStatus === "available" ? (
@@ -394,30 +394,30 @@ function RegisterForm() {
                 </p>
               ) : (
                 barbershopSlug && (
-                  <p className="text-xs text-zinc-600 mt-1.5">Use apenas letras minúsculas, números e hífen (mín. 3 caracteres)</p>
+                  <p className="text-xs text-fumaca/60 mt-1.5">Use apenas letras minúsculas, números e hífen (mín. 3 caracteres)</p>
                 )
               )}
             </div>
             <div className="grid grid-cols-[1fr_auto] gap-3">
               <div>
-                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+                <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
                   Cidade
                 </label>
                 <input
                   type="text"
                   placeholder="São Paulo"
                   {...register("city")}
-                  className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
+                  className="w-full h-11 px-3.5 bg-breu-2/70 border border-breu-3 rounded-xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:border-latao transition-colors text-sm"
                 />
                 {errors.city && <p className="text-xs text-red-400 mt-1.5">{errors.city.message}</p>}
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
+                <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
                   UF
                 </label>
                 <select
                   {...register("state")}
-                  className="h-12 w-20 px-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/60 transition-all text-sm appearance-none text-center"
+                  className="h-12 w-20 px-3 bg-breu-2 border border-breu-3 rounded-2xl text-porcelana focus:outline-none focus:ring-2 focus:ring-latao/50 focus:border-latao/60 transition-all text-sm appearance-none text-center"
                 >
                   <option value="">UF</option>
                   {UFS.map((uf) => (
@@ -428,15 +428,15 @@ function RegisterForm() {
               </div>
             </div>
               <div>
-                <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-                  CNPJ <span className="text-amber-400/80 normal-case font-normal">(obrigatório)</span>
+                <label className="block text-[13px] font-medium text-porcelana/80 mb-1.5">
+                  CNPJ <span className="text-latao-claro/80 normal-case font-normal">(obrigatório)</span>
                 </label>
                 <input
                   type="text"
                   inputMode="numeric"
                   placeholder="00.000.000/0000-00"
                   {...register("cnpj", { onChange: (e) => setValue("cnpj", formatCNPJ(e.target.value)) })}
-                  className="w-full h-11 px-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/70 transition-colors text-sm"
+                  className="w-full h-11 px-3.5 bg-breu-2/70 border border-breu-3 rounded-xl text-porcelana placeholder:text-fumaca/60 focus:outline-none focus:border-latao transition-colors text-sm"
                 />
                 {errors.cnpj && <p className="text-xs text-red-400 mt-1.5">{errors.cnpj.message}</p>}
               </div>
@@ -447,7 +447,7 @@ function RegisterForm() {
           type={step === 3 ? "submit" : "button"}
           onClick={step === 3 ? undefined : avancar}
           disabled={isLoading || (step === 3 && slugStatus === "taken")}
-          className="w-full h-12 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:hover:bg-amber-500 flex items-center justify-center gap-2 text-sm"
+          className="w-full h-12 bg-latao text-breu font-semibold rounded-xl hover:bg-latao-claro transition-colors disabled:opacity-50 disabled:hover:bg-latao flex items-center justify-center gap-2 text-sm"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -464,7 +464,7 @@ function RegisterForm() {
           <button
             type="button"
             onClick={() => setStep(step - 1)}
-            className="w-full text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="w-full text-sm text-fumaca hover:text-porcelana/80 transition-colors"
           >
             ← Voltar
           </button>
@@ -478,13 +478,13 @@ function RegisterForm() {
         </div>
       )}
 
-      <p className="mt-6 text-xs text-zinc-600 text-center">
+      <p className="mt-6 text-xs text-fumaca/60 text-center">
         Ao criar uma conta, você concorda com nossos{" "}
-        <Link href="/termos" className="text-zinc-500 hover:underline">
+        <Link href="/termos" className="text-fumaca hover:underline">
           Termos de Uso
         </Link>{" "}
         e{" "}
-        <Link href="/privacidade" className="text-zinc-500 hover:underline">
+        <Link href="/privacidade" className="text-fumaca hover:underline">
           Política de Privacidade
         </Link>
       </p>

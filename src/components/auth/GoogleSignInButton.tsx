@@ -48,12 +48,17 @@ export function GoogleSignInButton({ onSuccess, text = "continue_with" }: Props)
       client_id: GOOGLE_CLIENT_ID,
       callback: (response) => onSuccess(response.credential),
     });
+    // `filled_black` e `rectangular` são temas oficiais do Google, então a
+    // marca segue dentro das diretrizes deles. O `outline` branco em pílula
+    // que estava aqui virava o objeto mais claro de um cartão escuro: puxava
+    // o olho antes do botão "Entrar", que é a ação principal, e era o único
+    // canto arredondado em pílula no meio de campos com canto de 12px.
     window.google.accounts.id.renderButton(buttonRef.current, {
-      theme: "outline",
+      theme: "filled_black",
       size: "large",
       width: "100%",
       text,
-      shape: "pill",
+      shape: "rectangular",
     });
     // onSuccess is expected to be stable enough across renders for this
     // one-time button render (identical pattern to a mount-only effect).

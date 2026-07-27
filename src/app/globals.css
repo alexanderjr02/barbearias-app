@@ -1,5 +1,26 @@
 @import 'tailwindcss';
 
+/* Identidade da CORTIX — "latão e porcelana".
+ *
+ * As cores saem do material da própria barbearia, não da paleta padrão de
+ * dashboard: o preto quente do breu, o latão do poste e da máquina, a
+ * porcelana do azulejo e da toalha, e o vinho da listra do poste. O cinza é
+ * fumaça, quente, e não o zinc azulado que deixa toda tela parecida com toda
+ * outra tela.
+ */
+@theme {
+  --color-breu: #0b0a08;
+  --color-breu-2: #15120e;
+  --color-breu-3: #221d17;
+  --color-latao: #c8963c;
+  --color-latao-claro: #f0d79a;
+  --color-latao-escuro: #8a6420;
+  --color-porcelana: #f3eee5;
+  --color-porcelana-2: #e2d9c9;
+  --color-vinho: #7c1d2b;
+  --color-fumaca: #a79c8b;
+}
+
 :root {
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 64px;
@@ -13,6 +34,15 @@ body { font-family: var(--font-inter), Inter, system-ui, sans-serif; background-
 
 /* Display font for headlines — apply via className="font-display". */
 .font-display { font-family: var(--font-sora), var(--font-inter), system-ui, sans-serif; letter-spacing: -0.02em; }
+
+/* Tipografia de marca: vale nas telas que vendem e recebem (landing e entrada),
+   não no painel. As famílias --ff-* são declaradas nas próprias páginas, então
+   quem só abre o dashboard não baixa nenhuma delas.
+
+   A condensada é estreita de nascença: apertar mais o tracking fecha o
+   contraforma e mata a legibilidade em corpo grande, daí o reset para 0. */
+.marca-cortix { font-family: var(--ff-body), system-ui, sans-serif; }
+.marca-cortix .font-display { font-family: var(--ff-display), 'Arial Narrow', system-ui, sans-serif; letter-spacing: 0; }
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #09090b; }
@@ -54,18 +84,50 @@ body { font-family: var(--font-inter), Inter, system-ui, sans-serif; background-
 @keyframes gradient-pan { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 .text-shimmer { background-size: 220% auto; animation: gradient-pan 6s ease infinite; }
 
+/* Latão de verdade numa palavra do título: a luz correndo no metal da máquina,
+   com escuro nas pontas e brilho no meio. Um gradiente chapado de duas cores
+   vira plástico; o metal precisa da alternância clara-escura-clara. */
+.brass {
+  background-image: linear-gradient(100deg, #8a6420 0%, #f0d79a 26%, #c8963c 48%, #f7e7c0 72%, #8a6420 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Poste de barbeiro — o único enfeite que é literalmente a placa da barbearia.
+   Parado, marca o fio de uma borda; girando, vira a barra de progresso da
+   landing. A entrada usa o parado: quem veio digitar senha não precisa de
+   listra correndo no canto do olho. */
+@keyframes pole { to { background-position: 28px 0; } }
+.pole {
+  background-color: #f3eee5;
+  background-image: linear-gradient(115deg, transparent 0 25%, #7c1d2b 25% 50%, transparent 50% 75%, #c8963c 75% 100%);
+  background-size: 28px 100%;
+}
+/* Desliza exatamente uma célula por volta, então a emenda nunca aparece. */
+.pole-gira { animation: pole 1.1s linear infinite; }
+
 /* Scroll reveal — paired with the <Reveal> client wrapper, which adds
    `is-visible` when the element enters the viewport. */
 .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); will-change: opacity, transform; }
 .reveal.is-visible { opacity: 1; transform: none; }
 
+/* Um horário que acabou de ser preenchido na agenda do hero. */
+@keyframes slot-in { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.slot-in { animation: slot-in .45s cubic-bezier(.2,.7,.2,1) both; }
+
 /* Soft marquee for a logo/benefit strip. */
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.marquee-track { animation: marquee 28s linear infinite; }
+.marquee-track { animation: marquee 38s linear infinite; }
+
+/* Cartões que respondem ao mouse sem saltar. */
+.lift { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .35s ease, background-color .35s ease; }
+.lift:hover { transform: translateY(-4px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .kenburns, .text-shimmer, .marquee-track { animation: none; }
+  .kenburns, .text-shimmer, .marquee-track, .pole-gira, .slot-in { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
+  .lift:hover { transform: none; }
 }
 
 /* Remove as setas nativas (spin buttons) dos inputs numéricos — cinza/brancas
