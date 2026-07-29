@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import { RukzLogo } from "@/components/brand/RukzLogo";
+import { RukzLogo, RukzSimbolo } from "@/components/brand/RukzLogo";
 
 // A porta de entrada: foto real de barbearia atrás de um cartão centralizado,
 // dividida por login, cadastro, "esqueci a senha" e redefinição.
@@ -24,10 +24,19 @@ export default function AuthLayout({
       {/* Foto fixa da barbearia sob um véu preto. O gradiente saiu com o resto
           deles: uma opacidade única já apaga o fundo o bastante para o cartão
           ler, e não inventa uma cor que a paleta não tem. */}
-      <div className="fixed inset-0 -z-10 bg-preto">
+      <div className="fixed inset-0 -z-10 overflow-hidden bg-preto">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/landing/shop-interior.jpg" alt="" className="h-full w-full object-cover opacity-25" />
-        <div className="absolute inset-0 bg-preto/70" />
+        <img src="/landing/shop-interior.jpg" alt="" className="h-full w-full object-cover opacity-20" />
+        <div className="absolute inset-0 bg-preto/75" />
+        {/* Marca d'água do bigode, bem apagada — dá textura de marca ao fundo
+            sem virar decoração. */}
+        <RukzSimbolo
+          tom="mono"
+          className="pointer-events-none absolute left-1/2 top-[56%] w-[min(130vw,940px)] -translate-x-1/2 text-neve/[0.03]"
+        />
+        {/* Foco de luz atrás do cartão: um círculo borrado, não um gradiente —
+            atmosfera na cor da marca sem ferir o contraste seco. */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[440px] w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-ouro/10 blur-[130px]" />
       </div>
 
       <Link href="/" aria-label="rukz, início" className="mb-8 text-neve transition-opacity hover:opacity-80">

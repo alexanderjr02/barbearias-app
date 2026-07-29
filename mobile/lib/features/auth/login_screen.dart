@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import '../../core/brand/brand_slug.dart';
+import '../../core/brand/rukz_symbol.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
@@ -142,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     } else {
       media = DecoratedBox(
         decoration: BoxDecoration(
-          gradient: RadialGradient(center: const Alignment(0, -0.8), radius: 1.1, colors: [_accent.withValues(alpha: 0.22), _bg], stops: const [0, 0.6]),
+          gradient: RadialGradient(center: const Alignment(0, -0.85), radius: 0.9, colors: [_accent.withValues(alpha: 0.11), _bg], stops: const [0, 0.62]),
         ),
       );
     }
@@ -158,6 +159,21 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           },
           child: media,
         ),
+        // Marca d'água do bigode, bem apagada, só no visual padrão da rukz
+        // (numa barbearia com foto de fundo isso seria por cima da marca dela).
+        if (!hasMedia)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: -40,
+            child: Center(
+              child: RukzSymbol(
+                size: 360,
+                bigode: Colors.white.withValues(alpha: 0.035),
+                r: Colors.white.withValues(alpha: 0.035),
+              ),
+            ),
+          ),
         if (hasMedia && _bgDim > 0) Container(color: Colors.black.withValues(alpha: _bgDim.clamp(0, 0.85))),
         if (_bgGradient)
           DecoratedBox(
@@ -170,10 +186,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           child: AnimatedBuilder(
             animation: _anim,
             builder: (_, __) {
-              final op = _bgEffect == 'pulse' ? 0.35 + 0.55 * _anim.value : 0.26;
+              final op = _bgEffect == 'pulse' ? 0.28 + 0.45 * _anim.value : 0.16;
               return Container(
-                width: 320,
-                height: 320,
+                width: 280,
+                height: 280,
                 decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [_accent.withValues(alpha: op), _accent.withValues(alpha: 0)])),
               );
             },
@@ -316,18 +332,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             child: Column(
                               children: [
                                 Container(
-                                  width: 64,
-                                  height: 64,
+                                  width: 82,
+                                  height: 82,
+                                  clipBehavior: Clip.antiAlias,
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(18),
-                                    // Cor cheia, sem gradiente: a marca é contraste seco.
-                                    color: _logoUrl == null ? _accent : null,
+                                    borderRadius: BorderRadius.circular(24),
+                                    // A marca da rukz é o ícone preto do app — "r"
+                                    // amarelo sobre o bigode branco. Sem
+                                    // gradiente: contraste seco. Com logo de
+                                    // white-label, mostra a logo da barbearia.
+                                    color: _logoUrl == null ? const Color(0xFF0E0D12) : null,
                                     image: _logoUrl != null ? DecorationImage(image: NetworkImage(_logoUrl!), fit: BoxFit.cover) : null,
-                                    boxShadow: [BoxShadow(color: _accent.withValues(alpha: 0.4), blurRadius: 28, offset: const Offset(0, 10))],
+                                    border: _logoUrl == null ? Border.all(color: Colors.white.withValues(alpha: 0.08)) : null,
+                                    boxShadow: [BoxShadow(color: _accent.withValues(alpha: 0.35), blurRadius: 44, spreadRadius: -8, offset: const Offset(0, 14))],
                                   ),
-                                  child: _logoUrl == null ? const Icon(Icons.content_cut_rounded, color: Colors.black, size: 28) : null,
+                                  child: _logoUrl == null ? Center(child: RukzSymbol(size: 82, r: _accent)) : null,
                                 ),
-                                const SizedBox(height: 22),
+                                const SizedBox(height: 24),
                                 const Text('Bem-vindo de volta', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
                                 const SizedBox(height: 6),
                                 Text(_tagline ?? 'Entre na sua conta $_brandName', style: const TextStyle(color: Colors.white54, fontSize: 14), textAlign: TextAlign.center),
