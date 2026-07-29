@@ -50,7 +50,7 @@ class _OnboardingChecklistCardState extends State<OnboardingChecklistCard> {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [accent.withValues(alpha: 0.14), palette.surface]),
+        color: accent.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: accent.withValues(alpha: 0.3)),
       ),

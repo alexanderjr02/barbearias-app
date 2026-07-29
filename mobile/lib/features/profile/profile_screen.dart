@@ -177,12 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             margin: const EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [accent.withValues(alpha: 0.20), accent.withValues(alpha: 0.04), palette.surface],
-                stops: const [0, 0.6, 1],
-              ),
+              color: accent.withValues(alpha: 0.12),
               border: Border.all(color: accent.withValues(alpha: 0.18)),
             ),
             child: SafeArea(
@@ -212,11 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.all(2.5),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [accent, accent.withValues(alpha: 0.25)],
-                            ),
+                            color: accent,
                           ),
                           child: CircleAvatar(
                             radius: 36,

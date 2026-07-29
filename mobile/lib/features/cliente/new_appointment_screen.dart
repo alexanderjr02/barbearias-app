@@ -877,14 +877,7 @@ class _BarberCard extends StatelessWidget {
         width: 92,
         padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
         decoration: BoxDecoration(
-          gradient: selected
-              ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [accent.withValues(alpha: 0.22), palette.surface],
-                )
-              : null,
-          color: selected ? null : palette.surface,
+          color: selected ? accent.withValues(alpha: 0.16) : palette.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected ? accent : palette.textFaint.withValues(alpha: 0.12),
@@ -908,13 +901,7 @@ class _BarberCard extends StatelessWidget {
                   padding: const EdgeInsets.all(2.5),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: selected
-                          ? [accent, accent.withValues(alpha: 0.4)]
-                          : [palette.textFaint.withValues(alpha: 0.22), palette.textFaint.withValues(alpha: 0.08)],
-                    ),
+                    color: selected ? accent : palette.textFaint.withValues(alpha: 0.16),
                   ),
                   child: CircleAvatar(
                     radius: 25,

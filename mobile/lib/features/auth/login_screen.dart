@@ -141,11 +141,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       if (_bgBlur > 0) img = ImageFiltered(imageFilter: ui.ImageFilter.blur(sigmaX: _bgBlur, sigmaY: _bgBlur), child: img);
       media = img;
     } else {
-      media = DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(center: const Alignment(0, -0.85), radius: 0.9, colors: [_accent.withValues(alpha: 0.11), _bg], stops: const [0, 0.62]),
-        ),
-      );
+      // Fundo padrão da rukz: preto seco, sem lavagem de cor. A marca vive na
+      // marca d'água e no ícone — não num glow amarelo.
+      media = const ColoredBox(color: _bg);
     }
 
     return Stack(
@@ -165,12 +163,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           Positioned(
             left: 0,
             right: 0,
-            bottom: -40,
+            bottom: -30,
             child: Center(
               child: RukzSymbol(
-                size: 360,
-                bigode: Colors.white.withValues(alpha: 0.035),
-                r: Colors.white.withValues(alpha: 0.035),
+                size: 420,
+                bigode: Colors.white.withValues(alpha: 0.05),
+                r: Colors.white.withValues(alpha: 0.05),
               ),
             ),
           ),
@@ -181,20 +179,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.center, colors: [_bg, _bg.withValues(alpha: 0)]),
             ),
           ),
-        Align(
-          alignment: const Alignment(0, -0.95),
-          child: AnimatedBuilder(
-            animation: _anim,
-            builder: (_, __) {
-              final op = _bgEffect == 'pulse' ? 0.28 + 0.45 * _anim.value : 0.16;
-              return Container(
-                width: 280,
-                height: 280,
-                decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [_accent.withValues(alpha: op), _accent.withValues(alpha: 0)])),
-              );
-            },
+        // Glow de cor só quando a barbearia tem mídia de fundo ou pediu um
+        // efeito. No padrão rukz (preto seco) não entra amarelo nenhum.
+        if (hasMedia || _bgEffect != 'none')
+          Align(
+            alignment: const Alignment(0, -0.95),
+            child: AnimatedBuilder(
+              animation: _anim,
+              builder: (_, __) {
+                final op = _bgEffect == 'pulse' ? 0.28 + 0.45 * _anim.value : 0.16;
+                return Container(
+                  width: 280,
+                  height: 280,
+                  decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [_accent.withValues(alpha: op), _accent.withValues(alpha: 0)])),
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }
@@ -343,8 +344,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     // white-label, mostra a logo da barbearia.
                                     color: _logoUrl == null ? const Color(0xFF0E0D12) : null,
                                     image: _logoUrl != null ? DecorationImage(image: NetworkImage(_logoUrl!), fit: BoxFit.cover) : null,
-                                    border: _logoUrl == null ? Border.all(color: Colors.white.withValues(alpha: 0.08)) : null,
-                                    boxShadow: [BoxShadow(color: _accent.withValues(alpha: 0.35), blurRadius: 44, spreadRadius: -8, offset: const Offset(0, 14))],
+                                    border: _logoUrl == null ? Border.all(color: Colors.white.withValues(alpha: 0.10)) : null,
+                                    // Sombra escura só pra dar leve relevo — sem glow de cor.
+                                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.55), blurRadius: 28, spreadRadius: -4, offset: const Offset(0, 16))],
                                   ),
                                   child: _logoUrl == null ? Center(child: RukzSymbol(size: 82, r: _accent)) : null,
                                 ),

@@ -309,11 +309,7 @@ class _WalletPreview extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [accent.withValues(alpha: 0.14), palette.surface],
-        ),
+        color: accent.withValues(alpha: 0.10),
         border: Border.all(color: accent.withValues(alpha: 0.20)),
       ),
       child: Column(
@@ -368,9 +364,7 @@ class _WalletPreview extends StatelessWidget {
                     height: 30,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: done
-                          ? LinearGradient(colors: [accent, accent.withValues(alpha: 0.75)])
-                          : null,
+                      color: done ? accent : null,
                       border: done
                           ? null
                           : Border.all(

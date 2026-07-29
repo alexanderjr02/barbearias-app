@@ -259,11 +259,7 @@ class _StampCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [accent.withValues(alpha: done ? 0.28 : 0.16), accent.withValues(alpha: 0.03)],
-        ),
+        color: accent.withValues(alpha: done ? 0.22 : 0.12),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: accent.withValues(alpha: done ? 0.55 : 0.26), width: done ? 1.6 : 1),
       ),
@@ -385,13 +381,7 @@ class _Stamp extends StatelessWidget {
       height: 42,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: filled
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [accent, accent.withValues(alpha: 0.72)],
-              )
-            : null,
+        color: filled ? accent : null,
         border: filled
             ? null
             : Border.all(
@@ -444,11 +434,7 @@ class _RewardTicket extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [_green.withValues(alpha: 0.20), _green.withValues(alpha: 0.07)],
-            ),
+            color: _green.withValues(alpha: 0.14),
           ),
           child: Row(
             children: [
@@ -550,12 +536,7 @@ class _PointsCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [tierColor.withValues(alpha: 0.20), tierColor.withValues(alpha: 0.05), palette.surface],
-          stops: const [0, 0.5, 1],
-        ),
+        color: tierColor.withValues(alpha: 0.12),
         border: Border.all(color: tierColor.withValues(alpha: 0.26)),
       ),
       child: Column(
@@ -718,11 +699,7 @@ class _ReferralCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 17),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [accent.withValues(alpha: 0.16), accent.withValues(alpha: 0.05)],
-                  ),
+                  color: accent.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.4),
                 ),

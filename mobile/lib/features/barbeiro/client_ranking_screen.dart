@@ -373,7 +373,7 @@ class _MemberChip extends StatelessWidget {
             padding: const EdgeInsets.all(2.5),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: SweepGradient(colors: [color, Color.lerp(color, Colors.white, 0.4)!, color]),
+              color: color,
             ),
             child: CircleAvatar(
               radius: 24,

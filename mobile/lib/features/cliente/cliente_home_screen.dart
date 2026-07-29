@@ -342,7 +342,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                                 )
                               : DecoratedBox(
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [accent.withValues(alpha: 0.18), palette.bg]),
+                                    color: accent.withValues(alpha: 0.10),
                                   ),
                                 ),
                         ),
@@ -631,16 +631,7 @@ class _PointsHeroCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                tierColor.withValues(alpha: 0.22),
-                tierColor.withValues(alpha: 0.06),
-                palette.surface,
-              ],
-              stops: const [0, 0.55, 1],
-            ),
+            color: tierColor.withValues(alpha: 0.13),
             border: Border.all(color: tierColor.withValues(alpha: 0.28)),
           ),
           child: Stack(
@@ -725,9 +716,7 @@ class _PointsHeroCard extends StatelessWidget {
                               child: Container(
                                 height: 7,
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [tierColor.withValues(alpha: 0.75), tierColor],
-                                  ),
+                                  color: tierColor,
                                   boxShadow: [
                                     BoxShadow(color: tierColor.withValues(alpha: 0.45), blurRadius: 8, spreadRadius: -1),
                                   ],
@@ -1063,11 +1052,7 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [accent.withValues(alpha: 0.26), accent.withValues(alpha: 0.10)],
-                      ),
+                      color: accent.withValues(alpha: 0.16),
                       border: Border.all(color: accent.withValues(alpha: 0.32)),
                     ),
                     child: Column(
@@ -1171,9 +1156,7 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [accent.withValues(alpha: 0.35), accent.withValues(alpha: 0.15)],
-                        ),
+                        color: accent.withValues(alpha: 0.22),
                         border: Border.all(color: accent.withValues(alpha: 0.3)),
                       ),
                       child: Text(

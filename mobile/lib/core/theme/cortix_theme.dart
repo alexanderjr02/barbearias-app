@@ -50,13 +50,11 @@ class GlassPanel extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         borderRadius: borderRadius,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            overlay.withValues(alpha: isDark ? 0.06 : 0.035),
-            accent.withValues(alpha: 0.05),
-          ],
+        // Antes um gradiente sutil (glass); agora um tom só, com as duas tintas
+        // compostas — a marca rukz é contraste seco, sem gradiente nem no vidro.
+        color: Color.alphaBlend(
+          accent.withValues(alpha: 0.05),
+          overlay.withValues(alpha: isDark ? 0.06 : 0.035),
         ),
         border: Border.all(color: overlay.withValues(alpha: borderOpacity)),
         boxShadow: [

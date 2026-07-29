@@ -639,7 +639,7 @@ class _CardChip extends StatelessWidget {
       width: 34,
       height: 24,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFFDE68A), Color(0xFFFFC300)]),
+        color: const Color(0xFFFFC300),
         borderRadius: BorderRadius.circular(5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),

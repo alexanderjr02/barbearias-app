@@ -126,7 +126,7 @@ class _GestorReviewsScreenState extends State<GestorReviewsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [palette.surface, palette.bg]),
+                      color: palette.surface,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: palette.border),
                     ),

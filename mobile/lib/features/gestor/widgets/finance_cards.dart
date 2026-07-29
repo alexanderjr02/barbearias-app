@@ -176,9 +176,7 @@ class _FinanceCockpitCardState extends State<FinanceCockpitCard> {
                           widthFactor: (fillPct / 100).clamp(0.02, 1).toDouble(),
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: overGoal ? [const Color(0xFF10B981), const Color(0xFF34D399)] : [accent, const Color(0xFFFBBF24)],
-                              ),
+                              color: overGoal ? const Color(0xFF10B981) : accent,
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
