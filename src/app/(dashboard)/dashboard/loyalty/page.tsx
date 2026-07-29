@@ -278,7 +278,7 @@ function PhonePreview({ cfg, stamps, saving }: { cfg: Config; stamps: number; sa
               <div className="mt-5 space-y-3.5">
                 {/* Cartela */}
                 {cfg.stampEnabled && (
-                  <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/12 to-transparent p-4">
+                  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.08] p-4">
                     <div className="flex items-baseline justify-between">
                       <p className="text-[13px] font-bold text-white">Cartão de selos</p>
                       <p className="text-[11px] text-amber-300/90">{filled}/{cfg.stampGoal}</p>
@@ -293,7 +293,7 @@ function PhonePreview({ cfg, stamps, saving }: { cfg: Config; stamps: number; sa
                             className={cn(
                               "flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold transition-all",
                               done
-                                ? "bg-gradient-to-br from-amber-300 to-amber-500 text-zinc-900 shadow-lg shadow-amber-500/25"
+                                ? "bg-amber-400 text-zinc-900 shadow-lg shadow-amber-500/25"
                                 : isLast
                                   ? "border-2 border-dashed border-amber-400/50 text-amber-400/60"
                                   : "border-2 border-dashed border-white/12 text-transparent"
@@ -366,7 +366,7 @@ function ProgressToNextTier({ cfg, points }: { cfg: Config; points: number }) {
   return (
     <div className="mt-3">
       <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-300 transition-all duration-500" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-amber-400 transition-all duration-500" style={{ width: `${pct}%` }} />
       </div>
       <p className="mt-2 text-[11px] text-zinc-500">
         Faltam <span className="font-semibold text-zinc-300">{Math.max(0, target - points)}</span> pontos para {label}
@@ -381,8 +381,8 @@ function StatCard({ icon: Icon, value, label, tone, onClick }: {
   icon: React.ElementType; value: string; label: string; tone: "amber" | "emerald" | "off"; onClick?: () => void;
 }) {
   const tones = {
-    amber: "border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent text-amber-400",
-    emerald: "border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent text-emerald-400",
+    amber: "border-amber-500/20 bg-amber-500/[0.07] text-amber-400",
+    emerald: "border-emerald-500/20 bg-emerald-500/[0.07] text-emerald-400",
     off: "border-zinc-800 bg-zinc-900/40 text-zinc-600",
   }[tone];
 
@@ -488,7 +488,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
         "transition-all duration-300 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
         "focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900",
         checked
-          ? "bg-gradient-to-r from-amber-500 to-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.5),0_2px_12px_-1px_rgba(245,158,11,0.55)]"
+          ? "bg-amber-500 shadow-[0_0_0_1px_rgba(245,158,11,0.5),0_2px_12px_-1px_rgba(245,158,11,0.55)]"
           : "bg-zinc-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]"
       )}
     >
@@ -609,15 +609,15 @@ function TextInput({ value, placeholder, onCommit }: { value: string; placeholde
 
 function TierLadder({ cfg }: { cfg: Config }) {
   const tiers = [
-    { label: "Bronze", from: 0, to: cfg.silverThreshold - 1, color: "from-orange-700/40 to-orange-900/20 border-orange-700/40 text-orange-300", discount: 0 },
-    { label: "Prata", from: cfg.silverThreshold, to: cfg.goldThreshold - 1, color: "from-slate-400/25 to-slate-600/10 border-slate-400/30 text-slate-200", discount: cfg.silverDiscount },
-    { label: "Ouro", from: cfg.goldThreshold, to: undefined, color: "from-amber-400/25 to-amber-600/10 border-amber-400/35 text-amber-200", discount: cfg.goldDiscount },
+    { label: "Bronze", from: 0, to: cfg.silverThreshold - 1, color: "bg-zinc-800/60 border-zinc-700 text-zinc-500", discount: 0 },
+    { label: "Prata", from: cfg.silverThreshold, to: cfg.goldThreshold - 1, color: "bg-zinc-700/40 border-zinc-500/50 text-zinc-200", discount: cfg.silverDiscount },
+    { label: "Ouro", from: cfg.goldThreshold, to: undefined, color: "bg-amber-500/15 border-amber-500/40 text-amber-300", discount: cfg.goldDiscount },
   ];
 
   return (
     <div className="flex gap-2">
       {tiers.map((t, i) => (
-        <div key={t.label} className={cn("flex-1 rounded-xl border bg-gradient-to-br p-3", t.color)}>
+        <div key={t.label} className={cn("flex-1 rounded-xl border p-3", t.color)}>
           <div className="flex items-center gap-1.5">
             {i === 2 && <Crown className="h-3 w-3" />}
             {i === 1 && <Star className="h-3 w-3" />}
@@ -657,7 +657,7 @@ function RewardsQueue({ rewards, onRedeem }: { rewards: Reward[]; onRedeem: (r: 
           key={r.id}
           className="group flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 transition-colors hover:border-emerald-500/30"
         >
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-transparent text-emerald-400">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/[0.14] text-emerald-400">
             <Gift className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">

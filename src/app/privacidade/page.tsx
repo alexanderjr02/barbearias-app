@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { LegalShell, LegalSection } from "@/components/legal/LegalShell";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade · CORTIX",
-  description: "Como o CORTIX coleta, usa e protege dados pessoais, conforme a LGPD.",
+  title: "Política de Privacidade · rukz",
+  description: "Como o rukz coleta, usa e protege dados pessoais, conforme a LGPD.",
 };
 
 // NOTE: Starting template aligned with the LGPD (Lei 13.709/2018). Review with
@@ -12,14 +12,14 @@ export default function PrivacidadePage() {
   return (
     <LegalShell title="Política de Privacidade" updatedAt="14 de julho de 2026">
       <p className="text-zinc-400">
-        Esta Política explica como o CORTIX (&quot;nós&quot;), operado por <strong className="text-zinc-300">[RAZÃO SOCIAL], CNPJ [CNPJ]</strong>,
+        Esta Política explica como o rukz (&quot;nós&quot;), operado por <strong className="text-zinc-300">[RAZÃO SOCIAL], CNPJ [CNPJ]</strong>,
         coleta, usa, compartilha e protege dados pessoais, em conformidade com a Lei Geral de Proteção
         de Dados (Lei nº 13.709/2018 — &quot;LGPD&quot;).
       </p>
 
       <LegalSection n={1} title="Quem é o controlador">
-        <p>Para os dados da sua conta de Gestor e da operação da Plataforma, o CORTIX atua como <strong className="text-zinc-300">controlador</strong>.</p>
-        <p>Para os dados dos clientes finais que o Gestor insere e gerencia na sua barbearia, o CORTIX atua como <strong className="text-zinc-300">operador</strong>, tratando-os sob instrução do Gestor, que é o controlador desses dados.</p>
+        <p>Para os dados da sua conta de Gestor e da operação da Plataforma, o rukz atua como <strong className="text-zinc-300">controlador</strong>.</p>
+        <p>Para os dados dos clientes finais que o Gestor insere e gerencia na sua barbearia, o rukz atua como <strong className="text-zinc-300">operador</strong>, tratando-os sob instrução do Gestor, que é o controlador desses dados.</p>
       </LegalSection>
 
       <LegalSection n={2} title="Dados que coletamos">

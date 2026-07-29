@@ -36,9 +36,9 @@ interface SummaryResponse {
 }
 
 const statusConfig: Record<string, { label: string; icon: typeof CheckCircle; color: string }> = {
-  COMPLETED: { label: "Concluído", icon: CheckCircle, color: "text-green-400" },
+  COMPLETED: { label: "Concluído", icon: CheckCircle, color: "text-emerald-400" },
   IN_PROGRESS: { label: "Em andamento", icon: Clock, color: "text-yellow-400" },
-  SCHEDULED: { label: "Agendado", icon: Calendar, color: "text-blue-400" },
+  SCHEDULED: { label: "Agendado", icon: Calendar, color: "text-zinc-400" },
   CANCELLED: { label: "Cancelado", icon: XCircle, color: "text-red-400" },
 };
 
@@ -94,14 +94,14 @@ export default function DashboardPage() {
           title="Clientes Ativos"
           value={String(summary?.activeClients ?? 0)}
           icon={Users}
-          iconColor="text-blue-400"
+          iconColor="text-zinc-400"
           description="últimos 90 dias"
         />
         <StatsCard
           title="Ticket Médio"
           value={formatCurrency(summary?.avgTicket ?? 0)}
           icon={TrendingUp}
-          iconColor="text-green-400"
+          iconColor="text-emerald-400"
           description="este mês"
         />
       </div>
@@ -121,7 +121,7 @@ export default function DashboardPage() {
             )}
             {summary?.topBarbers.map((barber) => (
               <div key={barber.name} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black text-xs font-bold flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-black text-xs font-bold flex-shrink-0">
                   {barber.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -136,7 +136,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full"
+                        className="h-full bg-amber-500 rounded-full"
                         style={{ width: `${barber.share * 100}%` }}
                       />
                     </div>

@@ -139,7 +139,7 @@ export default function FiscalPage() {
         title="Nota Fiscal"
         subtitle="Emita NFS-e dos atendimentos"
         action={
-          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" /> Emitir nota
           </button>
         }

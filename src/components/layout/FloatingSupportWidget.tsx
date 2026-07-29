@@ -17,13 +17,13 @@ interface TicketRow {
 }
 
 const STATUS_INFO: Record<string, { label: string; cls: string }> = {
-  OPEN: { label: "Aberto", cls: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+  OPEN: { label: "Aberto", cls: "bg-zinc-800 text-zinc-400 border-zinc-700" },
   IN_PROGRESS: { label: "Em andamento", cls: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
   RESOLVED: { label: "Resolvido", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
   CLOSED: { label: "Fechado", cls: "bg-zinc-700/40 text-zinc-400 border-zinc-600" },
 };
 
-// A persistent, always-reachable "talk to CORTIX support" entry point —
+// A persistent, always-reachable "talk to rukz support" entry point —
 // mirrors the quick-compose pattern of chat widgets like Intercom/Crisp, but
 // wired straight into the existing SupportTicket system instead of a
 // separate channel: sending a message here either replies to the gestor's
@@ -68,11 +68,11 @@ export function FloatingSupportWidget() {
     <>
       {open && (
         <div className="fixed bottom-24 right-5 z-[65] w-[360px] max-h-[70vh] bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-800 bg-gradient-to-r from-amber-500/10 to-transparent flex-shrink-0">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-800 bg-amber-500/[0.07] flex-shrink-0">
             <div className="flex items-center gap-2">
               <LifeBuoy className="w-4 h-4 text-amber-400" />
               <div>
-                <p className="text-sm font-bold text-white leading-none">Suporte CORTIX</p>
+                <p className="text-sm font-bold text-white leading-none">Suporte rukz</p>
                 <p className="text-[11px] text-zinc-500 mt-0.5">Normalmente respondemos rápido</p>
               </div>
             </div>
@@ -99,7 +99,7 @@ export function FloatingSupportWidget() {
             <button
               onClick={send}
               disabled={sending || !message.trim()}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-xs font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-40"
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2 bg-amber-500 text-black text-xs font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-40"
             >
               <Send className="w-3.5 h-3.5" />
               {sending ? "Enviando..." : openTicket ? "Responder chamado" : "Iniciar conversa"}
@@ -149,7 +149,7 @@ export function FloatingSupportWidget() {
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-5 right-5 z-[65] w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-yellow-400 text-black shadow-2xl shadow-amber-500/30 flex items-center justify-center hover:scale-105 transition-transform"
+        className="fixed bottom-5 right-5 z-[65] w-14 h-14 rounded-full bg-amber-500 text-black shadow-2xl shadow-amber-500/30 flex items-center justify-center hover:scale-105 transition-transform"
       >
         {open ? <X className="w-5 h-5" /> : <LifeBuoy className="w-5 h-5" />}
         {!open && pendingReplyCount > 0 && (

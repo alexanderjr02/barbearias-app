@@ -175,7 +175,7 @@ export default function FinancePage() {
         title="Financeiro"
         subtitle="Serviços e mensalidades entram automático — você só lança o que sobra"
         action={
-          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" />
             Lançamento
           </button>
@@ -198,8 +198,8 @@ export default function FinancePage() {
           className={cn(
             "relative overflow-hidden rounded-2xl border p-6",
             profit >= 0
-              ? "border-amber-500/25 bg-gradient-to-br from-amber-500/[0.09] via-amber-500/[0.02] to-transparent"
-              : "border-red-500/25 bg-gradient-to-br from-red-500/[0.09] via-red-500/[0.02] to-transparent"
+              ? "border-amber-500/25 bg-amber-500/[0.06]"
+              : "border-red-500/25 bg-red-500/[0.06]"
           )}
         >
           <div className="flex items-start justify-between">
@@ -225,10 +225,10 @@ export default function FinancePage() {
           <div className="mt-6">
             <div className="flex h-2.5 overflow-hidden rounded-full bg-zinc-800">
               <div
-                className="bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-700"
+                className="bg-emerald-500 transition-all duration-700"
                 style={{ width: `${income > 0 ? Math.max(0, Math.min(100, (1 - expenses / income) * 100)) : 0}%` }}
               />
-              <div className="flex-1 bg-gradient-to-r from-red-500/70 to-red-400/70" />
+              <div className="flex-1 bg-red-500/70" />
             </div>
             <div className="mt-3 flex items-center justify-between text-xs">
               <span className="flex items-center gap-1.5 text-zinc-400">

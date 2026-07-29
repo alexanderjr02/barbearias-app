@@ -223,7 +223,7 @@ class ClientMembership {
 
   factory ClientMembership.fromJson(Map<String, dynamic> json) => ClientMembership(
         planName: json['planName'],
-        planColor: json['planColor'] ?? '#D4AF37',
+        planColor: json['planColor'] ?? '#FFC300',
         status: json['status'],
       );
 }

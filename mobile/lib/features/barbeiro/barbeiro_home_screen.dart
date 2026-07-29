@@ -330,7 +330,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(gradient: LinearGradient(colors: [accent, accent.withValues(alpha: 0.7)]), borderRadius: BorderRadius.circular(16)),
+                            decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(16)),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

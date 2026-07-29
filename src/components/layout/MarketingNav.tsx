@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, Scissors } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RukzLogo } from "@/components/brand/RukzLogo";
 
 const navLinks = [
   { label: "Funcionalidades", href: "#features" },
@@ -20,13 +21,8 @@ export function MarketingNav() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center">
-              <Scissors className="w-4 h-4 text-black" />
-            </div>
-            <span className="text-xl font-black text-white tracking-tight">
-              CORT<span className="text-amber-400">IX</span>
-            </span>
+          <Link href="/" aria-label="rukz, início" className="text-white transition-opacity hover:opacity-80">
+            <RukzLogo titulo={null} className="text-[1.3rem]" />
           </Link>
 
           {/* Desktop Links */}

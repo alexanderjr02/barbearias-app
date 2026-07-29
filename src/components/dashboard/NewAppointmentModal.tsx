@@ -183,8 +183,8 @@ export function NewAppointmentModal({ open, onClose }: Props) {
         <div className="flex-1 overflow-y-auto p-6">
           {done ? (
             <div className="text-center py-4">
-              <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-400" />
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-emerald-400" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Agendamento criado!</h3>
               <p className="text-zinc-400 text-sm mb-6">Já aparece na agenda e na conta do cliente, se ele tiver uma.</p>
@@ -210,7 +210,7 @@ export function NewAppointmentModal({ open, onClose }: Props) {
                   <span className="text-amber-400 font-bold">{service ? formatCurrency(service.price) : ""}</span>
                 </div>
               </div>
-              <button onClick={onClose} className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-all">
+              <button onClick={onClose} className="w-full py-3 bg-amber-500 text-black font-bold rounded-xl hover:opacity-90 transition-all">
                 Fechar
               </button>
             </div>
@@ -258,7 +258,7 @@ export function NewAppointmentModal({ open, onClose }: Props) {
                             : "border-zinc-800 bg-zinc-800/50 hover:border-zinc-700"
                         )}>
                         <div className={cn("w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden",
-                          barber?.id === b.id ? "bg-amber-500 text-black" : "bg-gradient-to-br from-amber-400/30 to-amber-600/30 text-amber-400"
+                          barber?.id === b.id ? "bg-amber-500 text-black" : "bg-amber-500/25 text-amber-400"
                         )}>
                           {b.avatar ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -399,14 +399,14 @@ export function NewAppointmentModal({ open, onClose }: Props) {
             )}
             {step < 4 ? (
               <button onClick={() => setStep(step + 1)} disabled={!canAdvance()}
-                className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                className="flex-1 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                 Continuar
               </button>
             ) : (
               <button
                 onClick={() => createAppointment.mutate()}
                 disabled={!canAdvance() || createAppointment.isPending || !me?.barbershopId}
-                className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {createAppointment.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Criando...</> : "Confirmar agendamento"}
               </button>

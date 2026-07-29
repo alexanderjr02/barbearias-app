@@ -8,11 +8,11 @@ import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
 import 'widgets/payment_connect_card.dart';
 
-const _colorSwatches = ['#D4AF37', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#F97316'];
+const _colorSwatches = ['#FFC300', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#F97316'];
 const _cycleLabels = {'MONTHLY': 'mês', 'QUARTERLY': 'trimestre', 'ANNUAL': 'ano'};
 const _statusLabels = {'ACTIVE': 'Ativo', 'PAST_DUE': 'Atrasado', 'CANCELLED': 'Cancelado'};
 
-Color _colorFromHex(String hex, [Color fallback = const Color(0xFFD4AF37)]) {
+Color _colorFromHex(String hex, [Color fallback = const Color(0xFFFFC300)]) {
   final cleaned = hex.replaceAll('#', '');
   if (cleaned.length != 6) return fallback;
   final value = int.tryParse(cleaned, radix: 16);
@@ -634,7 +634,7 @@ class _LockedView extends StatelessWidget {
         Container(
           width: 72,
           height: 72,
-          decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFC084FC), Color(0xFF7C3AED)]), shape: BoxShape.circle),
+          decoration: const BoxDecoration(color: Color(0xFF7C3AED), shape: BoxShape.circle),
           child: const Icon(Icons.workspace_premium_rounded, color: Colors.black, size: 34),
         ),
         const SizedBox(height: 18),

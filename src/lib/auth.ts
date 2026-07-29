@@ -2,6 +2,9 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies, headers } from "next/headers";
 import type { Role } from "./roles";
 
+// O nome do cookie fica com a marca antiga de propósito: ele não aparece
+// para ninguém, e trocar a chave invalidaria a sessão de toda pessoa que
+// estiver logada no dia do deploy.
 export const ACCESS_COOKIE = "cortix_access";
 export const REFRESH_COOKIE = "cortix_refresh";
 

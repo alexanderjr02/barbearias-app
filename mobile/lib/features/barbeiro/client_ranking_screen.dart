@@ -5,7 +5,7 @@ import '../../core/theme/cortix_theme.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'barber_repository.dart';
 
-Color _colorFromHex(String hex, [Color fallback = const Color(0xFFD4AF37)]) {
+Color _colorFromHex(String hex, [Color fallback = const Color(0xFFFFC300)]) {
   final cleaned = hex.replaceAll('#', '');
   if (cleaned.length != 6) return fallback;
   final value = int.tryParse(cleaned, radix: 16);
@@ -148,7 +148,7 @@ class _ClientRankingScreenState extends State<ClientRankingScreen> {
                 if (members.isNotEmpty) ...[
                   Row(
                     children: [
-                      const Icon(Icons.workspace_premium_rounded, size: 15, color: Color(0xFFD4AF37)),
+                      const Icon(Icons.workspace_premium_rounded, size: 15, color: Color(0xFFFFC300)),
                       const SizedBox(width: 6),
                       Text('Membros ativos · ${members.length}', style: TextStyle(color: palette.textFaint, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
                     ],
@@ -202,7 +202,7 @@ class _Podium extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (second != null) Expanded(child: _PodiumSlot(entry: second, place: 2, height: 118, color: const Color(0xFF94A3B8), initials: initials, palette: palette)),
-        if (first != null) Expanded(child: _PodiumSlot(entry: first, place: 1, height: 150, color: const Color(0xFFF59E0B), initials: initials, palette: palette)),
+        if (first != null) Expanded(child: _PodiumSlot(entry: first, place: 1, height: 150, color: const Color(0xFFFFC300), initials: initials, palette: palette)),
         if (third != null) Expanded(child: _PodiumSlot(entry: third, place: 3, height: 96, color: const Color(0xFFB07A4A), initials: initials, palette: palette)),
       ],
     );
@@ -229,7 +229,7 @@ class _PodiumSlot extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (place == 1) const Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 26),
+            if (place == 1) const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFC300), size: 26),
             const SizedBox(height: 4),
             Stack(
               alignment: Alignment.center,
@@ -277,7 +277,7 @@ class _PodiumSlot extends StatelessWidget {
               height: height,
               width: double.infinity,
               decoration: BoxDecoration(
-                gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [color.withValues(alpha: 0.35), color.withValues(alpha: 0.08)]),
+                color: color.withValues(alpha: 0.2),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               ),
             ),

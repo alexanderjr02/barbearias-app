@@ -12,8 +12,7 @@ import 'register_client_screen.dart';
 import 'session_provider.dart';
 
 const _bg = Color(0xFF0B0A0F);
-const _amber = Color(0xFFF59E0B);
-const _amberLight = Color(0xFFFBBF24);
+const _amber = Color(0xFFFFC300);
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,10 +28,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   bool _obscure = true;
 
   // Brand appearance (white-label): fetched from the barbershop configured via
-  // the BRAND_SLUG dart-define. Falls back to the default CORTIX look.
+  // the BRAND_SLUG dart-define. Falls back to the default rukz look.
   Color _accent = _amber;
-  Color _accentLight = _amberLight;
-  String _brandName = 'CORTIX';
+  String _brandName = 'rukz';
   String? _tagline;
   String? _logoUrl;
   String? _coverUrl;
@@ -74,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         final c = _parseHex(data['primaryColor'] as String?);
         if (c != null) {
           _accent = c;
-          _accentLight = Color.lerp(c, Colors.white, 0.22) ?? c;
         }
         final n = (data['name'] as String?)?.trim();
         if (n != null && n.isNotEmpty) _brandName = n;
@@ -323,7 +320,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   height: 64,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(18),
-                                    gradient: _logoUrl == null ? LinearGradient(colors: [_accentLight, _accent]) : null,
+                                    // Cor cheia, sem gradiente: a marca é contraste seco.
+                                    color: _logoUrl == null ? _accent : null,
                                     image: _logoUrl != null ? DecorationImage(image: NetworkImage(_logoUrl!), fit: BoxFit.cover) : null,
                                     boxShadow: [BoxShadow(color: _accent.withValues(alpha: 0.4), blurRadius: 28, offset: const Offset(0, 10))],
                                   ),
@@ -412,7 +410,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 const SizedBox(height: 18),
                                 PulseButton(
                                   onPressed: sessionProvider.isBusy ? null : () => _submit(sessionProvider),
-                                  gradient: LinearGradient(colors: [_accentLight, _accent]),
+                                  color: _accent,
                                   child: sessionProvider.isBusy
                                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                                       : const Text('Entrar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),

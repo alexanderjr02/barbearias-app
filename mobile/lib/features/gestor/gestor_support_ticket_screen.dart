@@ -133,7 +133,7 @@ class _GestorSupportTicketScreenState extends State<GestorSupportTicketScreen> {
                             Row(
                               children: [
                                 if (m.isAdmin) const Padding(padding: EdgeInsets.only(right: 4), child: Icon(Icons.verified_user_rounded, size: 12, color: Colors.purpleAccent)),
-                                Text(m.isAdmin ? 'Suporte CORTIX' : m.authorName, style: TextStyle(color: palette.textSecondary, fontSize: 11, fontWeight: FontWeight.w700)),
+                                Text(m.isAdmin ? 'Suporte rukz' : m.authorName, style: TextStyle(color: palette.textSecondary, fontSize: 11, fontWeight: FontWeight.w700)),
                               ],
                             ),
                             const SizedBox(height: 4),

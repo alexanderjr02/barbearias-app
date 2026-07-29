@@ -211,22 +211,22 @@ export default function AppearancePage() {
     setBgGradient(true);
     setBgEffect("none");
     setTagline("Sua barbearia, no estilo certo.");
-    // Restaurar o padrão é voltar à CORTIX de fábrica — inclui tirar a logo e
+    // Restaurar o padrão é voltar à rukz de fábrica — inclui tirar a logo e
     // a capa da barbearia, senão "padrão" ainda ficava com a marca de quem
     // estava editando.
     setLogo(null);
     setCover(null);
     setSuggested([]);
-    toast.success("Voltou ao padrão CORTIX. Salve para aplicar.");
+    toast.success("Voltou ao padrão rukz. Salve para aplicar.");
   };
 
   return (
     <div className="space-y-6">
       <style>{`
-        @keyframes cortix-kb { 0%{transform:scale(1.06)} 100%{transform:scale(1.22)} }
-        @keyframes cortix-pg { 0%,100%{opacity:.4} 50%{opacity:.95} }
-        .anim-zoom { animation: cortix-kb 16s ease-in-out infinite alternate; }
-        .anim-pulse { animation: cortix-pg 3.5s ease-in-out infinite; }
+        @keyframes rukz-kb { 0%{transform:scale(1.06)} 100%{transform:scale(1.22)} }
+        @keyframes rukz-pg { 0%,100%{opacity:.4} 50%{opacity:.95} }
+        .anim-zoom { animation: rukz-kb 16s ease-in-out infinite alternate; }
+        .anim-pulse { animation: rukz-pg 3.5s ease-in-out infinite; }
       `}</style>
 
       <PageHeader icon={Palette} title="Aparência do app" subtitle="Personalize com a sua marca, sem deixar feio nunca" />
@@ -265,7 +265,7 @@ export default function AppearancePage() {
               </button>
               <div className="flex-1">
                 <p className="text-sm text-zinc-300">Envie a logo da barbearia</p>
-                <p className="text-xs text-zinc-500 mt-0.5">PNG/JPG. A cor de destaque é sugerida a partir dela. Sem logo, o app usa o símbolo do CORTIX na sua cor.</p>
+                <p className="text-xs text-zinc-500 mt-0.5">PNG/JPG. A cor de destaque é sugerida a partir dela. Sem logo, o app usa o símbolo do rukz na sua cor.</p>
                 <div className="flex items-center gap-3 mt-2">
                   {suggested.length > 0 && (
                     <div className="flex items-center gap-2">

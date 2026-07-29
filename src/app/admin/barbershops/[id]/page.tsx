@@ -3,7 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, Store, Crown, Zap, Check, DollarSign, HeartPulse, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Store, Crown, Zap, Check, DollarSign, HeartPulse, Eye, Loader2, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { BarbershopActions } from "@/components/admin/BarbershopActions";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
@@ -149,7 +149,9 @@ export default function AdminBarbershopDetailPage({ params }: { params: Promise<
                   {PLAN_BADGE[p].label}
                 </button>
               ))}
-              <button onClick={() => setChangingPlan(false)} className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-400">✕</button>
+              <button onClick={() => setChangingPlan(false)} aria-label="Cancelar a troca de plano" className="px-2 py-1 rounded bg-zinc-800 text-zinc-400 hover:text-white transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -167,7 +169,7 @@ export default function AdminBarbershopDetailPage({ params }: { params: Promise<
             onClick={toggleActive}
             className={cn(
               "text-xs font-bold px-2.5 py-1 rounded-full border transition-all",
-              data.isActive ? "bg-green-500/10 text-green-400 border-green-500/30 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30" : "bg-red-500/10 text-red-400 border-red-500/30 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/30"
+              data.isActive ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30" : "bg-red-500/10 text-red-400 border-red-500/30 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30"
             )}
           >
             {data.isActive ? "Ativa" : "Suspensa"}

@@ -93,8 +93,8 @@ export function getInitials(name: string): string {
 }
 
 export const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  SCHEDULED: { label: "Agendado", color: "bg-blue-500" },
-  CONFIRMED: { label: "Confirmado", color: "bg-green-500" },
+  SCHEDULED: { label: "Agendado", color: "bg-zinc-600" },
+  CONFIRMED: { label: "Confirmado", color: "bg-emerald-500" },
   IN_PROGRESS: { label: "Em andamento", color: "bg-yellow-500" },
   COMPLETED: { label: "Concluído", color: "bg-gray-500" },
   CANCELLED: { label: "Cancelado", color: "bg-red-500" },

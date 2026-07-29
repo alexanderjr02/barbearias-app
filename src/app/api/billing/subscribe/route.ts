@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   try {
     const baseUrl = process.env.APP_URL || request.nextUrl.origin;
     const { id, initPoint } = await createSubscription({
-      reason: `CORTIX ${PLAN_LABELS[plan]}`,
+      reason: `rukz ${PLAN_LABELS[plan]}`,
       amount,
       payerEmail: session.email,
       externalReference: encodeExternalReference(session.barbershopId, plan),

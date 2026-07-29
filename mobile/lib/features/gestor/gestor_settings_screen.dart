@@ -13,11 +13,11 @@ import 'brand_controller.dart';
 import 'gestor_repository.dart';
 
 const _weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const _swatches = [0xFFD4AF37, 0xFFF59E0B, 0xFFEF4444, 0xFF3B82F6, 0xFF10B981, 0xFF8B5CF6, 0xFFEC4899, 0xFF000000];
+const _swatches = [0xFFFFC300, 0xFFFFC300, 0xFFEF4444, 0xFF3B82F6, 0xFF10B981, 0xFF8B5CF6, 0xFFEC4899, 0xFF000000];
 
 const _planInfo = {
   'FREE': ('Essencial', 'R\$ 50/mês', Color(0xFF9CA3AF), 'Agendamentos ilimitados · até 3 barbeiros'),
-  'PRO': ('Pro', 'R\$ 250/mês', Color(0xFFF59E0B), 'Ilimitado · Copiloto com IA, financeiro e assinatura'),
+  'PRO': ('Pro', 'R\$ 250/mês', Color(0xFFFFC300), 'Ilimitado · Copiloto com IA, financeiro e assinatura'),
   'ENTERPRISE': ('White Label', 'R\$ 897/mês', Color(0xFFA78BFA), 'App próprio, NF-e e multi-unidade'),
 };
 
@@ -68,7 +68,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   final _faqCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-  Color _color = const Color(0xFFD4AF37);
+  Color _color = const Color(0xFFFFC300);
   List<WorkingHour> _hours = [];
   String _plan = 'FREE';
   String? _logo;
@@ -128,7 +128,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
 
   Color _parseHex(String hex) {
     final cleaned = hex.replaceAll('#', '');
-    return Color(0xFF000000 | (int.tryParse(cleaned, radix: 16) ?? 0xD4AF37));
+    return Color(0xFF000000 | (int.tryParse(cleaned, radix: 16) ?? 0xFFC300));
   }
 
   String _toHex(Color c) => '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';

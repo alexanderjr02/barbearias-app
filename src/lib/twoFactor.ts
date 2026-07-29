@@ -8,7 +8,7 @@ export function generateSecret() {
 }
 
 export function buildOtpAuthUri(email: string, secret: string) {
-  return generateURI({ issuer: "CORTIX Admin", label: email, secret });
+  return generateURI({ issuer: "rukz Admin", label: email, secret });
 }
 
 export async function verifyCode(secret: string, code: string): Promise<boolean> {

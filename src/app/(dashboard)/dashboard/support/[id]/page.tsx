@@ -25,7 +25,7 @@ interface TicketDetail {
 }
 
 const STATUS_INFO: Record<string, { label: string; cls: string }> = {
-  OPEN: { label: "Aberto", cls: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+  OPEN: { label: "Aberto", cls: "bg-zinc-700/40 text-zinc-300 border-zinc-600" },
   IN_PROGRESS: { label: "Em andamento", cls: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
   RESOLVED: { label: "Resolvido", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
   CLOSED: { label: "Fechado", cls: "bg-zinc-700/40 text-zinc-400 border-zinc-600" },
@@ -81,10 +81,10 @@ export default function SupportTicketPage({ params }: { params: Promise<{ id: st
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4 max-h-[55vh] overflow-y-auto">
         {data.messages.map((m) => (
-          <div key={m.id} className={cn("max-w-[85%] rounded-2xl px-4 py-3", m.isAdmin ? "bg-purple-500/10 border border-purple-500/20 mr-auto" : "bg-amber-500/10 border border-amber-500/20 ml-auto")}>
+          <div key={m.id} className={cn("max-w-[85%] rounded-2xl px-4 py-3", m.isAdmin ? "bg-zinc-800 border border-amber-500/20 mr-auto" : "bg-amber-500/10 border border-amber-500/20 ml-auto")}>
             <div className="flex items-center gap-1.5 mb-1">
-              {m.isAdmin && <ShieldCheck className="w-3 h-3 text-purple-400" />}
-              <span className="text-xs font-semibold text-zinc-300">{m.isAdmin ? "Suporte CORTIX" : m.authorName}</span>
+              {m.isAdmin && <ShieldCheck className="w-3 h-3 text-zinc-400" />}
+              <span className="text-xs font-semibold text-zinc-300">{m.isAdmin ? "Suporte rukz" : m.authorName}</span>
               <span className="text-[10px] text-zinc-600">{formatDateTime(m.createdAt)}</span>
             </div>
             <p className="text-sm text-zinc-200 whitespace-pre-wrap">{m.body}</p>
@@ -101,7 +101,7 @@ export default function SupportTicketPage({ params }: { params: Promise<{ id: st
             placeholder="Escreva uma resposta..."
             className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
           />
-          <button onClick={sendReply} disabled={sending || !reply.trim()} className="px-4 bg-gradient-to-r from-amber-500 to-yellow-400 text-black rounded-xl font-bold disabled:opacity-50 flex items-center gap-2">
+          <button onClick={sendReply} disabled={sending || !reply.trim()} className="px-4 bg-amber-500 text-black rounded-xl font-bold disabled:opacity-50 flex items-center gap-2">
             <Send className="w-4 h-4" />
           </button>
         </div>

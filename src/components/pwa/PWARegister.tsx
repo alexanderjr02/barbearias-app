@@ -15,12 +15,12 @@ export function PWARegister() {
           newWorker.addEventListener("statechange", () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
               // New version available — could show update prompt
-              console.log("[CORTIX] Nova versão disponível.");
+              console.log("[rukz] Nova versão disponível.");
             }
           });
         });
       } catch (err) {
-        console.warn("[CORTIX] Service worker não registrado:", err);
+        console.warn("[rukz] Service worker não registrado:", err);
       }
     };
 

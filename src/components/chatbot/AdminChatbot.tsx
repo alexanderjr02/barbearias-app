@@ -73,18 +73,18 @@ function MessageBubble({ msg }: { msg: Message }) {
   return (
     <div className={cn("flex gap-2", isBot ? "items-start" : "items-start justify-end")}>
       {isBot && (
-        <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div className="w-7 h-7 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-0.5">
           <Bot className="w-3.5 h-3.5 text-white" />
         </div>
       )}
       <div className={cn("max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed",
-        isBot ? "bg-zinc-800 text-zinc-200 rounded-tl-sm" : "bg-blue-600 text-white rounded-tr-sm font-medium"
+        isBot ? "bg-zinc-800 text-zinc-200 rounded-tl-sm" : "bg-zinc-700 text-white rounded-tr-sm font-medium"
       )}>
         {msg.content.split("\n").map((line, i, arr) => (
           <span key={i}>
             {line.split(/(\*\*.*?\*\*)/).map((part, j) =>
               part.startsWith("**") && part.endsWith("**")
-                ? <strong key={j} className={isBot ? "text-blue-300" : "text-white"}>{part.slice(2, -2)}</strong>
+                ? <strong key={j} className={isBot ? "text-zinc-300" : "text-white"}>{part.slice(2, -2)}</strong>
                 : part
             )}
             {i < arr.length - 1 && <br />}
@@ -129,7 +129,7 @@ export function AdminChatbot() {
     <>
       {/* FAB */}
       <button onClick={() => setOpen(o => !o)}
-        className="fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-2xl shadow-blue-500/30 hover:scale-105 transition-all">
+        className="fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500 flex items-center justify-center shadow-2xl shadow-zinc-900/30 hover:scale-105 transition-all">
         {open ? <X className="w-5 h-5 lg:w-6 lg:h-6 text-white" /> : <Bot className="w-5 h-5 lg:w-6 lg:h-6 text-white" />}
       </button>
 
@@ -137,7 +137,7 @@ export function AdminChatbot() {
       {open && (
         <div className="fixed bottom-36 right-3 left-3 z-40 sm:left-auto sm:right-6 sm:w-80 lg:w-96 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(78dvh, 460px)" }}>
           {/* Header */}
-          <div className="px-4 py-3 flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700">
+          <div className="px-4 py-3 flex items-center gap-3 bg-amber-500">
             <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
               <Bot className="w-5 h-5 text-white" />
             </div>
@@ -151,9 +151,9 @@ export function AdminChatbot() {
           </div>
 
           {/* Insight banner */}
-          <div className="px-4 py-2.5 bg-blue-500/10 border-b border-blue-500/20 flex items-start gap-2">
-            <Lightbulb className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-300">
+          <div className="px-4 py-2.5 bg-zinc-800 border-b border-zinc-700 flex items-start gap-2">
+            <Lightbulb className="w-4 h-4 text-zinc-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-zinc-300">
               Dica rápida: Pergunte sobre seus relatórios, clientes VIP ou como configurar o chatbot!
             </p>
           </div>
@@ -163,7 +163,7 @@ export function AdminChatbot() {
             {messages.map(m => <MessageBubble key={m.id} msg={m} />)}
             {typing && (
               <div className="flex gap-2 items-start">
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0">
                   <Bot className="w-3.5 h-3.5 text-white" />
                 </div>
                 <div className="bg-zinc-800 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1.5 items-center">
@@ -180,7 +180,7 @@ export function AdminChatbot() {
           <div className="px-4 pb-2 flex flex-wrap gap-1.5 border-t border-zinc-800 pt-2">
             {shortcuts.map(s => (
               <button key={s.label} onClick={() => send(s.query)}
-                className="text-xs px-2.5 py-1 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-full hover:border-blue-500/50 hover:text-blue-400 transition-all flex items-center gap-1">
+                className="text-xs px-2.5 py-1 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-full hover:border-zinc-600 hover:text-zinc-400 transition-all flex items-center gap-1">
                 <Zap className="w-2.5 h-2.5" /> {s.label}
               </button>
             ))}
@@ -193,10 +193,10 @@ export function AdminChatbot() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && send(input)}
               placeholder="Pergunte algo sobre seu negócio..."
-              className="flex-1 h-9 px-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+              className="flex-1 h-9 px-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-500/50"
             />
             <button onClick={() => send(input)} disabled={!input.trim()}
-              className="w-9 h-9 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center disabled:opacity-40 transition-all hover:opacity-90">
+              className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center disabled:opacity-40 transition-all hover:opacity-90">
               <Send className="w-4 h-4 text-white" />
             </button>
           </div>

@@ -3,7 +3,7 @@
 // ctwa_clid que guardamos no lead. É o que faz a Meta otimizar por quem VIRA
 // cliente, não por quem só inicia conversa — barateia a campanha ao longo do
 // tempo. Praticamente nenhuma agência pequena faz isso, porque quase nenhuma
-// tem o dado do funil inteiro. O CORTIX tem.
+// tem o dado do funil inteiro. O rukz tem.
 //
 // INERTE POR PADRÃO: sem META_CAPI_TOKEN + META_DATASET_ID, apenas registra em
 // log (modo simulado, o mesmo padrão do app antes de cada credencial). Assim dá

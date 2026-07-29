@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
       <PageHeader
         icon={Shield}
         title="Painel Administrativo"
-        subtitle="Visão geral de toda a plataforma CORTIX"
+        subtitle="Visão geral de toda a plataforma rukz"
         accent="mono"
       />
 
@@ -123,7 +123,7 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiCard title="Barbearias ativas" value={String(data.active)} icon={Store} sub={`${data.total} cadastradas no total`} />
             <KpiCard title="MRR" value={formatCurrency(data.mrr)} icon={DollarSign} iconColor="text-emerald-400" sub={`${formatCurrency(data.arr)} ARR`} />
-            <KpiCard title="Usuários" value={String(Object.values(data.usersByRole).reduce((a, b) => a + b, 0))} icon={Users} iconColor="text-blue-400" sub={`${data.usersByRole.CLIENT ?? 0} clientes`} />
+            <KpiCard title="Usuários" value={String(Object.values(data.usersByRole).reduce((a, b) => a + b, 0))} icon={Users} iconColor="text-zinc-400" sub={`${data.usersByRole.CLIENT ?? 0} clientes`} />
             <KpiCard title="Suspensas" value={String(data.inactive)} icon={AlertTriangle} iconColor={data.inactive > 0 ? "text-red-400" : "text-zinc-500"} />
           </div>
 

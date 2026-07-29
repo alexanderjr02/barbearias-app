@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
   // Legível e forte: o admin vai ditar isto por WhatsApp ou telefone, então
   // caracteres ambíguos atrapalham mais do que a entropia extra ajuda.
-  const senhaInicial = `cortix${randomBytes(3).toString("hex")}A1`;
+  const senhaInicial = `rukz${randomBytes(3).toString("hex")}A1`;
 
   const { shop } = await prisma.$transaction(async (tx: typeof prisma) => {
     const owner = await tx.user.create({

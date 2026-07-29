@@ -151,7 +151,7 @@ class _TipScreenState extends State<TipScreen> {
               const SizedBox(height: 24),
               PulseButton(
                 onPressed: _sending ? null : _send,
-                gradient: LinearGradient(colors: [Color.lerp(accent, Colors.white, 0.22)!, accent]),
+                color: accent,
                 child: _sending
                     ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: onAccent))
                     : Text('Confirmar gorjeta de R\$ ${_amount.toStringAsFixed(2)}', style: TextStyle(color: onAccent, fontWeight: FontWeight.bold, fontSize: 15)),

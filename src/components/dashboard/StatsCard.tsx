@@ -36,7 +36,7 @@ export function StatsCard({
             className={cn(
               "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
               changeType === "positive" &&
-                "bg-green-500/10 text-green-400",
+                "bg-emerald-500/10 text-emerald-400",
               changeType === "negative" &&
                 "bg-red-500/10 text-red-400",
               changeType === "neutral" && "bg-zinc-800 text-zinc-400"

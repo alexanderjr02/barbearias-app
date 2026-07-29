@@ -1,28 +1,38 @@
-import type { Metadata } from "next";
-import { Inter, Sora } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
 
-// Tipografia do PRODUTO (painel, login, agendamento): Inter no texto e Sora
-// nos títulos. Neutras de propósito — quem passa o dia numa tela de gestão
-// precisa ler número e tabela, não ouvir a marca falar.
+// Uma família só, do anúncio ao relatório: Outfit, a fonte oficial da marca
+// rukz (ver Rukz-Marca/LEIA-ME.txt).
 //
-// A landing tem tipografia própria, carregada dentro da própria página
-// (src/app/page.tsx). Fica lá, e não aqui, para que a fonte de campanha não
-// seja baixada por quem só abriu o painel.
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-sora",
+// É geométrica como o desenho da logo — o mesmo tipo de traço reto e
+// construído que aparece no símbolo. A faixa de peso vai de 400 a 800, e é
+// essa amplitude que permite o mesmo tipo virar cartaz em 800 apertado e
+// tabela em 400.
+//
+// `latin-ext` não é opcional em português: sem ele, ã, ç, é e ê caem em fonte
+// de sistema e a palavra sai remendada no meio.
+const outfit = Outfit({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-jakarta",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "CORTIX — Sistema de Gestão para Barbearias",
+  title: "rukz | Gestão para barbearia",
   description:
-    "O sistema mais completo para gerenciamento de barbearias. Agendamento online, chatbot inteligente, controle financeiro, estoque e muito mais.",
-  keywords: "barbearia, sistema gestão, agendamento online, barbershop software",
+    "Agenda aberta 24 horas, lembrete automático que derruba a falta, financeiro sem planilha e assinatura de clientes. O sistema que organiza a sua barbearia e traz o cliente de volta.",
+  keywords: "barbearia, sistema de gestão, agenda online, agendamento, barbershop software",
+  // Os ícones não vêm daqui: `favicon.ico`, `icon.svg` e `apple-icon.png` moram
+  // em src/app e o Next monta as tags sozinho. Declarar nos dois lugares só
+  // duplicaria o <link>.
+  manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
@@ -31,8 +41,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${sora.variable}`}>
-      <body className="bg-black text-white antialiased">
+    <html lang="pt-BR" className={outfit.variable}>
+      <body className="bg-preto text-neve antialiased">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

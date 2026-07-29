@@ -26,7 +26,7 @@ class ClientSubscriptionPlan {
         price: (json['price'] as num).toDouble(),
         billingCycle: json['billingCycle'],
         benefits: json['benefits'] ?? '',
-        color: json['color'] ?? '#D4AF37',
+        color: json['color'] ?? '#FFC300',
       );
 }
 
@@ -67,7 +67,7 @@ class MySubscription {
         planName: json['planName'],
         price: (json['price'] as num).toDouble(),
         billingCycle: json['billingCycle'],
-        color: json['color'] ?? '#D4AF37',
+        color: json['color'] ?? '#FFC300',
         paymentMethod: json['paymentMethod'],
         status: json['status'],
         startedAt: json['startedAt'],

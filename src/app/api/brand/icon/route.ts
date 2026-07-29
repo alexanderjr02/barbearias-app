@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Recurso do plano Enterprise" }, { status: 403 });
   }
 
-  const bg = /^#[0-9a-f]{6}$/i.test(shop.primaryColor ?? "") ? shop.primaryColor! : "#F59E0B";
+  const bg = /^#[0-9a-f]{6}$/i.test(shop.primaryColor ?? "") ? shop.primaryColor! : "#FFC300";
 
   // Sem logo: devolve as iniciais sobre a cor da marca. É melhor que o ícone
   // genérico do Flutter, que não diz nada sobre a barbearia.

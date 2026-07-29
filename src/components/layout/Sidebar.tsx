@@ -8,6 +8,7 @@ import {
   ChevronLeft, ChevronRight, Sparkles, Crown, Repeat, LifeBuoy, Hourglass, Star, FileText, Palette, Building2, Gift, Share2, MessageCircle, BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RukzLogo, RukzSimbolo } from "@/components/brand/RukzLogo";
 import { useState } from "react";
 import { usePlan, PLAN_INFO } from "@/context/PlanContext";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -53,13 +54,14 @@ export function Sidebar() {
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} defaultPlan={pitch?.target ?? "PRO"} />
 
       <div className={cn("flex items-center h-16 border-b border-zinc-800/60 flex-shrink-0 px-4", collapsed ? "justify-center" : "gap-3")}>
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
-          <Scissors className="w-4 h-4 text-zinc-900" />
-        </div>
-        {!collapsed && (
+        {/* Recolhida, a barra fica com o símbolo sozinho: a palavra em 64px de
+            largura sairia ilegível, e o bigode se reconhece mesmo pequeno. */}
+        {collapsed ? (
+          <RukzSimbolo className="h-4 w-auto text-white" />
+        ) : (
           <div>
-            <span className="text-base font-black text-white tracking-tight">CORT<span className="text-amber-400">IX</span></span>
-            <div className="flex items-center gap-1 -mt-0.5">
+            <RukzLogo titulo={null} className="text-base text-white" />
+            <div className="flex items-center gap-1 mt-1">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <span className="text-xs text-zinc-500">Plano {planInfo.label}</span>
             </div>
@@ -87,7 +89,7 @@ export function Sidebar() {
       </nav>
 
       {!collapsed && pitch && (
-        <div className="mx-3 mb-3 p-3 bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border border-amber-500/20 rounded-xl">
+        <div className="mx-3 mb-3 p-3 bg-amber-500/[0.08] border border-amber-500/20 rounded-xl">
           <div className="flex items-center gap-2 mb-1">
             {pitch.target === "ENTERPRISE" ? <Crown className="w-3.5 h-3.5 text-amber-400" /> : <Sparkles className="w-3.5 h-3.5 text-amber-400" />}
             <span className="text-xs font-semibold text-amber-400">{pitch.badge}</span>

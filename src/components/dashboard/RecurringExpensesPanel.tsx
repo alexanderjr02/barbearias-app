@@ -120,8 +120,8 @@ export function RecurringExpensesPanel() {
       <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
         <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10">
-              <Repeat className="h-4.5 w-4.5 text-blue-400" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800">
+              <Repeat className="h-4.5 w-4.5 text-zinc-400" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">Despesas fixas</h3>
@@ -179,7 +179,7 @@ export function RecurringExpensesPanel() {
                     title={item.isActive ? "Pausar" : "Reativar"}
                     className={cn(
                       "relative h-5 w-9 flex-shrink-0 rounded-full transition-colors",
-                      item.isActive ? "bg-blue-500" : "bg-zinc-700"
+                      item.isActive ? "bg-zinc-600" : "bg-zinc-700"
                     )}
                   >
                     <span

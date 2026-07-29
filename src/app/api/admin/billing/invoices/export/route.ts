@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     metadata: { count: invoices.length, filters: Object.fromEntries(searchParams.entries()) },
   });
 
-  const filename = `faturas-cortix-${new Date().toISOString().slice(0, 10)}.csv`;
+  const filename = `faturas-rukz-${new Date().toISOString().slice(0, 10)}.csv`;
   // Leading BOM so Excel opens the file with correct UTF-8 accents instead
   // of guessing a Latin-1-like codepage and mangling barbershop names.
   return new NextResponse(`﻿${csv}`, {

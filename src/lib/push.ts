@@ -21,7 +21,7 @@ const PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "";
 const PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
 // mailto:/https: exigido pelo protocolo — é como o serviço de push te contata
 // se algo estiver errado com os envios.
-const SUBJECT = process.env.VAPID_SUBJECT || "mailto:contato@cortix.app";
+const SUBJECT = process.env.VAPID_SUBJECT || "mailto:contato@rukz.app";
 
 let configured = false;
 function ensureConfigured(): boolean {

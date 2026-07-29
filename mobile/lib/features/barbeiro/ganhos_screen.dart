@@ -60,7 +60,7 @@ class _GanhosScreenState extends State<GanhosScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [accent, accent.withValues(alpha: 0.65)]),
+                      color: accent,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 12))],
                     ),

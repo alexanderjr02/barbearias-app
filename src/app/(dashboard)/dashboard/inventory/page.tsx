@@ -221,7 +221,7 @@ export default function InventoryPage() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <Package className="w-6 h-6 text-blue-400 mb-3" />
+          <Package className="w-6 h-6 text-zinc-400 mb-3" />
           <p className="text-2xl font-bold text-white">{products.length}</p>
           <p className="text-sm text-zinc-500">Produtos</p>
         </div>
@@ -307,7 +307,7 @@ export default function InventoryPage() {
                       {product.costPrice != null && <p className="text-xs text-zinc-600">custo: {formatCurrency(product.costPrice)}</p>}
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${isLow ? "bg-amber-500/10 text-amber-400 border border-amber-500/30" : "bg-green-500/10 text-green-400 border border-green-500/30"}`}>
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${isLow ? "bg-amber-500/10 text-amber-400 border border-amber-500/30" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"}`}>
                         {isLow && <AlertTriangle className="w-3 h-3" />}
                         {product.quantity} un
                       </div>

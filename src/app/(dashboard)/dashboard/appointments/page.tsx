@@ -47,12 +47,12 @@ interface DaySchedule {
 type ViewMode = "month" | "week" | "day" | "list";
 
 const STATUS_STYLES: Record<string, { label: string; text: string; bg: string; chip: string; block: string; dot: string }> = {
-  SCHEDULED: { label: "Agendado", text: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", chip: "bg-blue-500/20 text-blue-200", block: "bg-blue-500/15 border-blue-500/40 text-blue-100", dot: "bg-blue-400" },
+  SCHEDULED: { label: "Agendado", text: "text-zinc-300", bg: "bg-zinc-500/10 border-zinc-600/40", chip: "bg-zinc-700/60 text-zinc-200", block: "bg-zinc-700/40 border-zinc-600 text-zinc-100", dot: "bg-zinc-400" },
   CONFIRMED: { label: "Confirmado", text: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", chip: "bg-emerald-500/20 text-emerald-200", block: "bg-emerald-500/15 border-emerald-500/40 text-emerald-100", dot: "bg-emerald-400" },
-  IN_PROGRESS: { label: "Em andamento", text: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20", chip: "bg-yellow-500/20 text-yellow-100", block: "bg-yellow-500/15 border-yellow-500/40 text-yellow-100", dot: "bg-yellow-400" },
-  COMPLETED: { label: "Concluído", text: "text-zinc-300", bg: "bg-zinc-500/10 border-zinc-500/20", chip: "bg-zinc-700/60 text-zinc-300", block: "bg-zinc-700/40 border-zinc-600 text-zinc-300", dot: "bg-zinc-400" },
+  IN_PROGRESS: { label: "Em andamento", text: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/25", chip: "bg-amber-500/20 text-amber-100", block: "bg-amber-500/15 border-amber-500/40 text-amber-100", dot: "bg-amber-400" },
+  COMPLETED: { label: "Concluído", text: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", chip: "bg-emerald-500/20 text-emerald-200", block: "bg-emerald-500/15 border-emerald-500/40 text-emerald-100", dot: "bg-emerald-400" },
   CANCELLED: { label: "Cancelado", text: "text-red-400", bg: "bg-red-500/10 border-red-500/20", chip: "bg-red-500/20 text-red-200 line-through decoration-red-400/60", block: "bg-red-500/10 border-red-500/30 text-red-200 line-through decoration-red-400/60", dot: "bg-red-400" },
-  NO_SHOW: { label: "Não compareceu", text: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20", chip: "bg-orange-500/20 text-orange-200", block: "bg-orange-500/10 border-orange-500/30 text-orange-200", dot: "bg-orange-400" },
+  NO_SHOW: { label: "Não compareceu", text: "text-red-400", bg: "bg-red-500/10 border-red-500/20", chip: "bg-red-500/20 text-red-200", block: "bg-red-500/10 border-red-500/30 text-red-200", dot: "bg-red-400" },
 };
 const statusOf = (s: string) => STATUS_STYLES[s] ?? STATUS_STYLES.SCHEDULED;
 
@@ -60,15 +60,21 @@ const statusOf = (s: string) => STATUS_STYLES[s] ?? STATUS_STYLES.SCHEDULED;
 // apart at a glance (month chips, week blocks, day columns) — mirrors the
 // same palette the Flutter app uses so a barber's color means the same thing
 // on the phone and the desktop.
+// Isto continua sendo dado, não enfeite: é como se sabe de quem é o horário na
+// agenda do mês, e a landing vende exatamente isso. O que mudou foi o tom — a
+// roda antiga era néon (fúcsia, lima, ciano) e transformava agenda cheia em
+// confete. Estes oito são dessaturados de propósito: separam à distância, e
+// nenhum disputa atenção com o amarelo da marca, que fica com o primeiro
+// barbeiro da lista.
 const BARBER_COLORS = [
   { dot: "bg-amber-400", text: "text-amber-400", ring: "ring-amber-400/50", bg: "bg-amber-400/15" },
-  { dot: "bg-sky-400", text: "text-sky-400", ring: "ring-sky-400/50", bg: "bg-sky-400/15" },
-  { dot: "bg-emerald-400", text: "text-emerald-400", ring: "ring-emerald-400/50", bg: "bg-emerald-400/15" },
-  { dot: "bg-fuchsia-400", text: "text-fuchsia-400", ring: "ring-fuchsia-400/50", bg: "bg-fuchsia-400/15" },
-  { dot: "bg-rose-400", text: "text-rose-400", ring: "ring-rose-400/50", bg: "bg-rose-400/15" },
-  { dot: "bg-cyan-400", text: "text-cyan-400", ring: "ring-cyan-400/50", bg: "bg-cyan-400/15" },
-  { dot: "bg-violet-400", text: "text-violet-400", ring: "ring-violet-400/50", bg: "bg-violet-400/15" },
-  { dot: "bg-lime-400", text: "text-lime-400", ring: "ring-lime-400/50", bg: "bg-lime-400/15" },
+  { dot: "bg-zinc-200", text: "text-zinc-200", ring: "ring-zinc-200/50", bg: "bg-zinc-200/15" },
+  { dot: "bg-[#7FB2A6]", text: "text-[#7FB2A6]", ring: "ring-[#7FB2A6]/50", bg: "bg-[#7FB2A6]/15" },
+  { dot: "bg-[#C98F6B]", text: "text-[#C98F6B]", ring: "ring-[#C98F6B]/50", bg: "bg-[#C98F6B]/15" },
+  { dot: "bg-[#7E97B8]", text: "text-[#7E97B8]", ring: "ring-[#7E97B8]/50", bg: "bg-[#7E97B8]/15" },
+  { dot: "bg-[#A9B27A]", text: "text-[#A9B27A]", ring: "ring-[#A9B27A]/50", bg: "bg-[#A9B27A]/15" },
+  { dot: "bg-[#B58BA8]", text: "text-[#B58BA8]", ring: "ring-[#B58BA8]/50", bg: "bg-[#B58BA8]/15" },
+  { dot: "bg-[#C7B58A]", text: "text-[#C7B58A]", ring: "ring-[#C7B58A]/50", bg: "bg-[#C7B58A]/15" },
 ];
 function barberColorOf(staffId: string, orderedIds: string[]) {
   const idx = orderedIds.indexOf(staffId);
@@ -579,7 +585,7 @@ export default function AppointmentsPage() {
       {/* Period stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <CalendarClock className="w-4 h-4 text-blue-400 mb-2" />
+          <CalendarClock className="w-4 h-4 text-zinc-400 mb-2" />
           <p className="text-2xl font-black text-white">{periodStats.total}</p>
           <p className="text-xs text-zinc-500">{hasRange ? "No período" : "Recentes"}</p>
         </div>

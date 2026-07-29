@@ -96,7 +96,7 @@ export async function GET() {
     metadata: { contagem, truncadas },
   });
 
-  const nome = `cortix-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const nome = `rukz-backup-${new Date().toISOString().slice(0, 10)}.json`;
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",

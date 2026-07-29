@@ -25,7 +25,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   String _password = '';
   // Brand accent (set from the theme at build time so the white-label brand
   // color reaches the borderless helpers too).
-  Color _accent = const Color(0xFFF59E0B);
+  Color _accent = const Color(0xFFFFC300);
 
   @override
   void dispose() {
@@ -86,7 +86,6 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   Widget build(BuildContext context) {
     final sessionProvider = context.watch<SessionProvider>();
     _accent = Theme.of(context).colorScheme.primary;
-    final accentLight = Color.lerp(_accent, Colors.white, 0.22) ?? _accent;
 
     return Scaffold(
       body: AuroraBackground(
@@ -222,7 +221,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                             const SizedBox(height: 22),
                             PulseButton(
                               onPressed: sessionProvider.isBusy ? null : () => _submit(sessionProvider),
-                              gradient: LinearGradient(colors: [accentLight, _accent]),
+                              color: _accent,
                               child: sessionProvider.isBusy
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                                   : const Text('Criar minha conta', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),

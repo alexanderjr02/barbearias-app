@@ -14,11 +14,11 @@ const _tierLabels = {'BRONZE': 'Bronze', 'SILVER': 'Prata', 'GOLD': 'Ouro'};
 const _tierColors = {
   'BRONZE': Color(0xFFB07A4A),
   'SILVER': Color(0xFF94A3B8),
-  'GOLD': Color(0xFFF59E0B),
+  'GOLD': Color(0xFFFFC300),
 };
 const _tierOrder = ['GOLD', 'SILVER', 'BRONZE'];
 
-Color _colorFromHex(String hex, [Color fallback = const Color(0xFFD4AF37)]) {
+Color _colorFromHex(String hex, [Color fallback = const Color(0xFFFFC300)]) {
   final cleaned = hex.replaceFirst('#', '');
   final value = int.tryParse(cleaned.length == 6 ? 'FF$cleaned' : cleaned, radix: 16);
   return value != null ? Color(value) : fallback;

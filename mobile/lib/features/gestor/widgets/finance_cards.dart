@@ -12,7 +12,7 @@ Color _methodColor(String m) {
     case 'Pix':
       return const Color(0xFF10B981);
     case 'Dinheiro':
-      return const Color(0xFFF59E0B);
+      return const Color(0xFFFFC300);
     case 'Cartão':
     case 'Cartão de crédito':
       return const Color(0xFF3B82F6);

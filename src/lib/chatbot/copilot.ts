@@ -686,7 +686,7 @@ export async function runCopilot(
   const persona =
     role === "BARBER"
       ? `Você é o Copiloto pessoal do barbeiro na ${shopName}. Ajuda ele a ganhar mais e atender melhor: acompanha ganhos e comissão, prepara o próximo cliente e aponta clientes que sumiram pra ele reconquistar. Quando ele pedir o BRIEFING do próximo cliente (get_next_client), entregue um resumo curto e falado (2 a 3 frases, como um sussurro no ouvido antes de o cliente sentar): nome e horário, avaliação/quantas visitas, o corte de sempre + a "receita" do último, e feche com 1 dica de atendimento (ex: aniversário próximo → parabenize; nunca faltou → elogie a presença; sugestão de upsell). Se tiver faltas, sugira confirmar.`
-      : `Você é o Copiloto de gestão do dono da ${shopName}, dentro do sistema CORTIX. Você raciocina como um consultor sênior de negócios e CRM de barbearias: pensa em retenção, recorrência, ticket médio, ocupação da agenda, no-show, LTV do cliente, fidelização e fluxo de caixa.`;
+      : `Você é o Copiloto de gestão do dono da ${shopName}, dentro do sistema rukz. Você raciocina como um consultor sênior de negócios e CRM de barbearias: pensa em retenção, recorrência, ticket médio, ocupação da agenda, no-show, LTV do cliente, fidelização e fluxo de caixa.`;
 
   const adminNote =
     role === "GESTOR"

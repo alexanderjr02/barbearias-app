@@ -36,9 +36,9 @@ class CortixApp extends StatelessWidget {
       ],
       child: Consumer2<SessionProvider, ThemeController>(
         builder: (context, sessionProvider, themeController, _) {
-          final seed = sessionProvider.brandColor ?? const Color(0xFFF59E0B);
+          final seed = sessionProvider.brandColor ?? const Color(0xFFFFC300);
           return MaterialApp(
-            title: 'CORTIX',
+            title: 'rukz',
             debugShowCheckedModeBanner: false,
             themeMode: themeController.mode,
             theme: buildCortixTheme(seed: seed, brightness: Brightness.light),
@@ -87,7 +87,7 @@ class AuthGate extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Este papel ainda usa o painel web do CORTIX.',
+                    'Este papel ainda usa o painel web do rukz.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white70),
                   ),

@@ -1,24 +1,74 @@
 @import 'tailwindcss';
 
-/* Identidade da CORTIX — "latão e porcelana".
+/* Identidade rukz.
  *
- * As cores saem do material da própria barbearia, não da paleta padrão de
- * dashboard: o preto quente do breu, o latão do poste e da máquina, a
- * porcelana do azulejo e da toalha, e o vinho da listra do poste. O cinza é
- * fumaça, quente, e não o zinc azulado que deixa toda tela parecida com toda
- * outra tela.
+ * Três cores e nada mais: preto, branco e o amarelo da logo. É a paleta dos
+ * anúncios da marca, e ela funciona porque não tenta nada. O amarelo é o único
+ * acento do sistema inteiro — quando tudo é preto e branco, uma coisa amarela
+ * é a coisa mais visível da tela, e é assim que se aponta para onde clicar.
+ *
+ * Sem gradiente em lugar nenhum. Gradiente é a maneira mais rápida de um
+ * produto parecer com todos os outros, e apaga justamente o que a marca tem
+ * de próprio, que é o contraste seco.
  */
 @theme {
-  --color-breu: #0b0a08;
-  --color-breu-2: #15120e;
-  --color-breu-3: #221d17;
-  --color-latao: #c8963c;
-  --color-latao-claro: #f0d79a;
-  --color-latao-escuro: #8a6420;
-  --color-porcelana: #f3eee5;
-  --color-porcelana-2: #e2d9c9;
-  --color-vinho: #7c1d2b;
-  --color-fumaca: #a79c8b;
+  --color-preto: #000000;
+  --color-carvao: #0b0b0b;
+  --color-grafite: #151515;
+  --color-traco: #232323;
+  --color-traco-forte: #333333;
+
+  --color-ouro: #ffc300;
+  --color-ouro-claro: #ffd84d;
+  --color-ouro-escuro: #c99a00;
+
+  --color-neve: #ffffff;
+  --color-cinza: #9c9c9c;
+  /* Este cinza carrega letra miúda — rodapé, ressalva, legenda. Em #6b6b6b ele
+     dava 3,94:1 sobre o preto, abaixo do mínimo legível; em #7a7a7a passa de
+     4,8:1 sem deixar de ser o tom mais apagado da escala. */
+  --color-cinza-fraco: #7a7a7a;
+
+  /* O painel amarelo é uma superfície de verdade, não um destaque: seções
+     inteiras invertem para ele, e ali o texto é preto. */
+  --color-painel-ouro: #ffc300;
+
+  /* O app inteiro foi escrito em `amber-*`. Em vez de trocar 648 classes à mão
+     e deixar passar alguma, o tom da marca entra por baixo: a rampa amber
+     inteira passa a ser o amarelo rukz, e cada botão, ícone e borda do painel
+     acerta a cor de uma vez só. */
+  --color-amber-50: #fff9e5;
+  --color-amber-100: #fff1bf;
+  --color-amber-200: #ffe480;
+  --color-amber-300: #ffd84d;
+  --color-amber-400: #ffce29;
+  --color-amber-500: #ffc300;
+  --color-amber-600: #e0ab00;
+  --color-amber-700: #b88c00;
+  --color-amber-800: #8f6d00;
+  --color-amber-900: #6b5200;
+  --color-amber-950: #3d2f00;
+
+  /* `yellow-*` aparecia só como segunda parada dos gradientes. Achatado no
+     mesmo tom, o que sobrar de referência solta continua coerente. */
+  --color-yellow-300: #ffd84d;
+  --color-yellow-400: #ffce29;
+  --color-yellow-500: #ffc300;
+  --color-yellow-600: #e0ab00;
+
+  /* O cinza do Tailwind puxa para o azul, e azul é cor. Aqui a rampa é neutra
+     de verdade, para o preto ser preto e o cinza não ter temperatura. */
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f2f2f2;
+  --color-zinc-200: #e4e4e4;
+  --color-zinc-300: #cfcfcf;
+  --color-zinc-400: #a3a3a3;
+  --color-zinc-500: #7c7c7c;
+  --color-zinc-600: #5a5a5a;
+  --color-zinc-700: #3a3a3a;
+  --color-zinc-800: #262626;
+  --color-zinc-900: #141414;
+  --color-zinc-950: #0a0a0a;
 }
 
 :root {
@@ -30,104 +80,111 @@
 
 html { scroll-behavior: smooth; }
 
-body { font-family: var(--font-inter), Inter, system-ui, sans-serif; background-color: #09090b; color: #fff; line-height: 1.5; }
-
-/* Display font for headlines — apply via className="font-display". */
-.font-display { font-family: var(--font-sora), var(--font-inter), system-ui, sans-serif; letter-spacing: -0.02em; }
-
-/* Tipografia de marca: vale nas telas que vendem e recebem (landing e entrada),
-   não no painel. As famílias --ff-* são declaradas nas próprias páginas, então
-   quem só abre o dashboard não baixa nenhuma delas.
-
-   A condensada é estreita de nascença: apertar mais o tracking fecha o
-   contraforma e mata a legibilidade em corpo grande, daí o reset para 0. */
-.marca-cortix { font-family: var(--ff-body), system-ui, sans-serif; }
-.marca-cortix .font-display { font-family: var(--ff-display), 'Arial Narrow', system-ui, sans-serif; letter-spacing: 0; }
-
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #09090b; }
-::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-
-/* Auth screen ambience — slow drifting glow blobs + shimmer sweep. */
-@keyframes auth-float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(24px, -28px) scale(1.08); }
-}
-@keyframes auth-float-slow {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-30px, 20px) scale(1.12); }
-}
-@keyframes auth-shimmer {
-  0% { transform: translateX(-120%) skewX(-12deg); }
-  100% { transform: translateX(220%) skewX(-12deg); }
-}
-@keyframes auth-rise {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.auth-float { animation: auth-float 14s ease-in-out infinite; }
-.auth-float-slow { animation: auth-float-slow 18s ease-in-out infinite; }
-.auth-shimmer { animation: auth-shimmer 3.2s ease-in-out infinite; }
-.auth-rise { animation: auth-rise 0.6s ease-out both; }
-
-@media (prefers-reduced-motion: reduce) {
-  .auth-float, .auth-float-slow, .auth-shimmer, .auth-rise { animation: none; }
+/* Uma família só, do anúncio ao relatório: Outfit, a fonte oficial da marca.
+   Aguenta os dois extremos: 800 apertado vira o título de cartaz, 400 vira
+   tabela legível. Duas famílias aqui só criariam uma costura visível entre a
+   página que vende e a tela que se usa todo dia. (A variável ainda se chama
+   --font-jakarta por herança; o valor é Outfit.) */
+body {
+  font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  background-color: #000000;
+  color: #ffffff;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Landing effects ---------------------------------------------------------- */
+/* Os três papéis da tipografia da marca, tirados dos anúncios.
+   Título: pesado e apertado, porque em corpo grande o espaçamento normal abre
+   buraco entre as letras. Etiqueta: o contrário, bem aberto, porque em corpo
+   miúdo e caixa alta o texto fecha e vira mancha. */
+.tipo-titulo { font-weight: 800; letter-spacing: -0.035em; line-height: 0.95; }
+.tipo-titulo-xl { font-weight: 800; letter-spacing: -0.045em; line-height: 0.92; }
+.tipo-etiqueta { font-weight: 700; text-transform: uppercase; letter-spacing: 0.22em; }
 
-/* Slow zoom on hero/section photos — cinematic "Ken Burns" feel. */
-@keyframes kenburns { from { transform: scale(1.06); } to { transform: scale(1.16); } }
-.kenburns { animation: kenburns 22s ease-in-out infinite alternate; }
+/* Herdado das telas que ainda chamam o título pelo nome antigo. Aponta para o
+   mesmo tratamento, então não existe uma segunda tipografia escondida. */
+.font-display { font-weight: 800; letter-spacing: -0.035em; }
 
-/* Animated gradient sweep for headline highlights. */
-@keyframes gradient-pan { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-.text-shimmer { background-size: 220% auto; animation: gradient-pan 6s ease infinite; }
+::selection { background: #ffc300; color: #000; }
 
-/* Latão de verdade numa palavra do título: a luz correndo no metal da máquina,
-   com escuro nas pontas e brilho no meio. Um gradiente chapado de duas cores
-   vira plástico; o metal precisa da alternância clara-escura-clara. */
-.brass {
-  background-image: linear-gradient(100deg, #8a6420 0%, #f0d79a 26%, #c8963c 48%, #f7e7c0 72%, #8a6420 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* Foco visível na cor da marca. Quem navega por teclado precisa enxergar onde
+   está, e o amarelo sobre preto é o par de maior contraste que a paleta tem. */
+:focus-visible { outline: 2px solid #ffc300; outline-offset: 2px; }
+
+/* Movimento ---------------------------------------------------------------- */
+
+/* Entra quando aparece na tela. Combina com o componente <Reveal>. */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1);
+  will-change: opacity, transform;
 }
-
-/* Poste de barbeiro — o único enfeite que é literalmente a placa da barbearia.
-   Parado, marca o fio de uma borda; girando, vira a barra de progresso da
-   landing. A entrada usa o parado: quem veio digitar senha não precisa de
-   listra correndo no canto do olho. */
-@keyframes pole { to { background-position: 28px 0; } }
-.pole {
-  background-color: #f3eee5;
-  background-image: linear-gradient(115deg, transparent 0 25%, #7c1d2b 25% 50%, transparent 50% 75%, #c8963c 75% 100%);
-  background-size: 28px 100%;
-}
-/* Desliza exatamente uma célula por volta, então a emenda nunca aparece. */
-.pole-gira { animation: pole 1.1s linear infinite; }
-
-/* Scroll reveal — paired with the <Reveal> client wrapper, which adds
-   `is-visible` when the element enters the viewport. */
-.reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); will-change: opacity, transform; }
 .reveal.is-visible { opacity: 1; transform: none; }
 
-/* Um horário que acabou de ser preenchido na agenda do hero. */
-@keyframes slot-in { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
-.slot-in { animation: slot-in .45s cubic-bezier(.2,.7,.2,1) both; }
+/* Título que sobe por linha, de dentro de um recorte. É o movimento do cartaz
+   sendo montado, e o único efeito de entrada da página que se repete — os
+   outros aparecem uma vez cada. */
+.linha-recorte { display: block; overflow: hidden; }
+.linha-sobe {
+  display: block;
+  transform: translateY(105%);
+  transition: transform .9s cubic-bezier(.16,1,.3,1);
+}
+.is-visible .linha-sobe { transform: none; }
 
-/* Soft marquee for a logo/benefit strip. */
-@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.marquee-track { animation: marquee 38s linear infinite; }
+/* Faixa corrida do rodapé de seção. */
+@keyframes corre { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.faixa-corre { animation: corre 42s linear infinite; }
 
-/* Cartões que respondem ao mouse sem saltar. */
-.lift { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .35s ease, background-color .35s ease; }
-.lift:hover { transform: translateY(-4px); }
+/* Cartões respondem ao mouse sem saltar. */
+.sobe { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .35s ease, background-color .35s ease; }
+.sobe:hover { transform: translateY(-4px); }
+
+/* Um horário que acabou de ser preenchido na agenda. */
+@keyframes entra-lado { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.entra-lado { animation: entra-lado .45s cubic-bezier(.2,.7,.2,1) both; }
+
+/* Carrossel ---------------------------------------------------------------- */
+
+/* Rolagem com encaixe, como no Instagram. A barra nativa some porque o
+   controle é o arrasto e os pontos embaixo.
+
+   O encaixe é pela esquerda, não pelo centro: numa tela larga cabem três ou
+   quatro cartazes de uma vez, e centralizar faria o cartaz "atual" ser um do
+   meio que ninguém escolheu. Alinhado à esquerda, apertar a seta traz o
+   próximo entrando pela direita, que é o que o gesto promete.
+
+   A margem do lado esquerdo acompanha a coluna de texto da página, então o
+   primeiro cartaz nasce na mesma linha do título. Para a direita a fileira
+   sangra até a borda, e é esse corte que avisa que há mais coisa ao lado. */
+.carrossel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+  /* O `calc()` explícito dentro do `max()` não é enfeite: sem ele o
+     compilador de CSS derruba a declaração inteira em silêncio, e a fileira
+     volta a nascer colada na borda da tela. */
+  padding-inline: max(1rem, calc((100vw - 72rem) / 2 + 1rem));
+  scroll-padding-inline-start: max(1rem, calc((100vw - 72rem) / 2 + 1rem));
+}
+.carrossel::-webkit-scrollbar { display: none; }
+.carrossel > * { scroll-snap-align: start; flex: 0 0 auto; }
+.carrossel-arrastando { cursor: grabbing; scroll-snap-type: none; user-select: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .kenburns, .text-shimmer, .marquee-track, .pole-gira, .slot-in { animation: none; }
+  .faixa-corre, .entra-lado { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
-  .lift:hover { transform: none; }
+  .linha-sobe { transform: none; transition: none; }
+  .sobe:hover { transform: none; }
+  html { scroll-behavior: auto; }
 }
 
 /* Remove as setas nativas (spin buttons) dos inputs numéricos — cinza/brancas

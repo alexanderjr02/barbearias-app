@@ -80,7 +80,7 @@ class _RevenueChartCardState extends State<RevenueChartCard> {
               else ...[
                 Row(
                   children: [
-                    Expanded(child: _MiniTotal(label: 'Receita total', value: totalReceita, color: const Color(0xFFF59E0B), palette: palette)),
+                    Expanded(child: _MiniTotal(label: 'Receita total', value: totalReceita, color: const Color(0xFFFFC300), palette: palette)),
                     const SizedBox(width: 10),
                     Expanded(child: _MiniTotal(label: 'Despesas', value: totalDespesas, color: Colors.redAccent, palette: palette)),
                   ],
@@ -133,13 +133,13 @@ class _RevenueChartCardState extends State<RevenueChartCard> {
                                 getTooltipItems: (spots) => spots
                                     .map((s) => LineTooltipItem(
                                           'R\$ ${s.y.toStringAsFixed(0)}',
-                                          TextStyle(color: s.barIndex == 0 ? const Color(0xFFF59E0B) : Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                                          TextStyle(color: s.barIndex == 0 ? const Color(0xFFFFC300) : Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold),
                                         ))
                                     .toList(),
                               ),
                             ),
                             lineBarsData: [
-                              _line(series.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.receita)).toList(), const Color(0xFFF59E0B)),
+                              _line(series.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.receita)).toList(), const Color(0xFFFFC300)),
                               _line(series.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.despesas)).toList(), Colors.redAccent),
                             ],
                           ),
@@ -149,7 +149,7 @@ class _RevenueChartCardState extends State<RevenueChartCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _Legend(color: const Color(0xFFF59E0B), label: 'Receita'),
+                    _Legend(color: const Color(0xFFFFC300), label: 'Receita'),
                     const SizedBox(width: 16),
                     _Legend(color: Colors.redAccent, label: 'Despesas'),
                   ],

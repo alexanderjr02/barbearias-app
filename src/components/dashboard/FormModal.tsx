@@ -51,7 +51,7 @@ export function FormModal({ open, onClose, title, onSubmit, submitLabel = "Salva
           <button
             type="submit"
             disabled={isPending}
-            className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50"
+            className="flex-1 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50"
           >
             {isPending ? "Salvando..." : submitLabel}
           </button>

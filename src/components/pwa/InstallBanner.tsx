@@ -85,11 +85,11 @@ export function InstallBanner() {
       <div className="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-zinc-800">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/25">
-            <Image src="/icons/icon.svg" alt="CORTIX" width={24} height={24} className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/25">
+            <Image src="/icons/icon.svg" alt="rukz" width={24} height={24} className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-white">Instalar CORTIX</p>
+            <p className="text-sm font-bold text-white">Instalar rukz</p>
             <p className="text-xs text-zinc-500">Acesso rápido, uso offline, notificações</p>
           </div>
           <button onClick={dismiss} className="text-zinc-600 hover:text-zinc-300 transition-colors flex-shrink-0">
@@ -115,7 +115,7 @@ export function InstallBanner() {
               </div>
               <button
                 onClick={() => setStep("ios-instructions")}
-                className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 Ver como instalar
@@ -161,7 +161,7 @@ export function InstallBanner() {
               </div>
               <button
                 onClick={handleInstall}
-                className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 Instalar aplicativo

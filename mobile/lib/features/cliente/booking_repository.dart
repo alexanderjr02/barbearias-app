@@ -12,7 +12,7 @@ class ClientBarbershop {
         id: json['id'],
         name: json['name'],
         slug: json['slug'],
-        primaryColor: json['primaryColor'] ?? '#D4AF37',
+        primaryColor: json['primaryColor'] ?? '#FFC300',
       );
 }
 
@@ -97,7 +97,7 @@ class BarbershopDetail {
         slug: json['slug'],
         logo: json['logo'],
         coverImage: json['coverImage'],
-        primaryColor: json['primaryColor'] ?? '#D4AF37',
+        primaryColor: json['primaryColor'] ?? '#FFC300',
         services: (json['services'] as List).map((e) => ServiceOption.fromJson(e)).toList(),
         staff: (json['staff'] as List).map((e) => StaffOption.fromJson(e)).toList(),
         workingHours: (json['workingHours'] as List).map((e) => WorkingHourEntry.fromJson(e)).toList(),

@@ -41,7 +41,7 @@ const SEED_SHOPS: Barbershop[] = [
     name: "Barbearia do João",
     slug: "barbearia-do-joao",
     ownerName: "João Silva",
-    ownerEmail: "demo@cortix.app",
+    ownerEmail: "demo@rukz.app",
     phone: "(11) 99999-9999",
     whatsapp: "(11) 99999-9999",
     city: "São Paulo",
@@ -122,7 +122,7 @@ const SEED_USERS: StoreUser[] = [
   {
     id: "seed-user-1",
     name: "João Silva",
-    email: "demo@cortix.app",
+    email: "demo@rukz.app",
     password: "demo123456",
     barbershopId: "seed-1",
     role: "OWNER",

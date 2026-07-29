@@ -112,15 +112,15 @@ export function ChatbotWidget() {
       {isOpen && (
         <div className="mb-4 w-80 sm:w-96 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-amber-600 to-yellow-500 px-4 py-3 flex items-center justify-between">
+          <div className="bg-amber-500 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-black/20 flex items-center justify-center">
                 <Scissors className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-sm font-bold text-black">Assistente CORTIX</p>
+                <p className="text-sm font-bold text-black">Assistente rukz</p>
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                   <span className="text-xs text-black/70">Online agora</span>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export function ChatbotWidget() {
               />
               <button
                 onClick={() => sendMessage(input)}
-                className="w-9 h-9 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-xl flex items-center justify-center text-black hover:opacity-90 transition-opacity"
+                className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center text-black hover:opacity-90 transition-opacity"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -218,7 +218,7 @@ export function ChatbotWidget() {
           "w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110",
           isOpen
             ? "bg-zinc-800 border border-zinc-700 text-zinc-300"
-            : "bg-gradient-to-br from-amber-500 to-yellow-400 text-black"
+            : "bg-amber-500 text-black"
         )}
       >
         {isOpen ? (
@@ -229,7 +229,7 @@ export function ChatbotWidget() {
       </button>
 
       {!isOpen && (
-        <div className="absolute -top-2 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-zinc-950 flex items-center justify-center">
+        <div className="absolute -top-2 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-zinc-950 flex items-center justify-center">
           <span className="text-xs font-bold text-white">1</span>
         </div>
       )}

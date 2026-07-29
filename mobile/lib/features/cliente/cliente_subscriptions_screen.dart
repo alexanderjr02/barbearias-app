@@ -13,7 +13,7 @@ import 'client_subscription_repository.dart';
 const _cycleLabels = {'MONTHLY': 'mês', 'QUARTERLY': 'trimestre', 'ANNUAL': 'ano'};
 const _statusLabels = {'ACTIVE': 'Ativa', 'PAST_DUE': 'Pagamento atrasado', 'CANCELLED': 'Cancelada'};
 
-Color _colorFromHex(String hex, [Color fallback = const Color(0xFFD4AF37)]) {
+Color _colorFromHex(String hex, [Color fallback = const Color(0xFFFFC300)]) {
   final cleaned = hex.replaceAll('#', '');
   if (cleaned.length != 6) return fallback;
   final value = int.tryParse(cleaned, radix: 16);
@@ -553,7 +553,6 @@ class _MembershipCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final planColor = _colorFromHex(sub.color);
-    final dark = Color.lerp(planColor, Colors.black, 0.55)!;
     final isActive = sub.status == 'ACTIVE';
     final statusColor = isActive ? const Color(0xFF34D399) : const Color(0xFFFBBF66);
     final monthsActive = DateTime.now().difference(DateTime.tryParse(sub.startedAt) ?? DateTime.now()).inDays ~/ 30;
@@ -561,7 +560,7 @@ class _MembershipCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [planColor, dark]),
+        color: planColor,
         borderRadius: BorderRadius.circular(22),
         boxShadow: [BoxShadow(color: planColor.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 12))],
       ),
@@ -640,7 +639,7 @@ class _CardChip extends StatelessWidget {
       width: 34,
       height: 24,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFFDE68A), Color(0xFFD4AF37)]),
+        gradient: const LinearGradient(colors: [Color(0xFFFDE68A), Color(0xFFFFC300)]),
         borderRadius: BorderRadius.circular(5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),

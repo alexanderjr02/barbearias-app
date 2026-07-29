@@ -55,8 +55,8 @@ export function TipPayoutsPanel() {
     <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
       <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10">
-            <HandCoins className="h-4.5 w-4.5 text-violet-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800">
+            <HandCoins className="h-4.5 w-4.5 text-zinc-400" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-white">Gorjetas a repassar</h3>
@@ -67,7 +67,7 @@ export function TipPayoutsPanel() {
         </div>
         {totalPending > 0 && (
           <div className="text-right">
-            <p className="text-lg font-black tabular-nums text-violet-300">{formatCurrency(totalPending)}</p>
+            <p className="text-lg font-black tabular-nums text-zinc-300">{formatCurrency(totalPending)}</p>
             <p className="text-[11px] text-zinc-600">a pagar</p>
           </div>
         )}
@@ -123,7 +123,7 @@ export function TipPayoutsPanel() {
                 </div>
               </div>
 
-              <span className="flex-shrink-0 text-base font-black tabular-nums text-violet-300">
+              <span className="flex-shrink-0 text-base font-black tabular-nums text-zinc-300">
                 {formatCurrency(s.pending)}
               </span>
 
@@ -136,7 +136,7 @@ export function TipPayoutsPanel() {
                 disabled={settle.isPending}
                 className={cn(
                   "flex flex-shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-colors",
-                  "bg-violet-500/15 text-violet-300 hover:bg-violet-500/25 disabled:opacity-50"
+                  "bg-zinc-800 text-zinc-300 hover:bg-amber-500/20 disabled:opacity-50"
                 )}
               >
                 <Check className="h-3.5 w-3.5" />

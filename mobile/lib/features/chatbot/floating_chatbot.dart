@@ -274,7 +274,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
               height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [accent, accent.withValues(alpha: 0.7)]),
+                color: accent,
                 boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.5), blurRadius: 18, offset: const Offset(0, 8))],
               ),
               child: AnimatedSwitcher(
@@ -308,7 +308,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(gradient: LinearGradient(colors: [accent, accent.withValues(alpha: 0.75)])),
+            decoration: BoxDecoration(color: accent),
             child: Builder(builder: (context) {
               final onAccent = contrastingTextColor(accent);
               return Row(
@@ -319,7 +319,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Assistente Cortix', style: TextStyle(color: onAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('Assistente rukz', style: TextStyle(color: onAccent, fontWeight: FontWeight.bold, fontSize: 14)),
                         Text('Online agora', style: TextStyle(color: onAccent.withValues(alpha: 0.7), fontSize: 11)),
                       ],
                     ),

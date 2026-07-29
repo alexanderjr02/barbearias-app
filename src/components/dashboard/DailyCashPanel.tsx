@@ -127,8 +127,8 @@ export function DailyCashPanel() {
                 ) : null
               }
             />
-            <Kpi icon={Scissors} iconColor="text-blue-400" label="Atendimentos" value={String(data.appointmentCount)} foot={<span className="text-zinc-500">concluídos</span>} />
-            <Kpi icon={Receipt} iconColor="text-violet-400" label="Ticket médio" value={formatCurrency(data.avgTicket)} foot={<span className="text-zinc-500">por atendimento</span>} />
+            <Kpi icon={Scissors} iconColor="text-zinc-400" label="Atendimentos" value={String(data.appointmentCount)} foot={<span className="text-zinc-500">concluídos</span>} />
+            <Kpi icon={Receipt} iconColor="text-zinc-400" label="Ticket médio" value={formatCurrency(data.avgTicket)} foot={<span className="text-zinc-500">por atendimento</span>} />
             <Kpi icon={HandCoins} iconColor="text-amber-400" label="Comissões" value={formatCurrency(data.totalCommission)} foot={<span className="text-zinc-500">a pagar</span>} />
           </div>
 
@@ -172,7 +172,7 @@ export function DailyCashPanel() {
                 <div className="space-y-2">
                   {data.byBarber.map((b) => (
                     <div key={b.staffId} className="flex items-center gap-3 rounded-xl bg-zinc-800/40 border border-zinc-800 px-3 py-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black text-xs font-bold flex-shrink-0 overflow-hidden">
+                      <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-black text-xs font-bold flex-shrink-0 overflow-hidden">
                         {b.avatar ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={b.avatar} alt={b.name} className="w-full h-full object-cover" />
@@ -213,7 +213,7 @@ export function DailyCashPanel() {
             </div>
             <button
               onClick={() => setCloseOpen(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all whitespace-nowrap"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all whitespace-nowrap"
             >
               <Wallet className="w-4 h-4" /> Fechar caixa
             </button>
@@ -284,7 +284,7 @@ function CashCloseModal({ data, dateLabel, onClose }: { data: Daily; dateLabel: 
           </button>
           <button
             onClick={() => window.print()}
-            className="flex items-center justify-center gap-2 flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all"
+            className="flex items-center justify-center gap-2 flex-1 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all"
           >
             <Printer className="w-4 h-4" /> Imprimir
           </button>

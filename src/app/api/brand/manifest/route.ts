@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
   const icon = (size: number) => `${api}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=${size}&v=${v}`;
 
   // App com a cara da barbearia é o que se compra no plano mais caro. Abaixo
-  // dele o app instalado é o CORTIX — mas o start_url continua levando o slug,
+  // dele o app instalado é o rukz — mas o start_url continua levando o slug,
   // senão o atalho abriria "uma barbearia qualquer" em vez da dele.
   const whiteLabel = shop.plan === "ENTERPRISE";
 
@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
         scope: `${origin}/`,
         display: "standalone",
         orientation: "portrait",
-        background_color: "#0B0A0F",
-        theme_color: shop.primaryColor || "#F59E0B",
+        background_color: "#000000",
+        theme_color: shop.primaryColor || "#FFC300",
         icons: [
           { src: icon(192), sizes: "192x192", type: "image/png", purpose: "any" },
           { src: icon(512), sizes: "512x512", type: "image/png", purpose: "any" },
@@ -72,15 +72,15 @@ export async function GET(request: NextRequest) {
         ],
       }
     : {
-        name: "CORTIX",
-        short_name: "CORTIX",
+        name: "rukz",
+        short_name: "rukz",
         description: "Agende seu horário na barbearia.",
         start_url: `${origin}/?shop=${encodeURIComponent(slug)}`,
         scope: `${origin}/`,
         display: "standalone",
         orientation: "portrait",
-        background_color: "#09090b",
-        theme_color: "#D4AF37",
+        background_color: "#000000",
+        theme_color: "#000000",
         icons: [
           { src: `${origin}/icons/Icon-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
           { src: `${origin}/icons/Icon-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },

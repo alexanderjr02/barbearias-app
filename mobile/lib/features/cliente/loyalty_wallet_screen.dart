@@ -624,7 +624,7 @@ class _PointsCard extends StatelessWidget {
                       child: Container(
                         height: 6,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [tierColor.withValues(alpha: 0.7), tierColor]),
+                          color: tierColor,
                           boxShadow: [
                             BoxShadow(color: tierColor.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: -1),
                           ],

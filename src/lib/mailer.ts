@@ -2,7 +2,7 @@
 //
 // Configure via env:
 //   RESEND_API_KEY   — your Resend API key (starts with "re_")
-//   EMAIL_FROM       — verified sender, e.g. "CORTIX <nao-responda@seudominio.com>"
+//   EMAIL_FROM       — verified sender, e.g. "rukz <nao-responda@seudominio.com>"
 //   APP_URL          — optional base URL used to build links in emails; when
 //                      unset, routes fall back to the request's own origin.
 //
@@ -18,7 +18,7 @@ interface SendMailInput {
   text: string;
 }
 
-const DEFAULT_FROM = "CORTIX <onboarding@resend.dev>";
+const DEFAULT_FROM = "rukz <onboarding@resend.dev>";
 
 // Há provedor de e-mail configurado? Quem chama usa isto para distinguir
 // "não enviei porque falhou" de "não enviei porque ninguém ligou o e-mail
@@ -70,15 +70,15 @@ export async function sendMail({ to, subject, html, text }: SendMailInput): Prom
 export function passwordResetEmail(name: string, resetUrl: string): { subject: string; html: string; text: string } {
   const firstName = name.trim().split(/\s+/)[0] || "";
   const greeting = firstName ? `Olá, ${firstName}!` : "Olá!";
-  const subject = "Redefinição de senha · CORTIX";
+  const subject = "Redefinição de senha · rukz";
 
   const text =
     `${greeting}\n\n` +
-    `Recebemos um pedido para redefinir a senha da sua conta CORTIX.\n` +
+    `Recebemos um pedido para redefinir a senha da sua conta rukz.\n` +
     `Abra o link abaixo para criar uma nova senha (válido por 1 hora):\n\n` +
     `${resetUrl}\n\n` +
     `Se você não pediu isso, pode ignorar este e-mail — sua senha continua a mesma.\n\n` +
-    `Equipe CORTIX`;
+    `Equipe rukz`;
 
   const html = `<!-- password reset -->
 <div style="background:#09090b;padding:32px 0;font-family:Inter,system-ui,Arial,sans-serif;">
@@ -124,7 +124,7 @@ export function platformAlertEmail(
   const text =
     `${body}\n` +
     (detailLines.length ? `\nDetalhes:\n${detailLines.join("\n")}\n` : "") +
-    `\n— CORTIX (alerta automático da plataforma)`;
+    `\n— rukz (alerta automático da plataforma)`;
 
   const detailHtml = detailLines.length
     ? `<div style="margin-top:20px;padding:14px 16px;background:#09090b;border:1px solid #27272a;border-radius:12px;">
@@ -155,7 +155,7 @@ export function platformAlertEmail(
   </div>
 </div>`;
 
-  return { subject: `${subject} · CORTIX`, html, text };
+  return { subject: `${subject} · rukz`, html, text };
 }
 
 function escapeHtml(value: string): string {

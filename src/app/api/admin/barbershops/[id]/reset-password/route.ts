@@ -30,7 +30,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!shop?.owner) return NextResponse.json({ error: "Barbearia ou dono não encontrado" }, { status: 404 });
 
   // Legível ao telefone: o admin vai ditar isto.
-  const senhaNova = `cortix${randomBytes(3).toString("hex")}A1`;
+  const senhaNova = `rukz${randomBytes(3).toString("hex")}A1`;
 
   await prisma.user.update({
     where: { id: shop.owner.id },

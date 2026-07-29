@@ -8,7 +8,7 @@ import 'gestor_repository.dart';
 import 'widgets/finance_cards.dart';
 
 const _categoryPalette = [
-  Color(0xFFF59E0B),
+  Color(0xFFFFC300),
   Color(0xFF3B82F6),
   Color(0xFF8B5CF6),
   Color(0xFFEC4899),

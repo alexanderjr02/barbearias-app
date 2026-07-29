@@ -241,8 +241,8 @@ function AdminBarbershopsPageInner() {
                         className={cn(
                           "text-xs font-bold px-2.5 py-1 rounded-full border transition-all",
                           shop.isActive
-                            ? "bg-green-500/10 text-green-400 border-green-500/30 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
-                            : "bg-red-500/10 text-red-400 border-red-500/30 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/30"
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+                            : "bg-red-500/10 text-red-400 border-red-500/30 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30"
                         )}
                       >
                         {shop.isActive ? "Ativa" : "Suspensa"}

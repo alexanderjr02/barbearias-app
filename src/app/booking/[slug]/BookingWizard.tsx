@@ -6,6 +6,7 @@ import {
   Scissors,
   Clock,
   ChevronLeft,
+  Check,
   CheckCircle,
   MessageCircle,
   Phone,
@@ -22,7 +23,7 @@ export interface Shop {
   id: string;
   name: string;
   slug: string;
-  // Decide se a marca CORTIX aparece na página e no app instalado
+  // Decide se a marca rukz aparece na página e no app instalado
   // (ENTERPRISE = White Label, sem a nossa marca).
   plan: string;
   description: string | null;
@@ -65,16 +66,19 @@ function StepIndicator({ current }: { current: Step }) {
     <div className="flex items-center justify-center gap-2 mb-8 flex-wrap">
       {STEPS.map((step, i) => (
         <div key={step} className="flex items-center gap-2">
+          {/* Uma cor só, em três intensidades: cheia onde a pessoa está,
+              apagada no que já passou, cinza no que ainda vem. O verde de
+              antes competia com o amarelo e a etapa atual sumia no meio. */}
           <div
             className={cn(
               "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all",
-              idx === i ? "bg-amber-500 text-black" : idx > i ? "bg-green-500 text-white" : "bg-zinc-800 text-zinc-500"
+              idx === i ? "bg-amber-500 text-black" : idx > i ? "bg-amber-500/20 text-amber-400" : "bg-zinc-800 text-zinc-500"
             )}
           >
-            {idx > i ? "✓" : i + 1}
+            {idx > i ? <Check className="w-3.5 h-3.5" /> : i + 1}
           </div>
           <span className={cn("text-xs hidden sm:block", idx >= i ? "text-zinc-300" : "text-zinc-600")}>{STEP_LABELS[i]}</span>
-          {i < STEPS.length - 1 && <div className={cn("w-8 h-px", idx > i ? "bg-green-500" : "bg-zinc-800")} />}
+          {i < STEPS.length - 1 && <div className={cn("w-8 h-px", idx > i ? "bg-amber-500/40" : "bg-zinc-800")} />}
         </div>
       ))}
     </div>
@@ -188,8 +192,8 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-green-400" />
+          <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-10 h-10 text-emerald-400" />
           </div>
           <h2 className="text-3xl font-black text-white mb-3 font-display">Agendado!</h2>
           <p className="text-zinc-400 mb-6">Seu horário na {shop.name} foi reservado com sucesso.</p>
@@ -206,7 +210,7 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
           <p className="text-sm text-zinc-500 mb-6">Você receberá a confirmação no WhatsApp. </p>
           <Link
             href="/"
-            className="inline-block px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl"
+            className="inline-block px-6 py-3 bg-amber-500 text-black font-bold rounded-xl"
           >
             Concluir
           </Link>
@@ -221,7 +225,7 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
       <div className="relative h-40 sm:h-52">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-black/40" />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
       <div className="max-w-2xl mx-auto px-4 -mt-12 relative">
         <div className="flex items-end gap-4">
@@ -249,7 +253,7 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
               href={`https://wa.me/55${waNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-2 bg-green-600/20 border border-green-600/30 text-green-400 text-xs font-medium rounded-lg hover:bg-green-600/30 transition-colors flex-shrink-0"
+              className="flex items-center gap-1.5 px-3 py-2 bg-green-600/20 border border-green-600/30 text-emerald-400 text-xs font-medium rounded-lg hover:bg-green-600/30 transition-colors flex-shrink-0"
             >
               <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
             </a>
@@ -315,7 +319,7 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
                   onClick={() => pickStaff(barber.id, barber.name)}
                   className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-left transition-all"
                 >
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-bold overflow-hidden">
+                  <div className="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center text-black font-bold overflow-hidden">
                     {barber.avatar ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={barber.avatar} alt={barber.name} className="w-full h-full object-cover" />
@@ -412,7 +416,7 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
             {selectedDate && selectedTime && (
               <button
                 onClick={() => setStep("info")}
-                className="w-full mt-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-all"
+                className="w-full mt-6 py-3 bg-amber-500 text-black font-bold rounded-xl hover:opacity-90 transition-all"
               >
                 Continuar →
               </button>
@@ -459,7 +463,7 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
               <button
                 disabled={!clientName || clientPhone.replace(/\D/g, "").length < 10}
                 onClick={() => setStep("confirm")}
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-amber-500 text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Revisar agendamento →
               </button>
@@ -494,9 +498,9 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
             <button
               onClick={submit}
               disabled={submitting}
-              className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-all text-lg disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-amber-500 text-black font-bold rounded-xl hover:opacity-90 transition-all text-lg disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "✓ Confirmar agendamento"}
+              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Check className="w-5 h-5" /> Confirmar agendamento</>}
             </button>
             <p className="text-xs text-zinc-600 text-center mt-3">Você receberá uma confirmação no WhatsApp</p>
           </div>
@@ -514,7 +518,7 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
             {shop.instagram && <span className="flex items-center gap-1.5">@{shop.instagram.replace(/^@/, "")}</span>}
           </div>
           <p className="text-center text-xs text-zinc-800 mt-4">
-            Powered by <span className="text-zinc-700 font-bold">CORTIX</span>
+            Powered by <span className="text-zinc-700 font-bold">rukz</span>
           </p>
         </div>
       </div>

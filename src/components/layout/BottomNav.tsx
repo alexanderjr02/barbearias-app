@@ -123,7 +123,7 @@ export function BottomNav() {
           {/* Center FAB */}
           <button onClick={() => setNewAptOpen(true)}
             className="flex flex-col items-center justify-center flex-1 py-2">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/30 -translate-y-2">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30 -translate-y-2">
               <Plus className="w-5 h-5 text-black" />
             </div>
             <span className="text-[10px] font-medium text-amber-400 -mt-1">Agendar</span>

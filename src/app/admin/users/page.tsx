@@ -198,7 +198,7 @@ export default function AdminUsersPage() {
                     <p className="text-xs text-zinc-500">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Nunca"}</p>
                   </td>
                   <td className="px-4 py-4">
-                    <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", u.isActive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400")}>
+                    <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", u.isActive ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400")}>
                       {u.isActive ? "Ativo" : "Inativo"}
                     </span>
                   </td>

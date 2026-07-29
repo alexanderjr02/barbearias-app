@@ -25,7 +25,7 @@ function token(): string {
 }
 
 export interface CreateSubscriptionInput {
-  reason: string; // e.g. "CORTIX Pro"
+  reason: string; // e.g. "rukz Pro"
   amount: number; // monthly BRL amount
   payerEmail: string;
   externalReference: string; // we use "<barbershopId>:<PLAN>"

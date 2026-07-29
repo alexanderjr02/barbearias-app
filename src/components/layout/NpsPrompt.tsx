@@ -38,7 +38,7 @@ export function NpsPrompt() {
         <Smile className="w-4 h-4 text-amber-400" />
         <p className="text-sm font-bold text-white">Como está sua experiência?</p>
       </div>
-      <p className="text-xs text-zinc-500 mb-3">De 0 a 10, o quanto você recomendaria o CORTIX para outro barbeiro?</p>
+      <p className="text-xs text-zinc-500 mb-3">De 0 a 10, o quanto você recomendaria o rukz para outro barbeiro?</p>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {Array.from({ length: 11 }, (_, i) => i).map((n) => (
           <button
@@ -64,7 +64,7 @@ export function NpsPrompt() {
       <button
         onClick={submit}
         disabled={score === null}
-        className="w-full py-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-xs font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-40"
+        className="w-full py-2 bg-amber-500 text-black text-xs font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-40"
       >
         Enviar
       </button>

@@ -40,7 +40,7 @@ export function OnboardingChecklist() {
   const pct = Math.round((data.completedCount / data.totalCount) * 100);
 
   return (
-    <div className="bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/25 rounded-xl p-5 relative">
+    <div className="bg-amber-500/[0.07] border border-amber-500/25 rounded-xl p-5 relative">
       <button onClick={dismiss} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300">
         <X className="w-4 h-4" />
       </button>
@@ -51,7 +51,7 @@ export function OnboardingChecklist() {
       <p className="text-xs text-zinc-500 mb-4">Complete essas etapas pra deixar sua barbearia pronta pra operar</p>
 
       <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-4">
-        <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

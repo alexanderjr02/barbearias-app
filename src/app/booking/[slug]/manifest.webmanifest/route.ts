@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 // Manifest PWA POR BARBEARIA. O manifest fixo em /public/manifest.json diz
-// "CORTIX" — então o cliente White Label, que paga justamente para NÃO ver a
-// nossa marca, instalava um app chamado CORTIX na tela dele. Aqui cada
+// "rukz" — então o cliente White Label, que paga justamente para NÃO ver a
+// nossa marca, instalava um app chamado rukz na tela dele. Aqui cada
 // barbearia ganha o seu, com nome, ícone e cor dela.
 //
 // A regra de marca segue o plano:
-//   ENTERPRISE (White Label) → 100% a marca dele, sem "CORTIX" em lugar nenhum
-//   demais planos            → nome da barbearia com a assinatura do CORTIX
+//   ENTERPRISE (White Label) → 100% a marca dele, sem "rukz" em lugar nenhum
+//   demais planos            → nome da barbearia com a assinatura do rukz
 export async function GET(_request: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params;
 
@@ -26,7 +26,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ slug: stri
 
   // Se a barbearia subiu um logo, ele vira o ícone do app. Sem logo, usamos um
   // ícone GERADO com as iniciais e a cor dela — nunca os ícones padrão, que
-  // têm a marca CORTIX e apareceriam justamente para o cliente White Label que
+  // têm a marca rukz e apareceriam justamente para o cliente White Label que
   // ainda não subiu logo.
   const generated = { src: `/booking/${slug}/icon.svg`, sizes: "any", type: "image/svg+xml" };
   const icons = shop.logo
@@ -40,7 +40,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ slug: stri
       ];
 
   const manifest = {
-    name: isWhiteLabel ? shop.name : `${shop.name} — CORTIX`,
+    name: isWhiteLabel ? shop.name : `${shop.name} — rukz`,
     short_name: shop.name.slice(0, 12),
     description: shop.description || `Agende seu horário na ${shop.name}.`,
     // Escopo preso à página da barbearia: o app instalado abre direto nela e

@@ -38,18 +38,18 @@ const PLANS = [
     id: "ENTERPRISE" as Plan,
     icon: Crown,
     badge: "Para expansão",
-    badgeColor: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-    activeBorder: "border-purple-500",
-    activeBg: "bg-purple-500/5",
-    iconActive: "text-purple-400",
-    iconBg: "bg-purple-500/20",
+    badgeColor: "bg-amber-500/20 text-zinc-400 border-amber-500/30",
+    activeBorder: "border-amber-500",
+    activeBg: "bg-amber-500/5",
+    iconActive: "text-zinc-400",
+    iconBg: "bg-amber-500/20",
     features: [
       "Tudo do Pro",
       "App próprio com a sua marca (logo, cores e fundo)",
       "App instalável — o link vira app no celular",
       "Nota fiscal automática (NFS-e)",
       "Multi-unidade / rede",
-      "Marca 100% sua, sem CORTIX",
+      "Marca 100% sua, sem rukz",
       "Barbeiros ilimitados",
     ],
   },
@@ -102,7 +102,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
               <Sparkles className="w-4 h-4 text-black" />
             </div>
             <div>
@@ -110,7 +110,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
                 {step === "plans" ? "Escolha seu plano" : "Plano ativado!"}
               </h2>
               <p className="text-xs text-zinc-500">
-                {step === "plans" ? "Cancele quando quiser" : `Bem-vindo ao CORTIX ${planInfo.label}`}
+                {step === "plans" ? "Cancele quando quiser" : `Bem-vindo ao rukz ${planInfo.label}`}
               </p>
             </div>
           </div>
@@ -181,7 +181,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
               <div className="flex items-center gap-3 p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <p className="text-xs text-zinc-400">
-                  Pagamento processado pelo <strong className="text-zinc-300">Mercado Pago</strong> — Pix, cartão ou boleto. Seus dados de cartão nunca passam pelo CORTIX.
+                  Pagamento processado pelo <strong className="text-zinc-300">Mercado Pago</strong> — Pix, cartão ou boleto. Seus dados de cartão nunca passam pelo rukz.
                 </p>
               </div>
 
@@ -196,16 +196,16 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
           {step === "success" && (
             <div className="text-center py-4">
               <div className={cn("w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-2xl",
-                selectedPlan === "ENTERPRISE" ? "bg-gradient-to-br from-purple-400 to-purple-600 shadow-purple-500/30" : "bg-gradient-to-br from-amber-400 to-yellow-500 shadow-amber-500/30"
+                selectedPlan === "ENTERPRISE" ? "bg-amber-500 shadow-amber-500/30" : "bg-amber-500 shadow-amber-500/30"
               )}>
                 <Check className="w-10 h-10 text-black" />
               </div>
               <h3 className="text-2xl font-black text-white mb-2">Plano {planInfo.label} ativado!</h3>
-              <p className="text-zinc-400 text-sm mb-6 max-w-xs mx-auto">Você agora tem acesso completo a todos os recursos premium do CORTIX.</p>
+              <p className="text-zinc-400 text-sm mb-6 max-w-xs mx-auto">Você agora tem acesso completo a todos os recursos premium do rukz.</p>
               <div className="grid grid-cols-2 gap-2 max-w-xs mx-auto text-left">
                 {["Relatórios avançados", "Chatbot personalizável", "WhatsApp Business", "Marketing e campanhas", "Exportar dados", "Controle de estoque"].map(f => (
                   <div key={f} className="flex items-center gap-1.5 text-xs text-zinc-300">
-                    <Check className={cn("w-3 h-3 flex-shrink-0", selectedPlan === "ENTERPRISE" ? "text-purple-400" : "text-amber-400")} />
+                    <Check className={cn("w-3 h-3 flex-shrink-0", selectedPlan === "ENTERPRISE" ? "text-zinc-400" : "text-amber-400")} />
                     {f}
                   </div>
                 ))}
@@ -222,7 +222,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
                 Continuar grátis
               </button>
               <button onClick={handleSubscribe} disabled={processing}
-                className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                className="flex-1 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                 {processing
                   ? <><div className="w-4 h-4 border-2 border-black/40 border-t-black rounded-full animate-spin" /> Redirecionando...</>
                   : <>Assinar {planInfo.label} →</>
@@ -230,7 +230,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
               </button>
             </>
           ) : (
-            <button onClick={handleClose} className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all">
+            <button onClick={handleClose} className="flex-1 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all">
               Começar a usar →
             </button>
           )}

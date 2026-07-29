@@ -119,7 +119,7 @@ export default function UnitsPage() {
         </div>
         <button
           onClick={() => setFormOpen((v) => !v)}
-          className="flex items-center gap-2 h-10 px-4 bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-900 text-sm font-semibold rounded-xl hover:from-amber-400 hover:to-amber-300 transition-all shadow-lg shadow-amber-500/20"
+          className="flex items-center gap-2 h-10 px-4 bg-amber-500 text-zinc-900 text-sm font-semibold rounded-xl hover:from-amber-400 hover:to-amber-300 transition-all shadow-lg shadow-amber-500/20"
         >
           <Plus className="w-4 h-4" /> Nova unidade
         </button>
@@ -166,7 +166,7 @@ export default function UnitsPage() {
 
       {/* Leitura do Copiloto */}
       {insight && (
-        <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 to-transparent p-4 flex items-start gap-3">
+        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] p-4 flex items-start gap-3">
           <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
             <Sparkles className="w-4 h-4 text-amber-400" />
           </div>

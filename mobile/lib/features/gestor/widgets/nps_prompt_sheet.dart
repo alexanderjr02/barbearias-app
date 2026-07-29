@@ -71,7 +71,7 @@ class _NpsPromptSheetState extends State<NpsPromptSheet> {
                 Text('Valeu pelo retorno!', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 16)),
               ]),
               const SizedBox(height: 6),
-              Text('Sua opinião ajuda a melhorar o CORTIX.', style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+              Text('Sua opinião ajuda a melhorar o rukz.', style: TextStyle(color: palette.textSecondary, fontSize: 13)),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -88,7 +88,7 @@ class _NpsPromptSheetState extends State<NpsPromptSheet> {
                 Expanded(child: Text('Como está sua experiência?', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 16))),
               ]),
               const SizedBox(height: 6),
-              Text('De 0 a 10, o quanto você recomendaria o CORTIX para outro barbeiro?', style: TextStyle(color: palette.textSecondary, fontSize: 12.5)),
+              Text('De 0 a 10, o quanto você recomendaria o rukz para outro barbeiro?', style: TextStyle(color: palette.textSecondary, fontSize: 12.5)),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,

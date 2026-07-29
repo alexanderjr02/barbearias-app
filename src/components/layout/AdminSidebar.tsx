@@ -9,6 +9,7 @@ import {
   Activity, LifeBuoy, Megaphone, Bell, UserCog, Ticket, HeartPulse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RukzLogo, RukzSimbolo } from "@/components/brand/RukzLogo";
 import { apiGet } from "@/lib/apiClient";
 import { useState } from "react";
 
@@ -84,14 +85,16 @@ export function AdminSidebar() {
 
   return (
     <aside style={{ width: w, minWidth: w }} className="fixed left-0 top-0 h-screen flex flex-col transition-all duration-300 z-40 bg-zinc-950 border-r border-zinc-800/60">
+      {/* O escudo saiu: a palavra embaixo já diz que este é o painel interno,
+          e duas marcas lado a lado disputavam o mesmo canto. */}
       <div className={cn("flex items-center h-16 border-b border-zinc-800/60 flex-shrink-0 px-4", collapsed ? "justify-center" : "gap-3")}>
-        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-          <Shield className="w-4 h-4 text-zinc-950" />
-        </div>
-        {!collapsed && (
+        {collapsed ? (
+          <RukzSimbolo className="h-4 w-auto text-white" />
+        ) : (
           <div>
-            <span className="text-base font-black text-white tracking-tight">CORTIX</span>
-            <div className="flex items-center gap-1 -mt-0.5">
+            <RukzLogo titulo={null} className="text-base text-white" />
+            <div className="flex items-center gap-1 mt-1">
+              <Shield className="w-3 h-3 text-zinc-500" aria-hidden="true" />
               <span className="text-xs text-zinc-500 font-medium">{isSuperAdmin || !me ? "Admin" : "Suporte"}</span>
             </div>
           </div>

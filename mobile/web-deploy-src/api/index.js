@@ -19,8 +19,8 @@
 const template = require('./_template.js');
 
 const DASHBOARD_ORIGIN = 'https://cortix-pied.vercel.app';
-const DEFAULT_NAME = 'CORTIX';
-const DEFAULT_THEME_COLOR = '#0B0A0F';
+const DEFAULT_NAME = 'rukz';
+const DEFAULT_THEME_COLOR = '#000000';
 // O app INSTALADO com a cara da barbearia (nome e ícone na tela de início) é
 // o que se compra no plano mais caro — sem isso qualquer barbearia, até no
 // FREE, saía com app próprio e o ENTERPRISE não valia nada. A marca DENTRO do

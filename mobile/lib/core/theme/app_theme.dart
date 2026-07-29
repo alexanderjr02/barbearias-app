@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Picks black or white for legible text over [background] — needed because
 /// the brand accent is merchant-chosen (Configurações > Aparência) and can
@@ -109,7 +110,9 @@ ThemeData buildCortixTheme({required Color seed, required Brightness brightness}
     appBarTheme: AppBarTheme(backgroundColor: palette.bg, foregroundColor: palette.textPrimary, elevation: 0),
     cardColor: palette.surface,
     dividerColor: palette.border,
-    textTheme: (isDark ? ThemeData.dark() : ThemeData.light()).textTheme.apply(
+    // Outfit, a fonte oficial da marca rukz, sobre toda a tipografia do app —
+    // o mesmo traço geométrico da logo, do cartaz ao relatório.
+    textTheme: GoogleFonts.outfitTextTheme((isDark ? ThemeData.dark() : ThemeData.light()).textTheme).apply(
           bodyColor: palette.textPrimary,
           displayColor: palette.textPrimary,
         ),

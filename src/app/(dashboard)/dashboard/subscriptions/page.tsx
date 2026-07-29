@@ -187,7 +187,7 @@ export default function SubscriptionsPage() {
 
             <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
               <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 text-center max-w-md shadow-2xl">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-purple-500/25">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-amber-500/25">
                   <Crown className="w-8 h-8 text-black" />
                 </div>
                 <h2 className="text-xl font-black text-white mb-2">Assinaturas recorrentes</h2>
@@ -198,12 +198,12 @@ export default function SubscriptionsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
                   {["Cobrança automática mensal", "Pix e cartão de crédito", "Receita previsível (MRR)", "Reduza cancelamentos", "Planos exclusivos por barbearia", "Dashboard completo de assinantes"].map((f) => (
                     <div key={f} className="flex items-center gap-1.5 text-xs text-zinc-400">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
                       {f}
                     </div>
                   ))}
                 </div>
-                <button onClick={() => setUpgradeOpen(true)} className="w-full py-3 bg-gradient-to-r from-purple-500 to-purple-400 text-black font-bold rounded-xl hover:opacity-90 transition-all">
+                <button onClick={() => setUpgradeOpen(true)} className="w-full py-3 bg-amber-500 text-black font-bold rounded-xl hover:opacity-90 transition-all">
                   Desbloquear assinaturas →
                 </button>
               </div>
@@ -287,7 +287,7 @@ export default function SubscriptionsPage() {
         title="Assinaturas"
         subtitle={`${activePlansCount} plano${activePlansCount === 1 ? "" : "s"} ativo${activePlansCount === 1 ? "" : "s"} · ${activeSubs.length} assinante${activeSubs.length === 1 ? "" : "s"}`}
         action={
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" />
             Novo plano
           </button>
@@ -306,8 +306,8 @@ export default function SubscriptionsPage() {
           <p className="text-sm text-zinc-500 mt-1">Receita recorrente mensal</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-3">
-            <Users className="w-5 h-5 text-blue-400" />
+          <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center mb-3">
+            <Users className="w-5 h-5 text-zinc-400" />
           </div>
           <p className="text-2xl font-black text-white">{activeSubs.length}</p>
           <p className="text-sm text-zinc-500 mt-1">Assinantes ativos</p>
@@ -320,8 +320,8 @@ export default function SubscriptionsPage() {
           <p className="text-sm text-zinc-500 mt-1">Ticket médio</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3">
-            <Repeat className="w-5 h-5 text-purple-400" />
+          <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center mb-3">
+            <Repeat className="w-5 h-5 text-zinc-400" />
           </div>
           <p className="text-2xl font-black text-white">{activePlansCount}</p>
           <p className="text-sm text-zinc-500 mt-1">Planos ativos</p>
@@ -334,11 +334,11 @@ export default function SubscriptionsPage() {
           <p className="text-sm font-bold text-white mb-3">Forma de pagamento dos assinantes</p>
           <div className="h-2.5 rounded-full overflow-hidden flex w-full bg-zinc-800">
             <div className="bg-emerald-400 h-full" style={{ width: `${pixPct}%` }} />
-            <div className="bg-blue-400 h-full" style={{ width: `${100 - pixPct}%` }} />
+            <div className="bg-zinc-400 h-full" style={{ width: `${100 - pixPct}%` }} />
           </div>
           <div className="flex items-center gap-4 mt-2.5 text-xs text-zinc-400">
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Pix · {pixPct}%</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400" /> Cartão · {100 - pixPct}%</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-zinc-400" /> Cartão · {100 - pixPct}%</span>
           </div>
         </div>
       )}

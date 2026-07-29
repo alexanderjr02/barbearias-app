@@ -6,7 +6,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Calendário do CORTIX — substitui o `<input type="date">` do navegador.
+ * Calendário do rukz — substitui o `<input type="date">` do navegador.
  *
  * O nativo tem três problemas que aparecem todo dia: ele muda de cara em cada
  * navegador e sistema (o do Chrome no Windows não é o do Safari no iPhone),

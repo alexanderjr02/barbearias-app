@@ -26,7 +26,7 @@ export async function GET() {
       priority: t.priority,
       messageCount: t._count.messages,
       lastMessage: t.messages[0]?.body ?? null,
-      // Lets the UI flag "the CORTIX team replied and you haven't answered
+      // Lets the UI flag "the rukz team replied and you haven't answered
       // yet" without a separate read/unread table — derived straight from
       // who wrote the most recent message.
       lastMessageIsAdmin: t.messages[0] ? ["SUPER_ADMIN", "SUPPORT_ADMIN"].includes(t.messages[0].author.role) : false,

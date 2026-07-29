@@ -16,7 +16,7 @@ export function WhatsAppFloat({ mensagem }: { mensagem?: string }) {
   const numero = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "").replace(/\D/g, "");
   if (!numero) return null;
 
-  const texto = encodeURIComponent(mensagem ?? "Olá! Vi o CORTIX e quero saber mais sobre os planos.");
+  const texto = encodeURIComponent(mensagem ?? "Olá! Vi o rukz e quero saber mais sobre os planos.");
 
   return (
     <a

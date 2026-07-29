@@ -40,7 +40,7 @@ export function PlanGate({ feature, children, label, compact = false }: PlanGate
             <button
               onClick={() => setOpen(true)}
               className={cn(
-                "flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all",
+                "flex items-center gap-1.5 bg-amber-500 text-black font-bold rounded-lg hover:opacity-90 transition-all",
                 compact ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"
               )}
             >

@@ -94,7 +94,7 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
               ],
               if (needsLoginFields) ...[
                 const SizedBox(height: 12),
-                Text('Opcional: crie um acesso para esse barbeiro usar o app CORTIX.', style: TextStyle(color: AppPalette.of(context).textFaint, fontSize: 11.5)),
+                Text('Opcional: crie um acesso para esse barbeiro usar o app rukz.', style: TextStyle(color: AppPalette.of(context).textFaint, fontSize: 11.5)),
                 const FieldLabel('E-mail de acesso'),
                 CortixField(controller: emailCtrl, keyboardType: TextInputType.emailAddress, hint: 'barbeiro@email.com'),
                 const FieldLabel('Senha de acesso'),

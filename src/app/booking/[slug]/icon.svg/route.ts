@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 // Ícone GERADO com a marca da barbearia: quadrado na cor dela + as iniciais.
 //
 // Por que existe: o manifest caía nos ícones padrão quando a barbearia não
-// tinha logo — e esses ícones têm a marca CORTIX. Ou seja, justamente o
+// tinha logo — e esses ícones têm a marca rukz. Ou seja, justamente o
 // cliente White Label que ainda não subiu um logo instalava um app com a
 // NOSSA marca, que é o oposto do que ele paga. Aqui ninguém fica sem ícone
 // próprio: sem logo, ele é desenhado a partir do nome e da cor da barbearia.

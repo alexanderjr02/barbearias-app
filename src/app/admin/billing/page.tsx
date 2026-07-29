@@ -196,7 +196,7 @@ export default function AdminBillingPage() {
               <p className="text-xs text-zinc-600 mt-1">{formatCurrency(summary.arr)} ARR</p>
             </div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-3"><Users className="w-5 h-5 text-blue-400" /></div>
+              <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center mb-3"><Users className="w-5 h-5 text-zinc-400" /></div>
               <p className="text-2xl font-black text-white">{formatCurrency(summary.arpu)}</p>
               <p className="text-sm text-zinc-500">ARPU</p>
               <p className="text-xs text-zinc-600 mt-1">Receita média por barbearia</p>

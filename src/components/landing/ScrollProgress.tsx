@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 
 /**
- * Progresso da página desenhado como o poste de barbeiro, embaixo do cabeçalho.
+ * Quanto da página já passou, num fio amarelo embaixo do cabeçalho.
  *
- * É o único elemento decorativo fixo da landing, e ganhou esse direito por ser
- * a placa da própria barbearia — não um enfeite genérico de site.
+ * Antes isto era um poste de barbeiro girando, com listras em gradiente. Saiu
+ * junto com os gradientes: a identidade nova não tem enfeite, tem contraste. O
+ * que sobrou é a informação crua — uma linha que enche — na única cor que a
+ * marca usa para apontar coisas.
  *
- * Três pixels de altura, então animar `width` sai barato; `transform: scaleX`
- * esticaria as listras e desmancharia o poste.
+ * Três pixels de altura, então animar `width` sai barato e não pesa a rolagem.
  */
 export function ScrollProgress() {
   const [progresso, setProgresso] = useState(0);
@@ -29,8 +30,8 @@ export function ScrollProgress() {
   }, []);
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-breu-3" aria-hidden="true">
-      <div className="pole pole-gira h-full" style={{ width: `${progresso * 100}%` }} />
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-traco" aria-hidden="true">
+      <div className="h-full bg-ouro" style={{ width: `${progresso * 100}%` }} />
     </div>
   );
 }

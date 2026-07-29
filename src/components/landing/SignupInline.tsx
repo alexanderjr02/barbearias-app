@@ -12,6 +12,10 @@ import { Check, Loader2, ArrowRight } from "lucide-react";
  * falta. Os dados da barbearia ficam para depois porque decidir e digitar CNPJ
  * são momentos diferentes.
  *
+ * Isto mora dentro do painel amarelo, então tudo aqui é preto sobre amarelo, e
+ * os cartões invertem para preto. É o contraste mais forte que a identidade
+ * tem, e ele está reservado para o momento em que a pessoa escolhe.
+ *
  * Os benefícios listados são os de verdade: saem de FEATURES_BY_PLAN
  * (src/context/PlanContext.tsx) e dos limites de DEFAULT_PLAN_PRICING. Se um
  * plano deixar de liberar algo lá, a lista aqui precisa mudar junto — prometer
@@ -91,37 +95,55 @@ export function SignupInline() {
           return (
             <div
               key={p.valor}
-              className={`lift relative flex flex-col rounded-2xl border-2 p-6 text-left ${
+              className={`sobe relative flex flex-col rounded-2xl p-6 text-left transition-shadow ${
                 ativo
-                  ? "border-latao bg-white shadow-xl shadow-latao-escuro/15"
-                  : "border-porcelana-2 bg-white/60 hover:border-fumaca/50"
+                  ? "bg-preto text-neve shadow-2xl shadow-black/25"
+                  : "bg-preto/[0.06] text-preto ring-1 ring-preto/15 hover:ring-preto/35"
               }`}
             >
               {p.destaque && (
-                <span className="absolute -top-3 left-6 rounded-full bg-vinho px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-porcelana">
+                <span
+                  className={`tipo-etiqueta absolute -top-3 left-6 rounded-full px-3 py-1 text-[0.6rem] ${
+                    ativo ? "bg-ouro text-preto" : "bg-preto text-ouro"
+                  }`}
+                >
                   Mais escolhido
                 </span>
               )}
 
-              <h3 className="font-display text-3xl font-bold uppercase leading-none text-breu">{p.nome}</h3>
-              <p className="mt-1.5 text-[13px] text-breu/60">{p.paraQuem}</p>
+              <h3 className="tipo-titulo text-3xl">{p.nome}</h3>
+              <p className={`mt-1.5 text-[13px] ${ativo ? "text-cinza" : "text-preto/75"}`}>{p.paraQuem}</p>
 
               <p className="mt-5 flex items-baseline gap-1">
-                <span className="text-lg font-semibold text-breu/50">R$</span>
-                <span className="font-display text-6xl font-bold leading-none tabular-nums text-breu">{p.preco}</span>
-                <span className="text-sm font-medium text-breu/50">/mês</span>
+                <span className={`text-lg font-semibold ${ativo ? "text-cinza" : "text-preto/65"}`}>R$</span>
+                <span className="tipo-titulo-xl text-6xl tabular-nums">{p.preco}</span>
+                <span className={`text-sm font-medium ${ativo ? "text-cinza" : "text-preto/65"}`}>/mês</span>
               </p>
 
               {p.herda && (
-                <p className="mt-5 border-t border-porcelana-2 pt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-latao-escuro">
+                <p
+                  className={`tipo-etiqueta mt-5 border-t pt-4 text-[0.6rem] ${
+                    ativo ? "border-traco text-ouro" : "border-preto/15 text-preto/75"
+                  }`}
+                >
                   {p.herda}
                 </p>
               )}
 
-              <ul className={`mb-8 space-y-2.5 ${p.herda ? "mt-3" : "mt-5 border-t border-porcelana-2 pt-5"}`}>
+              <ul
+                className={`mb-8 space-y-2.5 ${
+                  p.herda ? "mt-3" : `mt-5 border-t pt-5 ${ativo ? "border-traco" : "border-preto/15"}`
+                }`}
+              >
                 {p.beneficios.map((b) => (
-                  <li key={b} className="flex gap-2.5 text-[13px] leading-relaxed text-breu/80">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-latao-escuro" aria-hidden="true" />
+                  <li
+                    key={b}
+                    className={`flex gap-2.5 text-[13px] leading-relaxed ${ativo ? "text-cinza" : "text-preto/75"}`}
+                  >
+                    <Check
+                      className={`mt-0.5 h-4 w-4 shrink-0 ${ativo ? "text-ouro" : "text-preto/65"}`}
+                      aria-hidden="true"
+                    />
                     {b}
                   </li>
                 ))}
@@ -134,10 +156,10 @@ export function SignupInline() {
                 // `mt-auto` empurra o botão para a base: as listas têm tamanhos
                 // diferentes, e sem isso os três botões ficam em alturas
                 // diferentes, como se um plano estivesse desalinhado.
-                className={`mt-auto h-11 w-full rounded-xl pt-px text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-latao-escuro ${
+                className={`mt-auto h-11 w-full rounded-xl text-sm font-bold transition-colors ${
                   ativo
-                    ? "bg-breu text-porcelana"
-                    : "border border-breu/20 text-breu hover:border-breu/50 hover:bg-breu/5"
+                    ? "bg-ouro text-preto hover:bg-ouro-claro"
+                    : "bg-preto text-neve hover:bg-preto/85"
                 }`}
               >
                 {ativo ? "Plano escolhido" : `Escolher o ${p.nome}`}
@@ -147,7 +169,7 @@ export function SignupInline() {
         })}
       </div>
 
-      <p className="mt-5 text-center text-xs text-breu/50">
+      <p className="mt-5 text-center text-xs text-preto/75">
         Sem fidelidade e sem multa. Você troca de plano quando quiser, e leva os seus dados se decidir sair.
       </p>
 
@@ -178,11 +200,11 @@ function Formulario({ plano, nomePlano }: { plano: string; nomePlano: string }) 
   return (
     <form
       onSubmit={seguir}
-      className="mx-auto mt-12 max-w-xl rounded-2xl border-2 border-breu/10 bg-white p-6 shadow-xl shadow-breu/5 sm:p-8"
+      className="mx-auto mt-12 max-w-xl rounded-2xl bg-preto p-6 text-neve shadow-2xl shadow-black/25 sm:p-8"
     >
-      <p className="font-display text-3xl font-bold uppercase leading-none text-breu">Criar a conta</p>
-      <p className="mt-2 text-sm text-breu/60">
-        Você escolheu o <span className="font-semibold text-breu">{nomePlano}</span>. Leva menos de um minuto.
+      <p className="tipo-titulo text-3xl">Criar a conta</p>
+      <p className="mt-2 text-sm text-cinza">
+        Você escolheu o <span className="font-semibold text-ouro">{nomePlano}</span>. Leva menos de um minuto.
       </p>
 
       <div className="mt-6 space-y-3">
@@ -194,14 +216,14 @@ function Formulario({ plano, nomePlano }: { plano: string; nomePlano: string }) 
       <button
         type="submit"
         disabled={enviando}
-        className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-breu text-sm font-bold uppercase tracking-wider text-porcelana transition-colors hover:bg-breu-3 disabled:opacity-60"
+        className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-ouro text-sm font-bold text-preto transition-colors hover:bg-ouro-claro disabled:opacity-60"
       >
         {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         Continuar com o {nomePlano}
         {!enviando && <ArrowRight className="h-4 w-4" />}
       </button>
 
-      <p className="mt-3 text-center text-[11px] leading-relaxed text-breu/50">
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-cinza-fraco">
         Na próxima etapa você informa os dados da barbearia. Nada é cobrado sem a sua confirmação.
       </p>
     </form>
@@ -211,7 +233,7 @@ function Formulario({ plano, nomePlano }: { plano: string; nomePlano: string }) 
 function Campo({ nome, rotulo, tipo, exemplo }: { nome: string; rotulo: string; tipo: string; exemplo: string }) {
   return (
     <div>
-      <label htmlFor={`in-${nome}`} className="mb-1.5 block text-[13px] font-semibold text-breu/70">
+      <label htmlFor={`in-${nome}`} className="mb-1.5 block text-[13px] font-semibold text-cinza">
         {rotulo}
       </label>
       <input
@@ -221,7 +243,7 @@ function Campo({ nome, rotulo, tipo, exemplo }: { nome: string; rotulo: string; 
         required
         placeholder={exemplo}
         autoComplete={nome === "email" ? "email" : nome === "telefone" ? "tel" : "name"}
-        className="h-12 w-full rounded-xl border border-breu/15 bg-porcelana/60 px-3.5 text-sm text-breu placeholder:text-breu/35 transition-colors focus:border-latao-escuro focus:bg-white focus:outline-none"
+        className="h-12 w-full rounded-xl border border-traco-forte bg-grafite px-3.5 text-sm text-neve placeholder:text-cinza-fraco transition-colors focus:border-ouro focus:outline-none"
       />
     </div>
   );

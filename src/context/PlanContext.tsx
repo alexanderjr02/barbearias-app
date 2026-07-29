@@ -83,9 +83,9 @@ export const PLAN_INFO: Record<
   },
   ENTERPRISE: {
     label: "White Label",
-    color: "text-purple-400",
-    bg: "bg-purple-500/10",
-    badgeBg: "bg-purple-500/20 text-purple-400",
+    color: "text-zinc-400",
+    bg: "bg-zinc-800",
+    badgeBg: "bg-amber-500/20 text-zinc-400",
     price: "R$ 897/mês",
     appointmentsLimit: Infinity,
     staffLimit: Infinity,

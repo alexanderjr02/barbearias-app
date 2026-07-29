@@ -12,7 +12,7 @@ interface PageHeaderProps {
 }
 
 const ACCENT_CLASSES = {
-  amber: { badge: "bg-gradient-to-br from-amber-500/15 to-amber-600/5 border-amber-500/20", icon: "text-amber-400" },
+  amber: { badge: "bg-amber-500/10 border-amber-500/20", icon: "text-amber-400" },
   mono: { badge: "bg-white/10 border-white/15", icon: "text-white" },
 };
 

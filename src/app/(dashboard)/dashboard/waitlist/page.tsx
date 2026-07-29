@@ -103,7 +103,7 @@ export default function WaitlistPage() {
         title="Fila de espera"
         subtitle={`${entries.length} cliente${entries.length === 1 ? "" : "s"} aguardando`}
         action={
-          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" />
             Adicionar
           </button>
@@ -150,7 +150,7 @@ export default function WaitlistPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Avisar no WhatsApp"
-                  className="flex items-center gap-1.5 px-3 py-2 bg-green-600/15 border border-green-600/30 text-green-400 text-xs font-medium rounded-lg hover:bg-green-600/25 transition-colors flex-shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-green-600/15 border border-green-600/30 text-emerald-400 text-xs font-medium rounded-lg hover:bg-green-600/25 transition-colors flex-shrink-0"
                 >
                   <MessageCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Avisar</span>
                 </a>

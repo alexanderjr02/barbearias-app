@@ -279,7 +279,7 @@ export default function SettingsPage() {
                 />
                 <p className="mt-1 text-xs text-zinc-500">Escreva as dúvidas comuns e suas respostas. O assistente virtual usa isso pra responder os clientes.</p>
               </div>
-              <button type="submit" disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
+              <button type="submit" disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
                 {profileSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar alterações"}
               </button>
             </form>
@@ -336,7 +336,7 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={saveHours} disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
+              <button onClick={saveHours} disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
                 {hoursSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar horários"}
               </button>
             </div>
@@ -435,7 +435,7 @@ export default function SettingsPage() {
                       <p className="text-sm text-zinc-400 mt-1">Ative o plano para editar nome, mensagem de boas-vindas, FAQ e integração com WhatsApp.</p>
                     </div>
                   </div>
-                  <button onClick={() => setUpgradeOpen(true)} className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-semibold text-sm">
+                  <button onClick={() => setUpgradeOpen(true)} className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-black font-semibold text-sm">
                     <Sparkles className="w-4 h-4" /> Ver planos
                   </button>
                 </div>
@@ -510,7 +510,7 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
-                  <button onClick={saveChatbot} disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
+                  <button onClick={saveChatbot} disabled={updateBarbershop.isPending} className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60">
                     {chatbotSaved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar chatbot"}
                   </button>
                 </>
@@ -599,7 +599,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Prova de valor — receita recuperada real (AutopilotLog). */}
-                <div className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-900/30 p-5">
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
                   <div className="flex items-center gap-2 text-zinc-400">
                     <TrendingUp className="h-4 w-4 text-amber-400" />
                     <p className="text-xs font-medium">Receita recuperada este mês</p>
@@ -709,7 +709,7 @@ export default function SettingsPage() {
                           "mt-4 w-full py-2 rounded-lg text-xs font-bold transition-all",
                           isCurrent
                             ? "bg-zinc-800 text-zinc-500 cursor-default"
-                            : "bg-gradient-to-r from-amber-500 to-yellow-400 text-black hover:opacity-90"
+                            : "bg-amber-500 text-black hover:opacity-90"
                         )}
                       >
                         {isCurrent ? "Plano ativo" : `Ver como ${info.label}`}

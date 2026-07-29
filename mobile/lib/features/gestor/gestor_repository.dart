@@ -502,7 +502,7 @@ class BarbershopProfile {
         description: json['description'],
         logo: json['logo'],
         coverImage: json['coverImage'],
-        primaryColor: json['primaryColor'] ?? '#D4AF37',
+        primaryColor: json['primaryColor'] ?? '#FFC300',
         plan: json['plan'] ?? 'FREE',
         autopilotLevel: json['autopilotLevel'] as String? ?? 'suggest',
         autoConfirm: json['autoConfirm'] == true,
@@ -569,7 +569,7 @@ class ServiceSlice {
         name: json['name'],
         count: json['count'] as int,
         value: (json['value'] as num).toDouble(),
-        color: json['color'] ?? '#F59E0B',
+        color: json['color'] ?? '#FFC300',
       );
 }
 
@@ -851,7 +851,7 @@ class GestorSubscriptionPlan {
         price: (json['price'] as num).toDouble(),
         billingCycle: json['billingCycle'],
         benefits: json['benefits'] ?? '',
-        color: json['color'] ?? '#D4AF37',
+        color: json['color'] ?? '#FFC300',
         isActive: json['isActive'] == true,
         subscriptions: (json['subscriptions'] as List).map((e) => GestorSubscriber.fromJson(e)).toList(),
       );

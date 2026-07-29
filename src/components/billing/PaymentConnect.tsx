@@ -87,7 +87,7 @@ export function PaymentConnect() {
   const cfg = PROVIDERS[provider];
 
   return (
-    <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.06] to-transparent p-5">
+    <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-5">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
           <Link2 className="w-5 h-5 text-amber-400" />
@@ -101,7 +101,7 @@ export function PaymentConnect() {
           {!open ? (
             <button
               onClick={() => setOpen(true)}
-              className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all"
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all"
             >
               <Link2 className="w-4 h-4" /> Conectar recebimento
             </button>
@@ -137,7 +137,7 @@ export function PaymentConnect() {
                   <button
                     onClick={() => key.trim() && save.mutate({ paymentProvider: provider, paymentApiKey: key.trim() })}
                     disabled={!key.trim() || save.isPending}
-                    className="h-10 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="h-10 px-4 bg-amber-500 text-black text-sm font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar"}
                   </button>

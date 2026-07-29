@@ -231,7 +231,7 @@ class _FinalizeAppointmentScreenState extends State<FinalizeAppointmentScreen> {
         color: palette.bg,
         child: PulseButton(
           onPressed: _saving ? null : _submit,
-          gradient: LinearGradient(colors: [Color.lerp(accent, Colors.white, 0.22)!, accent]),
+          color: accent,
           child: _saving
               ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: onAccent))
               : Text('Concluir atendimento', style: TextStyle(color: onAccent, fontWeight: FontWeight.bold, fontSize: 15.5)),

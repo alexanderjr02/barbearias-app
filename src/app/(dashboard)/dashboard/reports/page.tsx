@@ -247,9 +247,9 @@ export default function ReportsPage() {
       {/* KPI Cards */}
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard title="Receita total" value={formatCurrency(totalRevenue)} icon={DollarSign} />
-        <KpiCard title="Agendamentos" value={String(totalAppointments)} icon={Calendar} iconColor="text-blue-400" />
-        <KpiCard title="Ticket médio" value={formatCurrency(avgTicket)} icon={TrendingUp} iconColor="text-green-400" />
-        <KpiCard title="Margem líquida" value={totalRevenue > 0 ? `${Math.round((profit / totalRevenue) * 100)}%` : "0%"} icon={Percent} iconColor="text-purple-400" sub={`Lucro: ${formatCurrency(profit)}`} />
+        <KpiCard title="Agendamentos" value={String(totalAppointments)} icon={Calendar} iconColor="text-zinc-400" />
+        <KpiCard title="Ticket médio" value={formatCurrency(avgTicket)} icon={TrendingUp} iconColor="text-emerald-400" />
+        <KpiCard title="Margem líquida" value={totalRevenue > 0 ? `${Math.round((profit / totalRevenue) * 100)}%` : "0%"} icon={Percent} iconColor="text-zinc-400" sub={`Lucro: ${formatCurrency(profit)}`} />
       </div>
 
       {/* Revenue Chart */}
@@ -320,7 +320,7 @@ export default function ReportsPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-base font-bold text-white">Novos vs Retornantes</h3>
-            <span className="text-xs text-green-400 font-medium bg-green-500/10 px-2 py-0.5 rounded-full">{returningShare}% retenção</span>
+            <span className="text-xs text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full">{returningShare}% retenção</span>
           </div>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={retentionData} margin={{ top: 4, right: 0, left: -24, bottom: 0 }}>

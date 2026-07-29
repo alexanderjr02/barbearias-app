@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { LegalShell, LegalSection } from "@/components/legal/LegalShell";
 
 export const metadata: Metadata = {
-  title: "Termos de Uso · CORTIX",
-  description: "Termos e condições de uso da plataforma CORTIX.",
+  title: "Termos de Uso · rukz",
+  description: "Termos e condições de uso da plataforma rukz.",
 };
 
 // NOTE: This is a solid starting template, not a substitute for review by a
@@ -13,9 +13,9 @@ export default function TermosPage() {
   return (
     <LegalShell title="Termos de Uso" updatedAt="14 de julho de 2026">
       <p className="text-zinc-400">
-        Bem-vindo ao CORTIX. Estes Termos de Uso (&quot;Termos&quot;) regem o acesso e a utilização da
-        plataforma de gestão para barbearias CORTIX (&quot;Plataforma&quot;, &quot;Serviço&quot;), oferecida por
-        <strong className="text-zinc-300"> [RAZÃO SOCIAL], inscrita no CNPJ [CNPJ]</strong> (&quot;CORTIX&quot;, &quot;nós&quot;).
+        Bem-vindo ao rukz. Estes Termos de Uso (&quot;Termos&quot;) regem o acesso e a utilização da
+        plataforma de gestão para barbearias rukz (&quot;Plataforma&quot;, &quot;Serviço&quot;), oferecida por
+        <strong className="text-zinc-300"> [RAZÃO SOCIAL], inscrita no CNPJ [CNPJ]</strong> (&quot;rukz&quot;, &quot;nós&quot;).
         Ao criar uma conta ou usar o Serviço, você concorda com estes Termos.
       </p>
 
@@ -50,7 +50,7 @@ export default function TermosPage() {
       </LegalSection>
 
       <LegalSection n={7} title="Limitação de responsabilidade">
-        <p>Na máxima extensão permitida pela lei, o CORTIX não se responsabiliza por lucros cessantes ou danos indiretos decorrentes do uso ou da indisponibilidade do Serviço. A responsabilidade total fica limitada ao valor pago por você nos 3 meses anteriores ao evento.</p>
+        <p>Na máxima extensão permitida pela lei, o rukz não se responsabiliza por lucros cessantes ou danos indiretos decorrentes do uso ou da indisponibilidade do Serviço. A responsabilidade total fica limitada ao valor pago por você nos 3 meses anteriores ao evento.</p>
       </LegalSection>
 
       <LegalSection n={8} title="Rescisão">

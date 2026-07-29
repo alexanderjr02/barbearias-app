@@ -26,7 +26,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["funcionalidade", "recurso", "o que faz", "features", "o que tem", "inclui", "sistema faz"],
-    answer: "O CORTIX cobre o essencial da gestão de uma barbearia:\n\n**Agendamento online** — página personalizada 24/7\n**Agenda com visão diária, semanal e mensal** — veja toda a equipe de uma vez ou filtre por barbeiro\n**Chatbot** no site (e no WhatsApp nos planos Pro/White Label)\n**Financeiro** — receitas, despesas e comissões\n**Relatórios** de faturamento e performance da equipe\n**Clientes** — histórico, avaliações e programa de pontos/fidelidade (Bronze, Prata, Ouro)\n**Equipe** — controle de barbeiros, comissões e agenda de cada um\n**App para barbeiro e cliente** — agenda, ganhos e avaliações para o barbeiro; histórico, cancelamento/remarcação e avaliação de atendimento para o cliente\n**Estoque** de produtos, com foto de cada item\n\nQuer ver a demonstração ao vivo?",
+    answer: "O rukz cobre o essencial da gestão de uma barbearia:\n\n**Agendamento online** — página personalizada 24/7\n**Agenda com visão diária, semanal e mensal** — veja toda a equipe de uma vez ou filtre por barbeiro\n**Chatbot** no site (e no WhatsApp nos planos Pro/White Label)\n**Financeiro** — receitas, despesas e comissões\n**Relatórios** de faturamento e performance da equipe\n**Clientes** — histórico, avaliações e programa de pontos/fidelidade (Bronze, Prata, Ouro)\n**Equipe** — controle de barbeiros, comissões e agenda de cada um\n**App para barbeiro e cliente** — agenda, ganhos e avaliações para o barbeiro; histórico, cancelamento/remarcação e avaliação de atendimento para o cliente\n**Estoque** de produtos, com foto de cada item\n\nQuer ver a demonstração ao vivo?",
   },
   {
     keywords: ["app", "aplicativo", "celular", "download", "baixar"],
@@ -46,7 +46,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["ponto", "pontos", "fidelidade", "fidelização", "cashback", "recompensa"],
-    answer: "O programa de fidelidade do CORTIX funciona por pontos:\n\n**Bronze** — 0 a 500 pontos\n**Prata** — 501 a 1.500 pontos (5% de desconto)\n**Ouro** — a partir de 1.501 pontos (10% de desconto)\n\nOs pontos são creditados automaticamente quando um atendimento é concluído, e o gestor pode configurar quantos pontos valem por real gasto. Disponível a partir do plano **Pro**.",
+    answer: "O programa de fidelidade do rukz funciona por pontos:\n\n**Bronze** — 0 a 500 pontos\n**Prata** — 501 a 1.500 pontos (5% de desconto)\n**Ouro** — a partir de 1.501 pontos (10% de desconto)\n\nOs pontos são creditados automaticamente quando um atendimento é concluído, e o gestor pode configurar quantos pontos valem por real gasto. Disponível a partir do plano **Pro**.",
   },
   {
     keywords: ["whatsapp", "integração", "api", "mensagem automática"],
@@ -62,11 +62,11 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["cardápio", "configurar", "personalizar", "logo", "cor", "aparência"],
-    answer: "Cada barbearia tem sua identidade visual no CORTIX:\n\nCores, logo e capa personalizadas (planos Pro e White Label)\nURL própria — ex: cortix.app/sua-barbearia\nServiços, preços e horários configuráveis\n\nTudo pelo painel, sem precisar de programação.",
+    answer: "Cada barbearia tem sua identidade visual no rukz:\n\nCores, logo e capa personalizadas (planos Pro e White Label)\nURL própria — ex: rukz.app/sua-barbearia\nServiços, preços e horários configuráveis\n\nTudo pelo painel, sem precisar de programação.",
   },
   {
     keywords: ["suporte", "ajuda", "problema", "contato", "falar", "vendas", "comercial"],
-    answer: "Estamos aqui para ajudar! \n\n**Email:** suporte@cortix.app\n**WhatsApp:** (11) 99999-0000\n\nNo plano **Pro**, o suporte é prioritário. No **White Label**, você tem atendimento dedicado.\n\nO que mais posso ajudar?",
+    answer: "Estamos aqui para ajudar! \n\n**Email:** suporte@rukz.app\n**WhatsApp:** (11) 99999-0000\n\nNo plano **Pro**, o suporte é prioritário. No **White Label**, você tem atendimento dedicado.\n\nO que mais posso ajudar?",
   },
   {
     keywords: ["segurança", "dados", "lgpd", "privacidade", "criptografia"],
@@ -74,11 +74,11 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["múltiplas", "unidades", "franquia", "rede", "várias"],
-    answer: "Para redes de barbearia, o plano **White Label** (R$ 897/mês + R$ 149 por unidade) foi feito para isso:\n\nApp instalável com a marca da sua rede — o cliente adiciona na tela do celular\nPainel da rede: compare suas lojas lado a lado\nCopiloto que responde \"qual unidade está puxando o faturamento pra baixo?\"\nSem marca do CORTIX em lugar nenhum\nBarbeiros e unidades ilimitados\n\nFale com nossa equipe comercial: **vendas@cortix.app**",
+    answer: "Para redes de barbearia, o plano **White Label** (R$ 897/mês + R$ 149 por unidade) foi feito para isso:\n\nApp instalável com a marca da sua rede — o cliente adiciona na tela do celular\nPainel da rede: compare suas lojas lado a lado\nCopiloto que responde \"qual unidade está puxando o faturamento pra baixo?\"\nSem marca do rukz em lugar nenhum\nBarbeiros e unidades ilimitados\n\nFale com nossa equipe comercial: **vendas@rukz.app**",
   },
   {
     keywords: ["quanto tempo", "implanta", "implementar", "migrar", "trocar de sistema", "demora"],
-    answer: "A configuração inicial leva minutos: você cria a conta, cadastra serviços/horários e já tem um link de agendamento no ar. Se você já usa outro sistema, nossa equipe de suporte te ajuda a migrar os dados — é só chamar no suporte@cortix.app.",
+    answer: "A configuração inicial leva minutos: você cria a conta, cadastra serviços/horários e já tem um link de agendamento no ar. Se você já usa outro sistema, nossa equipe de suporte te ajuda a migrar os dados — é só chamar no suporte@rukz.app.",
   },
 ];
 
@@ -102,12 +102,12 @@ function MessageBubble({ msg }: { msg: Message }) {
   return (
     <div className={cn("flex gap-2", isBot ? "items-start" : "items-start justify-end")}>
       {isBot && (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0 mt-0.5">
           <Bot className="w-3.5 h-3.5 text-black" />
         </div>
       )}
       <div className={cn("max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-        isBot ? "bg-zinc-800 text-zinc-200 rounded-tl-sm" : "bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-medium rounded-tr-sm"
+        isBot ? "bg-zinc-800 text-zinc-200 rounded-tl-sm" : "bg-amber-500 text-black font-medium rounded-tr-sm"
       )}>
         {msg.content.split("\n").map((line, i) => (
           <span key={i}>
@@ -129,7 +129,7 @@ export function LandingChatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     id: "0", role: "bot",
-    content: "Olá! Sou o assistente do **CORTIX**.\n\nPosso te ajudar com informações sobre planos, funcionalidades e como começar. O que você quer saber?",
+    content: "Olá! Sou o assistente do **rukz**.\n\nPosso te ajudar com informações sobre planos, funcionalidades e como começar. O que você quer saber?",
   }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -156,7 +156,7 @@ export function LandingChatbot() {
       {/* FAB */}
       <button
         onClick={() => { setOpen(true); setHasUnread(false); }}
-        className="fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-2xl shadow-amber-500/40 hover:scale-110 transition-all"
+        className="fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-40 w-14 h-14 rounded-full bg-amber-500 flex items-center justify-center shadow-2xl shadow-amber-500/40 hover:scale-110 transition-all"
       >
         {open ? <X className="w-6 h-6 text-black" /> : <MessageCircle className="w-6 h-6 text-black" />}
         {hasUnread && !open && (
@@ -168,12 +168,12 @@ export function LandingChatbot() {
       {open && (
         <div className="fixed bottom-36 right-3 left-3 z-40 sm:left-auto sm:right-6 sm:w-96 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(78dvh, 520px)" }}>
           {/* Header */}
-          <div className="bg-gradient-to-r from-amber-500 to-yellow-400 px-4 py-3 flex items-center gap-3">
+          <div className="bg-amber-500 px-4 py-3 flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center">
               <Scissors className="w-4 h-4 text-black" />
             </div>
             <div>
-              <p className="font-bold text-black text-sm">Assistente CORTIX</p>
+              <p className="font-bold text-black text-sm">Assistente rukz</p>
               <p className="text-black/70 text-xs">Suporte comercial • Online agora</p>
             </div>
             <button onClick={() => setOpen(false)} className="ml-auto text-black/60 hover:text-black transition-colors">
@@ -186,7 +186,7 @@ export function LandingChatbot() {
             {messages.map(m => <MessageBubble key={m.id} msg={m} />)}
             {typing && (
               <div className="flex gap-2 items-start">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
                   <Bot className="w-3.5 h-3.5 text-black" />
                 </div>
                 <div className="bg-zinc-800 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1.5 items-center">
@@ -221,7 +221,7 @@ export function LandingChatbot() {
               className="flex-1 h-9 px-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
             />
             <button onClick={() => send(input)} disabled={!input.trim()}
-              className="w-9 h-9 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 flex items-center justify-center disabled:opacity-40 transition-all hover:opacity-90">
+              className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center disabled:opacity-40 transition-all hover:opacity-90">
               <Send className="w-4 h-4 text-black" />
             </button>
           </div>

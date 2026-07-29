@@ -10,7 +10,7 @@ import { cn, formatDate } from "@/lib/utils";
 const STATUS_FLOW = ["REQUESTED", "IN_PROGRESS", "DELIVERED"] as const;
 const STATUS_INFO: Record<string, { label: string; color: string }> = {
   REQUESTED: { label: "Solicitado", color: "text-amber-400 bg-amber-500/10 border-amber-500/30" },
-  IN_PROGRESS: { label: "Em andamento", color: "text-blue-400 bg-blue-500/10 border-blue-500/30" },
+  IN_PROGRESS: { label: "Em andamento", color: "text-amber-400 bg-amber-500/10 border-amber-500/30" },
   DELIVERED: { label: "Entregue", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
 };
 

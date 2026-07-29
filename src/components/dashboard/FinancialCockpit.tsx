@@ -100,7 +100,7 @@ export function FinancialCockpit() {
     return (
       <>
         <GoalModal open={goalModal} onClose={() => setGoalModal(false)} onSave={(g) => saveGoal.mutate(g)} pending={saveGoal.isPending} suggested={Math.round(derived.projection || derived.monthRevenue || 5000)} />
-        <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.07] to-transparent p-6 sm:p-8">
+        <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-amber-500/[0.05] p-6 sm:p-8">
           <div className="absolute -top-10 -right-10 w-52 h-52 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5 justify-between">
             <div className="flex items-start gap-4">
@@ -116,7 +116,7 @@ export function FinancialCockpit() {
             </div>
             <button
               onClick={() => setGoalModal(true)}
-              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all whitespace-nowrap"
+              className="flex items-center gap-2 px-5 py-3 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all whitespace-nowrap"
             >
               <Target className="w-4 h-4" /> Definir meta
             </button>
@@ -130,7 +130,7 @@ export function FinancialCockpit() {
     <>
       <GoalModal open={goalModal} onClose={() => setGoalModal(false)} onSave={(g) => saveGoal.mutate(g)} pending={saveGoal.isPending} current={derived.goal} suggested={Math.round(derived.projection)} />
 
-      <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 to-zinc-950 p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
         <div className="absolute -top-16 -right-16 w-64 h-64 bg-amber-500/[0.06] rounded-full blur-3xl pointer-events-none" />
 
         {/* Header */}
@@ -184,7 +184,7 @@ export function FinancialCockpit() {
             <div
               className={cn(
                 "absolute inset-y-0 left-0 rounded-full transition-all duration-700",
-                overGoal ? "bg-gradient-to-r from-emerald-500 to-emerald-400" : "bg-gradient-to-r from-amber-500 to-yellow-400"
+                overGoal ? "bg-emerald-500" : "bg-amber-500"
               )}
               style={{ width: `${Math.max(fillPct, 2)}%` }}
             />
@@ -203,7 +203,7 @@ export function FinancialCockpit() {
                 className="absolute -translate-x-1/2 text-zinc-500 whitespace-nowrap flex items-center gap-1"
                 style={{ left: `${Math.min(Math.max(derived.breakEvenPct, 12), 88)}%` }}
               >
-                <Flame className="w-3 h-3 text-orange-400" /> equilíbrio
+                <Flame className="w-3 h-3 text-zinc-400" /> equilíbrio
               </span>
             )}
             <span className="absolute right-0 text-zinc-500 flex items-center gap-1">
@@ -217,7 +217,7 @@ export function FinancialCockpit() {
           {/* Projeção */}
           <div className="rounded-xl bg-zinc-900/70 border border-zinc-800 p-4">
             <div className="flex items-center gap-1.5 text-xs text-zinc-500 mb-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-blue-400" /> Projeção de fechamento
+              <TrendingUp className="w-3.5 h-3.5 text-zinc-400" /> Projeção de fechamento
             </div>
             <p className="text-xl font-black text-white">{formatCurrency(derived.projection)}</p>
             <p className={cn("text-xs mt-1 font-medium", derived.projectionPct >= 100 ? "text-emerald-400" : "text-zinc-500")}>
@@ -230,7 +230,7 @@ export function FinancialCockpit() {
           {/* Dia da virada / ponto de equilíbrio */}
           <div className={cn("rounded-xl border p-4", derived.covered ? "bg-emerald-500/5 border-emerald-500/20" : "bg-zinc-900/70 border-zinc-800")}>
             <div className="flex items-center gap-1.5 text-xs text-zinc-500 mb-1.5">
-              <Flame className="w-3.5 h-3.5 text-orange-400" /> Ponto de equilíbrio
+              <Flame className="w-3.5 h-3.5 text-zinc-400" /> Ponto de equilíbrio
             </div>
             {derived.monthExpenses === 0 ? (
               <>
@@ -273,7 +273,7 @@ export function FinancialCockpit() {
         <div className="mt-5 pt-5 border-t border-zinc-800/70">
           <div className="flex items-center gap-4 mb-3 text-[11px] text-zinc-500">
             <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-amber-400 rounded" /> Receita acumulada</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-orange-400 rounded" style={{ borderTop: "1px dashed" }} /> Ponto de equilíbrio</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-amber-400 rounded" style={{ borderTop: "1px dashed" }} /> Ponto de equilíbrio</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-emerald-400 rounded" /> Meta</span>
           </div>
           <ResponsiveContainer width="100%" height={130}>

@@ -121,7 +121,7 @@ class _CutWalletScreenState extends State<CutWalletScreen> {
                 Navigator.of(sheetContext).pop();
                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => NewAppointmentScreen(referencePhoto: cut.imageUrl)));
               },
-              gradient: LinearGradient(colors: [Color.lerp(accent, Colors.white, 0.22)!, accent]),
+              color: accent,
               child: Text('Quero esse de novo', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold, fontSize: 15)),
             ),
             const SizedBox(height: 8),
@@ -207,7 +207,7 @@ class _CutWalletScreenState extends State<CutWalletScreen> {
                   const SizedBox(height: 24),
                   PulseButton(
                     onPressed: _busy ? null : _add,
-                    gradient: LinearGradient(colors: [Color.lerp(accent, Colors.white, 0.22)!, accent]),
+                    color: accent,
                     child: Text('Adicionar meu primeiro corte', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold, fontSize: 15)),
                   ),
                 ],

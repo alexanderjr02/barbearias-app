@@ -426,7 +426,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [accent.withValues(alpha: 0.22), accent.withValues(alpha: 0.06)]),
+                                    color: accent.withValues(alpha: 0.14),
                                     borderRadius: BorderRadius.circular(18),
                                     border: Border.all(color: accent.withValues(alpha: 0.3)),
                                   ),

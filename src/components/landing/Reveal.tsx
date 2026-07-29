@@ -14,15 +14,22 @@ import { useEffect, useRef, type ReactNode } from "react";
  *
  * Sem JavaScript o conteúdo continua invisível, e por isso a landing declara
  * um <noscript> que zera a classe. Animação nunca pode esconder conteúdo.
+ *
+ * `apenasMarcar` serve ao título do topo, onde as linhas sobem de dentro de um
+ * recorte. Ali o bloco não pode subir junto nem esmaecer: seriam três
+ * movimentos ao mesmo tempo no mesmo texto, e o resultado é borrão. Neste modo
+ * o componente só pendura `is-visible` e deixa o efeito para o CSS de dentro.
  */
 export function Reveal({
   children,
   delay = 0,
   className = "",
+  apenasMarcar = false,
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
+  apenasMarcar?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,7 +49,11 @@ export function Reveal({
   }, []);
 
   return (
-    <div ref={ref} className={`reveal ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+    <div
+      ref={ref}
+      className={`${apenasMarcar ? "" : "reveal"} ${className}`}
+      style={apenasMarcar ? undefined : { transitionDelay: `${delay}ms` }}
+    >
       {children}
     </div>
   );

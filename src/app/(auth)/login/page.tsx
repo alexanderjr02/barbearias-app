@@ -98,19 +98,19 @@ export default function LoginPage() {
   if (pendingToken) {
     return (
       <div className="w-full">
-        <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-latao/25 bg-latao/10">
-          <ShieldCheck className="h-6 w-6 text-latao" aria-hidden="true" />
+        <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-ouro/25 bg-ouro/10">
+          <ShieldCheck className="h-6 w-6 text-ouro" aria-hidden="true" />
         </span>
-        <h1 className="font-display text-4xl font-bold uppercase leading-none text-porcelana">
+        <h1 className="tipo-titulo text-4xl text-neve">
           Verificação em duas etapas
         </h1>
-        <p className="mt-3 text-sm text-fumaca">
+        <p className="mt-3 text-sm text-cinza">
           Digite o código de 6 dígitos do seu aplicativo autenticador.
         </p>
 
         <form onSubmit={handleVerifyCode} className="mt-7 space-y-4">
           <div>
-            <label htmlFor="codigo-2fa" className="mb-1.5 block text-[13px] font-semibold text-porcelana/80">
+            <label htmlFor="codigo-2fa" className="mb-1.5 block text-[13px] font-semibold text-neve/80">
               Código
             </label>
             <input
@@ -125,7 +125,7 @@ export default function LoginPage() {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
-              className="h-14 w-full rounded-2xl border border-breu-3 bg-breu-2 px-4 text-center font-mono text-2xl tracking-[0.4em] text-porcelana placeholder:text-fumaca/30 transition-colors focus:border-latao focus:outline-none"
+              className="h-14 w-full rounded-2xl border border-traco-forte bg-grafite px-4 text-center font-mono text-2xl tracking-[0.4em] text-neve placeholder:text-cinza/30 transition-colors focus:border-ouro focus:outline-none"
             />
           </div>
 
@@ -135,7 +135,7 @@ export default function LoginPage() {
             type="submit"
             disabled={isLoading || code.length < 6}
             aria-busy={isLoading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-latao text-sm font-bold uppercase tracking-wider text-breu transition-colors hover:bg-latao-claro disabled:opacity-50"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ouro text-sm font-bold text-preto transition-colors hover:bg-ouro-claro disabled:opacity-50"
           >
             {isLoading ? <Girando /> : "Verificar"}
           </button>
@@ -147,7 +147,7 @@ export default function LoginPage() {
               setCode("");
               setError(null);
             }}
-            className="w-full text-xs text-fumaca transition-colors hover:text-porcelana"
+            className="w-full text-xs text-cinza transition-colors hover:text-neve"
           >
             Voltar para o login
           </button>
@@ -158,16 +158,16 @@ export default function LoginPage() {
 
   return (
     <div className="w-full">
-      <h1 className="font-display text-4xl font-bold uppercase leading-none text-porcelana">
+      <h1 className="tipo-titulo text-4xl text-neve">
         Bem-vindo de volta
       </h1>
       {/* Cliente não cria conta por aqui. Esta é a entrada do gestor; a conta
           do cliente nasce no app da barbearia dele, junto com o primeiro
           agendamento e já ligada a alguém. Conta de cliente criada solta no
           site não tem barbearia, não tem agenda e não leva a lugar nenhum. */}
-      <p className="mt-3 text-sm text-fumaca">
+      <p className="mt-3 text-sm text-cinza">
         É dono de barbearia e não tem conta?{" "}
-        <Link href="/register" className="font-semibold text-latao transition-colors hover:text-latao-claro">
+        <Link href="/register" className="font-semibold text-ouro transition-colors hover:text-ouro-claro">
           Criar a minha conta
         </Link>
       </p>
@@ -178,18 +178,18 @@ export default function LoginPage() {
             <GoogleSignInButton onSuccess={handleGoogleSuccess} text="signin_with" />
           </div>
           <div className="my-6 flex items-center gap-3">
-            <span className="h-px flex-1 bg-breu-3" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-fumaca/60">
+            <span className="h-px flex-1 bg-traco-forte" />
+            <span className="text-[11px] font-semibold tipo-etiqueta text-cinza-fraco">
               ou entre com e-mail
             </span>
-            <span className="h-px flex-1 bg-breu-3" />
+            <span className="h-px flex-1 bg-traco-forte" />
           </div>
         </>
       )}
 
       <form onSubmit={handleSubmit} className={`space-y-4 ${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "" : "mt-7"}`}>
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-[13px] font-semibold text-porcelana/80">
+          <label htmlFor="email" className="mb-1.5 block text-[13px] font-semibold text-neve/80">
             E-mail
           </label>
           <input
@@ -201,16 +201,16 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
-            className="h-12 w-full rounded-xl border border-breu-3 bg-breu-2/70 px-3.5 text-sm text-porcelana placeholder:text-fumaca/40 transition-colors focus:border-latao focus:outline-none"
+            className="h-12 w-full rounded-xl border border-traco-forte bg-grafite/70 px-3.5 text-sm text-neve placeholder:text-cinza/40 transition-colors focus:border-ouro focus:outline-none"
           />
         </div>
 
         <div>
           <div className="mb-1.5 flex items-baseline justify-between gap-4">
-            <label htmlFor="senha" className="text-[13px] font-semibold text-porcelana/80">
+            <label htmlFor="senha" className="text-[13px] font-semibold text-neve/80">
               Senha
             </label>
-            <Link href="/forgot-password" className="text-xs text-latao transition-colors hover:text-latao-claro">
+            <Link href="/forgot-password" className="text-xs text-ouro transition-colors hover:text-ouro-claro">
               Esqueceu a senha?
             </Link>
           </div>
@@ -224,14 +224,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="h-12 w-full rounded-xl border border-breu-3 bg-breu-2/70 pl-3.5 pr-12 text-sm text-porcelana placeholder:text-fumaca/40 transition-colors focus:border-latao focus:outline-none"
+              className="h-12 w-full rounded-xl border border-traco-forte bg-grafite/70 pl-3.5 pr-12 text-sm text-neve placeholder:text-cinza/40 transition-colors focus:border-ouro focus:outline-none"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               aria-pressed={showPassword}
-              className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-fumaca transition-colors hover:bg-breu-3 hover:text-porcelana"
+              className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-cinza transition-colors hover:bg-traco-forte hover:text-neve"
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -249,7 +249,7 @@ export default function LoginPage() {
           type="submit"
           disabled={isLoading}
           aria-busy={isLoading}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-latao text-sm font-bold uppercase tracking-wider text-breu transition-colors hover:bg-latao-claro disabled:opacity-50"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ouro text-sm font-bold text-preto transition-colors hover:bg-ouro-claro disabled:opacity-50"
         >
           {isLoading ? <Girando /> : "Entrar"}
         </button>
@@ -264,7 +264,7 @@ export default function LoginPage() {
 function Erro({ mensagem }: { mensagem: string | null }) {
   if (!mensagem) return null;
   return (
-    <p role="alert" className="rounded-xl border border-vinho/50 bg-vinho/15 p-3 text-center text-xs text-porcelana">
+    <p role="alert" className="rounded-xl border border-red-500/50 bg-red-500/15 p-3 text-center text-xs text-neve">
       {mensagem}
     </p>
   );
@@ -273,5 +273,5 @@ function Erro({ mensagem }: { mensagem: string | null }) {
 // O spinner antigo era branco num botão branco: invisível justamente no
 // momento em que serve para dizer "estou trabalhando".
 function Girando() {
-  return <span className="h-5 w-5 animate-spin rounded-full border-2 border-breu border-t-transparent" aria-hidden="true" />;
+  return <span className="h-5 w-5 animate-spin rounded-full border-2 border-preto border-t-transparent" aria-hidden="true" />;
 }

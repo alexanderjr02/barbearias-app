@@ -1,50 +1,51 @@
 #!/usr/bin/env node
-// Gera os ícones CORTIX de mobile/web/icons/ a partir do SVG oficial da marca
-// (public/icons/icon.svg, o mesmo do dashboard).
+// Gera os ícones do app Flutter (mobile/web/icons/) a partir do símbolo rukz.
 //
-// Existe porque esses PNGs são a identidade do app instalado para quem NÃO é
-// ENTERPRISE — antes eram o logo azul padrão do Flutter, que não diz nada
-// sobre a CORTIX. Ficam versionados em git; rode isto só quando o logo mudar:
-//   node mobile/scripts/gen-brand-icons.js
+// A marca é preto + amarelo #FFC300. O ícone "any" é o símbolo sobre o fundo
+// preto da marca; o maskable ganha respiro nas bordas (o sistema recorta ~20%
+// para encaixar na forma do aparelho).
+//
+// Fonte da verdade: o pacote de marca em Downloads/Rukz-Marca. Rode quando o
+// símbolo mudar: node mobile/scripts/gen-brand-icons.js
 
 const sharp = require("sharp");
 const fs = require("fs");
 const path = require("path");
 
-const ROOT = path.join(__dirname, "..", "..");
-const SVG = path.join(ROOT, "public", "icons", "icon.svg");
-const OUT = path.join(ROOT, "mobile", "web", "icons");
+const ROOT = path.join(__dirname, "..");
+const MARCA = "C:/Users/alexa/Downloads/Rukz-Marca/SVG-Editaveis";
+const QUADRADO = path.join(MARCA, "rukz-icone-quadrado.svg"); // símbolo sobre preto
+const SIMBOLO = path.join(MARCA, "rukz-simbolo.svg"); // só o símbolo, fundo transparente
+const OUT = path.join(ROOT, "web", "icons");
 
 async function main() {
-  if (!fs.existsSync(SVG)) {
-    console.error(`SVG da marca não encontrado: ${SVG}`);
-    process.exit(1);
-  }
   fs.mkdirSync(OUT, { recursive: true });
-  const svg = fs.readFileSync(SVG);
+  const quadrado = fs.readFileSync(QUADRADO);
+  const simbolo = fs.readFileSync(SIMBOLO);
 
-  // density alto: o SVG é vetorial, mas o sharp rasteriza a partir de uma
-  // resolução base — sem isso o 512 sai borrado.
-  // 180 é o tamanho que o iOS pede no apple-touch-icon.
+  // "any": o ícone quadrado da marca (preto + símbolo), cantos arredondados
+  // pelo próprio sistema.
   for (const size of [180, 192, 512]) {
-    await sharp(svg, { density: 384 }).resize(size, size).png().toFile(path.join(OUT, `Icon-${size}.png`));
+    await sharp(quadrado, { density: 384 }).resize(size, size).png().toFile(path.join(OUT, `Icon-${size}.png`));
   }
 
-  // "maskable": o sistema recorta até ~20% das bordas para encaixar o ícone na
-  // forma do aparelho. A arte precisa de respiro, senão a tesoura perde as
-  // pontas — fundo cheio na cor da marca com o logo reduzido ao centro.
+  // "maskable": fundo preto cheio + símbolo reduzido ao centro, com respiro.
   for (const size of [192, 512]) {
-    const inner = Math.round(size * 0.62);
-    const art = await sharp(svg, { density: 384 }).resize(inner, inner).png().toBuffer();
-    await sharp({ create: { width: size, height: size, channels: 4, background: "#09090b" } })
+    const inner = Math.round(size * 0.6);
+    const art = await sharp(simbolo, { density: 384 }).resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+    await sharp({ create: { width: size, height: size, channels: 4, background: "#000000" } })
       .composite([{ input: art, gravity: "center" }])
       .png()
       .toFile(path.join(OUT, `Icon-maskable-${size}.png`));
   }
 
+  // Favicon do app.
+  await sharp(quadrado, { density: 384 }).resize(64, 64).png().toFile(path.join(ROOT, "web", "favicon.png"));
+
   for (const f of fs.readdirSync(OUT).sort()) {
-    console.log(" ", f, fs.statSync(path.join(OUT, f)).size, "bytes");
+    console.log("  ", f, fs.statSync(path.join(OUT, f)).size, "bytes");
   }
+  console.log("   favicon.png atualizado");
 }
 
 main().catch((e) => {

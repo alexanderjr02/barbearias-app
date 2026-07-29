@@ -38,7 +38,7 @@ class _GestorReportsScreenState extends State<GestorReportsScreen> {
 
   Color _hex(String hex) {
     final cleaned = hex.replaceAll('#', '');
-    return Color(0xFF000000 | (int.tryParse(cleaned, radix: 16) ?? 0xF59E0B));
+    return Color(0xFF000000 | (int.tryParse(cleaned, radix: 16) ?? 0xFFC300));
   }
 
   @override

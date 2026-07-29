@@ -118,7 +118,7 @@ class _ClientPreferencesScreenState extends State<ClientPreferencesScreen> {
                 const SizedBox(height: 24),
                 PulseButton(
                   onPressed: _saving ? null : _save,
-                  gradient: LinearGradient(colors: [Color.lerp(accent, Colors.white, 0.22)!, accent]),
+                  color: accent,
                   child: _saving
                       ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: contrastingTextColor(accent)))
                       : Text('Salvar preferências', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold, fontSize: 15)),

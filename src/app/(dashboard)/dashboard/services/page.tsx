@@ -23,10 +23,10 @@ interface ApiService {
 }
 
 const categoryDot: Record<string, string> = {
-  HAIRCUT: "bg-blue-400",
+  HAIRCUT: "bg-zinc-200",
   BEARD: "bg-amber-400",
   COMBO: "bg-emerald-400",
-  TREATMENT: "bg-purple-400",
+  TREATMENT: "bg-zinc-500",
 };
 
 const categoryLabels: Record<string, string> = {
@@ -165,7 +165,7 @@ export default function ServicesPage() {
         title="Serviços"
         subtitle={`${items.filter((s) => s.isActive).length} ativos de ${items.length} · ticket médio ${formatCurrency(avgPrice)}`}
         action={
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" />
             Novo serviço
           </button>

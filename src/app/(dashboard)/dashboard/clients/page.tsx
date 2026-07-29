@@ -34,8 +34,8 @@ type Tier = (typeof TIERS)[number];
 // bronze quente. Cada tier tem a cor da barra de distribuição, o selo da
 // tabela e o pontinho do indicador.
 const TIER_META: Record<Tier, { label: string; bar: string; badge: string; dot: string }> = {
-  GOLD: { label: "Ouro", bar: "#f59e0b", badge: "border-amber-500/30 bg-amber-500/10 text-amber-300", dot: "bg-amber-400" },
-  SILVER: { label: "Prata", bar: "#94a3b8", badge: "border-slate-400/30 bg-slate-400/10 text-slate-200", dot: "bg-slate-300" },
+  GOLD: { label: "Ouro", bar: "#ffc300", badge: "border-amber-500/30 bg-amber-500/10 text-amber-300", dot: "bg-amber-400" },
+  SILVER: { label: "Prata", bar: "#a3a3a3", badge: "border-zinc-400/30 bg-zinc-400/10 text-zinc-200", dot: "bg-zinc-300" },
   BRONZE: { label: "Bronze", bar: "#b07a4a", badge: "border-amber-800/40 bg-amber-800/10 text-amber-600", dot: "bg-amber-700" },
 };
 

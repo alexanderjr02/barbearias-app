@@ -77,7 +77,7 @@ export function UnitSwitcher({ shopName }: { shopName: string }) {
 
   const trigger = (
     <>
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-900 text-xs font-black flex-shrink-0">
+      <div className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center text-zinc-900 text-xs font-black flex-shrink-0">
         {getInitials(shopName)}
       </div>
       <div className="hidden sm:block text-left">

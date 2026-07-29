@@ -5,7 +5,7 @@ const _prefsKey = 'cortix_theme_mode';
 
 /// Preferência de tema, persistida. Só Claro ou Escuro — a opção "Sistema"
 /// saiu (dava mais confusão que ajuda). O padrão é Escuro, a identidade do
-/// CORTIX; quem quiser claro troca no perfil.
+/// rukz; quem quiser claro troca no perfil.
 class ThemeController extends ChangeNotifier {
   ThemeMode mode = ThemeMode.dark;
 

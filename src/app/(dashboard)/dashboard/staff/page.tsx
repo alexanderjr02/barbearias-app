@@ -57,7 +57,7 @@ function Avatar({ name, avatar, size = 64 }: { name: string; avatar: string | nu
   return (
     <div
       style={{ width: size, height: size }}
-      className="rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black flex-shrink-0"
+      className="rounded-2xl bg-amber-500 flex items-center justify-center text-black font-black flex-shrink-0"
     >
       {name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
     </div>
@@ -235,7 +235,7 @@ export default function StaffPage() {
         )}
         {(!editing || !editing.hasLogin) && (
           <div className="pt-2 border-t border-zinc-800">
-            <p className="text-xs text-zinc-500 mb-3">Opcional: crie um acesso para esse barbeiro usar o app CORTIX.</p>
+            <p className="text-xs text-zinc-500 mb-3">Opcional: crie um acesso para esse barbeiro usar o app rukz.</p>
             <label className={labelCls}>E-mail de acesso</label>
             <input name="email" type="email" className={fieldCls} placeholder="barbeiro@email.com" />
             <label className={labelCls + " mt-3 block"}>Senha de acesso</label>
@@ -299,7 +299,7 @@ export default function StaffPage() {
         title="Equipe"
         subtitle={`${staff.filter((s) => s.isActive).length} barbeiros ativos · ${formatCurrency(totalRevenue)} receita/mês`}
         action={
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" />
             Adicionar barbeiro
           </button>
@@ -309,7 +309,7 @@ export default function StaffPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <UserCheck className="w-4 h-4 text-blue-400 mb-2" />
+          <UserCheck className="w-4 h-4 text-zinc-400 mb-2" />
           <p className="text-2xl font-black text-white">{staff.length}</p>
           <p className="text-xs text-zinc-500">Total de barbeiros</p>
         </div>
@@ -351,7 +351,7 @@ export default function StaffPage() {
               )}
             >
               {isTop && (
-                <span className="absolute -top-2.5 right-4 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg">
+                <span className="absolute -top-2.5 right-4 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black shadow-lg">
                   <Crown className="w-3 h-3" /> TOP DO MÊS
                 </span>
               )}
@@ -388,7 +388,7 @@ export default function StaffPage() {
 
               <div className="grid grid-cols-3 divide-x divide-zinc-800 mt-auto pt-4 border-t border-zinc-800/80">
                 <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1 overflow-hidden">
-                  <Scissors className="w-3.5 h-3.5 text-blue-400" />
+                  <Scissors className="w-3.5 h-3.5 text-zinc-400" />
                   <span className="text-sm font-bold text-white truncate w-full text-center">{member.appointmentsCount}</span>
                   <span className="text-[11px] text-zinc-500">cortes</span>
                 </div>

@@ -23,7 +23,7 @@ interface TicketRow {
 }
 
 const STATUS_INFO: Record<string, { label: string; cls: string }> = {
-  OPEN: { label: "Aberto", cls: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+  OPEN: { label: "Aberto", cls: "bg-zinc-700/40 text-zinc-300 border-zinc-600" },
   IN_PROGRESS: { label: "Em andamento", cls: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
   RESOLVED: { label: "Resolvido", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
   CLOSED: { label: "Fechado", cls: "bg-zinc-700/40 text-zinc-400 border-zinc-600" },
@@ -66,9 +66,9 @@ export default function SupportPage() {
       <PageHeader
         icon={LifeBuoy}
         title="Suporte"
-        subtitle="Fale com a equipe CORTIX sobre dúvidas, bugs ou solicitações"
+        subtitle="Fale com a equipe rukz sobre dúvidas, bugs ou solicitações"
         action={
-          <button onClick={() => setCreateOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all">
+          <button onClick={() => setCreateOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all">
             <Plus className="w-4 h-4" /> Novo chamado
           </button>
         }

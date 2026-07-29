@@ -5,7 +5,7 @@ import '../../core/widgets/skeleton.dart';
 import 'gestor_repository.dart';
 
 const _amber = Color(0xFFFBBF24);
-const _avatarPalette = [Color(0xFFF59E0B), Color(0xFF38BDF8), Color(0xFF8B5CF6), Color(0xFF34D399), Color(0xFFFB7185)];
+const _avatarPalette = [Color(0xFFFFC300), Color(0xFF38BDF8), Color(0xFF8B5CF6), Color(0xFF34D399), Color(0xFFFB7185)];
 
 Color _avatarColor(String name) {
   var h = 0;

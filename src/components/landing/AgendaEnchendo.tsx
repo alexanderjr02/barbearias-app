@@ -48,19 +48,17 @@ export function AgendaEnchendo() {
   const total = HORARIOS.slice(0, cheios).reduce((soma, h) => soma + h.valor, 0);
 
   return (
-    <div className="w-full rounded-2xl border border-breu-3 bg-breu-2/95 p-4 shadow-2xl shadow-black/60 backdrop-blur sm:p-5">
-      <div className="flex items-end justify-between gap-3 border-b border-breu-3 pb-3">
+    <div className="w-full rounded-2xl border border-traco bg-carvao/95 p-4 shadow-2xl shadow-black/60 backdrop-blur sm:p-5">
+      <div className="flex items-end justify-between gap-3 border-b border-traco pb-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fumaca">Terça-feira</p>
-          <p className="font-display text-2xl font-bold uppercase leading-none text-porcelana">
+          <p className="tipo-etiqueta text-[0.6rem] text-cinza">Terça-feira</p>
+          <p className="tipo-titulo mt-1.5 text-2xl text-neve">
             {cheios} de {HORARIOS.length} horários
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fumaca">Na cadeira</p>
-          <p className="font-display text-2xl font-bold leading-none tabular-nums text-latao-claro">
-            R$ {total}
-          </p>
+          <p className="tipo-etiqueta text-[0.6rem] text-cinza">Na cadeira</p>
+          <p className="tipo-titulo mt-1.5 text-2xl tabular-nums text-ouro">R$ {total}</p>
         </div>
       </div>
 
@@ -71,28 +69,28 @@ export function AgendaEnchendo() {
             <li
               key={h.hora}
               className={`flex items-center gap-3 rounded-lg border-l-2 py-1.5 pl-2.5 pr-2 text-sm ${
-                ocupado ? "slot-in border-latao bg-latao/[0.07]" : "border-breu-3 bg-transparent"
+                ocupado ? "entra-lado border-ouro bg-ouro/[0.07]" : "border-traco bg-transparent"
               }`}
             >
-              <span className={`font-display text-base font-semibold tabular-nums ${ocupado ? "text-porcelana" : "text-fumaca/60"}`}>
+              <span className={`text-base font-bold tabular-nums ${ocupado ? "text-neve" : "text-cinza-fraco"}`}>
                 {h.hora}
               </span>
               {ocupado ? (
                 <>
-                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-porcelana">{h.cliente}</span>
-                  <span className="hidden shrink-0 text-[11px] text-fumaca sm:block">{h.servico}</span>
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-neve">{h.cliente}</span>
+                  <span className="hidden shrink-0 text-[11px] text-cinza sm:block">{h.servico}</span>
                 </>
               ) : (
-                <span className="flex-1 text-[13px] text-fumaca/50">livre</span>
+                <span className="flex-1 text-[13px] text-cinza-fraco">livre</span>
               )}
             </li>
           );
         })}
       </ul>
 
-      <p className="mt-3 flex items-center justify-between gap-2 text-[10px] text-fumaca/70">
+      <p className="mt-3 flex items-center justify-between gap-2 text-[10px] text-cinza-fraco">
         <span>Terça era o dia fraco.</span>
-        <span className="rounded border border-breu-3 px-1.5 py-0.5 uppercase tracking-wider">exemplo</span>
+        <span className="rounded border border-traco px-1.5 py-0.5 uppercase tracking-wider">exemplo</span>
       </p>
     </div>
   );

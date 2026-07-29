@@ -179,7 +179,7 @@ export function ClientChatbot({ barbershopName = "Barbearia", primaryColor = "#D
             <div>
               <p className="font-bold text-sm">{config.name}</p>
               <div className="flex items-center gap-1 text-white/80 text-xs">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-300" />
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
                 Online agora
               </div>
             </div>

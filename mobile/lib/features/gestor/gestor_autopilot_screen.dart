@@ -157,7 +157,7 @@ class _GestorAutopilotScreenState extends State<GestorAutopilotScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [accent, accent.withValues(alpha: 0.65)]),
+                    color: accent,
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.25), blurRadius: 22, offset: const Offset(0, 10))],
                   ),

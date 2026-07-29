@@ -206,7 +206,7 @@ export function StaffScheduleModal({ staffId, staffName, onClose }: Props) {
                 <button
                   onClick={() => saveSchedule.mutate()}
                   disabled={saveSchedule.isPending}
-                  className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60"
+                  className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-black font-bold rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-60"
                 >
                   {saved ? <><CheckCircle className="w-4 h-4" /> Salvou!</> : "Salvar horário semanal"}
                 </button>

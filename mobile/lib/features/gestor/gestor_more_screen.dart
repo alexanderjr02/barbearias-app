@@ -140,7 +140,7 @@ class GestorMoreScreen extends StatelessWidget {
           _MenuTile(
             icon: Icons.support_agent_rounded,
             label: 'Suporte',
-            sub: 'Fale com a equipe CORTIX sobre dúvidas ou problemas',
+            sub: 'Fale com a equipe rukz sobre dúvidas ou problemas',
             palette: palette,
             accent: accent,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorSupportScreen())),

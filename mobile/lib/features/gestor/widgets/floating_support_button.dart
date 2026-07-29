@@ -12,7 +12,7 @@ const _statusColor = {
   'CLOSED': Color(0xFF9CA3AF),
 };
 
-/// Always-reachable "talk to CORTIX support" bubble, mirroring
+/// Always-reachable "talk to rukz support" bubble, mirroring
 /// [FloatingChatbot]'s bubble+panel structure but wired to the real
 /// SupportTicket system: sending a message here replies to the gestor's
 /// most recent open ticket, or opens a new one — no navigation required to
@@ -114,7 +114,7 @@ class _FloatingSupportButtonState extends State<FloatingSupportButton> {
                         height: 56,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [accent, accent.withValues(alpha: 0.7)]),
+                          color: accent,
                           boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.5), blurRadius: 18, offset: const Offset(0, 8))],
                         ),
                         child: AnimatedSwitcher(
@@ -160,7 +160,7 @@ class _FloatingSupportButtonState extends State<FloatingSupportButton> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(gradient: LinearGradient(colors: [accent, accent.withValues(alpha: 0.75)])),
+            decoration: BoxDecoration(color: accent),
             child: Row(
               children: [
                 CircleAvatar(radius: 16, backgroundColor: onAccent.withValues(alpha: 0.16), child: Icon(Icons.support_agent_rounded, color: onAccent, size: 18)),
@@ -169,7 +169,7 @@ class _FloatingSupportButtonState extends State<FloatingSupportButton> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Suporte CORTIX', style: TextStyle(color: onAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text('Suporte rukz', style: TextStyle(color: onAccent, fontWeight: FontWeight.bold, fontSize: 14)),
                       Text('Normalmente respondemos rápido', style: TextStyle(color: onAccent.withValues(alpha: 0.7), fontSize: 11)),
                     ],
                   ),
