@@ -53,17 +53,38 @@
     // notificação), então não tem o problema do cache — e removê-lo a cada
     // carregamento desligaria o push que a pessoa acabou de ativar.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function (regs) {
-        regs.forEach(function (r) {
-          var script = (r.active && r.active.scriptURL) ||
-                       (r.waiting && r.waiting.scriptURL) ||
-                       (r.installing && r.installing.scriptURL) || '';
-          if (script.indexOf('push-sw.js') === -1) r.unregister();
-        });
-      });
+      // Se ESTA página já veio servida por um service worker (o controller),
+      // e ele não é o de push, então é o SW de cache antigo de uma versão
+      // anterior do app — foi ele que entregou o HTML velho que estamos vendo
+      // agora. Guardamos isso ANTES de remover pra decidir o recarregamento.
+      var ctrl = navigator.serviceWorker.controller;
+      var servidoPorSwAntigo = !!ctrl && ctrl.scriptURL.indexOf('push-sw.js') === -1;
+
+      var limpezas = [
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          return Promise.all(regs.map(function (r) {
+            var script = (r.active && r.active.scriptURL) ||
+                         (r.waiting && r.waiting.scriptURL) ||
+                         (r.installing && r.installing.scriptURL) || '';
+            return script.indexOf('push-sw.js') === -1 ? r.unregister() : null;
+          }));
+        }),
+      ];
       if (window.caches) {
-        caches.keys().then(function (names) {
-          names.forEach(function (name) { caches.delete(name); });
+        limpezas.push(caches.keys().then(function (names) {
+          return Promise.all(names.map(function (name) { return caches.delete(name); }));
+        }));
+      }
+
+      // Depois de desregistrar o SW velho e apagar os caches dele, recarrega
+      // UMA vez pra buscar a versão nova do servidor. Sem isto, o usuário só
+      // veria a versão nova ao fechar o app por completo — nada óbvio num PWA
+      // de iPhone, então ele ficava preso na versão velha. A trava em
+      // sessionStorage garante um único recarregamento por sessão (nunca laço).
+      if (servidoPorSwAntigo && !sessionStorage.getItem('__sw_reset__')) {
+        Promise.all(limpezas).then(function () {
+          sessionStorage.setItem('__sw_reset__', '1');
+          location.reload();
         });
       }
     }
