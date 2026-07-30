@@ -522,19 +522,6 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
                   onTap: () => _shiftFocused(1),
                   child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.chevron_right, color: palette.textSecondary, size: 20)),
                 ),
-                const SizedBox(width: 4),
-                InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () => setState(() => _format = _format == CalendarFormat.month ? CalendarFormat.week : CalendarFormat.month),
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: AnimatedRotation(
-                      duration: const Duration(milliseconds: 260),
-                      turns: _format == CalendarFormat.month ? 0.5 : 0,
-                      child: Icon(Icons.keyboard_arrow_down_rounded, color: palette.textSecondary, size: 22),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -550,6 +537,12 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
               currentDay: _dateOnly(DateTime.now()),
               selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
               calendarFormat: _format,
+              // Arrastar o calendário pra baixo abre o mês; pra cima recolhe pra
+              // semana. Sem onFormatChanged o gesto não pegava (o formato é
+              // controlado por _format) — era por isso que existia um botão.
+              availableCalendarFormats: const {CalendarFormat.month: 'Mês', CalendarFormat.week: 'Semana'},
+              availableGestures: AvailableGestures.all,
+              onFormatChanged: (format) => setState(() => _format = format),
               headerVisible: false,
               eventLoader: _eventsFor,
               startingDayOfWeek: StartingDayOfWeek.sunday,
@@ -603,6 +596,30 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
                 todayTextStyle: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold),
                 selectedDecoration: BoxDecoration(color: accent, shape: BoxShape.circle),
                 selectedTextStyle: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          // Puxador: dica visual de que dá pra arrastar o calendário. Também
+          // aceita o arraste (baixo = mês, cima = semana) e o toque como atalho.
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => setState(() => _format = _format == CalendarFormat.month ? CalendarFormat.week : CalendarFormat.month),
+            onVerticalDragEnd: (d) {
+              final v = d.primaryVelocity ?? 0;
+              if (v > 60) setState(() => _format = CalendarFormat.month);
+              if (v < -60) setState(() => _format = CalendarFormat.week);
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              alignment: Alignment.center,
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: palette.textFaint.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
