@@ -24,15 +24,13 @@ class AuroraBackground extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: -30,
+          Positioned.fill(
             child: Center(
               child: RukzSymbol(
-                size: 420,
+                size: 340,
+                tight: true,
                 bigode: Colors.white.withValues(alpha: 0.05),
-                r: Colors.white.withValues(alpha: 0.05),
+                r: accent.withValues(alpha: 0.09),
               ),
             ),
           ),

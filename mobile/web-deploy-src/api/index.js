@@ -99,9 +99,12 @@ module.exports = async (req, res) => {
     }
   }
 
-  // Só o plano mais caro leva a identidade do app instalado. Quem não tem
-  // instala o CORTIX padrão — mesmo abrindo pelo link da barbearia.
-  const whiteLabel = !!shop && shop.plan === WHITE_LABEL_PLAN;
+  // Só o plano mais caro leva a identidade do app instalado — E só se a
+  // barbearia realmente subiu uma logo. Sem logo, o brand/icon devolvia um
+  // quadrado sólido da cor da marca (o "só aparece amarelo" na tela de início);
+  // então, sem logo própria, o app instalado é o rukz padrão. Quem não tem
+  // Enterprise também instala o rukz — mesmo abrindo pelo link da barbearia.
+  const whiteLabel = !!shop && shop.plan === WHITE_LABEL_PLAN && !!shop.logo;
 
   const name = (whiteLabel && shop.name) || DEFAULT_NAME;
   // A cor acompanha a barbearia em qualquer plano: ela pinta a barra de status

@@ -160,15 +160,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         // Marca d'água do bigode, bem apagada, só no visual padrão da rukz
         // (numa barbearia com foto de fundo isso seria por cima da marca dela).
         if (!hasMedia)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: -30,
+          Positioned.fill(
             child: Center(
               child: RukzSymbol(
-                size: 420,
+                size: 340,
+                tight: true,
                 bigode: Colors.white.withValues(alpha: 0.05),
-                r: Colors.white.withValues(alpha: 0.05),
+                r: _accent.withValues(alpha: 0.09),
               ),
             ),
           ),

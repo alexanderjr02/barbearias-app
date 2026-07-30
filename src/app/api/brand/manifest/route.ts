@@ -48,10 +48,12 @@ export async function GET(request: NextRequest) {
   const v = shop.updatedAt.getTime();
   const icon = (size: number) => `${api}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=${size}&v=${v}`;
 
-  // App com a cara da barbearia é o que se compra no plano mais caro. Abaixo
-  // dele o app instalado é o rukz — mas o start_url continua levando o slug,
-  // senão o atalho abriria "uma barbearia qualquer" em vez da dele.
-  const whiteLabel = shop.plan === "ENTERPRISE";
+  // App com a cara da barbearia é o que se compra no plano mais caro — e só
+  // vale quando ela subiu uma logo. Sem logo, o ícone do brand vira um quadrado
+  // sólido da cor da marca (o "só aparece amarelo" na tela de início); então,
+  // sem logo, o app instalado é o rukz. O start_url continua levando o slug,
+  // senão o atalho abriria "uma barbearia qualquer" em vez da dela.
+  const whiteLabel = shop.plan === "ENTERPRISE" && !!shop.logo;
 
   const manifest = whiteLabel
     ? {

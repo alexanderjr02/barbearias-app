@@ -48,13 +48,12 @@ export function GoogleSignInButton({ onSuccess, text = "continue_with" }: Props)
       client_id: GOOGLE_CLIENT_ID,
       callback: (response) => onSuccess(response.credential),
     });
-    // `filled_black` e `rectangular` são temas oficiais do Google, então a
-    // marca segue dentro das diretrizes deles. O `outline` branco em pílula
-    // que estava aqui virava o objeto mais claro de um cartão escuro: puxava
-    // o olho antes do botão "Entrar", que é a ação principal, e era o único
-    // canto arredondado em pílula no meio de campos com canto de 12px.
+    // `outline` (branco) e `rectangular` são temas oficiais do Google —
+    // marca dentro das diretrizes deles e igual ao botão branco "Continuar com
+    // Google" do app. Fica ao lado do de Apple, formando o mesmo par de entrada
+    // social do app.
     window.google.accounts.id.renderButton(buttonRef.current, {
-      theme: "filled_black",
+      theme: "outline",
       size: "large",
       width: "100%",
       text,

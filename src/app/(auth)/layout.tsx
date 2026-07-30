@@ -27,7 +27,7 @@ export default function AuthLayout({
       <div className="fixed inset-0 -z-10 overflow-hidden bg-preto">
         <RukzSimbolo
           tom="mono"
-          className="pointer-events-none absolute left-1/2 top-1/2 w-[min(70vw,520px)] -translate-x-1/2 -translate-y-1/2 text-neve/[0.018]"
+          className="pointer-events-none absolute left-1/2 top-1/2 w-[min(92vw,700px)] -translate-x-1/2 -translate-y-1/2 text-neve/[0.04]"
         />
       </div>
 
