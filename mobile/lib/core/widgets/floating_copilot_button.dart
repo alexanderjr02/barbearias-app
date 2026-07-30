@@ -53,7 +53,7 @@ class _FloatingCopilotButtonState extends State<FloatingCopilotButton> with Sing
                   color: accent,
                   boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.35 + _pulse.value * 0.30), blurRadius: 18, offset: const Offset(0, 8))],
                 ),
-                child: Icon(Icons.auto_awesome_rounded, color: onAccent, size: 26),
+                child: Icon(Icons.assistant_rounded, color: onAccent, size: 26),
               ),
             ),
           ),

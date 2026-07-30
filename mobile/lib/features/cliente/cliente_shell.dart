@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/cortix_bottom_nav.dart';
-import '../chatbot/floating_chatbot.dart';
+import '../../core/widgets/floating_copilot_button.dart';
 import '../profile/profile_screen.dart';
 import 'client_preferences_screen.dart';
+import 'cliente_copilot_screen.dart';
 import 'cliente_home_screen.dart';
 import 'cliente_subscriptions_screen.dart';
 import 'cut_wallet_screen.dart';
@@ -52,7 +53,14 @@ class _ClienteShellState extends State<ClienteShell> {
             ],
           ),
         ),
-        const Material(type: MaterialType.transparency, child: FloatingChatbot()),
+        // Mesmo botão flutuante do gestor e do barbeiro: abre o Copiloto em
+        // tela cheia (antes o cliente tinha um painelzinho que abria diferente).
+        Material(
+          type: MaterialType.transparency,
+          child: FloatingCopilotButton(
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClienteCopilotScreen())),
+          ),
+        ),
       ],
     );
   }

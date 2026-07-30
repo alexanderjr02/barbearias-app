@@ -195,8 +195,16 @@ class _CutWalletScreenState extends State<CutWalletScreen> {
               return ListView(
                 padding: const EdgeInsets.fromLTRB(28, 90, 28, 24),
                 children: [
-                  Icon(Icons.content_cut_rounded, size: 46, color: palette.textFaint),
-                  const SizedBox(height: 16),
+                  Center(
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(shape: BoxShape.circle, color: accent.withValues(alpha: 0.12)),
+                      child: Icon(Icons.collections_rounded, size: 44, color: accent),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                   Center(child: Text('Sua carteira de cortes', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 18))),
                   const SizedBox(height: 8),
                   Text(
