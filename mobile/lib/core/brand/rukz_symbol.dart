@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 /// A marca rukz desenhada — o bigode + o "r" — a partir dos traçados oficiais
@@ -40,6 +41,46 @@ class RukzSymbol extends StatelessWidget {
       child: CustomPaint(painter: _RukzPainter(bigode, r, tight)),
     );
   }
+}
+
+/// Só o "r" da marca (sem o bigode), recortado justo e centralizado — para
+/// espaços pequenos, tipo o botão do copiloto. Mesmo traçado oficial da logo.
+class RukzR extends StatelessWidget {
+  const RukzR({super.key, this.size = 28, this.color = const Color(0xFFFFC300)});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(width: size, height: size, child: CustomPaint(painter: _RukzRPainter(color)));
+  }
+}
+
+class _RukzRPainter extends CustomPainter {
+  _RukzRPainter(this.color);
+
+  final Color color;
+
+  // O "r" já posicionado no espaço 1024 do ícone (mesmos translate/scale do
+  // símbolo). Matriz coluna-maior de translate(440.8,636.1)·scale(2.1934).
+  static final Path _rGlyph = _parse(_rPath).transform(Float64List.fromList(
+    <double>[2.1934, 0, 0, 0, 0, 2.1934, 0, 0, 0, 0, 1, 0, 440.8, 636.1, 0, 1],
+  ));
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final b = _rGlyph.getBounds();
+    final side = b.width > b.height ? b.width : b.height;
+    final s = (size.shortestSide * 0.84) / side;
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.scale(s);
+    canvas.translate(-b.center.dx, -b.center.dy);
+    canvas.drawPath(_rGlyph, Paint()..color = color..isAntiAlias = true);
+  }
+
+  @override
+  bool shouldRepaint(_RukzRPainter old) => old.color != color;
 }
 
 // Traçados oficiais (viewBox 0 0 1024 1024). Só usam M, L, Q e Z absolutos.
