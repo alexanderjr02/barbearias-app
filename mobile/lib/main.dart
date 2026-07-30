@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -40,6 +41,10 @@ class CortixApp extends StatelessWidget {
           return MaterialApp(
             title: 'rukz',
             debugShowCheckedModeBanner: false,
+            // Rolar por ARRASTE também com mouse/trackpad (não só a roda) — no
+            // app web isso faz a agenda e as listas rolarem ao arrastar, igual
+            // ao toque no celular.
+            scrollBehavior: const _AppScrollBehavior(),
             themeMode: themeController.mode,
             theme: buildCortixTheme(seed: seed, brightness: Brightness.light),
             darkTheme: buildCortixTheme(seed: seed, brightness: Brightness.dark),
@@ -56,6 +61,20 @@ class CortixApp extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Habilita rolar por arraste com mouse/trackpad além do toque (o padrão do
+/// Flutter web só rola por arraste no toque; no desktop fica só a roda).
+class _AppScrollBehavior extends MaterialScrollBehavior {
+  const _AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
 }
 
 /// Shows a splash while restoring a stored session, then routes by role:

@@ -240,7 +240,11 @@ class BarberDayTimeline extends StatelessWidget {
         Divider(height: 1, color: palette.border),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 24),
+            physics: const AlwaysScrollableScrollPhysics(),
+            // Folga generosa embaixo pra as últimas horas (20h-21h) subirem
+            // acima do botão "+" e da barra de navegação — antes ficavam
+            // escondidas atrás deles e dava a impressão de não rolar.
+            padding: const EdgeInsets.only(bottom: 120),
             child: Stack(
               children: [
                 Row(
