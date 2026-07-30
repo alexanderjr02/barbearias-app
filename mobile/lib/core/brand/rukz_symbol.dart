@@ -16,18 +16,28 @@ class RukzSymbol extends StatelessWidget {
     this.size = 48,
     this.bigode = Colors.white,
     this.r = const Color(0xFFFFC300),
+    this.tight = false,
   });
+
+  /// Em [tight] = false o símbolo é desenhado dentro do quadrado 1024 do ícone
+  /// do app (com a mesma folga do ícone instalado). Em [tight] = true ele é
+  /// recortado justo — preenche a largura [size], sem margem — igual à logo da
+  /// web. Nesse modo a altura é [size] / 2.147 (a proporção do símbolo).
+  final bool tight;
 
   final double size;
   final Color bigode;
   final Color r;
 
+  // Proporção do símbolo recortado justo (do arquivo de marca): 634.9 : 295.67.
+  static const double _aspect = 2.1472;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
-      height: size,
-      child: CustomPaint(painter: _RukzPainter(bigode, r)),
+      height: tight ? size / _aspect : size,
+      child: CustomPaint(painter: _RukzPainter(bigode, r, tight)),
     );
   }
 }
@@ -77,10 +87,11 @@ Path _parse(String d) {
 }
 
 class _RukzPainter extends CustomPainter {
-  _RukzPainter(this.bigodeColor, this.rColor);
+  _RukzPainter(this.bigodeColor, this.rColor, this.tight);
 
   final Color bigodeColor;
   final Color rColor;
+  final bool tight;
 
   // Traçados construídos uma vez.
   static final Path _bigode = _parse(_bigodePath);
@@ -88,7 +99,15 @@ class _RukzPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.scale(size.width / 1024, size.height / 1024);
+    if (tight) {
+      // Encaixa a caixa justa do símbolo (194.5,364.16 · 634.9×295.67, do
+      // arquivo de marca) na largura toda — sem a margem do ícone quadrado.
+      final s = size.width / 634.9;
+      canvas.scale(s);
+      canvas.translate(-194.5, -364.16);
+    } else {
+      canvas.scale(size.width / 1024, size.height / 1024);
+    }
     canvas.translate(440.8, 636.1);
     canvas.scale(2.1934);
 
@@ -118,5 +137,5 @@ class _RukzPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RukzPainter old) =>
-      old.bigodeColor != bigodeColor || old.rColor != rColor;
+      old.bigodeColor != bigodeColor || old.rColor != rColor || old.tight != tight;
 }

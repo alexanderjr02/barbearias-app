@@ -25,8 +25,13 @@ async function main() {
 
   // "any": o ícone quadrado da marca (preto + símbolo), cantos arredondados
   // pelo próprio sistema.
+  //
+  // .flatten() é o detalhe que importa pro iOS: sem ele o PNG sai com canal
+  // alfa (RGBA), e o "Adicionar à Tela de Início" do iPhone às vezes recusa
+  // ícone com transparência e mostra um quadrado em branco. Achatando no preto
+  // da marca o ícone fica 100% opaco (RGB), do jeito que o iOS espera.
   for (const size of [180, 192, 512]) {
-    await sharp(quadrado, { density: 384 }).resize(size, size).png().toFile(path.join(OUT, `Icon-${size}.png`));
+    await sharp(quadrado, { density: 384 }).resize(size, size).flatten({ background: "#000000" }).png().toFile(path.join(OUT, `Icon-${size}.png`));
   }
 
   // "maskable": fundo preto cheio + símbolo reduzido ao centro, com respiro.
@@ -35,12 +40,13 @@ async function main() {
     const art = await sharp(simbolo, { density: 384 }).resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
     await sharp({ create: { width: size, height: size, channels: 4, background: "#000000" } })
       .composite([{ input: art, gravity: "center" }])
+      .flatten({ background: "#000000" })
       .png()
       .toFile(path.join(OUT, `Icon-maskable-${size}.png`));
   }
 
   // Favicon do app.
-  await sharp(quadrado, { density: 384 }).resize(64, 64).png().toFile(path.join(ROOT, "web", "favicon.png"));
+  await sharp(quadrado, { density: 384 }).resize(64, 64).flatten({ background: "#000000" }).png().toFile(path.join(ROOT, "web", "favicon.png"));
 
   for (const f of fs.readdirSync(OUT).sort()) {
     console.log("  ", f, fs.statSync(path.join(OUT, f)).size, "bytes");

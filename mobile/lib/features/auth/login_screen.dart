@@ -332,25 +332,36 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           RiseIn(
                             child: Column(
                               children: [
-                                Container(
-                                  width: 82,
-                                  height: 82,
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(24),
-                                    // A marca da rukz é o ícone preto do app — "r"
-                                    // amarelo sobre o bigode branco. Sem
-                                    // gradiente: contraste seco. Com logo de
-                                    // white-label, mostra a logo da barbearia.
-                                    color: _logoUrl == null ? const Color(0xFF0E0D12) : null,
-                                    image: _logoUrl != null ? DecorationImage(image: NetworkImage(_logoUrl!), fit: BoxFit.cover) : null,
-                                    border: _logoUrl == null ? Border.all(color: Colors.white.withValues(alpha: 0.10)) : null,
-                                    // Sombra escura só pra dar leve relevo — sem glow de cor.
-                                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.55), blurRadius: 28, spreadRadius: -4, offset: const Offset(0, 16))],
+                                // Marca: a MESMA da web — o símbolo (bigode + "r")
+                                // recortado justo, com a palavra "rukz" embaixo.
+                                // Antes era um ícone pequeno num tile grande, que
+                                // fazia o "r" parecer menor e a marca "diferente"
+                                // da web. Com white-label, mostra a logo da
+                                // barbearia num tile.
+                                if (_logoUrl != null)
+                                  Container(
+                                    width: 82,
+                                    height: 82,
+                                    clipBehavior: Clip.antiAlias,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(24),
+                                      image: DecorationImage(image: NetworkImage(_logoUrl!), fit: BoxFit.cover),
+                                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.55), blurRadius: 28, spreadRadius: -4, offset: const Offset(0, 16))],
+                                    ),
+                                  )
+                                else
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      RukzSymbol(size: 104, tight: true, r: _accent),
+                                      const SizedBox(height: 14),
+                                      const Text(
+                                        'rukz',
+                                        style: TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1.5, height: 1),
+                                      ),
+                                    ],
                                   ),
-                                  child: _logoUrl == null ? Center(child: RukzSymbol(size: 82, r: _accent)) : null,
-                                ),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 26),
                                 const Text('Bem-vindo de volta', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
                                 const SizedBox(height: 6),
                                 Text(_tagline ?? 'Entre na sua conta $_brandName', style: const TextStyle(color: Colors.white54, fontSize: 14), textAlign: TextAlign.center),
