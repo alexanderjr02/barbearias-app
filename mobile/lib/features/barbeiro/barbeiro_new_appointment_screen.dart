@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/cortix_date_picker.dart';
 import '../auth/session_provider.dart';
 import '../gestor/gestor_repository.dart';
 import '../gestor/widgets/appointment_steps.dart';
@@ -134,7 +135,7 @@ class _BarbeiroNewAppointmentScreenState extends State<BarbeiroNewAppointmentScr
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(context: context, initialDate: _date ?? now, firstDate: now, lastDate: now.add(const Duration(days: 90)));
+    final picked = await showCortixDatePicker(context: context, initialDate: _date ?? now, firstDate: now, lastDate: now.add(const Duration(days: 90)));
     if (picked != null) {
       setState(() => _date = picked);
       _loadSlots();

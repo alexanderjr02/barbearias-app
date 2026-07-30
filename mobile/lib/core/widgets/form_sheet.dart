@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+import 'cortix_date_picker.dart';
 
 /// A bottom-sheet form scaffold shared by every "create/edit X" flow in the
 /// Gestor app (services, products, staff, clients, transactions...) — mirrors
@@ -200,12 +201,12 @@ class CortixDateField extends StatelessWidget {
   Future<void> _pick(BuildContext context) async {
     final now = DateTime.now();
     final current = value.value;
-    final picked = await showDatePicker(
+    final picked = await showCortixDatePicker(
       context: context,
       initialDate: current ?? DateTime(now.year - 20, now.month, now.day),
       firstDate: DateTime(now.year - 120),
       lastDate: now,
-      helpText: 'Data de nascimento',
+      title: 'Data de nascimento',
     );
     if (picked != null) value.value = picked;
   }

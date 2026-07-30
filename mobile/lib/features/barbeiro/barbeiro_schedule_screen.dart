@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_toast.dart';
+import '../../core/widgets/cortix_date_picker.dart';
 import '../auth/session_provider.dart';
 import 'barber_repository.dart';
 
@@ -105,7 +106,7 @@ class _BarbeiroScheduleScreenState extends State<BarbeiroScheduleScreen> {
 
   Future<void> _pickBlockDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(context: context, initialDate: now, firstDate: now, lastDate: now.add(const Duration(days: 365)));
+    final picked = await showCortixDatePicker(context: context, initialDate: now, firstDate: now, lastDate: now.add(const Duration(days: 365)));
     if (picked != null) setState(() => _blockDate = picked);
   }
 
