@@ -1,4 +1,4 @@
-# CORTIX — Onde o projeto está hoje
+# rukz — Onde o projeto está hoje
 
 > Documento de apresentação, sem termos técnicos, para mostrar a clientes e parceiros o que o sistema já faz e o que ainda falta para ele estar pronto para vender.
 
@@ -6,7 +6,7 @@
 
 ## 1. Resumo em uma frase
 
-O CORTIX já é um sistema funcional de ponta a ponta: o dono da barbearia gerencia o negócio, o barbeiro usa o próprio app para ver a agenda e os clientes, e o cliente final agenda e acompanha seus pontos de fidelidade — tudo com dados reais, salvos em banco de dados, tanto pelo computador quanto pelo celular.
+O rukz já é um sistema funcional de ponta a ponta: o dono da barbearia gerencia o negócio, o barbeiro usa o próprio app para ver a agenda e os clientes, e o cliente final agenda e acompanha seus pontos de fidelidade — tudo com dados reais, salvos em banco de dados, tanto pelo computador quanto pelo celular.
 
 O que falta hoje não é "fazer o sistema funcionar" — é **conectar peças de operação comercial** (cobrança automática, envio de mensagens, IA no chat) que normalmente são plugadas por último, quando já existem clientes reais usando o produto.
 
@@ -89,4 +89,4 @@ Organizado por impacto — o que trava a venda primeiro aparece no topo.
 
 ## 4. Em resumo
 
-O CORTIX já entrega, hoje, a experiência completa de uso diário: agendar, atender, controlar caixa e estoque, fidelizar cliente — pelo computador ou pelo celular, para os três tipos de usuário da barbearia. O que resta é o conjunto de integrações comerciais (cobrança, mensagens, publicação nas lojas) necessárias para transformar o sistema, que já funciona, em um produto pronto para ser vendido e cobrado de múltiplos clientes ao mesmo tempo.
+O rukz já entrega, hoje, a experiência completa de uso diário: agendar, atender, controlar caixa e estoque, fidelizar cliente — pelo computador ou pelo celular, para os três tipos de usuário da barbearia. O que resta é o conjunto de integrações comerciais (cobrança, mensagens, publicação nas lojas) necessárias para transformar o sistema, que já funciona, em um produto pronto para ser vendido e cobrado de múltiplos clientes ao mesmo tempo.

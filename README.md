@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✂️ CORTIX
+# rukz
 
 ### Sistema de Gestão Completo para Barbearias Modernas
 
@@ -16,9 +16,9 @@
 
 ---
 
-## 📌 O que é o CORTIX?
+## O que é o rukz?
 
-O **CORTIX** é uma plataforma SaaS (Software as a Service) para barbearias que querem profissionalizar sua gestão. O dono da barbearia controla o negócio em um único lugar — agenda, financeiro, estoque, equipe, marketing e fidelidade — e cada papel (gestor, barbeiro, cliente) tem sua própria experiência, tanto no **painel web** quanto no **app mobile em Flutter**.
+O **rukz** é uma plataforma SaaS (Software as a Service) para barbearias que querem profissionalizar sua gestão. O dono da barbearia controla o negócio em um único lugar — agenda, financeiro, estoque, equipe, marketing e fidelidade — e cada papel (gestor, barbeiro, cliente) tem sua própria experiência, tanto no **painel web** quanto no **app mobile em Flutter**.
 
 Cada barbearia cadastrada tem uma **página pública de agendamento** com sua própria identidade visual (cores, logo, banner), compartilhável por link para os clientes agendarem sem precisar ligar.
 
@@ -26,7 +26,7 @@ Para uma explicação não técnica, pensada para apresentar a clientes/investid
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
 ### Painel web do gestor (dono/gerente da barbearia)
 
@@ -44,7 +44,7 @@ Para uma explicação não técnica, pensada para apresentar a clientes/investid
 | **Copiloto com IA** | Assistente de negócio: resumo diário proativo (sumidos, horários vazios, confirmar amanhã, estoque) com ações de 1 toque + chat que responde sobre o negócio em português (faturamento, clientes, equipe) e **administra por conversa** (cadastrar serviço, mudar preço, dar folga). Botão flutuante fixo no painel |
 | **Configurações** | Marca (logo/cores/banner), horários, chave PIX (gorjetas), FAQ do chatbot e plano da conta |
 
-### ✨ Diferenciais (o que nenhum concorrente tem junto)
+### Diferenciais (o que nenhum concorrente tem junto)
 
 - **Copiloto com IA** para gestor e barbeiro (assistente de negócio, não só bot de agendamento).
 - **Antes/Depois automático**: barbeiro fotografa o resultado ao concluir → vai pra Carteira de Cortes do cliente + vira portfólio.
@@ -86,7 +86,7 @@ A IA é um recurso **Pro+** (ver Planos). O modelo é configurável via `CHATBOT
 
 ---
 
-## 🛠️ Tecnologias
+## Tecnologias
 
 ### Backend + painel web
 
@@ -117,10 +117,10 @@ A IA é um recurso **Pro+** (ver Planos). O modelo é configurável via `CHATBOT
 
 ---
 
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
-cortix/
+rukz/
 ├── Dockerfile                  # Build multi-stage do painel web (deps → build → runtime)
 ├── docker-compose.yml          # Sobe painel web + app Flutter web com `docker compose up -d --build`
 ├── docker-entrypoint.sh        # Roda as migrations antes de iniciar o servidor
@@ -169,7 +169,7 @@ cortix/
 
 ---
 
-## 🗄️ Modelo de dados (multi-tenant)
+## Modelo de dados (multi-tenant)
 
 ```
 User (dono, barbeiro ou cliente — diferenciado por `role`)
@@ -200,7 +200,7 @@ Cada barbearia tem um `slug` único (ex.: `barbearia-do-joao`) que vira a URL p�
 
 ---
 
-## ⚙️ Como rodar localmente
+## Como rodar localmente
 
 ### Painel web (Next.js)
 
@@ -241,7 +241,7 @@ Faça login com o mesmo usuário do painel web — o `role` da conta decide se o
 
 ---
 
-## 📄 Variáveis de ambiente
+## Variáveis de ambiente
 
 ```env
 # Banco de dados (SQLite — arquivo local em dev, volume Docker em produção)
@@ -287,7 +287,7 @@ Pro **app Flutter**, o mesmo Client ID precisa ser passado via `--dart-define=GO
 
 ---
 
-## 🚀 Deploy em produção
+## Deploy em produção
 
 O jeito recomendado é via Docker — já testado de ponta a ponta (build, migrations automáticas, persistência de dados):
 
@@ -332,25 +332,25 @@ e rode `docker compose up -d --build` de novo (só o `mobile-web` precisa rebuil
 
 ---
 
-## 💰 Planos do sistema
+## Planos do sistema
 
 | Plano | Preço | Barbeiros | Agendamentos | IA (Copiloto/chatbot) |
 |---|---|---|---|---|
-| **Essencial** | R$ 79/mês | Até 3 | Ilimitado | ❌ |
-| **Pro** | R$ 149/mês | Até 10 | Ilimitado | ✅ |
-| **White Label** | R$ 399/mês | Ilimitado | Ilimitado | ✅ |
+| **Essencial** | R$ 79/mês | Até 3 | Ilimitado | Nao |
+| **Pro** | R$ 149/mês | Até 10 | Ilimitado | Sim |
+| **White Label** | R$ 399/mês | Ilimitado | Ilimitado | Sim |
 
 O plano fica salvo em `Barbershop.plan` e controla o que a conta pode acessar (`src/context/PlanContext.tsx`). Os preços/limites vivem no banco (`PlatformSetting`, editáveis em `/admin/settings`), com fallback em `src/lib/billing.ts`. A **IA é exclusiva do Pro+** (`planHasAI()` em `src/lib/billing.ts`) — protege a margem, já que cada conversa consome a API da Anthropic. **A cobrança automática (gateway) e o teste grátis de 14 dias ainda não estão implementados** — troca de plano hoje é manual.
 
 ---
 
-## 🌐 Referência da API
+## Referência da API
 
 Contrato completo, com todas as rotas e papéis, em **[docs/api-v1.md](docs/api-v1.md)**.
 
 ---
 
-## 🤝 Como contribuir
+## Como contribuir
 
 Fluxo trunk-based: `master` fica sempre pronta pra produção — mudanças maiores ou arriscadas passam por uma branch curta antes de voltar.
 
@@ -365,6 +365,6 @@ Fluxo trunk-based: `master` fica sempre pronta pra produção — mudanças maio
 
 ---
 
-## 📝 Licença
+## Licença
 
-MIT © 2025 CORTIX — Feito para barbearias brasileiras.
+MIT © 2026 rukz — Feito para barbearias brasileiras.
