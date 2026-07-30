@@ -2,17 +2,13 @@ import Link from "next/link";
 import { Lock } from "lucide-react";
 import { RukzLogo, RukzSimbolo } from "@/components/brand/RukzLogo";
 
-// A porta de entrada: foto real de barbearia atrás de um cartão centralizado,
-// dividida por login, cadastro, "esqueci a senha" e redefinição.
+// A porta de entrada, em duas colunas: a marca à esquerda, o formulário à
+// direita. Cara de sistema sério — preto seco, sem foto, com a marca d'água do
+// bigode como única textura. No mobile o painel da marca some (não cabem duas
+// colunas) e o formulário ocupa a tela, com um logo compacto no topo.
 //
-// Ela carrega a mesma identidade da landing — preto, branco e o amarelo da
-// marca — porque quem chega aqui acabou de decidir lá. Entrar num produto com
-// outra cara é o primeiro momento em que a pessoa desconfia de que comprou uma
-// coisa e recebeu outra.
-//
-// A tipografia não é mais declarada aqui. Depois que o sistema inteiro passou a
-// usar uma família só, a fonte vem do layout raiz e este arquivo para de ter
-// opinião sobre isso.
+// A tipografia vem do layout raiz (o sistema usa uma família só), então este
+// arquivo não opina sobre fonte.
 
 export default function AuthLayout({
   children,
@@ -20,30 +16,41 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center px-4 py-10">
-      {/* Cara de sistema, não de barbearia: preto seco, sem foto. A única
-          textura é a marca d'água do bigode, bem apagada — identidade sem
-          virar cenário. */}
-      <div className="fixed inset-0 -z-10 overflow-hidden bg-preto">
+    <div className="flex min-h-screen w-full bg-preto text-neve">
+      {/* ESQUERDA — painel da marca. Escondido abaixo de lg. */}
+      <aside className="relative hidden w-1/2 flex-col items-center justify-center overflow-hidden border-r border-traco px-10 lg:flex">
+        {/* Marca d'água do bigode, bem apagada — textura de marca, não cenário. */}
         <RukzSimbolo
           tom="mono"
-          className="pointer-events-none absolute left-1/2 top-1/2 w-[min(92vw,700px)] -translate-x-1/2 -translate-y-1/2 text-neve/[0.04]"
+          className="pointer-events-none absolute left-1/2 top-1/2 w-[125%] max-w-none -translate-x-1/2 -translate-y-1/2 text-neve/[0.05]"
         />
-      </div>
-
-      <Link href="/" aria-label="rukz, início" className="mb-8 text-neve transition-opacity hover:opacity-80">
-        <RukzLogo titulo={null} orientacao="empilhado" className="text-[2rem]" />
-      </Link>
-
-      <div className="auth-rise w-full max-w-md">
-        <div className="rounded-3xl border border-traco bg-carvao/85 p-6 shadow-2xl shadow-black/60 backdrop-blur-xl sm:p-8">
-          {children}
+        <div className="relative flex flex-col items-center text-center">
+          <RukzLogo titulo="rukz" orientacao="empilhado" className="text-[3.25rem]" />
+          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.32em] text-cinza">
+            Gestão para barbearia
+          </p>
         </div>
-        <p className="mt-5 flex items-center justify-center gap-2 text-[11px] text-cinza">
-          <Lock className="h-3 w-3 text-ouro" aria-hidden="true" />
-          Conexão segura e dados protegidos conforme a LGPD
-        </p>
-      </div>
+      </aside>
+
+      {/* DIREITA — o formulário (login / cadastro / redefinição). */}
+      <main className="flex w-full flex-col items-center justify-center px-6 py-12 lg:w-1/2">
+        {/* No mobile, sem o painel esquerdo, um logo compacto no topo. */}
+        <Link
+          href="/"
+          aria-label="rukz, início"
+          className="mb-10 text-neve transition-opacity hover:opacity-80 lg:hidden"
+        >
+          <RukzLogo titulo={null} orientacao="empilhado" className="text-[2rem]" />
+        </Link>
+
+        <div className="auth-rise w-full max-w-md">
+          {children}
+          <p className="mt-7 flex items-center justify-center gap-2 text-[11px] text-cinza">
+            <Lock className="h-3 w-3 text-ouro" aria-hidden="true" />
+            Conexão segura e dados protegidos conforme a LGPD
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
