@@ -232,14 +232,9 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <div className="mb-1.5 flex items-baseline justify-between gap-4">
-            <label htmlFor="senha" className="text-[13px] font-semibold text-neve/80">
-              Senha
-            </label>
-            <Link href="/forgot-password" className="text-xs text-ouro transition-colors hover:text-ouro-claro">
-              Esqueceu a senha?
-            </Link>
-          </div>
+          <label htmlFor="senha" className="mb-1.5 block text-[13px] font-semibold text-neve/80">
+            Senha
+          </label>
           <div className="relative">
             <input
               id="senha"
@@ -261,6 +256,11 @@ export default function LoginPage() {
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
+          </div>
+          <div className="mt-2 text-right">
+            <Link href="/forgot-password" className="text-xs text-ouro transition-colors hover:text-ouro-claro">
+              Esqueceu a senha?
+            </Link>
           </div>
         </div>
 
