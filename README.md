@@ -337,7 +337,7 @@ e rode `docker compose up -d --build` de novo (só o `mobile-web` precisa rebuil
 | Plano | Preço | Barbeiros | Agendamentos | IA (Copiloto/chatbot) |
 |---|---|---|---|---|
 | **Essencial** (`FREE`) | R$ 50/mês | Até 3 | Ilimitado | Nao |
-| **Pro** (`PRO`) | R$ 250/mês | Até 10 | Ilimitado | Sim |
+| **Pro** (`PRO`) | R$ 350/mês | Até 10 | Ilimitado | Sim |
 | **White Label** (`ENTERPRISE`) | R$ 897/mês | Ilimitado | Ilimitado | Sim |
 
 Rede com mais de uma unidade: a unidade principal paga o plano cheio e cada unidade adicional custa R$ 149/mês (`EXTRA_UNIT_PRICE`).

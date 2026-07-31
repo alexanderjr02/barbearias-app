@@ -58,7 +58,7 @@ Há duas frentes de inteligência, ambas **prontas e esperando só a chave da IA
 
 ### 2.6 Planos de assinatura (Essencial / Pro / White Label)
 
-Três planos — **Essencial R$ 50**, **Pro R$ 250** e **White Label R$ 897** — com a **IA (Copiloto e chatbot inteligente) exclusiva do Pro pra cima**. Os preços e limites são editáveis no painel administrativo. A troca de plano já funciona; a cobrança automática ainda não (ver abaixo).
+Três planos — **Essencial R$ 50**, **Pro R$ 350** e **White Label R$ 897** — com a **IA (Copiloto e chatbot inteligente) exclusiva do Pro pra cima**. Os preços e limites são editáveis no painel administrativo. A troca de plano já funciona; a cobrança automática ainda não (ver abaixo).
 
 ---
 

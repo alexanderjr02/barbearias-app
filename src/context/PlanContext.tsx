@@ -77,7 +77,7 @@ export const PLAN_INFO: Record<
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     badgeBg: "bg-amber-500/20 text-amber-400",
-    price: "R$ 250/mês",
+    price: "R$ 350/mês",
     appointmentsLimit: Infinity,
     staffLimit: 10,
   },

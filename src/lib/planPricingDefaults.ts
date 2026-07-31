@@ -15,6 +15,6 @@ export type PlanPricingDefaults = { price: number; appointmentsLimit: number | n
 
 export const DEFAULT_PLAN_PRICING: Record<"FREE" | "PRO" | "ENTERPRISE", PlanPricingDefaults> = {
   FREE: { price: 50, appointmentsLimit: null, staffLimit: 3 },
-  PRO: { price: 250, appointmentsLimit: null, staffLimit: 10 },
+  PRO: { price: 350, appointmentsLimit: null, staffLimit: 10 },
   ENTERPRISE: { price: 897, appointmentsLimit: null, staffLimit: null },
 };
