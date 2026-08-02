@@ -315,7 +315,7 @@ function BackupSection() {
         <h3 className="text-sm font-bold text-white">Exportar dados</h3>
       </div>
       <p className="text-xs leading-relaxed text-zinc-500">
-        Baixa os dados de negócio em JSON — barbearias, usuários, agendamentos, financeiro, cupons e faturas.
+        Baixa os dados de negócio em JSON, barbearias, usuários, agendamentos, financeiro, cupons e faturas.
         Serve para auditoria, migração e para consultar como as coisas estavam numa data. Não inclui senhas nem
         chaves de integração.
       </p>

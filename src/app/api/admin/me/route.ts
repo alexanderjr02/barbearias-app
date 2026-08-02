@@ -8,10 +8,10 @@ import { isSecureRequest, getClientIp } from "@/lib/requestIp";
 import { nameSchema, emailSchema } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 
-// GET /api/admin/me — lets client components (like AdminSidebar) know
+// GET /api/admin/me, lets client components (like AdminSidebar) know
 // whether the current admin is SUPER_ADMIN or the scoped SUPPORT_ADMIN, to
 // hide navigation to pages they can't reach (the API routes are the real
-// enforcement boundary — this is purely a UI convenience).
+// enforcement boundary, this is purely a UI convenience).
 export async function GET() {
   const session = await requireAnyAdminSession();
   if (!session) {
@@ -20,10 +20,10 @@ export async function GET() {
   return NextResponse.json({ name: session.name, email: session.email, role: session.role });
 }
 
-// PATCH /api/admin/me — o admin edita o próprio nome e e-mail.
+// PATCH /api/admin/me, o admin edita o próprio nome e e-mail.
 //
 // Trocar e-mail exige a senha atual: o e-mail é o que recupera a conta, então
-// quem consegue trocá-lo consegue tomá-la. Trocar só o nome, não — é inócuo.
+// quem consegue trocá-lo consegue tomá-la. Trocar só o nome, não, é inócuo.
 export async function PATCH(request: NextRequest) {
   const session = await requireAnyAdminSession();
   if (!session) return denyAdmin();

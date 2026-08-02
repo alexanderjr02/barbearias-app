@@ -19,7 +19,7 @@ class TimeRange {
   const TimeRange(this.start, this.end);
 }
 
-/// Gaps in [rangeStart, rangeEnd) not covered by any busy interval — mirrors
+/// Gaps in [rangeStart, rangeEnd) not covered by any busy interval, mirrors
 /// the same free-segment math the web dashboard uses, so "Xh livres" means
 /// exactly the same thing on the phone as it does on the desktop.
 List<TimeRange> freeSegments(int rangeStart, int rangeEnd, List<TimeRange> busy) {

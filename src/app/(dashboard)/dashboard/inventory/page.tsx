@@ -34,7 +34,7 @@ export default function InventoryPage() {
   const [editing, setEditing] = useState<ApiProduct | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ApiProduct | null>(null);
   const [sellQty, setSellQty] = useState(1);
-  // Quantidades do form de novo produto — controladas, para o NumberStepper.
+  // Quantidades do form de novo produto, controladas, para o NumberStepper.
   const [newQty, setNewQty] = useState(0);
   const [newMinQty, setNewMinQty] = useState(5);
   const queryClient = useQueryClient();
@@ -63,7 +63,7 @@ export default function InventoryPage() {
     onSuccess: () => {
       // Invalida o financeiro junto: a venda virou receita lá, e deixar a
       // outra tela com número velho é como o gestor perde a confiança no
-      // sistema — ele confere, não bate, e volta pra planilha.
+      // sistema, ele confere, não bate, e volta pra planilha.
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["finance-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["finance-overview"] });
@@ -266,7 +266,7 @@ export default function InventoryPage() {
               Excluir <span className="font-bold text-white">{confirmDelete.name}</span> do estoque?
             </p>
             <p className="text-xs leading-relaxed text-zinc-500">
-              As vendas já registradas continuam no Financeiro — o histórico não muda. Só o produto sai da lista.
+              As vendas já registradas continuam no Financeiro, o histórico não muda. Só o produto sai da lista.
             </p>
             {confirmDelete.quantity > 0 && (
               <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3.5 py-3">

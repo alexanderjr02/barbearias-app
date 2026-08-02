@@ -4,7 +4,7 @@ import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
 
 /// Painel da rede no celular: o consolidado no topo, a leitura do Copiloto e
-/// as unidades comparadas lado a lado — o mesmo conteúdo do web, adaptado.
+/// as unidades comparadas lado a lado, o mesmo conteúdo do web, adaptado.
 /// Trocar de unidade aqui reemite o token e recarrega o app inteiro.
 class GestorUnitsScreen extends StatefulWidget {
   const GestorUnitsScreen({super.key});
@@ -146,7 +146,7 @@ class _GestorUnitsScreenState extends State<GestorUnitsScreen> {
     if (eff != null && worst != null && eff.name != worst.name && worst.revenuePerBarber > 0) {
       final ratio = ((eff.revenuePerBarber / worst.revenuePerBarber - 1) * 100).round();
       if (ratio >= 15) {
-        return '${eff.name} rende ${_money(eff.revenuePerBarber)} por barbeiro — $ratio% a mais que ${worst.name}. Faturamento bruto engana: a loja com mais gente pode ser a menos eficiente.';
+        return '${eff.name} rende ${_money(eff.revenuePerBarber)} por barbeiro, $ratio% a mais que ${worst.name}. Faturamento bruto engana: a loja com mais gente pode ser a menos eficiente.';
       }
     }
     final best = byName(d.best);

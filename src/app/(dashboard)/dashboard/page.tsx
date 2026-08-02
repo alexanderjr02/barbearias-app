@@ -33,7 +33,7 @@ interface SummaryResponse {
   avgTicket: number;
   topBarbers: { name: string; appointments: number; revenue: number; share: number }[];
   recentAppointments: { id: string; client: string; service: string; barber: string; time: string; status: string; value: number }[];
-  /** Marcado para hoje e ainda não concluído — o que ainda entra no caixa. */
+  /** Marcado para hoje e ainda não concluído, o que ainda entra no caixa. */
   todayExpected: number;
   /** % da capacidade de hoje (horário × barbeiros) já vendida. */
   todayOccupancy: number;
@@ -87,7 +87,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* HOJE — a primeira pergunta de todo dono: como está o dia?
+          {/* HOJE, a primeira pergunta de todo dono: como está o dia?
               Já entrou, ainda entra, e quanto da casa está vendido. */}
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
@@ -118,7 +118,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {/* Cadeira vazia é dinheiro que não volta — por isso ocupação
+            {/* Cadeira vazia é dinheiro que não volta, por isso ocupação
                 aparece ao lado do caixa, não escondida num relatório. */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
               <div className="flex items-baseline justify-between">
@@ -138,7 +138,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* MÊS — estou no caminho? Projeção pelo ritmo atual, e comparação
+          {/* MÊS, estou no caminho? Projeção pelo ritmo atual, e comparação
               com o mesmo ponto do mês passado (não com o mês fechado, que
               diria "caiu 60%" todo dia 5). */}
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
@@ -189,12 +189,12 @@ export default function DashboardPage() {
               </div>
             ) : (
               <p className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 py-3 text-xs text-zinc-500">
-                Sem meta definida. Com uma meta, esta faixa mostra o quanto falta e se o ritmo atual chega lá — defina em Financeiro.
+                Sem meta definida. Com uma meta, esta faixa mostra o quanto falta e se o ritmo atual chega lá. Defina em Financeiro.
               </p>
             )}
           </div>
 
-          {/* PRECISA DE VOCÊ — o dashboard só é útil se transformar número em
+          {/* PRECISA DE VOCÊ, o dashboard só é útil se transformar número em
               decisão. Some inteiro quando não há nada pendente. */}
           {(summary.noShowsToday > 0 || summary.unconfirmedToday > 0 || summary.lowStock.length > 0) && (
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">

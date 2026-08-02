@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// POST /api/client/notifications/read-all — mark every notification the
+// POST /api/client/notifications/read-all, mark every notification the
 // client has as read (e.g. when they open the bell).
 export async function POST() {
   const session = await getSession();

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// POST /api/notifications/read-all — mark every notification for this
+// POST /api/notifications/read-all, mark every notification for this
 // barbershop as read (e.g. when the gestor opens the bell dropdown).
 export async function POST() {
   const session = await requireBarbershopSession();

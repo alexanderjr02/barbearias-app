@@ -15,7 +15,7 @@ const _statusColor = {
 /// Always-reachable "talk to rukz support" bubble, mirroring
 /// [FloatingChatbot]'s bubble+panel structure but wired to the real
 /// SupportTicket system: sending a message here replies to the gestor's
-/// most recent open ticket, or opens a new one — no navigation required to
+/// most recent open ticket, or opens a new one, no navigation required to
 /// get a message to the team. Meant to be dropped into a Stack above
 /// [GestorShell]'s Scaffold, same pattern as the client shell's chatbot.
 class FloatingSupportButton extends StatefulWidget {

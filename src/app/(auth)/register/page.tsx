@@ -45,7 +45,7 @@ function passwordStrength(password: string): { score: number; label: string; col
 }
 
 // useSearchParams() opts this page out of static prerendering unless it's
-// wrapped in Suspense — without it, `next build` fails to prerender /register.
+// wrapped in Suspense, without it, `next build` fails to prerender /register.
 export default function RegisterPage() {
   return (
     <Suspense fallback={null}>
@@ -55,7 +55,7 @@ export default function RegisterPage() {
 }
 
 // O endereco de agendamento sai do dominio em que a pagina esta rodando.
-// Estava escrito "rukz.app/" fixo no codigo — um dominio que NAO EXISTE
+// Estava escrito "rukz.app/" fixo no codigo, um dominio que NAO EXISTE
 // (o DNS nao resolve). Toda barbearia que se cadastrou leu, no proprio
 // cadastro, uma promessa de endereco falso. Derivar do runtime faz isso
 // acompanhar producao, preview e desenvolvimento sem ninguem lembrar de
@@ -113,7 +113,7 @@ function RegisterForm() {
   const plan = watch("plan");
   const strength = passwordStrength(password);
 
-  // Live availability check for the booking link — debounced so we don't hit
+  // Live availability check for the booking link, debounced so we don't hit
   // the server on every keystroke. Only fires on a well-formed slug; a stale
   // in-flight request is aborted when the value changes again.
   useEffect(() => {
@@ -135,7 +135,7 @@ function RegisterForm() {
         const data = await res.json();
         setSlugStatus(data.available ? "available" : data.valid ? "taken" : "invalid");
       } catch {
-        // Aborted (value changed) or offline — leave the last state; submit
+        // Aborted (value changed) or offline, leave the last state; submit
         // still validates server-side as the source of truth.
       }
     }, 450);
@@ -200,7 +200,7 @@ function RegisterForm() {
       {/* Não convidamos cliente a criar conta aqui. Conta de cliente sem
           barbearia não leva a lugar nenhum: ele se cadastra, cai na página
           inicial e não tem o que fazer. Quem agenda chega pelo link da
-          barbearia — é lá que a conta dele nasce junto com o agendamento,
+          barbearia, é lá que a conta dele nasce junto com o agendamento,
           já ligada a alguém. */}
       <div className="mb-6" />
 
@@ -219,7 +219,7 @@ function RegisterForm() {
       </div>
 
       {/* O plano escolhido acompanha as etapas seguintes. Quem está preenchendo
-          CNPJ já esqueceu o que escolheu três telas atrás — e é justamente o
+          CNPJ já esqueceu o que escolheu três telas atrás, e é justamente o
           que ele está comprando. */}
       {step > 1 && planoEscolhido && (
         <div className="mb-5 flex items-center justify-between rounded-xl border border-traco-forte bg-grafite/70 px-3.5 py-2.5">
@@ -236,7 +236,7 @@ function RegisterForm() {
       {/* O botão do Google saiu daqui de propósito. Uma conta criada por ele
           nasce sempre como CLIENTE (ver /api/auth/google), então o dono que
           clicasse ganhava a conta errada e caía na página inicial sem
-          barbearia nenhuma — e ainda tinha que voltar e preencher tudo. Um
+          barbearia nenhuma, e ainda tinha que voltar e preencher tudo. Um
           atalho que leva ao lugar errado é pior que não ter atalho. Abrir
           barbearia exige nome, CNPJ e endereço, coisas que o Google não
           fornece; não há atalho real a oferecer aqui. */}
@@ -246,7 +246,7 @@ function RegisterForm() {
           /* O plano vem PRIMEIRO porque é decisão de compra, não de cadastro:
              ninguém digita CNPJ sem saber quanto vai pagar. Deixá-lo no fim de
              um formulário longo faz a pessoa descobrir o preço depois de já ter
-             investido dez minutos — e é aí que ela desiste. */
+             investido dez minutos, e é aí que ela desiste. */
           <div className="space-y-2">
             {planOptions.map((p) => {
               const escolhido = plan === p.value;

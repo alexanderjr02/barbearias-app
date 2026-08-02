@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/client/loyalty — the logged-in client's loyalty balance across
+// GET /api/client/loyalty, the logged-in client's loyalty balance across
 // every barbershop where they've earned points.
 export async function GET() {
   const session = await getSession();

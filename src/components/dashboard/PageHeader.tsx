@@ -18,7 +18,7 @@ interface PageHeaderProps {
 //
 // O selo com ícone que ficava à esquerda saiu. Ele repetia em quadrado o que o
 // menu lateral já diz (você está em Equipe), e um quadrado colorido em cada
-// página empurrava o título para baixo na hierarquia — quem entra quer ler
+// página empurrava o título para baixo na hierarquia, quem entra quer ler
 // "Equipe · 2 barbeiros ativos", não olhar um ícone. Sem ele o título ganha o
 // peso e a página começa na informação.
 export function PageHeader({ title, subtitle, action }: PageHeaderProps) {

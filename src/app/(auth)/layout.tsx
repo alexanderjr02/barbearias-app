@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import { RukzLogo, RukzSimbolo } from "@/components/brand/RukzLogo";
 
 // A porta de entrada, em duas colunas: a marca à esquerda, o formulário à
-// direita. Cara de sistema sério — preto seco, sem foto, com a marca d'água do
+// direita. Cara de sistema sério, preto seco, sem foto, com a marca d'água do
 // bigode como única textura. No mobile o painel da marca some (não cabem duas
 // colunas) e o formulário ocupa a tela, com um logo compacto no topo.
 //
@@ -17,9 +17,9 @@ export default function AuthLayout({
 }) {
   return (
     <div className="flex min-h-screen w-full bg-preto text-neve">
-      {/* ESQUERDA — painel da marca. Escondido abaixo de lg. */}
+      {/* ESQUERDA, painel da marca. Escondido abaixo de lg. */}
       <aside className="relative hidden w-1/2 flex-col items-center justify-center overflow-hidden border-r border-traco px-10 lg:flex">
-        {/* Marca d'água do bigode, bem apagada — textura de marca, não cenário. */}
+        {/* Marca d'água do bigode, bem apagada, textura de marca, não cenário. */}
         <RukzSimbolo
           tom="mono"
           className="pointer-events-none absolute left-1/2 top-1/2 w-[125%] max-w-none -translate-x-1/2 -translate-y-1/2 text-neve/[0.05]"
@@ -32,7 +32,7 @@ export default function AuthLayout({
         </div>
       </aside>
 
-      {/* DIREITA — o formulário (login / cadastro / redefinição). */}
+      {/* DIREITA, o formulário (login / cadastro / redefinição). */}
       <main className="flex w-full flex-col items-center justify-center px-6 py-12 lg:w-1/2">
         {/* No mobile, sem o painel esquerdo, um logo compacto no topo. */}
         <Link

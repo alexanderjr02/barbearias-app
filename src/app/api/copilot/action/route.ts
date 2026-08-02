@@ -5,7 +5,7 @@ import { planHasAI } from "@/lib/billing";
 import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
 import { churnedClients, tomorrowAppointments, emptySlotsToday } from "@/lib/copilot/insights";
 
-// POST /api/copilot/action { action } — executes one of the briefing's one-tap
+// POST /api/copilot/action { action }, executes one of the briefing's one-tap
 // actions. Each is a real, safe operation scoped to the caller's barbershop.
 export async function POST(request: NextRequest) {
   const session = await requireBarbershopSession();
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         await notifyClient(barbershopId, a.clientId, "APPOINTMENT_CONFIRMED", "Agendamento confirmado", `Confirmamos seu horário de amanhã às ${a.startTime}. Até lá!`, "/appointments");
       }
     }
-    return NextResponse.json({ ok: true, count: toConfirm.length, message: `${toConfirm.length} agendamento(s) confirmado(s).` });
+    return NextResponse.json({ ok: true, count: toConfirm.length, message: `${toConfirm.length} ${toConfirm.length === 1 ? "agendamento confirmado" : "agendamentos confirmados"}.` });
   }
 
   if (action === "winback_churned") {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       ok: true,
       count: withAccount.length,
       total: churned.length,
-      message: `${withAccount.length} cliente(s) avisado(s) pelo app.${churned.length > withAccount.length ? ` ${churned.length - withAccount.length} sem conta — chame pelo WhatsApp.` : ""}`,
+      message: `${withAccount.length} ${withAccount.length === 1 ? "cliente avisado" : "clientes avisados"} pelo app.${churned.length > withAccount.length ? ` ${churned.length - withAccount.length} sem conta. Chame pelo WhatsApp.` : ""}`,
     });
   }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       select: { id: true, clientId: true },
     });
     const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
-    // Diz QUAIS horários abriram — "abriu horário" sem a hora obriga o cliente
+    // Diz QUAIS horários abriram, "abriu horário" sem a hora obriga o cliente
     // a abrir o app pra descobrir. Pega os horários livres de hoje de verdade
     // (todos os barbeiros), os 3 mais cedo, e cita na mensagem.
     const { perStaff } = await emptySlotsToday(barbershopId);
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       await notifyClient(barbershopId, w.clientId!, "APPOINTMENT_CONFIRMED", "Abriu horário!", `Vagou horário hoje${whenTxt} na ${shopName}. Corre pra garantir!`, "/appointments");
     }
     await prisma.waitlistEntry.updateMany({ where: { id: { in: waiting.map((w: { id: string }) => w.id) } }, data: { status: "DONE" } });
-    return NextResponse.json({ ok: true, count: waiting.length, message: `${waiting.length} cliente(s) da fila avisado(s).` });
+    return NextResponse.json({ ok: true, count: waiting.length, message: `${waiting.length} ${waiting.length === 1 ? "cliente da fila avisado" : "clientes da fila avisados"}.` });
   }
 
   return NextResponse.json({ error: "Ação desconhecida" }, { status: 400 });

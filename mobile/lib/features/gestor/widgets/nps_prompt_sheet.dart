@@ -4,7 +4,7 @@ import '../gestor_repository.dart';
 
 /// Mirrors the web NpsPrompt floating card: an occasional 0-10 satisfaction
 /// check shown once /nps says shouldPrompt is true (server-side 30-day
-/// cooldown, same rule as web — no local scheduling needed here).
+/// cooldown, same rule as web, no local scheduling needed here).
 class NpsPromptSheet extends StatefulWidget {
   final GestorRepository repository;
 

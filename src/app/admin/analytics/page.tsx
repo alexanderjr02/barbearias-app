@@ -52,7 +52,7 @@ export default function AdminAnalyticsPage() {
       <PageHeader
         icon={Activity}
         title="Analytics"
-        subtitle="Usuários ativos e uso do chatbot — dado real desde que essa tela entrou no ar"
+        subtitle="Usuários ativos e uso do chatbot, dado real desde que essa tela entrou no ar"
         accent="mono"
       />
 
@@ -70,7 +70,7 @@ export default function AdminAnalyticsPage() {
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <h3 className="text-base font-bold text-white mb-1">Usuários ativos por dia</h3>
-            <p className="text-xs text-zinc-500 mb-5">Últimos 14 dias — cresce a partir de agora, sem histórico inventado.</p>
+            <p className="text-xs text-zinc-500 mb-5">Últimos 14 dias, cresce a partir de agora, sem histórico inventado.</p>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={data.dailyTrend} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
                 <defs>
@@ -130,7 +130,7 @@ export default function AdminAnalyticsPage() {
               <TrendingUp className="w-4 h-4 text-white" />
               <h3 className="text-base font-bold text-white">Retenção por cohort</h3>
             </div>
-            <p className="text-xs text-zinc-500 mb-5">% de barbearias de cada mês de cadastro que fizeram login em cada mês seguinte — só é significativo a partir de agora.</p>
+            <p className="text-xs text-zinc-500 mb-5">% de barbearias de cada mês de cadastro que fizeram login em cada mês seguinte, só é significativo a partir de agora.</p>
             {data.retentionCohorts.length === 0 ? (
               <p className="text-sm text-zinc-500 text-center py-6">Nenhum cadastro ainda</p>
             ) : (
@@ -194,7 +194,7 @@ export default function AdminAnalyticsPage() {
                 <Gauge className="w-4 h-4 text-amber-400" />
                 <h3 className="text-base font-bold text-white">Perto do limite do plano</h3>
               </div>
-              <p className="text-xs text-zinc-500 mb-4">80%+ de uso — oportunidade de upgrade</p>
+              <p className="text-xs text-zinc-500 mb-4">80%+ de uso, oportunidade de upgrade</p>
               {data.planLimitUsage.length === 0 ? (
                 <p className="text-sm text-zinc-500 text-center py-8">Nenhuma barbearia perto do limite</p>
               ) : (
@@ -222,7 +222,7 @@ export default function AdminAnalyticsPage() {
               <ShieldAlert className="w-4 h-4 text-red-400" />
               <h3 className="text-base font-bold text-white">Logins de IP novo</h3>
             </div>
-            <p className="text-xs text-zinc-500 mb-4">Sem geolocalização — só sinaliza um IP nunca visto antes para aquele usuário.</p>
+            <p className="text-xs text-zinc-500 mb-4">Sem geolocalização, só sinaliza um IP nunca visto antes para aquele usuário.</p>
             {data.newIpLogins.length === 0 ? (
               <p className="text-sm text-zinc-500 text-center py-6">Nenhum login de IP novo registrado</p>
             ) : (

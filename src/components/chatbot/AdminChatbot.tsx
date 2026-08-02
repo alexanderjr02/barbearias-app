@@ -21,7 +21,7 @@ const INSIGHTS = [
 const RESPONSES: { keywords: string[]; answer: string }[] = [
   {
     keywords: ["agendar", "agendamento", "novo agendamento", "criar"],
-    answer: "Para criar um novo agendamento:\n\n1. Clique no botão **+ Novo Agendamento** no topo da tela\n2. Ou acesse **Agendamentos** no menu lateral\n3. Preencha serviço, barbeiro, data/hora e dados do cliente\n\nVocê também pode deixar o cliente agendar direto pela sua **página pública** — compartilhe o link com seus clientes!",
+    answer: "Para criar um novo agendamento:\n\n1. Clique no botão **+ Novo Agendamento** no topo da tela\n2. Ou acesse **Agendamentos** no menu lateral\n3. Preencha serviço, barbeiro, data/hora e dados do cliente\n\nVocê também pode deixar o cliente agendar direto pela sua **página pública**, compartilhe o link com seus clientes!",
   },
   {
     keywords: ["relatório", "receita", "financeiro", "dinheiro", "quanto ganhei"],
@@ -61,7 +61,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
 ];
 
-const DEFAULT = "Não entendi exatamente, mas posso ajudar com:\n\n**Agendamentos** — como criar e gerenciar\n**Relatórios** — análise da receita\n**Clientes** — VIPs e fidelidade\n**Serviços** — cadastro e preços\n**Chatbot** — personalização\n**Marketing** — campanhas\n\nPergunta algo específico!";
+const DEFAULT = "Não entendi exatamente, mas posso ajudar com:\n\n**Agendamentos**, como criar e gerenciar\n**Relatórios**, análise da receita\n**Clientes**. VIPs e fidelidade\n**Serviços**, cadastro e preços\n**Chatbot**, personalização\n**Marketing**, campanhas\n\nPergunta algo específico!";
 
 function getResponse(text: string): string {
   const lower = text.toLowerCase();

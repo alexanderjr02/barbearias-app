@@ -173,7 +173,7 @@ export default function FinancePage() {
       <PageHeader
         icon={Wallet}
         title="Financeiro"
-        subtitle="Serviços e mensalidades entram automático — você só lança o que sobra"
+        subtitle="Serviços e mensalidades entram automático, você só lança o que sobra"
         action={
           <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
             <Plus className="w-4 h-4" />
@@ -190,7 +190,7 @@ export default function FinancePage() {
 
       {/* Resultado.
           Três cards iguais tratavam receita, despesa e lucro como se pesassem
-          o mesmo — mas lucro é a resposta e os outros dois são a conta que
+          o mesmo, mas lucro é a resposta e os outros dois são a conta que
           leva até ela. Aqui o lucro domina e a barra mostra, em uma olhada,
           quanto da receita sobrou. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
@@ -270,7 +270,7 @@ export default function FinancePage() {
 
       <TipPayoutsPanel />
 
-      {/* Fixas — ficam acima do gráfico de propósito: é o que o gestor precisa
+      {/* Fixas, ficam acima do gráfico de propósito: é o que o gestor precisa
           cadastrar para o número lá em cima parar de mentir. */}
       <RecurringExpensesPanel />
 
@@ -319,7 +319,7 @@ export default function FinancePage() {
           <div>
             <h3 className="text-sm font-bold text-white">Lançamentos manuais</h3>
             <p className="mt-0.5 text-xs text-zinc-600">
-              Serviços concluídos e mensalidades pagas entram sozinhos — aqui fica o resto
+              Serviços concluídos e mensalidades pagas entram sozinhos, aqui fica o resto
             </p>
           </div>
           {transactions.length > 0 && (
@@ -336,7 +336,7 @@ export default function FinancePage() {
             </div>
             <p className="mt-4 text-sm font-semibold text-zinc-300">Nenhum lançamento manual</p>
             <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-zinc-600">
-              Aluguel, produtos, energia — o que não passa pelo agendamento entra aqui e o lucro acima passa a
+              Aluguel, produtos, energia, o que não passa pelo agendamento entra aqui e o lucro acima passa a
               refletir a realidade.
             </p>
             <button
@@ -379,7 +379,7 @@ export default function FinancePage() {
                   {t.type === "INCOME" ? "+" : "−"}
                   {formatCurrency(t.amount)}
                 </span>
-                {/* Lixeira revelada no hover da linha — some quando não está
+                {/* Lixeira revelada no hover da linha, some quando não está
                     focado, para não poluir. */}
                 <button
                   onClick={() => setPendingDelete(t)}

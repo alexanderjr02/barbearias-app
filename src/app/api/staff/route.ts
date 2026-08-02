@@ -40,7 +40,7 @@ export async function GET() {
   const mesmoDia = (a: Date, b: Date) =>
     a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
-  // Minutos que a barbearia esteve ABERTA do dia 1 até hoje — o denominador da
+  // Minutos que a barbearia esteve ABERTA do dia 1 até hoje, o denominador da
   // ocupação. Sem isto, "ocupação" seria um número solto sem referência.
   let minutosAbertos = 0;
   for (let d = new Date(inicioMes); d <= agora; d.setDate(d.getDate() + 1)) {
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
   }
   const { name, role, specialties, avatar, commissionRate, email, password, cpf, employmentType, hireDate, pixKey } = parsed.data;
 
-  // Plan limit — block adding a barber beyond what the plan allows.
+  // Plan limit, block adding a barber beyond what the plan allows.
   const limitError = await staffLimitError(session.barbershopId);
   if (limitError) {
     return NextResponse.json({ error: limitError, upgradeRequired: true }, { status: 403 });

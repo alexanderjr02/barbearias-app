@@ -28,7 +28,7 @@ export function mensagemDoErro(e: CouponError): string {
 
 /**
  * Confere o cupom sem consumi-lo. Serve para a tela de cadastro dizer "código
- * válido: 12 meses de Pro" ANTES da pessoa preencher o resto — descobrir que
+ * válido: 12 meses de Pro" ANTES da pessoa preencher o resto, descobrir que
  * o código não presta depois de digitar o formulário inteiro é o tipo de
  * atrito que faz desistir.
  */

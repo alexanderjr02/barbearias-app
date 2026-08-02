@@ -39,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   });
 }
 
-// POST — reply to your own ticket. Replying to a RESOLVED ticket reopens it.
+// POST, reply to your own ticket. Replying to a RESOLVED ticket reopens it.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireBarbershopSession();
   if (!session) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   return NextResponse.json(message, { status: 201 });
 }
 
-// PATCH — the gestor can only self-close their own ticket; every other
+// PATCH, the gestor can only self-close their own ticket; every other
 // status transition is admin-only (see /api/admin/support/tickets/[id]).
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireBarbershopSession();

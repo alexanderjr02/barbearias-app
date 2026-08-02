@@ -254,7 +254,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       );
 }
 
-/// Live password strength meter — three segments that fill and shift color
+/// Live password strength meter, three segments that fill and shift color
 /// as the password gains length and character variety, mirroring the web
 /// signup so the two surfaces feel like one product.
 class _PasswordStrength extends StatelessWidget {

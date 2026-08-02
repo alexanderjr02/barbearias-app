@@ -9,7 +9,7 @@ import { prisma } from "@/lib/db";
 //
 // Duas coisas que esta rota resolve:
 //
-// 1. A logo enviada pelo gestor é uma foto qualquer — a de teste era 800x1421.
+// 1. A logo enviada pelo gestor é uma foto qualquer, a de teste era 800x1421.
 //    O iOS recorta o centro de qualquer imagem não quadrada, então metade da
 //    marca sumia. Aqui ela é encaixada inteira num quadrado, com fundo, em vez
 //    de cortada.
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     const input = Buffer.from(await res.arrayBuffer());
 
     // .trim() primeiro: remove a MARGEM da própria logo (transparente ou de cor
-    // uniforme) antes de encaixar — é o que tira a "moldura" que aparecia quando
+    // uniforme) antes de encaixar, é o que tira a "moldura" que aparecia quando
     // a imagem enviada já vinha com espaço em volta. Depois "contain" (não
     // "cover", que cortaria a marca): a logo inteira aparece, e só a sobra por
     // formato não-quadrado é preenchida com a cor da marca.

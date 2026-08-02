@@ -15,7 +15,7 @@ String _addMinutes(String time, int minutes) {
   return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 }
 
-/// The gestor's own booking flow — same step order as the web dashboard's
+/// The gestor's own booking flow, same step order as the web dashboard's
 /// "Novo agendamento" modal (serviço → barbeiro → data/horário → cliente),
 /// backed by the exact same real-availability endpoints, so a walk-in gets
 /// booked the same way whether the gestor is at the counter or on the phone.

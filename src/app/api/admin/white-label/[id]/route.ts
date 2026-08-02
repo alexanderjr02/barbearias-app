@@ -5,7 +5,7 @@ import { logAdminAction } from "@/lib/audit";
 
 const STATUSES = ["REQUESTED", "IN_PROGRESS", "DELIVERED"] as const;
 
-// PATCH /api/admin/white-label/[id] — [id] is the WhiteLabelRequest id.
+// PATCH /api/admin/white-label/[id], [id] is the WhiteLabelRequest id.
 // Manual status advance + notes; this is an honest queue the admin works by
 // hand, not an automated build pipeline (none exists in this app).
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

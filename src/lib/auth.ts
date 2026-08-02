@@ -6,7 +6,7 @@ export const ACCESS_COOKIE = "rukz_access";
 export const REFRESH_COOKIE = "rukz_refresh";
 
 // Cookies da marca antiga. Trocar o nome, sozinho, invalidaria a sessão de
-// todo mundo que estivesse logado no dia do deploy — então a leitura aceita o
+// todo mundo que estivesse logado no dia do deploy, então a leitura aceita o
 // nome antigo como reserva, e a gravação seguinte já sai com o nome novo. Os
 // legados são apagados no logout (ver clearSessionCookies).
 export const LEGACY_ACCESS_COOKIE = "cortix_access";
@@ -23,7 +23,7 @@ export function readCookieWithLegacy(
 
 export const ACCESS_TOKEN_TTL = 15 * 60; // seconds
 export const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60; // seconds
-export const TWO_FACTOR_PENDING_TTL = 2 * 60; // seconds — just long enough to type a 6-digit code
+export const TWO_FACTOR_PENDING_TTL = 2 * 60; // seconds, just long enough to type a 6-digit code
 
 export interface SessionPayload {
   sub: string;
@@ -67,7 +67,7 @@ export async function verifyAccessToken(token: string): Promise<SessionPayload |
 }
 
 // Short-lived token proving "password already verified for this user,
-// waiting on their 2FA code" — deliberately carries only a userId and a
+// waiting on their 2FA code", deliberately carries only a userId and a
 // `purpose` tag distinguishing it from a real session token, so it can
 // never be mistaken for (or reused as) one even if leaked.
 interface PendingTwoFactorPayload {

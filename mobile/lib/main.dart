@@ -28,7 +28,7 @@ class RukzApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => SessionProvider()..restore()),
         ChangeNotifierProvider(create: (_) => ThemeController()..restore()),
-        // Lazy (default): only instantiated — and only then does it fetch —
+        // Lazy (default): only instantiated, and only then does it fetch —
         // once a Gestor screen actually reads it. Declared above the
         // Navigator so it's reachable from both the shell's tabs and any
         // screen pushed on top of them (e.g. Configurações), unlike a
@@ -41,7 +41,7 @@ class RukzApp extends StatelessWidget {
           return MaterialApp(
             title: 'rukz',
             debugShowCheckedModeBanner: false,
-            // Rolar por ARRASTE também com mouse/trackpad (não só a roda) — no
+            // Rolar por ARRASTE também com mouse/trackpad (não só a roda), no
             // app web isso faz a agenda e as listas rolarem ao arrastar, igual
             // ao toque no celular.
             scrollBehavior: const _AppScrollBehavior(),

@@ -4,10 +4,10 @@ import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 import { emailSchema } from "@/lib/validation";
 
-// POST /api/admin/barbershops/[id]/transfer — passa a barbearia para outro dono.
+// POST /api/admin/barbershops/[id]/transfer, passa a barbearia para outro dono.
 //
 // Barbearia é vendida, sócio sai, o cadastro foi feito no e-mail errado. Sem
-// isto a única saída era criar tudo de novo — e recriar significa perder
+// isto a única saída era criar tudo de novo, e recriar significa perder
 // agenda, histórico de cliente e financeiro, ou seja, perder o negócio inteiro
 // para consertar um nome.
 //

@@ -3,7 +3,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'app_toast.dart';
 
 /// A microphone button that dictates speech straight into a text field using
-/// the device/browser's built-in speech recognition — no external provider or
+/// the device/browser's built-in speech recognition, no external provider or
 /// extra API key. Degrades gracefully where speech isn't available (some
 /// browsers). Fills [controller] live as you speak; tap again to stop.
 class VoiceInputButton extends StatefulWidget {

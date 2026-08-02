@@ -1,13 +1,13 @@
 import webpush from "web-push";
 import { prisma } from "./db";
 
-// Web Push — o que faz o celular apitar com o app fechado, como o WhatsApp.
+// Web Push, o que faz o celular apitar com o app fechado, como o WhatsApp.
 //
 // O navegador de cada aparelho tem um "serviço de push" (Apple para iPhone,
 // Google para Android/Chrome, Mozilla para Firefox). Quando a pessoa autoriza,
 // ele nos dá um `endpoint` único e duas chaves. Guardamos isso (PushSubscription)
 // e, para avisar, mandamos o recado CRIPTOGRAFADO para esse endpoint com nossa
-// assinatura VAPID — o serviço de push entrega ao aparelho e acorda o service
+// assinatura VAPID, o serviço de push entrega ao aparelho e acorda o service
 // worker, que mostra a notificação. Nada disso precisa do app aberto.
 //
 // No iPhone só funciona com o app INSTALADO na tela de início (iOS 16.4+) —
@@ -19,7 +19,7 @@ import { prisma } from "./db";
 // como env.
 const PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "";
 const PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
-// mailto:/https: exigido pelo protocolo — é como o serviço de push te contata
+// mailto:/https: exigido pelo protocolo, é como o serviço de push te contata
 // se algo estiver errado com os envios.
 const SUBJECT = process.env.VAPID_SUBJECT || "mailto:contato@rukz.app";
 
@@ -77,7 +77,7 @@ async function sendToMany(subs: StoredSubscription[], payload: PushPayload): Pro
         const status = (err as { statusCode?: number })?.statusCode;
         // 404 (foi embora) / 410 (não existe mais): assinatura morta, some com
         // ela. Qualquer outro erro (rede, 500 do serviço de push) é transitório
-        // — não apaga, só registra, para tentar de novo no próximo aviso.
+        //, não apaga, só registra, para tentar de novo no próximo aviso.
         if (status === 404 || status === 410) {
           dead.push(s.endpoint);
         } else {
@@ -98,7 +98,7 @@ async function purge(endpoints: string[]) {
 }
 
 // Avisa TODOS os aparelhos de um usuário (a mesma pessoa pode ter iPhone +
-// computador). Usado quando o alvo é uma pessoa específica — ex.: cliente cujo
+// computador). Usado quando o alvo é uma pessoa específica, ex.: cliente cujo
 // agendamento foi confirmado.
 export async function sendPushToUser(userId: string, payload: PushPayload): Promise<void> {
   if (!isPushConfigured()) return;
@@ -111,7 +111,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
 }
 
 // Avisa a EQUIPE de uma barbearia (dono/gerente/barbeiros que ativaram push)
-// — ex.: "novo agendamento". Filtra pela barbearia guardada na inscrição, sem
+//, ex.: "novo agendamento". Filtra pela barbearia guardada na inscrição, sem
 // precisar de JOIN por staff a cada disparo.
 export async function sendPushToBarbershopStaff(barbershopId: string, payload: PushPayload): Promise<void> {
   if (!isPushConfigured()) return;

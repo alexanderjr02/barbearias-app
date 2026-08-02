@@ -56,7 +56,7 @@ function KpiCard({ title, value, icon: Icon, iconColor = "text-white", sub }: {
   );
 }
 
-// Everything that needs the owner's attention, in one glance — before this,
+// Everything that needs the owner's attention, in one glance, before this,
 // failed invoices, suspended shops, pending White Label requests and open
 // support tickets each only surfaced on their own separate page.
 function AlertsCenter({ alerts }: { alerts: DashboardData["alerts"] }) {
@@ -70,7 +70,7 @@ function AlertsCenter({ alerts }: { alerts: DashboardData["alerts"] }) {
   if (items.length === 0) {
     return (
       <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-emerald-400">
-        <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Tudo em dia — nenhum alerta pendente.
+        <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Tudo em dia, nenhum alerta pendente.
       </div>
     );
   }

@@ -10,7 +10,7 @@ const DB_STATUS: Record<InvoiceStatus, string> = {
   cancelled: "CANCELLED",
 };
 
-// POST /api/invoices/[id]/refresh — re-check the nota status at the provider.
+// POST /api/invoices/[id]/refresh, re-check the nota status at the provider.
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireBarbershopSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -26,7 +26,7 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     select: { fiscalProvider: true, fiscalApiKey: true },
   });
   if (!isFiscalProvider(shop?.fiscalProvider) || !shop?.fiscalApiKey) {
-    return NextResponse.json(invoice); // simulated / not connected — nothing to poll
+    return NextResponse.json(invoice); // simulated / not connected, nothing to poll
   }
 
   const result = await fetchInvoiceStatus(shop.fiscalProvider, shop.fiscalApiKey, invoice.providerRef ?? invoice.id);

@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Informe a barbearia e a origem do app" }, { status: 400 });
   }
 
-  // Só aceita origem https — sem isso a rota viraria um gerador de manifesto
+  // Só aceita origem https, sem isso a rota viraria um gerador de manifesto
   // apontando para qualquer domínio que alguém colocasse na query.
   let origin: string;
   try {
@@ -44,11 +44,11 @@ export async function GET(request: NextRequest) {
   // muda, a URL do ícone muda, e o navegador/aparelho busca o ícone novo em
   // vez do que ficou preso no cache (era o bug de "troquei a logo e o ícone do
   // app continuou o antigo"). Sem isto, a URL é idêntica e o ícone velho fica
-  // até o cache expirar (1h) — e o ícone JÁ INSTALADO nunca troca.
+  // até o cache expirar (1h), e o ícone JÁ INSTALADO nunca troca.
   const v = shop.updatedAt.getTime();
   const icon = (size: number) => `${api}/api/brand/icon?slug=${encodeURIComponent(slug)}&size=${size}&v=${v}`;
 
-  // App com a cara da barbearia é o que se compra no plano mais caro — e só
+  // App com a cara da barbearia é o que se compra no plano mais caro, e só
   // vale quando ela subiu uma logo. Sem logo, o ícone do brand vira um quadrado
   // sólido da cor da marca (o "só aparece amarelo" na tela de início); então,
   // sem logo, o app instalado é o rukz. O start_url continua levando o slug,
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(manifest, {
     headers: {
       "Content-Type": "application/manifest+json",
-      // O manifesto é buscado pelo domínio do app, que é outro — sem CORS o
+      // O manifesto é buscado pelo domínio do app, que é outro, sem CORS o
       // navegador recusa e o PWA volta ao manifesto padrão.
       "Access-Control-Allow-Origin": "*",
       "Cache-Control": "public, max-age=300, s-maxage=3600",

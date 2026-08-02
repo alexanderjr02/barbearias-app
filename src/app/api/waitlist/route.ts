@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// GET /api/waitlist — the barbershop's current waiting queue (oldest first).
+// GET /api/waitlist, the barbershop's current waiting queue (oldest first).
 export async function GET() {
   const session = await requireBarbershopSession();
   if (!session) {
@@ -15,7 +15,7 @@ export async function GET() {
   return NextResponse.json(entries);
 }
 
-// POST /api/waitlist { clientName, clientPhone, note? } — add someone to the queue.
+// POST /api/waitlist { clientName, clientPhone, note? }, add someone to the queue.
 export async function POST(request: NextRequest) {
   const session = await requireBarbershopSession();
   if (!session) {

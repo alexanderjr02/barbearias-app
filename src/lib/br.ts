@@ -1,6 +1,6 @@
 // Validações de documento brasileiro. Ficam aqui (e não soltas em cada rota)
 // porque CPF entra por três portas: cadastro do cliente, cadastro do barbeiro
-// e nota fiscal — e um CPF inválido só aparece na hora de emitir a nota, que
+// e nota fiscal, e um CPF inválido só aparece na hora de emitir a nota, que
 // é o pior momento possível para descobrir.
 
 /** Só os dígitos. `"123.456.789-09"` → `"12345678909"`. */
@@ -35,7 +35,7 @@ export function isValidCpf(value: string): boolean {
  * (00.000.000/0000-00 e afins) rejeitados porque passam na conta mas não
  * existem na Receita.
  *
- * Existe porque o cadastro só conferia "tem 14 dígitos" — o que deixava
+ * Existe porque o cadastro só conferia "tem 14 dígitos", o que deixava
  * entrar barbearia fantasma com CNPJ inventado. É a diferença entre exigir
  * documento e exigir que o documento seja real.
  */

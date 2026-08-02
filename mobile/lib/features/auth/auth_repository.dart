@@ -9,7 +9,7 @@ class AuthRepository {
     return Session.fromJson(data['user']);
   }
 
-  /// Client self-signup — see POST /api/auth/register/client on the backend.
+  /// Client self-signup, see POST /api/auth/register/client on the backend.
   /// dateOfBirth must be "YYYY-MM-DD".
   Future<Session> registerClient({
     required String name,
@@ -51,7 +51,7 @@ class AuthRepository {
       final refreshToken = await TokenStorage.instance.refreshToken;
       await ApiClient.instance.post('/auth/logout', data: {'refreshToken': refreshToken});
     } catch (_) {
-      // ignore network errors on logout — clearing local tokens still logs the user out
+      // ignore network errors on logout, clearing local tokens still logs the user out
     }
     await TokenStorage.instance.clear();
   }

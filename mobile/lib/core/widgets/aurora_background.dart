@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../brand/rukz_symbol.dart';
 
 /// Fundo das telas de entrada: preto seco com a marca d'água do bigode, bem
-/// apagada — a mesma linguagem da tela de login.
+/// apagada, a mesma linguagem da tela de login.
 ///
 /// Antes eram blobs de glow animados (a "aurora"), incluindo um roxo fora da
 /// paleta. Saíram junto com os outros gradientes decorativos: a marca rukz é

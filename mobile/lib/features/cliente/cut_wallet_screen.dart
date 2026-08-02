@@ -208,7 +208,7 @@ class _CutWalletScreenState extends State<CutWalletScreen> {
                   Center(child: Text('Sua carteira de cortes', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 18))),
                   const SizedBox(height: 8),
                   Text(
-                    'Guarde aqui as fotos dos seus cortes favoritos. Na próxima visita, é só mostrar "quero esse de novo" pro barbeiro — sem precisar explicar.',
+                    'Guarde aqui as fotos dos seus cortes favoritos. Na próxima visita, é só mostrar "quero esse de novo" pro barbeiro, sem precisar explicar.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: palette.textFaint, fontSize: 13.5, height: 1.5),
                   ),

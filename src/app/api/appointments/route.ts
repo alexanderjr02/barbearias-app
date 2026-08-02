@@ -9,7 +9,7 @@ import { advanceLead } from "@/lib/attribution";
 
 // GET /api/appointments?barbershopId=xxx&staffId=yyy&from=YYYY-MM-DD&to=YYYY-MM-DD
 // staffId optional (a gestor viewing a single barber's agenda). from/to are
-// optional too — when given, returns every appointment in that date range
+// optional too, when given, returns every appointment in that date range
 // (used by the calendar week/month views); otherwise falls back to the 50
 // most recent, for callers that just want a quick recent-activity snapshot.
 export async function GET(request: NextRequest) {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/appointments — open to guest bookings (public booking wizard).
+// POST /api/appointments, open to guest bookings (public booking wizard).
 // When called with a logged-in session, the appointment is automatically
 // linked to that account (clientId) so loyalty points and "my appointments"
 // pick it up, regardless of who is named as the contact.
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: slotError }, { status: 409 });
     }
 
-    // Plan limit — the barbershop's monthly appointment quota.
+    // Plan limit, the barbershop's monthly appointment quota.
     const limitError = await appointmentLimitError(barbershopId);
     if (limitError) {
       return NextResponse.json({ error: limitError }, { status: 403 });
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     const session = await getSession();
     // Only a CLIENT's own session auto-links the appointment to their
-    // account — a staff member (owner/manager/barber) booking a walk-in on
+    // account, a staff member (owner/manager/barber) booking a walk-in on
     // someone else's behalf must never have the booking attributed to them.
     const selfBookingClientId = session?.role === "CLIENT" ? session.sub : undefined;
 
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       console.error("[appointments] advanceLead SCHEDULED", e);
     }
 
-    // A staff member booking a walk-in never notifies themselves — only a
+    // A staff member booking a walk-in never notifies themselves, only a
     // client (logged in or guest) creating their own appointment does.
     const isClientInitiated = !session || session.role === "CLIENT";
     if (isClientInitiated) {
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Best-effort WhatsApp confirmation to the client — never let a messaging
+    // Best-effort WhatsApp confirmation to the client, never let a messaging
     // failure (or missing config) break the booking itself.
     try {
       const iso = String(date).slice(0, 10);

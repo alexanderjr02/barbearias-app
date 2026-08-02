@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/barber/clients/history?appointmentId=X — for the logged-in barber,
+// GET /api/barber/clients/history?appointmentId=X, for the logged-in barber,
 // the full visit history (within their own barbershop) of the client behind
 // a given appointment. Matches by clientId when the client has an account,
 // falling back to clientEmail for guest bookings made pre-signup.

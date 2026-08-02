@@ -4,7 +4,7 @@ import '../theme/app_theme.dart';
 /// Calendário próprio, em bottom sheet.
 ///
 /// O `showDatePicker` do Material carrega a cara do Material 2 e ignora a cor
-/// da marca da barbearia — num app white-label isso aparece feio na hora. Este
+/// da marca da barbearia, num app white-label isso aparece feio na hora. Este
 /// aqui herda o acento, abre de baixo (onde o polegar está) e, quando o
 /// intervalo é longo, deixa saltar direto para o ano: escolher 1995 paginando
 /// mês a mês são 370 toques.
@@ -100,7 +100,7 @@ class _RukzDatePickerState extends State<_RukzDatePicker> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Puxador — sinaliza que dá pra arrastar pra fechar.
+            // Puxador, sinaliza que dá pra arrastar pra fechar.
             Container(
               width: 38,
               height: 4,

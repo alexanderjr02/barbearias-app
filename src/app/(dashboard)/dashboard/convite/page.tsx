@@ -58,7 +58,7 @@ export default function ConvitePage() {
       : "";
 
   // useEffect e não useMemo: gerar o QR é efeito colateral (setState), e o
-  // useMemo não garante execução — serve para calcular valor, não para agir.
+  // useMemo não garante execução, serve para calcular valor, não para agir.
   useEffect(() => {
     if (!installUrl) return;
     QRCode.toDataURL(installUrl, { width: 640, margin: 1, errorCorrectionLevel: "M" })
@@ -90,7 +90,7 @@ export default function ConvitePage() {
   /**
    * A mensagem muda conforme o que a pessoa já tem.
    *
-   * Quem já tem selo recebe o número — abandonar exige perder algo, e isso
+   * Quem já tem selo recebe o número, abandonar exige perder algo, e isso
    * converte muito melhor que um convite genérico. Quem não tem ainda recebe
    * a promessa concreta do prêmio, não um "baixe nosso app".
    */
@@ -103,7 +103,7 @@ export default function ConvitePage() {
       return (
         `Oi ${primeiroNome}! Aqui é da ${shop.name}.\n\n` +
         `Seu cartão de fidelidade já tem ${client.stamps} de ${loyalty.stampGoal} selos` +
-        (faltam > 0 ? ` — faltam ${faltam} para ganhar ${loyalty.stampRewardLabel}.` : ` e já está completo!`) +
+        (faltam > 0 ? `, faltam ${faltam} para ganhar ${loyalty.stampRewardLabel}.` : ` e já está completo!`) +
         `\n\nVeja o seu cartão e agende pelo link: ${link}`
       );
     }
@@ -200,7 +200,7 @@ export default function ConvitePage() {
                 <h3 className="text-sm font-bold text-white">Convidar por WhatsApp</h3>
                 <p className="mt-0.5 text-xs text-zinc-600">
                   {loyalty.stampEnabled && comSelo > 0
-                    ? `${comSelo} ${comSelo === 1 ? "cliente já tem selo" : "clientes já têm selos"} — a mensagem mostra o progresso deles`
+                    ? `${comSelo} ${comSelo === 1 ? "cliente já tem selo" : "clientes já têm selos"}, a mensagem mostra o progresso deles`
                     : "A mensagem já vai escrita, é só enviar"}
                 </p>
               </div>
@@ -229,7 +229,7 @@ export default function ConvitePage() {
               </p>
               <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-zinc-600">
                 {clients.length === 0
-                  ? "Só aparecem aqui clientes com telefone cadastrado — sem ele não há como enviar."
+                  ? "Só aparecem aqui clientes com telefone cadastrado, sem ele não há como enviar."
                   : "Tente outro nome ou telefone."}
               </p>
             </div>
@@ -354,7 +354,7 @@ export default function ConvitePage() {
         </div>
       </div>
 
-      {/* Só o QR sai na impressão — o resto da tela viraria papel desperdiçado. */}
+      {/* Só o QR sai na impressão, o resto da tela viraria papel desperdiçado. */}
       <style jsx global>{`
         @media print {
           body * {

@@ -25,7 +25,7 @@ const _statusLabels = {
 const _weekdaysLong = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 const _months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
-/// The barbeiro's own agenda — the same rich, full-day timeline the gestor
+/// The barbeiro's own agenda, the same rich, full-day timeline the gestor
 /// gets (hour grid, shaded free time, live "now" line, tap-a-block detail)
 /// but scoped to a single column, since there's only ever one barber here:
 /// the one holding the phone. The one thing the gestor's view doesn't have:

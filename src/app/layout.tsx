@@ -6,7 +6,7 @@ import { AppProviders } from "@/components/providers/AppProviders";
 // Uma família só, do anúncio ao relatório: Outfit, a fonte oficial da marca
 // rukz (ver Rukz-Marca/LEIA-ME.txt).
 //
-// É geométrica como o desenho da logo — o mesmo tipo de traço reto e
+// É geométrica como o desenho da logo, o mesmo tipo de traço reto e
 // construído que aparece no símbolo. A faixa de peso vai de 400 a 800, e é
 // essa amplitude que permite o mesmo tipo virar cartaz em 800 apertado e
 // tabela em 400.

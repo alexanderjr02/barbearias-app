@@ -8,7 +8,7 @@ const VALID_STATUS = ["ACTIVE", "PAST_DUE", "CANCELLED"];
 
 // Two callers can PATCH a subscriber: the gestor (any status change, gated
 // to White Label) or the client themself cancelling their own membership
-// (only CANCELLED, no plan gate — cancelling is always allowed).
+// (only CANCELLED, no plan gate, cancelling is always allowed).
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await request.json().catch(() => null);
@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     data: {
       status: body.status,
       cancelledAt: body.status === "CANCELLED" ? new Date() : null,
-      // "Marcar como pago" simulates a manual retry succeeding — pushes the
+      // "Marcar como pago" simulates a manual retry succeeding, pushes the
       // next charge a full cycle forward from today instead of leaving it
       // stuck in the past.
       ...(body.status === "ACTIVE" && sub.status === "PAST_DUE"

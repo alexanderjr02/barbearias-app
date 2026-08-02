@@ -2,9 +2,9 @@ import { prisma } from "@/lib/db";
 import { startOfUtcDay, startOfUtcMonth } from "@/lib/dateRange";
 
 // AI margin guardrail. Two jobs:
-//   1) MEASURE — record every model call's tokens + estimated R$ cost, so the
+//   1) MEASURE, record every model call's tokens + estimated R$ cost, so the
 //      platform can see spend per shop and never be surprised by a bill.
-//   2) CAP — bound how much AI a single shop can use per day by plan, so one
+//   2) CAP, bound how much AI a single shop can use per day by plan, so one
 //      heavy user (or an abuse loop) can't torch your margin. Over the cap the
 //      chat falls back to the FREE simulated mode instead of calling the model.
 //
@@ -45,7 +45,7 @@ export function estimateCostCents(model: string, inTok: number, outTok: number, 
 // FREE has no AI at all.
 export function dailyCap(plan: string | null | undefined): number {
   // 80/dia no White Label (R$897) => pior caso ~R$390/mês de IA, 44% da
-  // mensalidade. Com o teto antigo de 120 o pior caso batia R$587 — mais que
+  // mensalidade. Com o teto antigo de 120 o pior caso batia R$587, mais que
   // o preço de então (R$350), ou seja, prejuízo garantido no limite.
   if (plan === "ENTERPRISE") return Number(process.env.AI_DAILY_CAP_ENTERPRISE) || 80;
   if (plan === "PRO") return Number(process.env.AI_DAILY_CAP_PRO) || 40;
@@ -71,7 +71,7 @@ export async function aiQuota(barbershopId: string, plan: string | null | undefi
   }
 }
 
-/** Records one AI call. Never throws — metering must not break the chat. */
+/** Records one AI call. Never throws, metering must not break the chat. */
 export async function recordAiUsage(
   barbershopId: string,
   feature: string,
@@ -94,7 +94,7 @@ export async function recordAiUsage(
   }
 }
 
-/** Month-to-date spend + volume for a shop — powers the cost dashboard. */
+/** Month-to-date spend + volume for a shop, powers the cost dashboard. */
 export async function aiSpendThisMonth(barbershopId: string) {
   const since = startOfUtcMonth(new Date());
   const rows = await prisma.aiUsage.findMany({ where: { barbershopId, createdAt: { gte: since } }, select: { costCents: true, inputTokens: true, outputTokens: true, cacheWriteTokens: true, cacheReadTokens: true, feature: true } });
@@ -119,7 +119,7 @@ export async function aiSpendThisMonth(barbershopId: string) {
     outputTokens: list.reduce((s, r) => s + r.outputTokens, 0),
     cacheReadTokens: cacheRead,
     cacheWriteTokens: cacheWrite,
-    // % do prompt servido pelo cache (a ~10% do preço) — quanto maior, melhor a margem.
+    // % do prompt servido pelo cache (a ~10% do preço), quanto maior, melhor a margem.
     cacheHitPercent: totalPrompt > 0 ? Math.round((cacheRead / totalPrompt) * 100) : 0,
     byFeature,
   };

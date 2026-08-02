@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 
-// GET /api/admin/white-label — every ENTERPRISE barbershop, lazily
+// GET /api/admin/white-label, every ENTERPRISE barbershop, lazily
 // backfilling a REQUESTED row for any shop that was already on this plan
 // before the tracker existed (e.g. seeded demo data).
 export async function GET() {

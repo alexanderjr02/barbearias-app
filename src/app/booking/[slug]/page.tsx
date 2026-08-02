@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const shop = await getShop(slug);
   if (!shop) return { title: "Barbearia não encontrada" };
-  // No White Label a nossa marca não aparece em lugar nenhum — nem na aba do
+  // No White Label a nossa marca não aparece em lugar nenhum, nem na aba do
   // navegador, nem no nome do app instalado. Nos demais planos, mantemos a
   // assinatura do rukz.
   const isWhiteLabel = shop.plan === "ENTERPRISE";

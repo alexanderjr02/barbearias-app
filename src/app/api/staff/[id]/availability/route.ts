@@ -11,7 +11,7 @@ interface DayInput {
   endTime?: string;
 }
 
-// GET /api/staff/{id}/availability — this staff member's weekly schedule
+// GET /api/staff/{id}/availability, this staff member's weekly schedule
 // overrides plus the barbershop's default hours, so the UI can show "usa o
 // padrão da barbearia" vs a per-day override for each weekday.
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -29,8 +29,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json({ availability, shopHours });
 }
 
-// PUT /api/staff/{id}/availability — replaces the staff's weekly overrides.
-// body: { days: DayInput[] } — "default" removes any override for that
+// PUT /api/staff/{id}/availability, replaces the staff's weekly overrides.
+// body: { days: DayInput[] }, "default" removes any override for that
 // weekday (falls back to the shop's hours), "custom" sets the staff's own
 // open/close, "closed" marks the staff as off that weekday regardless of
 // the shop's hours.

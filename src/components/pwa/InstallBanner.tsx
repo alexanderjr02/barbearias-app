@@ -32,7 +32,7 @@ export function InstallBanner() {
     const isAndroid = /android/.test(ua);
 
     if (isIOS) {
-      // iOS Safari — show after short delay
+      // iOS Safari, show after short delay
       const t = setTimeout(() => {
         setPlatform("ios");
         setShow(true);
@@ -51,7 +51,7 @@ export function InstallBanner() {
       return () => window.removeEventListener("beforeinstallprompt", handler as EventListener);
     }
 
-    // Desktop Chrome — also support install
+    // Desktop Chrome, also support install
     const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -140,7 +140,7 @@ export function InstallBanner() {
               ))}
               <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-2.5 flex items-start gap-2 mt-2">
                 <span className="text-amber-400 text-xs"></span>
-                <p className="text-xs text-zinc-400">Use o <strong className="text-zinc-300">Safari</strong> para instalar — outros navegadores não suportam.</p>
+                <p className="text-xs text-zinc-400">Use o <strong className="text-zinc-300">Safari</strong> para instalar, outros navegadores não suportam.</p>
               </div>
             </div>
           )}

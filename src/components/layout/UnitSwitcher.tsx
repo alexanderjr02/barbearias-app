@@ -22,7 +22,7 @@ interface UnitsResponse {
 }
 
 // Seletor de unidade da rede. Para quem tem uma barbearia só (a maioria), ele
-// se comporta exatamente como o botão de perfil de antes — o dropdown só
+// se comporta exatamente como o botão de perfil de antes, o dropdown só
 // aparece quando existe rede de verdade ou quando o plano permite abrir uma.
 export function UnitSwitcher({ shopName }: { shopName: string }) {
   const { plan } = usePlan();
@@ -39,7 +39,7 @@ export function UnitSwitcher({ shopName }: { shopName: string }) {
 
   const units = data?.units ?? [];
   // Só some de vez quando a resposta CONFIRMOU que é loja única. Em erro o
-  // seletor continua clicável e mostra o problema — antes ele caía no botão
+  // seletor continua clicável e mostra o problema, antes ele caía no botão
   // estático, que é visualmente idêntico ao antigo, e uma falha de API ficava
   // indistinguível de "nada mudou".
   const isNetwork = isError || units.length > 1 || !!data?.canAddUnit;

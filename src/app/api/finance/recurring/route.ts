@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { materializeRecurringExpenses } from "@/lib/finance/autoEntry";
 
-// GET /api/finance/recurring — despesas fixas cadastradas.
+// GET /api/finance/recurring, despesas fixas cadastradas.
 export async function GET() {
   const session = await requireBarbershopSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     data: { barbershopId: session.barbershopId, description, category, amount, dayOfMonth },
   });
 
-  // Se o dia já passou neste mês, o lançamento entra na hora — senão o gestor
+  // Se o dia já passou neste mês, o lançamento entra na hora, senão o gestor
   // cadastra o aluguel dia 20 e não vê nada até o mês que vem.
   await materializeRecurringExpenses(session.barbershopId).catch(() => {});
 
@@ -74,7 +74,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 // DELETE /api/finance/recurring?id=...
-// Só apaga a regra — os lançamentos já gerados ficam, porque apagá-los
+// Só apaga a regra, os lançamentos já gerados ficam, porque apagá-los
 // reescreveria meses fechados e o histórico deixaria de bater.
 export async function DELETE(request: NextRequest) {
   const session = await requireBarbershopSession();

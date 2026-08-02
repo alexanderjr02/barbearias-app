@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 
-// POST /api/admin/billing/invoices/[id]/refund — a formal reversal of an
+// POST /api/admin/billing/invoices/[id]/refund, a formal reversal of an
 // already-PAID invoice, distinct from just marking one FAILED (which means
 // "payment never landed"). Creates a Refund record with a reason and moves
 // the invoice to REFUNDED, so it drops out of revenue-by-month totals.

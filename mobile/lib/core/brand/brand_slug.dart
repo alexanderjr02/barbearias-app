@@ -5,11 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Existe como função solta porque DOIS lugares precisam da resposta e antes
 /// cada um tinha a sua: o SessionProvider (cor do tema) e a tela de login
 /// (logo, nome, capa, vídeo de fundo). Corrigir um e esquecer o outro foi
-/// exatamente o que aconteceu — o tema mudava e a tela de login continuava
+/// exatamente o que aconteceu, o tema mudava e a tela de login continuava
 /// com a cara padrão.
 ///
 /// Ordem de resolução:
-///   1. `?shop=slug` na URL — o link que o gestor divulga;
+///   1. `?shop=slug` na URL, o link que o gestor divulga;
 ///   2. o último slug usado neste aparelho, porque depois de instalado na
 ///      tela de início não há query string;
 ///   3. o dart-define BRAND_SLUG, para builds dedicados a uma barbearia.

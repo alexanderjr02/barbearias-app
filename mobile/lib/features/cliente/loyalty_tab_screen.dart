@@ -4,7 +4,7 @@ import 'client_repository.dart';
 import 'loyalty_wallet_screen.dart';
 
 /// Aba "Fidelidade". A carteira precisa de uma barbearia, mas a aba não recebe
-/// nenhuma — então é aqui que isso se resolve: com uma só, abre direto (o caso
+/// nenhuma, então é aqui que isso se resolve: com uma só, abre direto (o caso
 /// de quase todo mundo); com várias, deixa escolher antes.
 class LoyaltyTabScreen extends StatefulWidget {
   const LoyaltyTabScreen({super.key});

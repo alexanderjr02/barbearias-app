@@ -6,7 +6,7 @@ function resolvePlan(plan: string | null | undefined): PlatformPlan {
 }
 
 // User-facing error message when the barbershop's plan wouldn't allow one more
-// active barber — or null when it's within the limit. Limits come from
+// active barber, or null when it's within the limit. Limits come from
 // PlatformSetting (editable in /admin/settings), null meaning "unlimited".
 export async function staffLimitError(barbershopId: string): Promise<string | null> {
   const [shop, pricing] = await Promise.all([

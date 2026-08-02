@@ -71,7 +71,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
   final ScrollController _tabScrollController = ScrollController();
   int _currentPage = 0;
   // Tira de barbeiros recolhida: devolve ~80px pra linha do tempo e ainda
-  // mostra o que o gestor procura ali — quanto cada um tem livre hoje.
+  // mostra o que o gestor procura ali, quanto cada um tem livre hoje.
   bool _barbeirosCompacto = false;
 
   static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
@@ -324,7 +324,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
   }
 
   /// The mobile-native take on the web's "all barbers at once" agenda: each
-  /// barber gets a full, legible page — reached by swiping the timeline
+  /// barber gets a full, legible page, reached by swiping the timeline
   /// below or tapping their card here. The card doubles as a status pulse
   /// (activity ring showing busy vs. free share of the day) and as a tab.
 
@@ -607,7 +607,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
               calendarFormat: _format,
               // Arrastar o calendário pra baixo abre o mês; pra cima recolhe pra
               // semana. Sem onFormatChanged o gesto não pegava (o formato é
-              // controlado por _format) — era por isso que existia um botão.
+              // controlado por _format), era por isso que existia um botão.
               availableCalendarFormats: const {CalendarFormat.month: 'Mês', CalendarFormat.week: 'Semana'},
               availableGestures: AvailableGestures.all,
               onFormatChanged: (format) => setState(() => _format = format),
@@ -621,7 +621,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
                   _selectedDay = _dateOnly(selected);
                   _focusedDay = focused;
                   // Selecting a day while the full month grid is open collapses
-                  // it back to a single week — the same tap that answers "what's
+                  // it back to a single week, the same tap that answers "what's
                   // on this day" also clears the screen space to show it.
                   _format = CalendarFormat.week;
                 });
@@ -707,7 +707,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
                   Expanded(child: Text(_selectedDayLabel(), style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.5))),
                   if (_loading) const Padding(padding: EdgeInsets.only(right: 10), child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))),
                   // Recolher a tira de barbeiros devolve altura pra linha do
-                  // tempo — com 2+ barbeiros os cartões comiam metade da tela.
+                  // tempo, com 2+ barbeiros os cartões comiam metade da tela.
                   if (_staffList.length > 1)
                     GestureDetector(
                       onTap: () => setState(() => _barbeirosCompacto = !_barbeirosCompacto),

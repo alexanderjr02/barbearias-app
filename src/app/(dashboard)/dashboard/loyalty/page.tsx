@@ -43,7 +43,7 @@ export default function LoyaltyPage() {
   const [cfg, setCfg] = useState<Config | null>(null);
   const [saving, setSaving] = useState(false);
   // Quantos selos mostrar na prévia. É só encenação visual, mas deixa o gestor
-  // ver a cartela meio cheia em vez de sempre vazia — que é como ela passa a
+  // ver a cartela meio cheia em vez de sempre vazia, que é como ela passa a
   // maior parte da vida do cliente.
   const [previewStamps, setPreviewStamps] = useState(3);
 
@@ -106,7 +106,7 @@ export default function LoyaltyPage() {
       <PageHeader
         icon={Gift}
         title="Fidelidade"
-        subtitle="Desenhe o programa da sua barbearia — e veja na hora o que o cliente vê"
+        subtitle="Desenhe o programa da sua barbearia, e veja na hora o que o cliente vê"
         accent="amber"
       />
 
@@ -169,7 +169,7 @@ export default function LoyaltyPage() {
             <Section
               icon={Users2}
               title="Indicação"
-              hint="O crescimento mais barato que existe — cada cliente vira vendedor. Os dois lados ganham."
+              hint="O crescimento mais barato que existe, cada cliente vira vendedor. Os dois lados ganham."
               enabled={cfg.referralEnabled}
               onToggle={(v) => save({ referralEnabled: v })}
             >
@@ -182,14 +182,14 @@ export default function LoyaltyPage() {
                 </Field>
               </div>
               <Note>
-                O prêmio só cai quando o amigo <strong className="text-zinc-300">conclui o primeiro corte</strong> — ninguém ganha por cadastro fantasma.
+                O prêmio só cai quando o amigo <strong className="text-zinc-300">conclui o primeiro corte</strong>, ninguém ganha por cadastro fantasma.
               </Note>
             </Section>
 
             <Section
               icon={Crown}
               title="Pontos e faixas"
-              hint="Cada real gasto vira ponto. As faixas dão status — e status é o que traz o cliente de volta."
+              hint="Cada real gasto vira ponto. As faixas dão status, e status é o que traz o cliente de volta."
               enabled={cfg.loyaltyEnabled}
               onToggle={(v) => save({ loyaltyEnabled: v })}
             >
@@ -213,7 +213,7 @@ export default function LoyaltyPage() {
 
               <Note>
                 Com {cfg.pointsPerReal} pts por real, um corte de R$ 50 rende{" "}
-                <strong className="text-amber-300">{cfg.pointsPerReal * 50} pontos</strong> — a faixa Prata chega em{" "}
+                <strong className="text-amber-300">{cfg.pointsPerReal * 50} pontos</strong>, a faixa Prata chega em{" "}
                 <strong className="text-zinc-300">
                   {Math.max(1, Math.ceil(cfg.silverThreshold / (cfg.pointsPerReal * 50)))} cortes
                 </strong>.
@@ -237,7 +237,7 @@ export default function LoyaltyPage() {
 
 /**
  * O coração da tela. Configurar fidelidade às cegas é o que faz o gestor
- * desistir no meio — aqui ele vê exatamente a tela do cliente mudando
+ * desistir no meio, aqui ele vê exatamente a tela do cliente mudando
  * enquanto mexe, então a decisão deixa de ser abstrata.
  */
 function PhonePreview({ cfg, stamps, saving }: { cfg: Config; stamps: number; saving: boolean }) {
@@ -248,7 +248,7 @@ function PhonePreview({ cfg, stamps, saving }: { cfg: Config; stamps: number; sa
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prévia — o app do cliente</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prévia, o app do cliente</p>
         <span className={cn("flex items-center gap-1.5 text-[11px] transition-opacity", saving ? "text-amber-400 opacity-100" : "text-emerald-400 opacity-70")}>
           {saving ? <><Loader2 className="w-3 h-3 animate-spin" /> salvando</> : <><Check className="w-3 h-3" /> salvo</>}
         </span>
@@ -471,7 +471,7 @@ function Section({ icon: Icon, title, hint, enabled, onToggle, children }: {
 }
 
 /**
- * O switch é o gesto mais repetido desta tela — vale o capricho. Três coisas
+ * O switch é o gesto mais repetido desta tela, vale o capricho. Três coisas
  * que separam ele de um checkbox estilizado: a trilha acende com brilho
  * próprio quando liga, o botão estica no meio do caminho (o "squish" que dá
  * peso físico ao movimento) e a curva é elástica, não linear.
@@ -559,7 +559,7 @@ function SliderRow({ label, value, max, onChange }: { label: string; value: numb
 
 /**
  * Inputs commitam no blur (e no Enter), nunca a cada tecla: por tecla dispara
- * um PATCH por dígito e ainda grava estados intermediários inválidos — digitar
+ * um PATCH por dígito e ainda grava estados intermediários inválidos, digitar
  * "10" passaria por "1".
  */
 function NumberInput({ value, min, max, onCommit, suffix }: {

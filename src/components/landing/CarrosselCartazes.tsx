@@ -17,7 +17,7 @@ import { RukzLogo } from "@/components/brand/RukzLogo";
  * A alternância preto/amarelo não é enfeite: ela separa o que dói (preto) do
  * que resolve (amarelo), que é a ordem em que o argumento é feito.
  *
- * Rolagem nativa com `scroll-snap` é a base — assim funciona no toque, com
+ * Rolagem nativa com `scroll-snap` é a base, assim funciona no toque, com
  * inércia, e continua rolável se o JavaScript falhar. O arrasto com o mouse é
  * o que se acrescenta por cima, porque no desktop não existe gesto de deslizar.
  */
@@ -229,11 +229,11 @@ function Cartaz({
   const ouro = tom === "ouro";
 
   // O destaque sai do próprio título para o texto continuar sendo uma frase só
-  // — para quem lê com leitor de tela, e para quem copia e cola.
+  //, para quem lê com leitor de tela, e para quem copia e cola.
   //
   // No cartaz amarelo o destaque some, e isso é de propósito: o amarelo já é a
   // cor de chamar atenção, e no anúncio impresso esse título vai todo preto.
-  // Branco sobre #FFC300 dá menos de 2:1 de contraste — some ao sol, no
+  // Branco sobre #FFC300 dá menos de 2:1 de contraste, some ao sol, no
   // celular, que é onde essa página é lida.
   const corte = ouro ? -1 : titulo.indexOf(destaque);
   const antes = corte >= 0 ? titulo.slice(0, corte) : titulo;

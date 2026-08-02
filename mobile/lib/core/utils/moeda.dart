@@ -1,7 +1,7 @@
 /// Dinheiro no padrao brasileiro: ponto no milhar, virgula nos centavos.
 ///
 /// O app inteiro vinha escrevendo 'R\$ \${v.toStringAsFixed(2)}', que produz
-/// "R\$ 1234.50" — formato americano. Numa tela que o dono confere contra o
+/// "R\$ 1234.50", formato americano. Numa tela que o dono confere contra o
 /// caixa, isso e leitura errada, nao so estranheza.
 String reais(num valor) {
   final negativo = valor < 0;

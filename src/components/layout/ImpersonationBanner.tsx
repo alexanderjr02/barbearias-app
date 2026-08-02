@@ -9,7 +9,7 @@ import { Eye, Loader2, ArrowLeft } from "lucide-react";
  *
  * Ela existe para impedir o erro mais caro da impersonação: agir achando que
  * é o dono. Por isso fica no topo de todas as telas, não some ao rolar, e diz
- * de quem é a conta — não só "modo admin".
+ * de quem é a conta, não só "modo admin".
  */
 export function ImpersonationBanner({ shopName, ownerName }: { shopName: string | null; ownerName: string }) {
   const [leaving, setLeaving] = useState(false);

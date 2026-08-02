@@ -37,7 +37,7 @@ export async function GET() {
       where: { barbershopId, date: { gte: activeClientsSince }, status: { not: "CANCELLED" } },
       select: { clientId: true, clientPhone: true },
     }),
-    // O MESMO intervalo do mês passado, até o mesmo dia — comparar mês fechado
+    // O MESMO intervalo do mês passado, até o mesmo dia, comparar mês fechado
     // com mês em curso diria "caiu 60%" todo dia 5.
     prisma.appointment.findMany({
       where: { barbershopId, date: { gte: startOfLastMonth, lt: sameDayLastMonth }, status: "COMPLETED" },
@@ -95,7 +95,7 @@ export async function GET() {
   const minutosVendidosHoje = todayAppointments
     .filter((a: TodayAppointmentRow) => a.status !== "CANCELLED" && a.status !== "NO_SHOW")
     .reduce((acc: number, a: TodayAppointmentRow) => acc + Math.max(0, minutos(a.endTime) - minutos(a.startTime)), 0);
-  // Dia fechado tem capacidade zero — sem isto a tela diria "agenda cheia"
+  // Dia fechado tem capacidade zero, sem isto a tela diria "agenda cheia"
   // num domingo em que ninguem trabalha.
   const closedToday = capacidadeHoje === 0;
   const todayOccupancy = capacidadeHoje > 0 ? Math.min(100, Math.round((minutosVendidosHoje / capacidadeHoje) * 100)) : 0;

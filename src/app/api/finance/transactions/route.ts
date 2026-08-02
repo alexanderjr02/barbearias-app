@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  // Materializa as recorrentes ANTES de somar — senão a tela mostraria o mês
+  // Materializa as recorrentes ANTES de somar, senão a tela mostraria o mês
   // sem o aluguel que já venceu, e o lucro apareceria maior do que é.
   // Nunca derruba a tela: financeiro incompleto é ruim, financeiro fora do ar
   // é pior.
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => null);
 
-  // Validação de servidor — NUNCA confiar no cliente. O app bloqueia valor <= 0,
+  // Validação de servidor. NUNCA confiar no cliente. O app bloqueia valor <= 0,
   // mas quem chama a API direto (curl/Postman) pula isso. Sem revalidar aqui,
   // dava para injetar -9999, NaN, Infinity ou um número gigante, que corrompia
   // o lucro e quebrava o gráfico (a "faixa vermelha").
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
   const rawAmount = body?.amount;
   // Number.isFinite recusa NaN e Infinity de uma vez (ambos são typeof "number").
   if (typeof rawAmount !== "number" || !Number.isFinite(rawAmount) || rawAmount <= 0 || rawAmount > 10_000_000) {
-    return NextResponse.json({ error: "Valor inválido — informe um número positivo (máx. 10.000.000)." }, { status: 400 });
+    return NextResponse.json({ error: "Valor inválido, informe um número positivo (máx. 10.000.000)." }, { status: 400 });
   }
   const amount = Math.round(rawAmount * 100) / 100; // 2 casas, sem lixo de float
 

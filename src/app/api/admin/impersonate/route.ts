@@ -6,7 +6,7 @@ import { setAccessCookie } from "@/lib/sessionCookies";
 import { isSecureRequest, getClientIp } from "@/lib/requestIp";
 import { logAdminAction } from "@/lib/audit";
 
-// POST /api/admin/impersonate — abre o painel de uma barbearia com os olhos
+// POST /api/admin/impersonate, abre o painel de uma barbearia com os olhos
 // do dono dela.
 //
 // Serve para o suporte parar de trabalhar por adivinhação: em vez de pedir
@@ -15,7 +15,7 @@ import { logAdminAction } from "@/lib/audit";
 // As três regras que separam isto de uma porta dos fundos:
 //
 //  1. NÃO troca o cookie de renovação. Ele continua sendo o do admin, então a
-//     impersonação morre sozinha em 15 minutos — e o "voltar" é só reemitir.
+//     impersonação morre sozinha em 15 minutos, e o "voltar" é só reemitir.
 //     Sessão de impersonação que dura para sempre é conta compartilhada.
 //  2. A sessão carrega `imp` com o id do admin. A faixa no topo da tela lê
 //     dali: quem está dentro vê o tempo todo que não é o dono de verdade.

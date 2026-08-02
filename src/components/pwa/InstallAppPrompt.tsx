@@ -7,7 +7,7 @@ import { Share, Plus, X, Download, Smartphone } from "lucide-react";
 //
 // Por que isso existe: no Android o Chrome oferece instalar sozinho, mas no
 // iPhone o cliente precisa abrir no Safari, tocar em compartilhar e escolher
-// "Adicionar à Tela de Início" — e a maioria não sabe fazer isso. Sem esta
+// "Adicionar à Tela de Início", e a maioria não sabe fazer isso. Sem esta
 // telinha, o app com a marca da barbearia simplesmente não é instalado por
 // quem mais importa: o cliente final.
 
@@ -35,7 +35,7 @@ export function InstallAppPrompt({ shopName, color = "#D4AF37", slug }: { shopNa
     if (localStorage.getItem(dismissKey)) return;
 
     const ua = window.navigator.userAgent;
-    // iPadOS 13+ se identifica como Mac — daí o teste por touch.
+    // iPadOS 13+ se identifica como Mac, daí o teste por touch.
     const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
     // No iPhone, SÓ o Safari consegue instalar. Chrome/Firefox no iOS não.
     const isIOSSafari = isIOS && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);

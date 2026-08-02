@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Stable per-barber color identity, mirroring the web dashboard's team
-/// palette — so a barber's color means the same thing whether the gestor is
+/// palette, so a barber's color means the same thing whether the gestor is
 /// looking at the phone or the desktop. Cycles if there are more barbers
 /// than colors.
 const List<Color> barberColorPalette = [

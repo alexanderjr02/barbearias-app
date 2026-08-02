@@ -7,7 +7,7 @@ import { requireBarbershopSession } from "@/lib/apiAuth";
 import { assistantEnabled } from "@/lib/chatbot/assistant";
 import { planHasAI } from "@/lib/billing";
 
-// POST /api/copilot/marketing { occasion } — the AI marketing copywriter.
+// POST /api/copilot/marketing { occasion }, the AI marketing copywriter.
 // Generates a ready-to-send promo message in the shop's voice. Pro+ + key.
 export async function POST(request: NextRequest) {
   const session = await requireBarbershopSession();

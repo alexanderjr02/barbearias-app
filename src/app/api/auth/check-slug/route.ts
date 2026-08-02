@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { slugSchema } from "@/lib/validation";
 
-// GET /api/auth/check-slug?slug=minha-barbearia — public, pre-signup helper so
+// GET /api/auth/check-slug?slug=minha-barbearia, public, pre-signup helper so
 // the owner registration form can tell in real time whether a booking link is
 // still available. Slugs become public booking URLs anyway, so there's nothing
 // sensitive to leak here; we only report free/taken (plus whether the format is

@@ -5,8 +5,8 @@ import { logAdminAction } from "@/lib/audit";
 import { getNetworkPricing } from "@/lib/billing";
 
 // Preços de REDE editáveis pelo admin, no mesmo molde de plan-pricing:
-//   extraUnitPrice — quanto custa cada unidade além da matriz
-//   setupFee       — taxa de implantação do White Label (0 = não cobra)
+//   extraUnitPrice, quanto custa cada unidade além da matriz
+//   setupFee      , taxa de implantação do White Label (0 = não cobra)
 //
 // Antes só dava para mudar por variável de ambiente, o que exigia deploy para
 // um número que é decisão comercial.

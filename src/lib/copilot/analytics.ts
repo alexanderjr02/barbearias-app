@@ -3,7 +3,7 @@ import { startOfUtcDay, addUtcDays, startOfUtcMonth } from "@/lib/dateRange";
 import { shopNow, timeToMinutes } from "@/lib/scheduling";
 import { revenueSummary, churnedClients, emptySlotsToday, lowStock, busyDays } from "./insights";
 
-// The "10 segundos que valem horas ou dias" engine — heavier analytics the
+// The "10 segundos que valem horas ou dias" engine, heavier analytics the
 // Copiloto exposes as tools: revenue-leak audit, month close, agenda gap
 // finder, decision simulator, weekly-schedule suggester and cashbox close.
 // All deterministic (zero AI): plain queries the AI narrates. Buildable and
@@ -12,7 +12,7 @@ import { revenueSummary, churnedClients, emptySlotsToday, lowStock, busyDays } f
 const OCCUPYING = ["SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS"];
 
 /**
- * "Onde estou perdendo dinheiro?" — one report that aggregates every leak:
+ * "Onde estou perdendo dinheiro?", one report that aggregates every leak:
  * clientes sumidos, no-shows do mês, horários vazios hoje e estoque parado,
  * com um total estimado de R$ escapando + as ações que tapam cada buraco.
  */
@@ -50,7 +50,7 @@ export async function revenueLeak(barbershopId: string) {
 }
 
 /**
- * "Fecha o meu mês" — fechamento financeiro completo em 10s: faturamento,
+ * "Fecha o meu mês", fechamento financeiro completo em 10s: faturamento,
  * comissão de CADA barbeiro, receitas/despesas manuais, gorjetas, imposto
  * estimado (ISS) e o lucro. Horas de planilha viram um comando.
  */
@@ -110,7 +110,7 @@ export async function closeMonth(barbershopId: string, monthOffset = 0) {
 }
 
 /**
- * "Otimiza minha agenda" — acha os buracos (tempo morto) entre atendimentos de
+ * "Otimiza minha agenda", acha os buracos (tempo morto) entre atendimentos de
  * cada barbeiro num dia, some quanto está parado e estime quanto isso custa.
  * Ninguém faz isso na mão.
  */
@@ -156,7 +156,7 @@ export async function agendaGaps(barbershopId: string, dateKey?: string, minGap 
 }
 
 /**
- * "E se...?" — simula uma decisão antes de arriscar. type:
+ * "E se...?", simula uma decisão antes de arriscar. type:
  *  - "price": {pct} muda o preço em % (serviço específico ou todos) → impacto no mês/ano.
  *  - "hire": adiciona 1 barbeiro → receita potencial na mesma utilização.
  */
@@ -205,7 +205,7 @@ export async function simulateDecision(barbershopId: string, input: { type: stri
 }
 
 /**
- * "Monta a escala da semana" — recomenda quantos barbeiros por dia com base na
+ * "Monta a escala da semana", recomenda quantos barbeiros por dia com base na
  * demanda dos últimos 90 dias, pra não sobrar equipe no dia fraco nem faltar no
  * pico.
  */
@@ -229,7 +229,7 @@ export async function suggestSchedule(barbershopId: string) {
 }
 
 /**
- * "Qual serviço realmente dá lucro?" — margem por serviço, não faturamento.
+ * "Qual serviço realmente dá lucro?", margem por serviço, não faturamento.
  *
  * É a pergunta que o sistema não conseguia responder: sem o custo, o campeão
  * de vendas parecia o campeão de lucro. Aqui entram volume, receita, custo
@@ -282,7 +282,7 @@ export async function serviceMargins(barbershopId: string) {
     mostSold: byVolume[0] ?? null,
     bestPerHour: byHour[0] ?? null,
     worstMargin: rows.length > 1 ? [...rows].sort((a, b) => a.marginPercent - b.marginPercent)[0] : null,
-    // Avisa quando ninguém preencheu custo — senão a margem parece ótima só
+    // Avisa quando ninguém preencheu custo, senão a margem parece ótima só
     // porque o custo está zerado, e o gestor tomaria decisão com número falso.
     costsFilled,
     warning: costsFilled ? null : "Nenhum serviço tem custo cadastrado, então a margem está igual ao faturamento menos comissão. Preencha o custo em Serviços para o número ficar real.",
@@ -290,7 +290,7 @@ export async function serviceMargins(barbershopId: string) {
 }
 
 /**
- * "Responde as avaliações" — nota média, distribuição e as avaliações recentes
+ * "Responde as avaliações", nota média, distribuição e as avaliações recentes
  * (com comentário) que valem uma resposta. O Copiloto usa isso pra redigir a
  * resposta de cada uma na voz da barbearia.
  */
@@ -315,7 +315,7 @@ export async function reputationSummary(barbershopId: string, limit = 8) {
 }
 
 /**
- * "Fecha o caixa do dia" — bate o dinheiro/cartão/pix informado com o que os
+ * "Fecha o caixa do dia", bate o dinheiro/cartão/pix informado com o que os
  * atendimentos concluídos hoje somam, e aponta divergência.
  */
 export async function closeCashbox(barbershopId: string, input: { cash?: number; card?: number; pix?: number }) {

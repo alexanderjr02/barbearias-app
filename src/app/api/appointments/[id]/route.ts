@@ -26,9 +26,9 @@ function addDurationLabel(start: string, dur: number): string {
   return toLabel(toMin(start) + Math.max(dur, 0));
 }
 
-// PATCH /api/appointments/{id} — update status. Allowed for the barbershop's
+// PATCH /api/appointments/{id}, update status. Allowed for the barbershop's
 // gestor/manager, the barber assigned to the appointment (Staff.userId), or
-// the client it belongs to (Appointment.clientId) — but a client may only
+// the client it belongs to (Appointment.clientId), but a client may only
 // cancel, never set any other status (e.g. never mark their own visit
 // COMPLETED to fake loyalty points).
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -58,7 +58,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
   const hasExtras = Object.keys(extras).length > 0;
   // Arrastar-e-soltar: trocar de barbeiro (coluna), remarcar de dia e/ou mudar
-  // de horário (altura). Combináveis — soltar numa posição pode mudar os três.
+  // de horário (altura). Combináveis, soltar numa posição pode mudar os três.
   const wantsStaffChange = typeof body.staffId === "string" && body.staffId.trim().length > 0;
   const wantsDateChange = typeof body.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date);
   const wantsTimeChange = typeof body.startTime === "string" && /^\d{2}:\d{2}$/.test(body.startTime);
@@ -77,7 +77,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!isManager && !isAssignedBarber && !isOwnClientCancelling) {
     return NextResponse.json({ error: "Sem permissão para alterar este agendamento" }, { status: 403 });
   }
-  // A client may only ever flip their own appointment to CANCELLED — never
+  // A client may only ever flip their own appointment to CANCELLED, never
   // touch the photo/recipe (those belong to whoever cut the hair).
   if (isOwnClientCancelling && hasExtras) {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
@@ -120,7 +120,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // A "tratação" que evita quebrar a agenda: o barbeiro de destino precisa
-    // atender no dia/horário e estar LIVRE naquele intervalo — senão dois
+    // atender no dia/horário e estar LIVRE naquele intervalo, senão dois
     // clientes cairiam no mesmo barbeiro na mesma hora. ignorePast só quando
     // NÃO muda a data (trocar de barbeiro no mesmo dia não é "agendar de
     // novo"); ao remarcar para outro dia, a data nova tem que ser válida.
@@ -234,7 +234,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   return NextResponse.json(updated);
 }
 
-// DELETE /api/appointments/{id} — apaga de vez (diferente de cancelar, que
+// DELETE /api/appointments/{id}, apaga de vez (diferente de cancelar, que
 // deixa o registro riscado na agenda). Só gestor/gerente da barbearia ou o
 // barbeiro do próprio horário.
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

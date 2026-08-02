@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/copilot/conversations — the list of the user's past Copiloto
+// GET /api/copilot/conversations, the list of the user's past Copiloto
 // conversations (threads), newest first, each with a title (first message) so
 // they can be browsed and revisited.
 export async function GET() {

@@ -3,7 +3,7 @@ import { startOfUtcDay, addUtcDays, startOfUtcMonth } from "@/lib/dateRange";
 import { revenueSummary, churnedClients, emptySlotsToday } from "./insights";
 import { closeMonth } from "./analytics";
 
-// Inteligência de REDE — o que nenhum concorrente entrega: o dono de várias
+// Inteligência de REDE, o que nenhum concorrente entrega: o dono de várias
 // unidades pergunta em linguagem natural e recebe a comparação entre elas.
 // Hoje ele loga em 3 contas separadas e soma no Excel.
 //
@@ -109,7 +109,7 @@ export async function networkMonthClose(ownerId: string, monthOffset = 0) {
 }
 
 /**
- * Onde a REDE perde dinheiro, por unidade — para o dono saber em qual loja
+ * Onde a REDE perde dinheiro, por unidade, para o dono saber em qual loja
  * agir primeiro em vez de tratar todas igual.
  */
 export async function networkLeak(ownerId: string) {
@@ -149,7 +149,7 @@ export async function networkLeak(ownerId: string) {
 
 /**
  * Compara duas unidades de verdade (não só faturamento): eficiência por
- * barbeiro, ticket, ocupação e retenção — e diz em que cada uma ganha.
+ * barbeiro, ticket, ocupação e retenção, e diz em que cada uma ganha.
  */
 export async function compareUnits(ownerId: string, nameA: string, nameB: string) {
   const units = await unitsOf(ownerId);
@@ -180,7 +180,7 @@ export async function compareUnits(ownerId: string, nameA: string, nameB: string
 }
 
 /**
- * O melhor barbeiro de cada unidade e o ranking geral da rede — responde
+ * O melhor barbeiro de cada unidade e o ranking geral da rede, responde
  * "meu melhor barbeiro está na loja errada?".
  */
 export async function networkStaffRanking(ownerId: string) {
@@ -210,7 +210,7 @@ export async function networkStaffRanking(ownerId: string) {
   return { ranking: all.slice(0, 15), top: all[0] ?? null };
 }
 
-/** Movimento por dia da semana em cada unidade — base para remanejar equipe. */
+/** Movimento por dia da semana em cada unidade, base para remanejar equipe. */
 export async function networkBusyDays(ownerId: string) {
   const units = await unitsOf(ownerId);
   const since = addUtcDays(startOfUtcDay(new Date()), -90);

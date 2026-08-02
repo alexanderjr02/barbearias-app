@@ -14,7 +14,7 @@ export function PWARegister() {
           if (!newWorker) return;
           newWorker.addEventListener("statechange", () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              // New version available — could show update prompt
+              // New version available, could show update prompt
               console.log("[rukz] Nova versão disponível.");
             }
           });

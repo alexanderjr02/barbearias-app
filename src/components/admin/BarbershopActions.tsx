@@ -11,7 +11,7 @@ import { toast } from "@/lib/toast";
  * acesso de um gestor, passar a barbearia para outro dono, e apagar de vez.
  *
  * Ficam num bloco separado no fim da página, e não junto dos dados, porque
- * duas delas são irreversíveis — misturar "trocar plano" com "apagar tudo" na
+ * duas delas são irreversíveis, misturar "trocar plano" com "apagar tudo" na
  * mesma faixa da tela é como se clica no que não queria.
  */
 export function BarbershopActions({ id, slug, name, ownerEmail, isActive }: { id: string; slug: string; name: string; ownerEmail: string; isActive: boolean }) {
@@ -166,7 +166,7 @@ function Apagar({ id, slug, name, isActive }: { id: string; slug: string; name: 
             <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
               <p className="text-xs leading-relaxed text-amber-200">
-                Esta barbearia está <strong>ativa</strong>. Suspenda antes de apagar — é a trava que impede uma operação em
+                Esta barbearia está <strong>ativa</strong>. Suspenda antes de apagar, é a trava que impede uma operação em
                 funcionamento sumir com um clique errado.
               </p>
             </div>

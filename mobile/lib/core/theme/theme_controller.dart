@@ -6,7 +6,7 @@ const _prefsKey = 'rukz_theme_mode';
 // nao voltar pro padrao depois do rebrand.
 const _legacyPrefsKey = 'cortix_theme_mode';
 
-/// Preferência de tema, persistida. Só Claro ou Escuro — a opção "Sistema"
+/// Preferência de tema, persistida. Só Claro ou Escuro, a opção "Sistema"
 /// saiu (dava mais confusão que ajuda). O padrão é Escuro, a identidade do
 /// rukz; quem quiser claro troca no perfil.
 class ThemeController extends ChangeNotifier {
@@ -14,8 +14,8 @@ class ThemeController extends ChangeNotifier {
 
   Future<void> restore() async {
     final prefs = await SharedPreferences.getInstance();
-    // Só 'light' vira claro. Qualquer outra coisa — inclusive o 'system'
-    // gravado por versões antigas — cai no escuro padrão.
+    // Só 'light' vira claro. Qualquer outra coisa, inclusive o 'system'
+    // gravado por versões antigas, cai no escuro padrão.
     final salvo = prefs.getString(_prefsKey) ?? prefs.getString(_legacyPrefsKey);
     mode = salvo == 'light' ? ThemeMode.light : ThemeMode.dark;
     if (prefs.getString(_prefsKey) == null && salvo != null) {

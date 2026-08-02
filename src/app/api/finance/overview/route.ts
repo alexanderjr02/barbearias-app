@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// GET /api/finance/overview — current-month figures for the "Meta & Ponto de
+// GET /api/finance/overview, current-month figures for the "Meta & Ponto de
 // Equilíbrio" cockpit: per-day revenue (completed appointments + manual
 // income), total month expenses (the break-even target) and the owner-set
 // monthly goal. Projection and break-even day are derived on the client.
@@ -58,7 +58,7 @@ export async function GET() {
   });
 }
 
-// PATCH /api/finance/overview { goal: number | null } — set the monthly goal.
+// PATCH /api/finance/overview { goal: number | null }, set the monthly goal.
 export async function PATCH(request: NextRequest) {
   const session = await requireBarbershopSession();
   if (!session || session.role !== "OWNER") {

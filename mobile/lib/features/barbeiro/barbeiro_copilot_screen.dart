@@ -6,7 +6,7 @@ import '../../core/widgets/typewriter_text.dart';
 import '../../core/widgets/voice_input_button.dart';
 import '../gestor/gestor_repository.dart';
 
-/// The barber's personal Copiloto — a chat that answers about their own work:
+/// The barber's personal Copiloto, a chat that answers about their own work:
 /// earnings/commission, next client (with preferences + last recipe), churned
 /// clients. Same role-aware backend as the gestor copilot; the server decides
 /// what this barber can see. Simulated now, real AI when the key is set.

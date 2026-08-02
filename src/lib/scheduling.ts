@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 // CANCELLED/NO_SHOW free the slot back up.
 export const OCCUPYING_STATUSES = ["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED"] as const;
 
-// No barbershop timezone field exists yet — every shop using this app is in
+// No barbershop timezone field exists yet, every shop using this app is in
 // Brazil, and America/Sao_Paulo has been fixed at UTC-3 with no DST since
 // 2019, so a constant offset is safe. WorkingHour/Availability "HH:mm"
 // values are the shop's local wall-clock time.
@@ -22,7 +22,7 @@ export function minutesToTime(totalMinutes: number): string {
 }
 
 // Appointment.date is stored from "YYYY-MM-DD" strings, which JS parses as
-// UTC midnight (see src/lib/dateRange.ts) — dayOfWeek must be read the same
+// UTC midnight (see src/lib/dateRange.ts), dayOfWeek must be read the same
 // way or it drifts a day depending on the server's local timezone.
 export function dayOfWeekFromDateKey(dateKey: string): number {
   return new Date(`${dateKey}T00:00:00Z`).getUTCDay();
@@ -42,7 +42,7 @@ export interface DaySchedule {
   isOpen: boolean;
   openTime: string | null;
   closeTime: string | null;
-  // Where these hours came from — lets the UI explain *why* a day is closed
+  // Where these hours came from, lets the UI explain *why* a day is closed
   // ("dia de folga" vs "barbearia fechada" vs just following the default).
   source: "blocked" | "staff" | "shop";
 }
@@ -87,8 +87,8 @@ export async function getEffectiveSchedule(
 }
 
 // Shared by getEffectiveSchedule (single day/staff) and getRangeScheduleByStaff
-// (batched range) so the resolution order — time off > personal override >
-// shop default — only lives in one place.
+// (batched range) so the resolution order, time off > personal override >
+// shop default, only lives in one place.
 function resolveDaySchedule(params: {
   hasTimeOff: boolean;
   availability: { isAvailable: boolean; startTime: string; endTime: string } | undefined;
@@ -124,7 +124,7 @@ function enumerateDateKeys(fromDateKey: string, toDateKey: string): string[] {
 }
 
 // Batched version of getEffectiveSchedule for a date range across many staff
-// at once — three queries total instead of staff.length * days.length —
+// at once, three queries total instead of staff.length * days.length —
 // powers the Agenda page's month/week free-hours indicators.
 export async function getRangeScheduleByStaff(params: {
   barbershopId: string;
@@ -225,7 +225,7 @@ export async function buildDaySlots(params: {
   return { schedule, slots };
 }
 
-// Server-side guard for POST /api/appointments — re-checks everything the
+// Server-side guard for POST /api/appointments, re-checks everything the
 // UI already filters for, so a stale screen or a direct API call can't
 // create a past/closed/double-booked appointment.
 export async function validateRequestedSlot(params: {
@@ -235,14 +235,14 @@ export async function validateRequestedSlot(params: {
   startTime: string;
   endTime: string;
   // Ao remanejar um agendamento que já existe (arrastar para outro barbeiro),
-  // não faz sentido barrar por "esse horário já passou" — o horário é o mesmo,
+  // não faz sentido barrar por "esse horário já passou", o horário é o mesmo,
   // só muda quem atende. Um agendamento novo mantém a trava (default false).
   ignorePast?: boolean;
   // Encaixe deliberado do gestor: pula SÓ a checagem de choque de horário
   // (dois clientes no mesmo barbeiro), mantendo as demais (folga, expediente,
   // passado). É o "encaixar mesmo assim" do arrastar-e-soltar.
   allowOverlap?: boolean;
-  // Ignora este agendamento na checagem de choque — usado ao mover SÓ o
+  // Ignora este agendamento na checagem de choque, usado ao mover SÓ o
   // horário do próprio agendamento (senão ele "colidiria consigo mesmo").
   excludeId?: string;
 }): Promise<string | null> {

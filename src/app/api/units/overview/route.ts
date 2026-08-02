@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { networkOverview } from "@/lib/copilot/network";
 import { listUnits } from "@/lib/units";
 
-// GET /api/units/overview — o painel da rede: KPIs consolidados + o
+// GET /api/units/overview, o painel da rede: KPIs consolidados + o
 // desempenho de cada unidade lado a lado. Alimenta a tela "Unidades" no web e
 // no app. Reaproveita exatamente o mesmo motor que o Copiloto usa, então o
 // número da tela e o número que a IA fala nunca divergem.

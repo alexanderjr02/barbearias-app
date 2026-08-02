@@ -6,7 +6,7 @@ import { Smile, X } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import { cn } from "@/lib/utils";
 
-// A lightweight, occasional satisfaction prompt — server-side cooldown (30
+// A lightweight, occasional satisfaction prompt, server-side cooldown (30
 // days) via /api/nps GET's shouldPrompt, no scheduling infra needed. Session
 // dismiss just hides it for this browser session; it'll ask again next visit
 // until either answered or 30 days pass.

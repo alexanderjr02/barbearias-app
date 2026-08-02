@@ -120,7 +120,7 @@ class _FloatingChatbotState extends State<FloatingChatbot> with TickerProviderSt
     String reply;
     final shopId = _barbershopId;
     if (shopId != null) {
-      // Personalized assistant for the logged-in client — knows who they are,
+      // Personalized assistant for the logged-in client, knows who they are,
       // remembers the conversation. AI when the shop is Pro+ with a key set.
       try {
         reply = await _clientRepo.clientChatSend(message: text, barbershopId: shopId);

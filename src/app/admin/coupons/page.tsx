@@ -82,7 +82,7 @@ export default function AdminCouponsPage() {
           <Ticket className="mx-auto h-7 w-7 text-zinc-700" />
           <p className="mt-3 text-sm font-medium text-zinc-300">Nenhum cupom ainda</p>
           <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-            Gere um código para fechar venda por fora, dar cortesia ou levar a um evento — quem resgatar já entra no plano certo.
+            Gere um código para fechar venda por fora, dar cortesia ou levar a um evento, quem resgatar já entra no plano certo.
           </p>
         </div>
       ) : (
@@ -149,7 +149,7 @@ function Formulario({ onDone }: { onDone: () => void }) {
         </div>
         {durationDays === null && (
           <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
-            Vitalício não expira nunca. Use com limite de usos baixo — cortesia sem controle é receita saindo sem aparecer em lugar nenhum.
+            Vitalício não expira nunca. Use com limite de usos baixo, cortesia sem controle é receita saindo sem aparecer em lugar nenhum.
           </p>
         )}
       </div>

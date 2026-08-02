@@ -6,7 +6,7 @@ import { logAdminAction } from "@/lib/audit";
 import { getClientIp } from "@/lib/requestIp";
 import { rateLimit } from "@/lib/rateLimit";
 
-// POST /api/admin/recovery/reset-link — a porta dos fundos para quando o
+// POST /api/admin/recovery/reset-link, a porta dos fundos para quando o
 // super admin perde a senha E o e-mail não chega.
 //
 // Existe porque a recuperação normal depende de duas coisas que podem falhar
@@ -17,17 +17,17 @@ import { rateLimit } from "@/lib/rateLimit";
 // O que ela faz é o MÍNIMO: devolve o mesmo link de redefinição que o e-mail
 // levaria. Não define senha, não cria sessão, não devolve token de acesso. A
 // troca em si continua passando pelo fluxo normal de /reset-password, que já
-// é testado — esta rota só substitui o carteiro.
+// é testado, esta rota só substitui o carteiro.
 //
 // Como ela é protegida:
 //   1. Só existe se ADMIN_RECOVERY_SECRET estiver configurado. Sem a variável
-//      responde 404, como se a rota não existisse — é o estado normal.
+//      responde 404, como se a rota não existisse, é o estado normal.
 //   2. O segredo tem que ter 24+ caracteres. Segredo curto seria adivinhável
 //      justamente na rota que menos pode ser adivinhada.
 //   3. Comparação em tempo constante, para o tempo de resposta não vazar
 //      quantos caracteres iniciais estavam certos.
 //   4. Freio por IP.
-//   5. Fica registrada na auditoria, com IP — se alguém usar, aparece.
+//   5. Fica registrada na auditoria, com IP, se alguém usar, aparece.
 //
 // Depois de recuperar o acesso, APAGUE ADMIN_RECOVERY_SECRET da Vercel. Com a
 // variável fora, a rota volta a não existir.
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Invalida links pendentes antes de emitir o novo — mesma regra do fluxo
+  // Invalida links pendentes antes de emitir o novo, mesma regra do fluxo
   // por e-mail, para não deixar vários links válidos circulando.
   await prisma.passwordResetToken.deleteMany({ where: { userId: admin.id, usedAt: null } });
   const { token, tokenHash, expiresAt } = generatePasswordResetToken();

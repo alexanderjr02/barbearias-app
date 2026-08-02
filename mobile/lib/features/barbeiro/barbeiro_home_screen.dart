@@ -49,7 +49,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
       final list = await _repository.activeAnnouncements();
       if (mounted) setState(() => _announcements = list);
     } catch (_) {
-      // Non-critical — the bell just stays empty if this fails.
+      // Non-critical, the bell just stays empty if this fails.
     }
   }
 
@@ -58,7 +58,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
       final result = await _repository.notifications();
       if (mounted) setState(() => _unreadNotifications = result.unreadCount);
     } catch (_) {
-      // Non-critical — the bell just stays empty if this fails.
+      // Non-critical, the bell just stays empty if this fails.
     }
   }
 

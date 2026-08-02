@@ -1,7 +1,7 @@
 // Conversions API da Meta para anúncios clique-pro-WhatsApp (CTWA). Devolve à
 // Meta os eventos de FUNDO de funil (agendou/compareceu), amarrados ao
 // ctwa_clid que guardamos no lead. É o que faz a Meta otimizar por quem VIRA
-// cliente, não por quem só inicia conversa — barateia a campanha ao longo do
+// cliente, não por quem só inicia conversa, barateia a campanha ao longo do
 // tempo. Praticamente nenhuma agência pequena faz isso, porque quase nenhuma
 // tem o dado do funil inteiro. O rukz tem.
 //
@@ -11,9 +11,9 @@
 // configurada.
 //
 // Credenciais (env):
-//   META_CAPI_TOKEN   — System User access token com permissão na dataset.
-//   META_DATASET_ID   — id da dataset (Events Manager) ligada à conta de anúncio.
-//   META_WABA_ID      — (opcional) WhatsApp Business Account id, vai em user_data.
+//   META_CAPI_TOKEN  . System User access token com permissão na dataset.
+//   META_DATASET_ID  , id da dataset (Events Manager) ligada à conta de anúncio.
+//   META_WABA_ID     , (opcional) WhatsApp Business Account id, vai em user_data.
 //   META_GRAPH_VERSION— (opcional) versão da Graph API. Default v21.0.
 
 const GRAPH_VERSION = process.env.META_GRAPH_VERSION || "v21.0";
@@ -30,7 +30,7 @@ export interface CtwaEventInput {
   currency?: string;
 }
 
-// Envia UM evento de conversão para a Meta. Best-effort: nunca lança — devolve
+// Envia UM evento de conversão para a Meta. Best-effort: nunca lança, devolve
 // { ok } para quem chamar decidir se marca como enviado.
 export async function sendCtwaEvent(input: CtwaEventInput): Promise<{ ok: boolean; simulated?: boolean; error?: string }> {
   const token = process.env.META_CAPI_TOKEN;
@@ -38,7 +38,7 @@ export async function sendCtwaEvent(input: CtwaEventInput): Promise<{ ok: boolea
   const wabaId = process.env.META_WABA_ID;
 
   if (!token || !datasetId) {
-    // Modo simulado — não chama a Meta, só deixa rastro para depuração.
+    // Modo simulado, não chama a Meta, só deixa rastro para depuração.
     console.log(`[meta-capi] simulado ${input.eventName} clid=${input.ctwaClid.slice(0, 8)}…`);
     return { ok: true, simulated: true };
   }

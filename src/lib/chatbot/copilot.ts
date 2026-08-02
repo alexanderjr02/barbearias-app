@@ -183,7 +183,7 @@ function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
     },
     {
       name: "close_agenda",
-      description: "Fecha a agenda (bloqueia atendimentos) num dia — para um barbeiro específico ou para a equipe toda. Confirme antes.",
+      description: "Fecha a agenda (bloqueia atendimentos) num dia, para um barbeiro específico ou para a equipe toda. Confirme antes.",
       input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" }, staffName: { type: "string", description: "opcional; se omitido, fecha pra todos" } }, required: ["dateKey"] },
     },
     {
@@ -204,34 +204,34 @@ function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
   ];
   const gestorSmart: Anthropic.Tool[] = [
     { name: "get_no_show_risk", description: "Clientes com risco de FALTAR amanhã (têm histórico de no-show).", input_schema: { type: "object", properties: {} } },
-    { name: "get_churn_risk", description: "Clientes prestes a sumir — atrasados em relação à própria frequência de visita (aja antes de perdê-los).", input_schema: { type: "object", properties: {} } },
-    { name: "get_busy_days", description: "Dias da semana mais cheios e mais vazios (últimos 90 dias) — pra escalar equipe e promoções.", input_schema: { type: "object", properties: {} } },
+    { name: "get_churn_risk", description: "Clientes prestes a sumir, atrasados em relação à própria frequência de visita (aja antes de perdê-los).", input_schema: { type: "object", properties: {} } },
+    { name: "get_busy_days", description: "Dias da semana mais cheios e mais vazios (últimos 90 dias), pra escalar equipe e promoções.", input_schema: { type: "object", properties: {} } },
     { name: "get_diagnosis", description: "Diagnóstico do negócio: compara os últimos 7 dias com os 7 anteriores e aponta a causa da queda/alta (barbeiro, no-show, folgas).", input_schema: { type: "object", properties: {} } },
     { name: "get_goal_progress", description: "Progresso da meta de faturamento do mês e quanto falta por dia.", input_schema: { type: "object", properties: {} } },
     { name: "set_goal", description: "Define a meta de faturamento do mês.", input_schema: { type: "object", properties: { amount: { type: "number" } }, required: ["amount"] } },
     { name: "set_automation", description: "Liga/desliga automações do auto-piloto. rule: 'confirm' (confirmar agendamentos), 'birthday' (msg de aniversário), 'winback' (chamar sumidos). Use enabled=false para desligar; para winback, days define há quantos dias.", input_schema: { type: "object", properties: { rule: { type: "string", enum: ["confirm", "birthday", "winback"] }, enabled: { type: "boolean" }, days: { type: "number" } }, required: ["rule"] } },
   ];
-  // "10 segundos que valem horas ou dias" — análises pesadas que substituem
+  // "10 segundos que valem horas ou dias", análises pesadas que substituem
   // planilha, consultor e contador.
   const gestorPower: Anthropic.Tool[] = [
-    { name: "get_revenue_leak", description: "AUDITORIA DE DINHEIRO PERDIDO: junta num relatório só onde o negócio está vazando R$ — clientes sumidos, no-shows do mês, horários vazios de hoje e estoque parado, com um total estimado. Use quando perguntarem 'onde estou perdendo dinheiro?', 'como faturar mais?' ou pra abrir os olhos do gestor.", input_schema: { type: "object", properties: {} } },
-    { name: "close_month", description: "FECHA O MÊS: fechamento financeiro completo — faturamento, comissão de CADA barbeiro, receitas/despesas lançadas, gorjetas, imposto (ISS) estimado e o LUCRO. Use para 'fecha meu mês', 'quanto lucrei', 'quanto pagar de comissão'. monthOffset=-1 para o mês passado.", input_schema: { type: "object", properties: { monthOffset: { type: "number", description: "0=mês atual, -1=mês passado" } } } },
+    { name: "get_revenue_leak", description: "AUDITORIA DE DINHEIRO PERDIDO: junta num relatório só onde o negócio está vazando R$, clientes sumidos, no-shows do mês, horários vazios de hoje e estoque parado, com um total estimado. Use quando perguntarem 'onde estou perdendo dinheiro?', 'como faturar mais?' ou pra abrir os olhos do gestor.", input_schema: { type: "object", properties: {} } },
+    { name: "close_month", description: "FECHA O MÊS: fechamento financeiro completo, faturamento, comissão de CADA barbeiro, receitas/despesas lançadas, gorjetas, imposto (ISS) estimado e o LUCRO. Use para 'fecha meu mês', 'quanto lucrei', 'quanto pagar de comissão'. monthOffset=-1 para o mês passado.", input_schema: { type: "object", properties: { monthOffset: { type: "number", description: "0=mês atual, -1=mês passado" } } } },
     { name: "get_agenda_gaps", description: "OTIMIZA A AGENDA: acha os buracos (tempo morto) entre atendimentos de cada barbeiro num dia e estima quanto isso custa. Use para 'otimiza minha agenda', 'onde tem tempo morto hoje'.", input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD (padrão hoje)" } } } },
     { name: "simulate", description: "SIMULADOR DE DECISÃO ('e se...?'): projeta o impacto ANTES de arriscar. type 'price' com pct (e serviceName opcional) simula mudar preço em %; type 'hire' simula contratar mais 1 barbeiro. Use para 'e se eu subir 10%?', 'vale a pena contratar?'.", input_schema: { type: "object", properties: { type: { type: "string", enum: ["price", "hire"] }, pct: { type: "number" }, serviceName: { type: "string" } }, required: ["type"] } },
     { name: "suggest_schedule", description: "MONTA A ESCALA DA SEMANA: recomenda quantos barbeiros por dia com base na demanda real dos últimos 90 dias. Use para 'monta a escala', 'como escalar a equipe'.", input_schema: { type: "object", properties: {} } },
     { name: "close_cashbox", description: "FECHA O CAIXA DO DIA: bate os valores informados (dinheiro/cartão/pix) com o que os atendimentos concluídos hoje somam e aponta sobra/falta. Use quando o gestor disser quanto fechou (ex: 'fechei com 840 em dinheiro e 1200 no cartão').", input_schema: { type: "object", properties: { cash: { type: "number" }, card: { type: "number" }, pix: { type: "number" } } } },
     { name: "get_service_margins", description: "MARGEM POR SERVIÇO (não faturamento): volume, receita, custo direto, comissão paga e o lucro que sobra de cada serviço, além do lucro por hora de cadeira. Use para 'qual serviço da mais lucro', 'meu carro-chefe compensa?', 'onde ganho mais por hora'. Se costsFilled for false, avise que o custo não está cadastrado antes de concluir.", input_schema: { type: "object", properties: {} } },
-    { name: "get_reviews", description: "REPUTAÇÃO: nota média, distribuição de estrelas e as avaliações recentes com comentário. Use para 'como está minha reputação', 'me ajuda a responder as avaliações' — aí você redige a resposta de cada uma na voz da barbearia.", input_schema: { type: "object", properties: {} } },
+    { name: "get_reviews", description: "REPUTAÇÃO: nota média, distribuição de estrelas e as avaliações recentes com comentário. Use para 'como está minha reputação', 'me ajuda a responder as avaliações', aí você redige a resposta de cada uma na voz da barbearia.", input_schema: { type: "object", properties: {} } },
   ];
-  // REDE — só entram quando o dono tem mais de uma unidade. Sem isso seriam
+  // REDE, só entram quando o dono tem mais de uma unidade. Sem isso seriam
   // ~1.500 tokens inúteis no prompt de toda barbearia de loja única.
   const networkTools: Anthropic.Tool[] = [
     { name: "get_network_overview", description: "PANORAMA DA REDE: todas as unidades lado a lado (faturamento do mês, atendimentos, ticket médio, faturamento POR BARBEIRO, horários vazios, sumidos) + totais, melhor/pior unidade e a mais/menos eficiente. Use para 'como estão minhas lojas', 'qual unidade vai melhor', 'resumo da rede'.", input_schema: { type: "object", properties: {} } },
     { name: "compare_units", description: "COMPARA DUAS UNIDADES de verdade: faturamento, ticket médio, atendimentos e eficiência por barbeiro, com a diferença em %. Use para 'compara a Centro com a Zona Sul'.", input_schema: { type: "object", properties: { unitA: { type: "string" }, unitB: { type: "string" } }, required: ["unitA", "unitB"] } },
     { name: "close_month_network", description: "FECHA O MÊS DA REDE INTEIRA: faturamento, despesas, comissões e lucro somados, e também por unidade. Use para 'fecha o mês das minhas lojas', 'quanto a rede lucrou'.", input_schema: { type: "object", properties: { monthOffset: { type: "number", description: "0=mês atual, -1=passado" } } } },
-    { name: "get_network_leak", description: "ONDE A REDE PERDE DINHEIRO, por unidade — diz em qual loja agir primeiro. Use para 'onde estou perdendo dinheiro na rede', 'qual loja está vazando'.", input_schema: { type: "object", properties: {} } },
+    { name: "get_network_leak", description: "ONDE A REDE PERDE DINHEIRO, por unidade, diz em qual loja agir primeiro. Use para 'onde estou perdendo dinheiro na rede', 'qual loja está vazando'.", input_schema: { type: "object", properties: {} } },
     { name: "get_network_staff_ranking", description: "RANKING DE BARBEIROS DA REDE INTEIRA, com a unidade de cada um. Use para 'quem é meu melhor barbeiro', 'meu melhor barbeiro está na loja certa?'.", input_schema: { type: "object", properties: {} } },
-    { name: "get_network_busy_days", description: "Dia mais cheio e mais vazio de CADA unidade (90 dias) — base pra remanejar equipe entre lojas.", input_schema: { type: "object", properties: {} } },
+    { name: "get_network_busy_days", description: "Dia mais cheio e mais vazio de CADA unidade (90 dias), base pra remanejar equipe entre lojas.", input_schema: { type: "object", properties: {} } },
   ];
   if (role === "BARBER") return [...barberTools, ...clientTools, ...read.filter((t) => ["get_churned_clients"].includes(t.name))];
   return [...read, ...clientTools, ...gestorActions, ...gestorAdmin, ...gestorOps, ...gestorSmart, ...gestorPower, ...(hasNetwork ? networkTools : [])];
@@ -317,7 +317,7 @@ async function loadMemoryBlock(barbershopId: string): Promise<string> {
     select: { content: true },
   });
   if (!mems.length) return "";
-  return `\n\nO QUE VOCÊ JÁ SABE SOBRE ESTE NEGÓCIO (memória de conversas e decisões anteriores — leve em conta quando for relevante, sem repetir de propósito):\n${mems.reverse().map((m) => `• ${m.content}`).join("\n")}`;
+  return `\n\nO QUE VOCÊ JÁ SABE SOBRE ESTE NEGÓCIO (memória de conversas e decisões anteriores, leve em conta quando for relevante, sem repetir de propósito):\n${mems.reverse().map((m) => `• ${m.content}`).join("\n")}`;
 }
 
 async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: string | null, name: string, input: Record<string, unknown>, ownerId: string | null = null, userId: string | null = null): Promise<string> {
@@ -437,7 +437,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       });
       if (userId) await recordUndoable(barbershopId, userId, name, `Agendamento de ${appt.clientName} em ${dateKey} às ${time}`, { kind: "appointment_created", appointmentId: appt.id });
       // Atribuição (Onda 1): walk-in agendado pelo gestor também entra no funil
-      // (origem UNKNOWN — é uma fatia honesta de "não identificado"). Best-effort.
+      // (origem UNKNOWN, é uma fatia honesta de "não identificado"). Best-effort.
       try {
         await advanceLead(barbershopId, String(input.clientPhone ?? ""), "SCHEDULED", { scheduledAt: new Date(dateKey) });
       } catch (e) {
@@ -463,7 +463,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       });
       type Row = (typeof appts)[number];
       if (!appts.length) return "Nenhum agendamento futuro encontrado.";
-      return appts.map((a: Row) => `id ${a.id} — ${a.clientName}, ${a.date.toISOString().slice(0, 10)} ${a.startTime}, ${a.service?.name ?? "serviço"} com ${a.staff?.name ?? "barbeiro"}`).join("\n");
+      return appts.map((a: Row) => `id ${a.id}, ${a.clientName}, ${a.date.toISOString().slice(0, 10)} ${a.startTime}, ${a.service?.name ?? "serviço"} com ${a.staff?.name ?? "barbeiro"}`).join("\n");
     }
     case "cancel_appointment": {
       const id = String(input.appointmentId ?? "");
@@ -509,7 +509,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       } else {
         targets = await prisma.staff.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true } });
       }
-      // Só entram no desfazer as folgas que ESTE comando criou — se já existia
+      // Só entram no desfazer as folgas que ESTE comando criou, se já existia
       // folga marcada antes, desfazer não pode apagá-la.
       const createdIds: string[] = [];
       for (const t of targets) {
@@ -538,7 +538,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const tx = await prisma.financialTransaction.create({ data: { barbershopId, type, category, description, amount, date } });
       if (userId) await recordUndoable(barbershopId, userId, name, `${type === "INCOME" ? "Receita" : "Despesa"}: ${description} R$ ${amount.toFixed(2)}`, { kind: "transaction_created", transactionId: tx.id });
       await rememberFact(barbershopId, `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description} R$ ${amount.toFixed(2)}.`, "action");
-      return `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description} — R$ ${amount.toFixed(2)}.`;
+      return `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description}. R$ ${amount.toFixed(2)}.`;
     }
     case "restock_product": {
       const products: { id: string; name: string; quantity: number }[] = await prisma.product.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true, quantity: true } });
@@ -572,7 +572,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
         clientIds = [...set];
       }
       if (!clientIds.length) return "Nenhum cliente com conta pra receber a promoção.";
-      // Só quem autorizou. O número informado é o que REALMENTE recebeu — se
+      // Só quem autorizou. O número informado é o que REALMENTE recebeu, se
       // eu reportasse o total encontrado, o gestor acharia que alcançou mais
       // gente do que alcançou.
       let sent = 0;
@@ -581,7 +581,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       }
       const blocked = clientIds.length - sent;
       if (sent === 0) return `Ninguém recebeu: os ${clientIds.length} clientes encontrados não autorizaram receber promoção. O aceite é pedido no cadastro do cliente.`;
-      return `Promoção enviada pra ${sent} cliente(s)${segment === "churned" ? " sumido(s)" : ""}.${blocked > 0 ? ` ${blocked} não recebeu por não ter autorizado contato.` : ""}`;
+      return `Promoção enviada pra ${sent} ${sent === 1 ? "cliente" : "clientes"}${segment === "churned" ? (sent === 1 ? " sumido" : " sumidos") : ""}.${blocked > 0 ? ` ${blocked} não recebeu por não ter autorizado contato.` : ""}`;
     }
     case "get_no_show_risk":
       return JSON.stringify(await noShowRisk(barbershopId));
@@ -691,31 +691,31 @@ export async function runCopilot(
   const adminNote =
     role === "GESTOR"
       ? `\n\nVOCÊ OPERA O SISTEMA POR CONVERSA (execute quando o gestor pedir, confirmando os dados numa frase curta antes de agir):
-- Agenda: AGENDAR (book_appointment — cheque antes com check_availability), CANCELAR (find_appointments → cancel_appointment), REMARCAR (find_appointments → reschedule_appointment), FECHAR a agenda de um dia (close_agenda, um barbeiro ou a equipe toda).
+- Agenda: AGENDAR (book_appointment, cheque antes com check_availability), CANCELAR (find_appointments → cancel_appointment), REMARCAR (find_appointments → reschedule_appointment), FECHAR a agenda de um dia (close_agenda, um barbeiro ou a equipe toda).
 - Cadastro: criar serviço (create_service), mudar preço (update_service_price), marcar folga (set_day_off).
 - Financeiro: lançar receita ou despesa (add_transaction).
 - Estoque: repor/ajustar produto (restock_product).
-- Marketing: enviar promoção pros clientes (send_promo — todos ou os sumidos). Escreva um texto curto e chamativo você mesmo e confirme antes de disparar.
+- Marketing: enviar promoção pros clientes (send_promo, todos ou os sumidos). Escreva um texto curto e chamativo você mesmo e confirme antes de disparar.
 - Inteligência: PREVER faltas de amanhã (get_no_show_risk) e clientes prestes a sumir (get_churn_risk); dias cheios/vazios (get_busy_days); DIAGNOSTICAR queda de faturamento e a causa (get_diagnosis); acompanhar a META do mês (get_goal_progress / set_goal).
 - Superpoderes (o que levaria horas ou dias, você faz em segundos):
-  • AUDITAR onde o dinheiro está vazando (get_revenue_leak) — sumidos, no-shows, horários vazios, estoque parado, com total em R$.
-  • FECHAR O MÊS (close_month) — faturamento, comissão de cada barbeiro, despesas, gorjetas, imposto e lucro.
+  • AUDITAR onde o dinheiro está vazando (get_revenue_leak), sumidos, no-shows, horários vazios, estoque parado, com total em R$.
+  • FECHAR O MÊS (close_month), faturamento, comissão de cada barbeiro, despesas, gorjetas, imposto e lucro.
   • OTIMIZAR a agenda achando tempo morto (get_agenda_gaps).
-  • SIMULAR decisões antes de arriscar (simulate) — subir preço X%, contratar mais um barbeiro.
+  • SIMULAR decisões antes de arriscar (simulate), subir preço X%, contratar mais um barbeiro.
   • MONTAR a escala da semana pela demanda real (suggest_schedule).
   • FECHAR O CAIXA do dia batendo os valores (close_cashbox).
-  • REPUTAÇÃO: ver nota e avaliações (get_reviews) e REDIGIR a resposta de cada avaliação na voz da barbearia — agradeça as boas, e nas ruins peça desculpa, resolva e convide a voltar. Entregue o texto pronto pra copiar.
-  Quando o gestor pedir "por que caiu / como faturar mais / onde perco dinheiro", combine get_diagnosis + get_revenue_leak e entregue um PLANO curto de ação (o que fazer hoje, amanhã, esta semana) — e ofereça executar (tocar nas ações). Aja como consultor: número → causa → o que fazer.
+  • REPUTAÇÃO: ver nota e avaliações (get_reviews) e REDIGIR a resposta de cada avaliação na voz da barbearia, agradeça as boas, e nas ruins peça desculpa, resolva e convide a voltar. Entregue o texto pronto pra copiar.
+  Quando o gestor pedir "por que caiu / como faturar mais / onde perco dinheiro", combine get_diagnosis + get_revenue_leak e entregue um PLANO curto de ação (o que fazer hoje, amanhã, esta semana), e ofereça executar (tocar nas ações). Aja como consultor: número → causa → o que fazer.
 - Auto-piloto: ligar/desligar automações que rodam sozinhas (set_automation): confirmação de agendamentos, mensagem de aniversário e win-back de sumidos.${
         hasNetwork
           ? `
-- REDE (este gestor tem ${unitCount} unidades — pense como gestor de rede, não de loja):
+- REDE (este gestor tem ${unitCount} unidades, pense como gestor de rede, não de loja):
   • Panorama de todas as lojas (get_network_overview), comparar duas (compare_units), fechar o mês da rede (close_month_network), onde a rede vaza (get_network_leak), ranking de barbeiros da rede (get_network_staff_ranking), dias cheios por loja (get_network_busy_days).
   • ATENÇÃO à diferença: as demais ferramentas veem só a unidade ATUAL (${shopName}). As de rede veem todas. Se a pergunta for sobre "minhas lojas/rede/todas", use as de rede; se for sobre "aqui/esta loja", use as normais.
-  • Compare pelo que importa: faturamento POR BARBEIRO revela mais que faturamento bruto — uma loja maior pode faturar mais e ser a menos eficiente. Diga sempre qual unidade agir primeiro.`
+  • Compare pelo que importa: faturamento POR BARBEIRO revela mais que faturamento bruto, uma loja maior pode faturar mais e ser a menos eficiente. Diga sempre qual unidade agir primeiro.`
           : ""
       }
-- Sempre converta datas relativas ("amanhã", "sexta") para AAAA-MM-DD. Nunca invente horário — use check_availability. Confirme antes de qualquer ação que grava ("Confirmo: agendar João, Corte, com o Thalles, amanhã 14h?").`
+- Sempre converta datas relativas ("amanhã", "sexta") para AAAA-MM-DD. Nunca invente horário, use check_availability. Confirme antes de qualquer ação que grava ("Confirmo: agendar João, Corte, com o Thalles, amanhã 14h?").`
       : "";
 
   const system = `${persona}
@@ -723,18 +723,18 @@ export async function runCopilot(
 Hoje é ${shopNow().dateKey} (use para converter datas relativas como "amanhã", "sexta").
 
 COMO VOCÊ FALA
-- Direto, esperto e humano — como um sócio que manja do negócio, nunca um robô. Vá ao ponto.
+- Direto, esperto e humano, como um sócio que manja do negócio, nunca um robô. Vá ao ponto.
 - Nunca repita a pergunta nem enrole ("Claro!", "Com certeza!"). Comece pela resposta.
 - Frases curtas. Termine com uma recomendação prática de 1 linha ("O que eu faria: ...") sempre que fizer sentido.
 - Se os dados mostrarem um problema (muitos sumidos, agenda vazia, no-show alto, queda no faturamento), aponte sem esperar perguntarem.
 
-FORMATO (importante — a resposta aparece num balão de chat)
+FORMATO (importante, a resposta aparece num balão de chat)
 - Texto limpo e natural. NUNCA use markdown: nada de **negrito**, ##títulos ou listas com "-".
 - Se precisar enumerar, use "•" e no máximo 3–4 itens curtos.
 - Valores sempre em R$ e variações em %. Seja econômico: 2–5 frases na maioria das respostas.
 
 DADOS E AÇÕES
-- Use as ferramentas para números reais — nunca invente. Se faltar dado, diga o que precisa.
+- Use as ferramentas para números reais, nunca invente. Se faltar dado, diga o que precisa.
 - Para avisos em massa (confirmar amanhã, chamar sumidos, avisar fila), NÃO execute no chat: oriente a tocar no botão da ação no painel.${adminNote}`;
 
   // MARGEM: o prompt + as ferramentas somam ~14 mil tokens IGUAIS em toda
@@ -766,7 +766,7 @@ DADOS E AÇÕES
       const reply = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim() || "Pode reformular?";
       await recordAiUsage(barbershopId, "copilot", MODEL, usedIn, usedOut, cacheWrite, cacheRead);
       // Se esta rodada gravou algo reversível, devolve o "Desfazer" junto da
-      // resposta — o gestor vê a saída de emergência no mesmo lugar em que a
+      // resposta, o gestor vê a saída de emergência no mesmo lugar em que a
       // ação aconteceu, não escondida num menu.
       const undoable = userId ? await latestUndoable(barbershopId, userId) : null;
       const undo = undoable && Date.now() - undoable.createdAt.getTime() < 60_000 ? { id: undoable.id, label: `Desfazer: ${undoable.description}` } : undefined;
@@ -817,7 +817,7 @@ export async function simulatedReply(role: CopilotRole, barbershopId: string, st
       if (!n) return "Você não tem próximo cliente na agenda.";
       const bits = [`Próximo: ${n.name} às ${n.time} (${n.service ?? "serviço"})${n.rating ? `, ${n.rating.toFixed(1)}` : ""}${n.visits ? `, ${n.visits} visitas` : ""}.`];
       if (n.recipe?.recipeMachine || n.recipe?.recipeFinish) bits.push(`Receita do último: ${[n.recipe.recipeMachine, n.recipe.recipeFinish, n.recipe.recipeProducts].filter(Boolean).join(" · ")}.`);
-      if (n.birthdayInDays != null) bits.push(n.birthdayInDays === 0 ? "É aniversário dele hoje — manda um parabéns!" : `Aniversário em ${n.birthdayInDays} dia(s).`);
+      if (n.birthdayInDays != null) bits.push(n.birthdayInDays === 0 ? "É aniversário dele hoje, manda um parabéns!" : `Aniversário em ${n.birthdayInDays} dia(s).`);
       if (n.upsell) bits.push(n.upsell);
       return bits.join(" ");
     }
@@ -843,16 +843,16 @@ export async function simulatedReply(role: CopilotRole, barbershopId: string, st
   if (has("melhor cliente", "top cliente", "fiel", "melhores clientes")) {
     const t = await topClients(barbershopId, 5);
     if (!t.length) return "Ainda não há atendimentos concluídos pra ranquear.";
-    return "Melhores clientes: " + t.map((c, i) => `${i + 1}) ${c.name} — ${money(c.spent)} (${c.visits}x)`).join("; ");
+    return "Melhores clientes: " + t.map((c, i) => `${i + 1}) ${c.name}, ${money(c.spent)} (${c.visits}x)`).join("; ");
   }
   if (has("barbeiro", "equipe", "ranking", "profissional")) {
     const b = await barberLeaderboard(barbershopId);
     if (!b.length) return "Nenhum barbeiro com atendimento no mês ainda.";
-    return "No mês: " + b.map((x) => `${x.name} — ${money(x.revenue)} (${x.count}x${x.avgRating ? `, ${x.avgRating.toFixed(1)}` : ""})`).join("; ");
+    return "No mês: " + b.map((x) => `${x.name}, ${money(x.revenue)} (${x.count}x${x.avgRating ? `, ${x.avgRating.toFixed(1)}` : ""})`).join("; ");
   }
   if (has("estoque", "produto", "acabando", "repor")) {
     const s = await lowStock(barbershopId);
-    if (!s.length) return "Estoque ok — nada no limite mínimo.";
+    if (!s.length) return "Estoque ok, nada no limite mínimo.";
     return "Acabando: " + s.map((p) => `${p.name} (${p.quantity})`).join(", ") + ".";
   }
   if (has("amanhã", "amanha", "confirmar", "confirmação")) {
@@ -869,7 +869,7 @@ function timeGreeting(): string {
   return "Boa noite";
 }
 
-/// A short, natural-language opener written by the AI from real data — the
+/// A short, natural-language opener written by the AI from real data, the
 /// "abrir o app e ele já te conhecer". Falls back to a deterministic line when
 /// there's no key.
 export async function copilotGreeting(

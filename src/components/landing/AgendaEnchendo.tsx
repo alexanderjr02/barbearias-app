@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
  * landing acontecendo na frente de quem lê.
  *
  * Vai marcado como exemplo. O resto da página usa captura real do produto
- * justamente porque barbearia desconfia de tela bonita que não existe — seria
+ * justamente porque barbearia desconfia de tela bonita que não existe, seria
  * incoerente deixar uma ilustração passar por dado real.
  */
 
@@ -28,7 +28,7 @@ const PAUSA_MS = 2800;
 
 export function AgendaEnchendo() {
   // Começa cheia, e não vazia. Assim o HTML servido já mostra a agenda lotada —
-  // que é a mensagem — em vez de "0 de 5 horários, R$ 0", que é o contrário
+  // que é a mensagem, em vez de "0 de 5 horários, R$ 0", que é o contrário
   // dela. Quem pediu menos movimento no sistema, ou está sem JavaScript, fica
   // com esse estado. A animação só existe para quem pode vê-la.
   const [cheios, setCheios] = useState(HORARIOS.length);

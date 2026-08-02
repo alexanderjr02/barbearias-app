@@ -6,7 +6,7 @@ import { weeklyAttributionSummary } from "@/lib/attribution";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
 import { sendMail } from "@/lib/mailer";
 
-// GET /api/cron/weekly-report — computes each active barbershop's weekly
+// GET /api/cron/weekly-report, computes each active barbershop's weekly
 // summary and drops it in the gestor's notification feed (and e-mails the
 // owner). Meant to be hit by a scheduler once a week.
 //
@@ -33,12 +33,12 @@ export async function GET(request: NextRequest) {
       const lines = [
         `Faturamento (7 dias): ${money(rev.thisWeek)}${delta}.`,
         `No mês: ${money(rev.monthRevenue)} em ${rev.monthCount} atendimentos (ticket médio ${money(rev.avgTicket)}).`,
-        topBarber ? `Destaque: ${topBarber.name} — ${money(topBarber.revenue)} (${topBarber.count} atendimentos).` : "",
+        topBarber ? `Destaque: ${topBarber.name}, ${money(topBarber.revenue)} (${topBarber.count} atendimentos).` : "",
         // Atribuição (#4): de onde vieram os contatos rastreados na semana.
         attr.identified > 0
           ? `Marketing: ${attr.identified} ${attr.identified === 1 ? "contato veio" : "contatos vieram"} de canais rastreados${attr.top ? ` (destaque ${attr.top.label}: ${attr.top.contacts})` : ""}, ${attr.novos} ${attr.novos === 1 ? "cliente novo" : "clientes novos"}.`
           : "",
-        churned.length > 0 ? `${churned.length} clientes sumidos há +45 dias — vale chamar de volta.` : "Nenhum cliente sumido.",
+        churned.length > 0 ? `${churned.length} clientes sumidos há +45 dias, vale chamar de volta.` : "Nenhum cliente sumido.",
       ].filter(Boolean);
       const bodyText = lines.join(" ");
 
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       if (shop.owner?.email) {
         await sendMail({
           to: shop.owner.email,
-          subject: `Resumo da semana — ${shop.name}`,
+          subject: `Resumo da semana, ${shop.name}`,
           text: `Olá${shop.owner.name ? `, ${shop.owner.name.split(" ")[0]}` : ""}!\n\n${lines.join("\n")}\n\nAbra o painel para ver os detalhes e agir com o Copiloto.`,
           html: `<p>Olá${shop.owner.name ? `, ${shop.owner.name.split(" ")[0]}` : ""}!</p><ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul><p>Abra o painel para ver os detalhes e agir com o Copiloto.</p>`,
         }).catch(() => {});

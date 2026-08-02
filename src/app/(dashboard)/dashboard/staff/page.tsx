@@ -28,7 +28,7 @@ interface ApiStaff {
   hasLogin: boolean;
   avgRating: number | null;
   reviewCount: number;
-  // Recortes do mês corrente — é assim que comissão fecha e que dá pra
+  // Recortes do mês corrente, é assim que comissão fecha e que dá pra
   // comparar um barbeiro com o outro sem o acumulado de sempre distorcer.
   monthAppointments: number;
   monthRevenue: number;
@@ -151,7 +151,7 @@ export default function StaffPage() {
       commissionRate: Number(form.get("commissionRate")) / 100,
       avatar,
       // Campo vazio: no PATCH vira null ("apaguei isso"), no POST vira
-      // undefined — o schema de criação é .optional(), não .nullable(), e
+      // undefined, o schema de criação é .optional(), não .nullable(), e
       // mandar null ali derruba a validação inteira.
       cpf: form.get("cpf") || blank,
       employmentType: form.get("employmentType") || blank,
@@ -180,7 +180,7 @@ export default function StaffPage() {
     return busca && app;
   });
 
-  // Indicadores do MÊS, só de quem está ativo — barbeiro desligado não entra na
+  // Indicadores do MÊS, só de quem está ativo, barbeiro desligado não entra na
   // média de ocupação nem puxa a comissão a pagar.
   const equipeAtiva = staff.filter((s) => s.isActive);
   const ativos = equipeAtiva.length;
@@ -224,7 +224,7 @@ export default function StaffPage() {
         </div>
 
         <div className="pt-2 border-t border-zinc-800 space-y-3">
-          <p className="text-xs text-zinc-500">Dados trabalhistas — tudo opcional, preencha o que fizer sentido.</p>
+          <p className="text-xs text-zinc-500">Dados trabalhistas, tudo opcional, preencha o que fizer sentido.</p>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Vínculo</label>
@@ -429,7 +429,7 @@ export default function StaffPage() {
                 </button>
               </div>
 
-              {/* Especialidades como etiquetas — texto corrido some no cartão */}
+              {/* Especialidades como etiquetas, texto corrido some no cartão */}
               {member.specialties && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {member.specialties.split(/[,;]/).map((e) => e.trim()).filter(Boolean).slice(0, 5).map((esp) => (

@@ -6,7 +6,7 @@ import { recordSubscriptionPayment } from "@/lib/finance/autoEntry";
 
 // Payment providers (the BARBERSHOP's own account) ping this when a client's
 // membership payment changes. We identify the subscription, then re-fetch the
-// real status with that barbershop's own credential — never trusting the raw
+// real status with that barbershop's own credential, never trusting the raw
 // notification body. Handles both Mercado Pago and Asaas payloads.
 export async function POST(request: NextRequest) {
   try {

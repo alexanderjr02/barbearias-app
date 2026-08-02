@@ -101,7 +101,7 @@ interface PlanContextType {
   appointmentsLimit: number;
   isLoading: boolean;
   // Real price/limits from /admin/settings (PlatformSetting), falling back to
-  // PLAN_INFO's static defaults while loading — so editing prices in the
+  // PLAN_INFO's static defaults while loading, so editing prices in the
   // admin panel is actually reflected here instead of the old hardcoded
   // strings.
   pricing: Record<Plan, LivePricing> | null;
@@ -118,7 +118,7 @@ const PlanContext = createContext<PlanContextType>({
   formatPrice: (plan) => PLAN_INFO[plan].price,
 });
 
-// The plan lives on the Barbershop record — this reads/writes it for real
+// The plan lives on the Barbershop record, this reads/writes it for real
 // instead of the old localStorage-only toggle, so gating actually reflects
 // what the gestor is subscribed to (and demo accounts can showcase each tier).
 export function PlanProvider({ children }: { children: ReactNode }) {
@@ -151,7 +151,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const can = useCallback((feature: Feature) => FEATURES_BY_PLAN[plan].includes(feature), [plan]);
 
   const livePlanPricing = pricing?.[plan];
-  // A live appointmentsLimit of `null` means "unlimited" — must map to
+  // A live appointmentsLimit of `null` means "unlimited", must map to
   // Infinity, not fall through to the static default's finite number.
   const appointmentsLimit = livePlanPricing ? livePlanPricing.appointmentsLimit ?? Infinity : PLAN_INFO[plan].appointmentsLimit;
 

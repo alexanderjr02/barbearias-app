@@ -10,7 +10,7 @@ class rukzColors {
   static const border = Color(0x1AFFFFFF);
 }
 
-/// Background gradient used behind auth/onboarding surfaces — a slow drift
+/// Background gradient used behind auth/onboarding surfaces, a slow drift
 /// of deep violet/blue behind the brand accent, evoking a "premium tech"
 /// feel rather than a flat single color.
 List<Color> rukzBackdropColors(Color accent) => [
@@ -51,7 +51,7 @@ class GlassPanel extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: borderRadius,
         // Antes um gradiente sutil (glass); agora um tom só, com as duas tintas
-        // compostas — a marca rukz é contraste seco, sem gradiente nem no vidro.
+        // compostas, a marca rukz é contraste seco, sem gradiente nem no vidro.
         color: Color.alphaBlend(
           accent.withValues(alpha: 0.05),
           overlay.withValues(alpha: isDark ? 0.06 : 0.035),
@@ -66,7 +66,7 @@ class GlassPanel extends StatelessWidget {
   }
 }
 
-/// A pill button with a subtle scale-down press animation — used for the
+/// A pill button with a subtle scale-down press animation, used for the
 /// primary CTAs across auth/booking flows so taps feel tactile.
 class PulseButton extends StatefulWidget {
   final VoidCallback? onPressed;
@@ -139,7 +139,7 @@ class _PulseButtonState extends State<PulseButton> {
   }
 }
 
-/// Fades + gently scales content in on first build — a cheap way to give
+/// Fades + gently scales content in on first build, a cheap way to give
 /// list items and cards a sense of arrival instead of popping in instantly.
 class RiseIn extends StatefulWidget {
   final Widget child;

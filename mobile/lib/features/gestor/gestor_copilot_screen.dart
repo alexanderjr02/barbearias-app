@@ -6,7 +6,7 @@ import '../../core/widgets/typewriter_text.dart';
 import '../../core/widgets/voice_input_button.dart';
 import 'gestor_repository.dart';
 
-/// The Copiloto — a business assistant for the gestor. Top: a proactive
+/// The Copiloto, a business assistant for the gestor. Top: a proactive
 /// briefing (sumidos, horários vazios, confirmar amanhã, estoque) with one-tap
 /// actions. Bottom: a chat to ask about the business in plain Portuguese.
 /// Works today in "simulated" mode; the same screen lights up with real AI the
@@ -23,7 +23,7 @@ class _Msg {
   final String text;
   final List<CopilotAction> actions;
   bool actionsDone;
-  /// Ação reversível executada nesta resposta — vira o botão "Desfazer".
+  /// Ação reversível executada nesta resposta, vira o botão "Desfazer".
   final ({String id, String label})? undo;
   bool undone;
   _Msg(this.role, this.text, {this.actions = const [], this.actionsDone = false, this.undo, this.undone = false});
@@ -171,7 +171,7 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
       _scrollToEnd();
     } catch (_) {
       if (mounted) {
-        AppToast.error(context, 'Não consegui desfazer — o prazo pode ter passado');
+        AppToast.error(context, 'Não consegui desfazer, o prazo pode ter passado');
         setState(() => _runningAction = null);
       }
     }
@@ -342,7 +342,7 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
                 ),
                 const SizedBox(height: 12),
                 if (_messages.isEmpty && !_greetingLoading)
-                  Text('Me pergunte qualquer coisa sobre o negócio — eu leio os dados reais e te digo o que fazer. Você também pode pedir pra cadastrar serviço, mudar preço ou dar folga.', style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.45)),
+                  Text('Me pergunte qualquer coisa sobre o negócio, eu leio os dados reais e te digo o que fazer. Você também pode pedir pra cadastrar serviço, mudar preço ou dar folga.', style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.45)),
                 ..._messages.asMap().entries.map((e) => _Bubble(
                       msg: e.value,
                       palette: palette,

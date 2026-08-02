@@ -41,7 +41,7 @@ class GestorMoreScreen extends StatelessWidget {
           _MenuTile(
             icon: Icons.card_giftcard_rounded,
             label: 'Fidelidade',
-            sub: 'Cartão de selos, indicação e pontos — com prévia do que o cliente vê',
+            sub: 'Cartão de selos, indicação e pontos, com prévia do que o cliente vê',
             palette: palette,
             accent: accent,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GestorLoyaltyScreen())),

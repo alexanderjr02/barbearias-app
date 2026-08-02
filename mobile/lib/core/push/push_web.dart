@@ -15,12 +15,12 @@ external JSPromise<JSString> _enableJS(JSString token, JSString apiBase);
 external JSPromise<JSString> _disableJS(JSString token, JSString apiBase);
 
 // Estados possíveis (mesmos que o JS devolve):
-//   granted        — inscrito, vai receber push
-//   denied         — usuário recusou a permissão
-//   default        — ainda não decidiu
-//   needs-install  — iPhone sem o app na tela de início (Apple só libera assim)
-//   unsupported    — navegador sem suporte a push
-//   error          — falhou no meio do caminho
+//   granted       , inscrito, vai receber push
+//   denied        , usuário recusou a permissão
+//   default       , ainda não decidiu
+//   needs-install , iPhone sem o app na tela de início (Apple só libera assim)
+//   unsupported   , navegador sem suporte a push
+//   error         , falhou no meio do caminho
 String pushStatus() {
   if (_bridge == null) return 'unsupported';
   try {

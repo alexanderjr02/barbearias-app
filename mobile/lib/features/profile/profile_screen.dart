@@ -38,7 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// "YYYY-MM-DD" como o servidor devolve. Guardado como String e não DateTime
-  /// para ir e voltar da API sem conversão de fuso no meio — data de
+  /// para ir e voltar da API sem conversão de fuso no meio, data de
   /// nascimento não tem hora, e tratá-la como instante já rendeu bug de
   /// "nasceu um dia antes" em muito sistema.
   String? _birthDate;
@@ -189,7 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   // Voltar: o Perfil é empurrado por cima do shell (a barra de
                   // abas some enquanto ele está aberto), e sem AppBar não havia
-                  // como voltar a não ser pelo gesto de borda — que no PWA
+                  // como voltar a não ser pelo gesto de borda, que no PWA
                   // instalado nem sempre existe. Só aparece quando a tela foi
                   // empurrada; onde o Perfil é uma aba fixa, canPop é false.
                   if (Navigator.of(context).canPop())
@@ -323,7 +323,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   accent: accent,
                 ),
                 _Divider(palette: palette),
-                // Nascimento é o gancho da campanha de aniversário — a barbearia
+                // Nascimento é o gancho da campanha de aniversário, a barbearia
                 // manda mensagem no dia. Por isso ganha um "por quê" visível em
                 // vez de ser mais um campo mudo que ninguém preenche.
                 _TapRow(
@@ -337,7 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 _Divider(palette: palette),
                 // E-mail não é editável (é a identidade de login), então nem
-                // finge ser campo — vira linha de leitura com cadeado.
+                // finge ser campo, vira linha de leitura com cadeado.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 13, 16, 13),
                   child: Row(
@@ -532,7 +532,7 @@ class _Divider extends StatelessWidget {
 
 /// Campo em linha (rótulo à esquerda, valor à direita) no lugar de rótulo
 /// acima + caixa cheia embaixo. Ocupa metade da altura e alinha tudo numa
-/// coluna só — é como iOS e a maioria dos apps de ajustes fazem.
+/// coluna só, é como iOS e a maioria dos apps de ajustes fazem.
 class _FieldRow extends StatelessWidget {
   final String label;
   final TextEditingController controller;
@@ -586,7 +586,7 @@ class _FieldRow extends StatelessWidget {
 }
 
 /// Linha que abre um seletor em vez de aceitar digitação. Mostra o valor
-/// quando existe e um convite quando não — campo vazio sem convite é campo
+/// quando existe e um convite quando não, campo vazio sem convite é campo
 /// que fica vazio para sempre.
 class _TapRow extends StatelessWidget {
   final String label;
@@ -707,7 +707,7 @@ class _ActionRow extends StatelessWidget {
   }
 }
 
-/// Simple 3-way appearance toggle — the same pattern most mainstream apps
+/// Simple 3-way appearance toggle, the same pattern most mainstream apps
 /// use in Settings, rather than a bare on/off switch that can't express
 /// "follow the system".
 class _ThemeModeSelector extends StatelessWidget {
@@ -718,7 +718,7 @@ class _ThemeModeSelector extends StatelessWidget {
     final controller = context.watch<ThemeController>();
     final palette = AppPalette.of(context);
     final accent = Theme.of(context).colorScheme.primary;
-    // Só Claro e Escuro — sem "Sistema". Duas opções são uma escolha clara;
+    // Só Claro e Escuro, sem "Sistema". Duas opções são uma escolha clara;
     // "seguir o sistema" confundia mais do que ajudava.
     final options = [
       (ThemeMode.light, 'Claro', Icons.light_mode_rounded),

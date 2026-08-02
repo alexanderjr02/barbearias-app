@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// GET /api/loyalty — gestor view of every client's loyalty balance at this
+// GET /api/loyalty, gestor view of every client's loyalty balance at this
 // barbershop, sorted by points descending.
 export async function GET() {
   const session = await requireBarbershopSession();

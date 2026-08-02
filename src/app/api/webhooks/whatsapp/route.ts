@@ -7,17 +7,17 @@ import { planHasAI } from "@/lib/billing";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
 import { captureWhatsappLead, recoverOriginFromText, type WaReferral } from "@/lib/attribution";
 
-// WhatsApp Cloud API webhook — the inbound half of the 24/7 assistant. The
+// WhatsApp Cloud API webhook, the inbound half of the 24/7 assistant. The
 // outbound sender already lives in src/lib/whatsapp.ts; this receives client
 // messages and answers them with the same AI assistant used in-app.
 //
 // Configure (env):
-//   WHATSAPP_VERIFY_TOKEN   — arbitrary string you also type into the Meta
+//   WHATSAPP_VERIFY_TOKEN  , arbitrary string you also type into the Meta
 //                             webhook "Verify token" field. É único da
 //                             plataforma: o webhook é UM só para todas as
 //                             barbearias; o roteamento por loja acontece por
 //                             mensagem (pelo phone_number_id de quem recebeu).
-//   WHATSAPP_BARBERSHOP_ID  — fallback single-tenant: usado só quando a
+//   WHATSAPP_BARBERSHOP_ID , fallback single-tenant: usado só quando a
 //                             mensagem não casa com nenhuma WhatsappConnection.
 //
 // Multi-barbearia: cada loja tem sua conexão (WhatsappConnection); a mensagem
@@ -43,7 +43,7 @@ interface WaMessage {
   type?: string;
   text?: { body?: string };
   // Origem do anúncio clique-pro-WhatsApp. A Meta anexa este bloco à 1ª mensagem
-  // da conversa; o payload já chegava aqui — só não era lido.
+  // da conversa; o payload já chegava aqui, só não era lido.
   referral?: WaReferral;
 }
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     // Human handoff: flag the team and let the client know.
     if (HANDOFF_RE.test(text)) {
       await notifyBarbershop(barbershopId, "SUPPORT_REPLY", "Cliente pediu atendimento humano", `Pelo WhatsApp (${from}): "${text.slice(0, 120)}"`, "/dashboard");
-      const reply = "Claro! Já avisei a equipe — em breve alguém fala com você por aqui.";
+      const reply = "Claro! Já avisei a equipe, em breve alguém fala com você por aqui.";
       await prisma.chatMessage.create({ data: { content: reply, role: "BOT", sessionId, barbershopId } });
       await sendWhatsAppText(barbershopId, from, reply);
       return NextResponse.json({ ok: true });
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     const isGestor = ownerDigits.length >= 8 && fromDigits === ownerDigits;
 
     // Atribuição (Onda 1): registra/atualiza o lead com a origem do anúncio
-    // (referral clique-pro-WhatsApp). Só para cliente — o gestor operando por
+    // (referral clique-pro-WhatsApp). Só para cliente, o gestor operando por
     // WhatsApp não é lead. Best-effort: nunca deve impedir a resposta nem o ACK.
     // originChannel guarda a origem atual do lead (após recuperar pelo texto),
     // para o assistente decidir se pergunta "como nos conheceu?".

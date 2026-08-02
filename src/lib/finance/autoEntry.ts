@@ -57,7 +57,7 @@ export async function recordAutoIncome(params: {
  * falha em silêncio deixaria o lucro errado sem ninguém saber. Idempotente
  * por `recurring:<id>:<ano-mês>`, então chamar toda vez não duplica nada.
  *
- * Só materializa despesa cujo dia de vencimento já passou — lançar o aluguel
+ * Só materializa despesa cujo dia de vencimento já passou, lançar o aluguel
  * do dia 25 logo no dia 1º faria o mês inteiro parecer no prejuízo.
  */
 export async function materializeRecurringExpenses(barbershopId: string): Promise<number> {
@@ -103,7 +103,7 @@ export async function materializeRecurringExpenses(barbershopId: string): Promis
 
 /**
  * Mensalidade confirmada vira receita. A referência inclui o mês de cobrança
- * para que a renovação do mês seguinte gere um lançamento novo — mas o mesmo
+ * para que a renovação do mês seguinte gere um lançamento novo, mas o mesmo
  * mês, reenviado, não.
  */
 export async function recordSubscriptionPayment(subscriptionId: string): Promise<{ created: boolean }> {
@@ -120,7 +120,7 @@ export async function recordSubscriptionPayment(subscriptionId: string): Promise
     barbershopId: sub.plan.barbershopId,
     amount: sub.plan.price,
     category: "Assinatura",
-    description: `${sub.plan.name} — ${sub.clientName}`,
+    description: `${sub.plan.name}, ${sub.clientName}`,
     paymentMethod: sub.paymentMethod,
     reference: `subscription:${sub.id}:${period}`,
     date: now,

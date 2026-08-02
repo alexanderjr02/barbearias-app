@@ -6,7 +6,7 @@ import { planHasAI } from "@/lib/billing";
 import { runCopilot, simulatedReply, copilotSuggestions, unavailableAiNote, type CopilotRole, type ChatTurn, type CopilotAction } from "@/lib/chatbot/copilot";
 import { aiQuota } from "@/lib/ai/usage";
 
-// POST /api/copilot/chat { messages: [{role, content}] } — the business copilot
+// POST /api/copilot/chat { messages: [{role, content}] }, the business copilot
 // for the gestor/barber. Uses the AI loop when a key is configured, otherwise
 // a deterministic "simulated" responder so it's usable right now.
 export async function POST(request: NextRequest) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   let capNote: string | null = null;
   if (aiPowered) {
     try {
-      // Só o OWNER enxerga a rede — um MANAGER responde pela loja dele.
+      // Só o OWNER enxerga a rede, um MANAGER responde pela loja dele.
       const ownerId = session.role === "OWNER" ? session.sub : null;
       const res = await runCopilot(role, session.barbershopId, staffId, history, ownerId, session.sub);
       reply = res.reply;
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
   } else {
     reply = await simulatedReply(role, session.barbershopId, staffId, lastUser.content);
-    if (assistantEnabled() && !quota.allowed) capNote = "Limite diário de IA atingido — respostas no modo rápido até amanhã.";
+    if (assistantEnabled() && !quota.allowed) capNote = "Limite diário de IA atingido, respostas no modo rápido até amanhã.";
   }
 
   // Persist this turn so the conversation survives closing/reopening AND can be

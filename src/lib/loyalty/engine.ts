@@ -3,7 +3,7 @@ import { notifyClient } from "@/lib/gestorNotifications";
 
 // Motor de fidelização: cartão de selos e indicação.
 //
-// Tudo aqui é dirigido pela configuração DA BARBEARIA — nada de regra fixa no
+// Tudo aqui é dirigido pela configuração DA BARBEARIA, nada de regra fixa no
 // código. O programa de pontos antigo tinha as faixas cravadas (501/1501), o
 // que obrigava toda barbearia a usar o mesmo desenho; agora cada uma calibra
 // o seu, liga o que quiser e desliga o resto.
@@ -59,7 +59,7 @@ export async function addStampForAppointment(appointmentId: string): Promise<voi
   if (!cfg?.stampEnabled || cfg.stampGoal < 1) return;
 
   // Reaproveita o registro de pontos como marca de "este atendimento já foi
-  // processado" — ele é criado na mesma transição e é único por atendimento.
+  // processado", ele é criado na mesma transição e é único por atendimento.
   const card = await prisma.stampCard.upsert({
     where: { userId_barbershopId: { userId: appt.clientId, barbershopId: appt.barbershopId } },
     create: { userId: appt.clientId, barbershopId: appt.barbershopId, stamps: 1 },
@@ -75,7 +75,7 @@ export async function addStampForAppointment(appointmentId: string): Promise<voi
     await prisma.loyaltyReward.create({
       data: { userId: appt.clientId, barbershopId: appt.barbershopId, source: "STAMP_CARD", label: cfg.stampRewardLabel },
     });
-    // Aviso transacional: ele CONQUISTOU algo, não é oferta — por isso vai
+    // Aviso transacional: ele CONQUISTOU algo, não é oferta, por isso vai
     // mesmo sem aceite de marketing.
     await notifyClient(
       appt.barbershopId, appt.clientId, "APPOINTMENT_COMPLETED",
@@ -111,7 +111,7 @@ export async function referralCodeFor(userId: string, barbershopId: string): Pro
   return code;
 }
 
-/** Amigo entra usando o código. Ainda NÃO premia — só vincula. */
+/** Amigo entra usando o código. Ainda NÃO premia, só vincula. */
 export async function attachReferral(code: string, friendId: string, barbershopId: string): Promise<{ ok: boolean; message: string }> {
   const cfg = await loyaltyConfig(barbershopId);
   if (!cfg?.referralEnabled) return { ok: false, message: "Esta barbearia não tem programa de indicação." };
@@ -121,7 +121,7 @@ export async function attachReferral(code: string, friendId: string, barbershopI
   if (referral.referrerId === friendId) return { ok: false, message: "Você não pode usar o seu próprio código." };
   if (referral.friendId) return { ok: false, message: "Este código já foi usado." };
 
-  // Quem já é cliente da casa não vale como indicação — senão o programa vira
+  // Quem já é cliente da casa não vale como indicação, senão o programa vira
   // desconto para a base existente em vez de trazer gente nova.
   const alreadyClient = await prisma.appointment.findFirst({
     where: { clientId: friendId, barbershopId, status: "COMPLETED" },
@@ -181,7 +181,7 @@ export async function clientLoyaltyStatus(userId: string, barbershopId: string) 
     tier: account?.tier ?? "BRONZE",
     // As faixas vêm junto para o app poder mostrar QUANTO FALTA para a
     // próxima. Sem elas o cliente só vê um número solto, e é a distância até
-    // o próximo nível que faz ele querer voltar — não o saldo em si.
+    // o próximo nível que faz ele querer voltar, não o saldo em si.
     silverThreshold: cfg?.silverThreshold ?? 0,
     goldThreshold: cfg?.goldThreshold ?? 0,
     stampEnabled: cfg?.stampEnabled ?? false,

@@ -141,7 +141,7 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
               ]);
             }
             // Tipo explicito: sem ele a lista vira List<dynamic>, e somar campo
-            // dynamic devolve num — o analyze passa e o compilador do web quebra.
+            // dynamic devolve num, o analyze passa e o compilador do web quebra.
             final staff = <GestorStaff>[...(snapshot.data ?? [])]..sort((a, b) => b.monthRevenue.compareTo(a.monthRevenue));
 
             // Mesma leitura do painel web: o mes primeiro (e assim que comissao
@@ -368,7 +368,7 @@ String _money(double v) {
 }
 
 // Célula de estatística: valor em destaque, rótulo discreto embaixo. Sem caixa
-// colorida nem ícone — três delas numa linha, separadas por um fio fino.
+// colorida nem ícone, três delas numa linha, separadas por um fio fino.
 
 const _cargos = {'BARBER': 'Barbeiro', 'MANAGER': 'Gerente', 'OWNER': 'Dono', 'ASSISTANT': 'Auxiliar'};
 String _rotuloCargo(String c) => _cargos[c.toUpperCase()] ?? c;

@@ -3,8 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { redeemReward } from "@/lib/loyalty/engine";
 
-// GET  /api/loyalty/rewards — prêmios a resgatar na barbearia (fila do balcão)
-// POST /api/loyalty/rewards { rewardId } — gestor baixa o prêmio
+// GET  /api/loyalty/rewards, prêmios a resgatar na barbearia (fila do balcão)
+// POST /api/loyalty/rewards { rewardId }, gestor baixa o prêmio
 export async function GET() {
   const session = await requireBarbershopSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

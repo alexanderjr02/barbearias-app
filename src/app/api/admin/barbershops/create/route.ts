@@ -7,7 +7,7 @@ import { logAdminAction } from "@/lib/audit";
 import { PLANS, type PlatformPlan } from "@/lib/billing";
 import { nameSchema, emailSchema, phoneSchema, slugSchema, cnpjSchema, optionalStateSchema } from "@/lib/validation";
 
-// POST /api/admin/barbershops/create — o admin cadastra uma barbearia inteira.
+// POST /api/admin/barbershops/create, o admin cadastra uma barbearia inteira.
 //
 // Existe porque a venda real acontece fora do site: fecha-se no WhatsApp, num
 // evento, num piloto. Sem isto o único caminho de entrada é o autocadastro
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!body) return NextResponse.json({ error: "Corpo da requisição inválido" }, { status: 400 });
 
   // Mesmas regras do cadastro público. Barbearia criada pelo admin não pode
-  // ser barbearia com dado pior — senão a porta dos fundos vira o buraco por
+  // ser barbearia com dado pior, senão a porta dos fundos vira o buraco por
   // onde entra o que a porta da frente barra.
   const campos = {
     ownerName: nameSchema.safeParse(body.ownerName),

@@ -5,7 +5,7 @@ import { planHasAI } from "@/lib/billing";
 import { buildBriefing } from "@/lib/copilot/insights";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
 
-// GET /api/cron/daily-briefing?secret=CRON_SECRET — the proactive Copiloto.
+// GET /api/cron/daily-briefing?secret=CRON_SECRET, the proactive Copiloto.
 // Every morning it checks each Pro+ barbershop and, if there's something worth
 // acting on (sumidos, horários vazios, agendamentos a confirmar, estoque
 // baixo), drops a notification so the gestor doesn't even need to open the app.

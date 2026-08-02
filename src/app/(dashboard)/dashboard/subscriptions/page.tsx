@@ -84,7 +84,7 @@ function SubscriberAvatar({ name, url, size = 9 }: { name: string; url: string |
 
 // ROI = how many times over the plan already paid for itself in real
 // services delivered. This is the number that turns "just a subscriber
-// list" into something a gestor can act on — a client who never books is
+// list" into something a gestor can act on, a client who never books is
 // invisible risk, and this makes that risk visible before it churns.
 function roiBadge(sub: Subscriber): { label: string; cls: string; icon: typeof Flame } {
   const ratio = sub.totalPaid > 0 ? sub.valueConsumed / sub.totalPaid : 0;
@@ -192,7 +192,7 @@ export default function SubscriptionsPage() {
                 </div>
                 <h2 className="text-xl font-black text-white mb-2">Assinaturas recorrentes</h2>
                 <p className="text-zinc-400 text-sm mb-6">
-                  Ofereça planos de assinatura para seus clientes, com cobrança automática todo mês — como uma academia
+                  Ofereça planos de assinatura para seus clientes, com cobrança automática todo mês, como uma academia
                   ou o Netflix. Exclusivo do plano White Label.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
@@ -521,7 +521,7 @@ function SubscriberDetail({
             </span>
           </div>
 
-          {/* Usage / ROI — the differentiator: ties the subscription to what the client actually consumed */}
+          {/* Usage / ROI, the differentiator: ties the subscription to what the client actually consumed */}
           <div className={cn("rounded-2xl border p-4", roi.cls.includes("emerald") ? "border-emerald-500/20 bg-emerald-500/[0.04]" : roi.cls.includes("red") ? "border-red-500/20 bg-red-500/[0.04]" : "border-zinc-800 bg-zinc-950/40")}>
             <div className="flex items-center gap-2 mb-3">
               <RoiIcon className="w-4 h-4" style={{ color: roi.cls.includes("emerald") ? "#34D399" : roi.cls.includes("red") || roi.cls.includes("amber") ? "#FBBF66" : "#A1A1AA" }} />

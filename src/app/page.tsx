@@ -142,7 +142,7 @@ const RECURSOS = [
 ];
 
 // A conta é o argumento da assinatura. Dono de barbearia não compra "receita
-// recorrente" — compra saber quanto cai na conta no dia 1º sem ninguém sentar
+// recorrente", compra saber quanto cai na conta no dia 1º sem ninguém sentar
 // na cadeira. Números de exemplo, e a seção diz isso na cara.
 const CONTA = [
   { rotulo: "Assinantes", valor: "40" },
@@ -222,7 +222,7 @@ export default function Home() {
         <ScrollProgress />
       </header>
 
-      {/* Hero — o cartaz de abertura --------------------------------------- */}
+      {/* Hero, o cartaz de abertura --------------------------------------- */}
       <section className="px-4 pb-20 pt-28 sm:pt-32">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_.95fr]">
           <div>
@@ -288,7 +288,7 @@ export default function Home() {
 
           {/* Sem `justify-self`: um item de grid alinhado encolhe até o conteúdo,
               e aí o `absolute` do cartão passa a se medir pela largura do
-              celular em vez da coluna — o cartão cobria o aparelho inteiro. */}
+              celular em vez da coluna, o cartão cobria o aparelho inteiro. */}
           <Reveal delay={200}>
             <div className="relative mx-auto w-full max-w-sm lg:max-w-none">
               <div className="mx-auto w-[248px] rounded-[2.2rem] border-[10px] border-grafite bg-carvao shadow-2xl shadow-black/70 sm:w-[276px] lg:mr-2">
@@ -323,7 +323,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Carrossel de cartazes — o formato dos anúncios, arrastável --------- */}
+      {/* Carrossel de cartazes, o formato dos anúncios, arrastável --------- */}
       <section className="py-24">
         <div className="mx-auto mb-12 max-w-6xl px-4">
           <Reveal>
@@ -462,7 +462,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Recorrência — painel amarelo --------------------------------------- */}
+      {/* Recorrência, painel amarelo --------------------------------------- */}
       <section className="bg-painel-ouro px-4 py-24 text-preto">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <Reveal>
@@ -525,7 +525,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Como começa — sequência de verdade, por isso numerada -------------- */}
+      {/* Como começa, sequência de verdade, por isso numerada -------------- */}
       <section className="px-4 py-24">
         <div className="mx-auto max-w-6xl">
           <Reveal>
@@ -550,7 +550,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Planos — painel amarelo, a decisão --------------------------------- */}
+      {/* Planos, painel amarelo, a decisão --------------------------------- */}
       <section id="planos" className="scroll-mt-20 bg-painel-ouro px-4 py-24 text-preto">
         <div className="mx-auto max-w-6xl">
           <Reveal>

@@ -29,7 +29,7 @@ const QUICK_LINKS = [
   { label: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
-// Cmd/Ctrl+K command palette — the Topbar search input (previously
+// Cmd/Ctrl+K command palette, the Topbar search input (previously
 // decorative) opens this, and it's also reachable from anywhere via the
 // keyboard shortcut. Searches real data (clients/services/staff, all scoped
 // to the barbershop) through /api/search, plus static quick-nav links.
@@ -38,7 +38,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Clear the previous search as soon as the palette opens again — adjusted
+  // Clear the previous search as soon as the palette opens again, adjusted
   // during render (not an effect) since it only reacts to the `open` prop
   // flipping, not to any value that needs to be read after paint.
   const [wasOpen, setWasOpen] = useState(open);

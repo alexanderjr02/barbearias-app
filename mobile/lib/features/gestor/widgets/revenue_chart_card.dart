@@ -127,7 +127,7 @@ class _RevenueChartCardState extends State<RevenueChartCard> {
                                     if (i < 0 || i >= series.length) return const SizedBox.shrink();
                                     // No mês são ~30 pontos: escrever todos vira
                                     // borrão. Mostra no máximo 7, sempre incluindo
-                                    // o último — é o dia de hoje.
+                                    // o último, é o dia de hoje.
                                     final passo = (series.length / 7).ceil();
                                     final ultimo = series.length - 1;
                                     if (passo > 1 && i != ultimo && (ultimo - i) % passo != 0) {

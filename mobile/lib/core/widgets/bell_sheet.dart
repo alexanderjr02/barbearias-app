@@ -11,7 +11,7 @@ const _notifIcon = {
   'APPOINTMENT_COMPLETED': Icons.content_cut_rounded,
 };
 
-/// Combined bell dropdown — mirrors the web Topbar's two-tab bell (Avisos /
+/// Combined bell dropdown, mirrors the web Topbar's two-tab bell (Avisos /
 /// Notificações). Shared by every role that has both: gestor and barbeiro.
 /// Takes plain callbacks instead of a concrete repository type so it isn't
 /// tied to GestorRepository specifically.

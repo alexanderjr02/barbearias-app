@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { hashToken } from "./refreshToken";
 
-// 1 hour — long enough to check email and click, short enough to limit the
+// 1 hour, long enough to check email and click, short enough to limit the
 // window if the link is ever intercepted.
 export const PASSWORD_RESET_TTL = 60 * 60; // seconds
 

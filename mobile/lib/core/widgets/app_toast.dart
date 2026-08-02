@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 const _emerald = Color(0xFF34D399);
 
 /// Consistent feedback for every create/edit/delete action across the
-/// gestor app — replaces the 20+ ad-hoc `ScaffoldMessenger.showSnackBar`
+/// gestor app, replaces the 20+ ad-hoc `ScaffoldMessenger.showSnackBar`
 /// calls that used to be copy-pasted per screen with inconsistent styling.
 class AppToast {
   static void success(BuildContext context, String message) => _show(context, message, isError: false);

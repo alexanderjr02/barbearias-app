@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../gestor_repository.dart';
 
-/// "Primeiros passos" card — mirrors the web Dashboard's OnboardingChecklist,
+/// "Primeiros passos" card, mirrors the web Dashboard's OnboardingChecklist,
 /// same 4 signals from /api/onboarding (has staff, has services, 1st
 /// appointment, 1st completed). Hidden once all steps are done or dismissed.
 class OnboardingChecklistCard extends StatefulWidget {
@@ -28,7 +28,7 @@ class _OnboardingChecklistCardState extends State<OnboardingChecklistCard> {
       final status = await _repository.onboardingStatus();
       if (mounted) setState(() => _status = status);
     } catch (_) {
-      // Non-critical — the card simply doesn't show if this fails.
+      // Non-critical, the card simply doesn't show if this fails.
     }
   }
 

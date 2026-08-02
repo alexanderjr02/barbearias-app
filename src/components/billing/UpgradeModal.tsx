@@ -46,7 +46,7 @@ const PLANS = [
     features: [
       "Tudo do Pro",
       "App próprio com a sua marca (logo, cores e fundo)",
-      "App instalável — o link vira app no celular",
+      "App instalável, o link vira app no celular",
       "Nota fiscal automática (NFS-e)",
       "Multi-unidade / rede",
       "Marca 100% sua, sem rukz",
@@ -181,7 +181,7 @@ export function UpgradeModal({ open, onClose, defaultPlan = "PRO" }: Props) {
               <div className="flex items-center gap-3 p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <p className="text-xs text-zinc-400">
-                  Pagamento processado pelo <strong className="text-zinc-300">Mercado Pago</strong> — Pix, cartão ou boleto. Seus dados de cartão nunca passam pelo rukz.
+                  Pagamento processado pelo <strong className="text-zinc-300">Mercado Pago</strong>. Pix, cartão ou boleto. Seus dados de cartão nunca passam pelo rukz.
                 </p>
               </div>
 

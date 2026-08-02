@@ -154,7 +154,7 @@ export default function ServicesPage() {
           <div>
             <label className={labelCls}>Custo (R$)</label>
             <input name="cost" type="number" min={0} step="0.01" defaultValue={editing?.cost ?? 0} className={fieldCls} />
-            {/* Sem custo, o sistema só sabe faturamento — nunca lucro. */}
+            {/* Sem custo, o sistema só sabe faturamento, nunca lucro. */}
             <p className="text-[11px] text-zinc-600 mt-1">Produto gasto, lâmina, toalha. Destrava a margem real.</p>
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function ServicesPage() {
         }
       />
 
-      {/* Category filter — segmented control */}
+      {/* Category filter, segmented control */}
       <div className="flex items-center gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit overflow-x-auto max-w-full">
         <button
           onClick={() => setFilter("all")}

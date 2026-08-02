@@ -7,7 +7,7 @@ import { recordAiUsage } from "@/lib/ai/usage";
 import { readFile } from "fs/promises";
 import path from "path";
 
-// POST /api/barber/analyze-reference { imageUrl } — reads the client's
+// POST /api/barber/analyze-reference { imageUrl }, reads the client's
 // reference photo and returns a short technical brief for the barber (fade
 // type, lengths, technique, finish + rough time estimate). Needs an Anthropic
 // key; degrades gracefully to { available:false } when none is configured.

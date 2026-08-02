@@ -4,7 +4,7 @@ import { requireBarbershopSession } from "@/lib/apiAuth";
 
 // Editar e excluir um produto do estoque. Antes só existia criar e vender, então
 // um produto cadastrado errado (nome trocado, preço errado) ficava na lista pra
-// sempre — e a única saída era conviver com ele.
+// sempre, e a única saída era conviver com ele.
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireBarbershopSession();

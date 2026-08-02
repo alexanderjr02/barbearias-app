@@ -4,8 +4,8 @@ import { getSession } from "@/lib/auth";
 import { listUnits, primaryBarbershopId } from "@/lib/units";
 import { slugify } from "@/lib/utils";
 
-// GET /api/units — as unidades da rede do dono logado.
-// POST /api/units { name, city? } — abre uma nova unidade.
+// GET /api/units, as unidades da rede do dono logado.
+// POST /api/units { name, city? }, abre uma nova unidade.
 //
 // Multi-unidade é do plano White Label: a unidade primária carrega o preço
 // base e cada unidade extra é cobrada à parte.
@@ -18,7 +18,7 @@ export async function GET() {
   return NextResponse.json({ units, canAddUnit: await canAddUnit(session.sub) });
 }
 
-/** Só o White Label abre unidades — checa o plano da unidade primária. */
+/** Só o White Label abre unidades, checa o plano da unidade primária. */
 async function canAddUnit(ownerId: string): Promise<boolean> {
   const primaryId = await primaryBarbershopId(ownerId);
   if (!primaryId) return false;
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       slug,
       city,
       ownerId: session.sub,
-      // A unidade nova herda o plano e a identidade visual da rede — senão ela
+      // A unidade nova herda o plano e a identidade visual da rede, senão ela
       // nasceria no Essencial e o dono perderia a IA e a marca dentro da
       // própria rede que ele já paga.
       plan: primary.plan,

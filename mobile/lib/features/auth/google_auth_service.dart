@@ -1,7 +1,7 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
 /// Thin wrapper around google_sign_in's v7 API (initialize once, then
-/// authenticate()) — isolates the login screen from that API's shape so a
+/// authenticate()), isolates the login screen from that API's shape so a
 /// future google_sign_in major version only touches this file.
 ///
 /// Needs real setup to actually work, none of which this code can provide:

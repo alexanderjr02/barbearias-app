@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// GET /api/tips/payouts — quanto a barbearia deve de gorjeta a cada barbeiro.
+// GET /api/tips/payouts, quanto a barbearia deve de gorjeta a cada barbeiro.
 //
 // Gorjeta NÃO é receita da barbearia: é dinheiro do barbeiro que passou pela
 // conta dela. Por isso não entra no faturamento (inflaria lucro e margem com
@@ -58,7 +58,7 @@ export async function GET() {
     const entry = byStaff.get(key)!;
 
     if (t.paidToBarber) {
-      // Nunca passou pela loja — aparece só como informação de quanto o
+      // Nunca passou pela loja, aparece só como informação de quanto o
       // barbeiro já ganhou, nunca como dívida.
       entry.directToBarber += t.amount;
       continue;
@@ -86,7 +86,7 @@ export async function GET() {
   return NextResponse.json({ staff, totalPending });
 }
 
-// POST /api/tips/payouts { staffId } — marca como repassadas todas as gorjetas
+// POST /api/tips/payouts { staffId }, marca como repassadas todas as gorjetas
 // pendentes daquele barbeiro.
 //
 // Quita por barbeiro e não por gorjeta porque é assim que o repasse acontece

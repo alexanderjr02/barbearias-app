@@ -3,7 +3,7 @@ import { startOfUtcDay, addUtcDays, startOfUtcMonth } from "@/lib/dateRange";
 import { buildDaySlots, shopNow } from "@/lib/scheduling";
 
 // The deterministic business-intelligence layer behind the Copiloto. Every
-// function here works with ZERO AI — it's plain queries over the shop's own
+// function here works with ZERO AI, it's plain queries over the shop's own
 // data. The AI copilot (chatbot/copilot.ts) simply wraps these as tools, and
 // the briefing endpoint composes them. This keeps the whole feature usable and
 // testable before any Anthropic key is configured.
@@ -233,7 +233,7 @@ export async function noShowRisk(barbershopId: string) {
     .sort((a, b) => b.pastNoShows - a.pastNoShows);
 }
 
-/** Clients overdue vs their own visit cadence — about to lapse (but not yet churned). */
+/** Clients overdue vs their own visit cadence, about to lapse (but not yet churned). */
 export async function churnRisk(barbershopId: string, limit = 15) {
   const startToday = startOfUtcDay(new Date());
   const appts = await prisma.appointment.findMany({
@@ -329,7 +329,7 @@ export async function goalProgress(barbershopId: string) {
   return { goal, revenue, percent: goal ? (revenue / goal) * 100 : null, daysLeft, neededPerDay: goal && daysLeft > 0 ? Math.max(0, (goal - revenue) / daysLeft) : null };
 }
 
-/** Composes the full gestor briefing — the proactive "bom dia" panel. */
+/** Composes the full gestor briefing, the proactive "bom dia" panel. */
 export async function buildBriefing(barbershopId: string) {
   const [revenue, churned, empty, stock, tomorrow] = await Promise.all([
     revenueSummary(barbershopId),
@@ -369,7 +369,7 @@ export async function buildBriefing(barbershopId: string) {
       kind: "churn",
       icon: "ghost",
       title: `${churned.length} clientes sumidos`,
-      body: `Não voltam há mais de 45 dias — cerca de ${money(potentialWinback)} parados. Quer chamar de volta?`,
+      body: `Não voltam há mais de 45 dias, cerca de ${money(potentialWinback)} parados. Quer chamar de volta?`,
       action: { id: "winback_churned", label: "Chamar de volta" },
       count: churned.length,
     });

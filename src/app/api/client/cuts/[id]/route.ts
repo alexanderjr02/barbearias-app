@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// DELETE /api/client/cuts/[id] — remove a photo from the client's passport.
+// DELETE /api/client/cuts/[id], remove a photo from the client's passport.
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

@@ -4,7 +4,7 @@ import { sendCtwaEvent } from "./metaCapi";
 
 // Bloco de origem que a Meta anexa à PRIMEIRA mensagem de uma conversa iniciada
 // por anúncio clique-pro-WhatsApp. Vem em value.messages[0].referral. O payload
-// inteiro já chega no webhook — só não era lido.
+// inteiro já chega no webhook, só não era lido.
 export interface WaReferral {
   source_type?: string;
   source_id?: string;
@@ -21,7 +21,7 @@ export interface WaReferral {
 // Atribuição de PRIMEIRO TOQUE + best-effort: na criação grava a origem; em
 // contatos seguintes só atualiza lastSeenAt. Exceção única: se o lead nasceu
 // UNKNOWN e depois chega um referral de anúncio, promovemos a origem (é o
-// primeiro sinal real de campanha) — nunca o contrário.
+// primeiro sinal real de campanha), nunca o contrário.
 export async function captureWhatsappLead(
   barbershopId: string,
   from: string,
@@ -76,7 +76,7 @@ export async function captureWhatsappLead(
 }
 
 // Classificador conservador de "como nos conheceu" a partir do texto da mensagem.
-// Só reage a sinais fortes — falso positivo aqui é raro e, no pior caso, só
+// Só reage a sinais fortes, falso positivo aqui é raro e, no pior caso, só
 // rotula um lead que estava "não identificado". Devolve o canal ou null.
 export function classifyOrigin(text: string): string | null {
   const t = text.toLowerCase();
@@ -91,7 +91,7 @@ export function classifyOrigin(text: string): string | null {
 // Recupera a origem de um lead ainda "não identificado" a partir do que o
 // cliente escreveu (resposta a "como nos conheceu?"). NUNCA sobrescreve uma
 // origem já conhecida (ex.: veio de anúncio). Devolve o canal atual do lead
-// (após eventual recuperação), ou null se não há lead — o webhook usa isso para
+// (após eventual recuperação), ou null se não há lead, o webhook usa isso para
 // decidir se o assistente deve perguntar.
 export async function recoverOriginFromText(barbershopId: string, from: string, text: string): Promise<string | null> {
   const key = phoneKey(from);
@@ -119,7 +119,7 @@ const WEEKLY_CHANNEL_LABEL: Record<string, string> = {
 };
 
 // Resumo de atribuição dos últimos 7 dias, para o relatório semanal do Copiloto
-// (#4). Só conta contatos com origem identificada — o "não identificado" não
+// (#4). Só conta contatos com origem identificada, o "não identificado" não
 // vira linha de marketing.
 export async function weeklyAttributionSummary(
   barbershopId: string,
@@ -150,7 +150,7 @@ export async function weeklyAttributionSummary(
   }
 }
 
-// Ordem do funil. Só avançamos PARA A FRENTE — reprocessar um agendamento não
+// Ordem do funil. Só avançamos PARA A FRENTE, reprocessar um agendamento não
 // pode fazer um lead que já compareceu voltar para "agendou".
 const STAGE_RANK: Record<string, number> = { NEW: 0, SCHEDULED: 1, SHOWED: 2, RETURNING: 3, LOST: 0 };
 
@@ -168,7 +168,7 @@ export function normalizeChannel(raw: string | null | undefined): string {
 // Avança o funil do lead quando o cliente agenda / comparece. É o que liga
 // "chegou um lead" a "esse lead virou dinheiro". Best-effort e idempotente:
 // - se o lead já existe (veio do WhatsApp), avança o stage e vincula o clientId;
-// - se NÃO existe (cliente que agendou sem nunca ter mandado mensagem — ex.:
+// - se NÃO existe (cliente que agendou sem nunca ter mandado mensagem, ex.:
 //   página pública), cria com origem UNKNOWN para o funil não ficar cego.
 export async function advanceLead(
   barbershopId: string,
@@ -232,7 +232,7 @@ export async function advanceLead(
   });
 
   // Onda 3: devolve o evento de conversão à Meta (CAPI), só para lead de anúncio
-  // (CTWA) com click id. Best-effort — inerte sem credenciais.
+  // (CTWA) com click id. Best-effort, inerte sem credenciais.
   if (existing.channel === "CTWA" && existing.ctwaClid) {
     await syncMetaConversions(existing.id, { value: extra?.value }).catch((e) =>
       console.error("[attribution] syncMetaConversions", e),

@@ -6,16 +6,16 @@ import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 import { getClientIp } from "@/lib/requestIp";
 
-// POST /api/admin/barbershops/[id]/reset-password — o admin define uma senha
+// POST /api/admin/barbershops/[id]/reset-password, o admin define uma senha
 // nova para o dono da barbearia e a devolve para repassar.
 //
 // Existe pelo caso que aconteceu com o próprio dono desta plataforma: o
 // gestor perde a senha, o e-mail de recuperação não chega, e não havia botão
-// nenhum — o suporte ficava sem resposta. Um painel administrativo que não
+// nenhum, o suporte ficava sem resposta. Um painel administrativo que não
 // consegue destravar o acesso de um cliente não está administrando nada.
 //
 // Não é "ver a senha": ninguém consegue ler a antiga, ela é hash. É definir
-// uma nova, o que fica registrado na auditoria com IP — e derruba as sessões
+// uma nova, o que fica registrado na auditoria com IP, e derruba as sessões
 // abertas, porque se a senha estava perdida, quem eventualmente estivesse
 // dentro não deveria continuar.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

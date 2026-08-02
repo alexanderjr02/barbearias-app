@@ -5,7 +5,7 @@ import { setAccessCookie } from "@/lib/sessionCookies";
 import { isSecureRequest, getClientIp } from "@/lib/requestIp";
 import { logAdminAction } from "@/lib/audit";
 
-// POST /api/admin/impersonate/stop — o caminho de volta.
+// POST /api/admin/impersonate/stop, o caminho de volta.
 //
 // Não exige sessão de admin (a sessão atual é a do gestor, por definição) —
 // exige que ela seja uma impersonação, o que só o servidor consegue afirmar,

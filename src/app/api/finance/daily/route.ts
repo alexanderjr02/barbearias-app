@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// Explicit row shapes — the libsql-adapter Prisma client is typed `any`, so we
+// Explicit row shapes, the libsql-adapter Prisma client is typed `any`, so we
 // annotate query results ourselves to keep the reducers type-safe.
 interface ApptRow { staffId: string | null; totalPrice: number; paymentMethod: string | null }
 interface StaffRow { id: string; name: string; commissionRate: number; avatar: string | null }
@@ -22,7 +22,7 @@ function methodLabel(raw: string | null): string {
   return raw;
 }
 
-// GET /api/finance/daily?date=YYYY-MM-DD (default today) — the "Caixa do Dia":
+// GET /api/finance/daily?date=YYYY-MM-DD (default today), the "Caixa do Dia":
 // everything a gestor needs to close the till: total, ticket médio, breakdown
 // by payment method, per-barber production + commission owed, manual in/out,
 // and how the day compares to the month's daily average.

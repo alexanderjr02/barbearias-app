@@ -1,10 +1,10 @@
 // Mercado Pago recurring subscriptions (Assinaturas / "preapproval"), called
-// via the REST API with fetch — no SDK dependency.
+// via the REST API with fetch, no SDK dependency.
 //
 // Configure via env:
-//   MERCADOPAGO_ACCESS_TOKEN — your production or test access token (starts
+//   MERCADOPAGO_ACCESS_TOKEN, your production or test access token (starts
 //                              with "APP_USR-" for prod, "TEST-" for sandbox).
-//   APP_URL                  — public base URL, used for back_url and the
+//   APP_URL                 , public base URL, used for back_url and the
 //                              webhook notification_url. Falls back to the
 //                              request origin when unset.
 //
@@ -96,7 +96,7 @@ export async function cancelSubscription(id: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Client memberships — charged with the BARBERSHOP's own token (money goes to
+// Client memberships, charged with the BARBERSHOP's own token (money goes to
 // the barbershop, not the platform). These take the token explicitly instead
 // of reading the platform env var.
 // ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ export interface PixResult {
   qrCodeBase64: string; // PNG image, base64
 }
 
-// Instant Pix charge — returns the QR code (image + copia-e-cola) the client
+// Instant Pix charge, returns the QR code (image + copia-e-cola) the client
 // pays right in the app.
 export async function createPixPayment(
   token: string,
@@ -146,7 +146,7 @@ export async function getPayment(token: string, id: string): Promise<{ status: s
   return { status: data.status, externalReference: data.external_reference ?? "" };
 }
 
-// Recurring monthly card charge (true "gym membership") — returns the hosted
+// Recurring monthly card charge (true "gym membership"), returns the hosted
 // checkout URL where the client authorizes their card.
 export async function createCardSubscription(
   token: string,

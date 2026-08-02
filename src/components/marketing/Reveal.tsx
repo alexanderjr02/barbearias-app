@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 // Fades + lifts its children into view the first time they enter the viewport.
 // Pure IntersectionObserver (no animation library) so it's cheap and reliable
-// on mobile Safari. Content is always in the DOM — if JS/observer never runs,
+// on mobile Safari. Content is always in the DOM, if JS/observer never runs,
 // the CSS fallback for reduced motion keeps it visible.
 export function Reveal({
   children,

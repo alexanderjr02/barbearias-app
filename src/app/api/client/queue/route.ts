@@ -6,7 +6,7 @@ import { shopNow } from "@/lib/scheduling";
 // Statuses that still hold a place in the day's line (not yet finished).
 const PENDING = ["SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS"];
 
-// GET /api/client/queue?appointmentId= — live queue info for the client's own
+// GET /api/client/queue?appointmentId=, live queue info for the client's own
 // appointment: how many people are ahead, a rough wait estimate, and the
 // current status (so the app can update itself without a manual refresh).
 export async function GET(request: NextRequest) {

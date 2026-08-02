@@ -60,15 +60,15 @@ const navGroups = [
   },
 ];
 
-// Platform-admin equivalent of components/layout/Sidebar.tsx — same
+// Platform-admin equivalent of components/layout/Sidebar.tsx, same
 // structural shape (fixed width, collapsible, logout).
 //
 // Paleta preto e branco, sem cor de marca: o /admin é ferramenta de operação,
 // não vitrine. Branco só onde há significado (o item ativo, a ação principal)
 // faz a hierarquia aparecer sozinha, e o contraste com o painel do gestor —
-// que é âmbar — continua evidente à distância, sem precisar de roxo.
+// que é âmbar, continua evidente à distância, sem precisar de roxo.
 //
-// Grupos marcados superAdminOnly somem para uma sessão SUPPORT_ADMIN — puro
+// Grupos marcados superAdminOnly somem para uma sessão SUPPORT_ADMIN, puro
 // conforto de interface, a fronteira real é o requireSuperAdminSession() vs
 // requireAnyAdminSession() de cada rota.
 export function AdminSidebar() {

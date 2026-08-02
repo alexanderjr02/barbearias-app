@@ -88,7 +88,7 @@ export function NewAppointmentModal({ open, onClose }: Props) {
   });
 
   // A previously picked time can become invalid after changing the barber
-  // or date (different hours, or the slot just got taken) — don't let a
+  // or date (different hours, or the slot just got taken), don't let a
   // stale selection silently carry through to submission. Adjusted during
   // render (not an effect) since it only reacts to these two values changing.
   const selectionKey = `${barber?.id ?? ""}|${date ? toDateKey(date) : ""}`;

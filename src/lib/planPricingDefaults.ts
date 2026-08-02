@@ -8,7 +8,7 @@
 // a plataforma faturava o preço velho em silêncio. Manter os dois lados
 // apontando para cá reduz a chance de a semente reintroduzir preço antigo.
 //
-// ATENÇÃO: alterar aqui NÃO muda uma instalação que já rodou o seed — as
+// ATENÇÃO: alterar aqui NÃO muda uma instalação que já rodou o seed, as
 // linhas de PlatformSetting existentes continuam valendo. Para valer, edite
 // em /admin/settings ou atualize as linhas do banco.
 export type PlanPricingDefaults = { price: number; appointmentsLimit: number | null; staffLimit: number | null };

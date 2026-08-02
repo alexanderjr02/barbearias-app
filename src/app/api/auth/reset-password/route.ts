@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { resetPasswordSchema, firstFieldError } from "@/lib/validation";
 import { hashToken } from "@/lib/refreshToken";
 
-// POST /api/auth/reset-password — consumes the emailed token and sets a new
+// POST /api/auth/reset-password, consumes the emailed token and sets a new
 // password. The token is single-use (usedAt) and short-lived (expiresAt); we
 // look it up by hash, never by the raw value.
 export async function POST(request: NextRequest) {

@@ -215,7 +215,7 @@ class _FinalizeAppointmentScreenState extends State<FinalizeAppointmentScreen> {
           const SizedBox(height: 4),
           Text(
             _prefilled
-                ? 'Pré-carregada do último corte deste cliente — ajuste se mudou algo.'
+                ? 'Pré-carregada do último corte deste cliente, ajuste se mudou algo.'
                 : 'Anote como você fez, pra reproduzir igual na próxima.',
             style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.4),
           ),

@@ -52,7 +52,7 @@ export function slugify(text: string): string {
 
 // A plain top-level function (not inline in a component) so assigning
 // window.location.href doesn't read as "modifying a variable defined
-// outside the component" to the React Compiler's purity checks — used for
+// outside the component" to the React Compiler's purity checks, used for
 // post-auth redirects, which need a full page load (not router.push) so the
 // just-set session cookie is picked up fresh.
 export function redirectTo(url: string) {
@@ -60,7 +60,7 @@ export function redirectTo(url: string) {
 }
 
 // As-you-type Brazilian input masks. Each takes the raw user input, keeps
-// only the digits, and re-formats — safe to call on every keystroke.
+// only the digits, and re-formats, safe to call on every keystroke.
 export function formatPhoneBR(value: string): string {
   const d = value.replace(/\D/g, "").slice(0, 11);
   if (d.length <= 2) return d.replace(/^(\d{0,2})/, "($1");

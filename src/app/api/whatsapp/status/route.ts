@@ -3,10 +3,10 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { embeddedSignupConfigured } from "@/lib/whatsappConnect";
 
-// GET /api/whatsapp/status — estado da conexão de WhatsApp DESTA barbearia.
+// GET /api/whatsapp/status, estado da conexão de WhatsApp DESTA barbearia.
 //
 // Diz se está conectada, o número que aparece pro cliente, e se o botão de
-// conexão automática (Embedded Signup) está disponível — que depende da
+// conexão automática (Embedded Signup) está disponível, que depende da
 // plataforma já ter sido aprovada pela Meta (FACEBOOK_APP_ID/SECRET).
 export async function GET() {
   const session = await requireBarbershopSession();

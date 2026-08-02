@@ -10,7 +10,7 @@ import '../../core/utils/moeda.dart';
 
 // Atalhos do lançamento. Digitar categoria à mão toda vez, além de lento, gera
 // "Aluguel", "aluguel" e "ALUGUEL" como três categorias diferentes no relatório
-// — o toque padroniza a escrita sem tirar a liberdade de digitar outra.
+//, o toque padroniza a escrita sem tirar a liberdade de digitar outra.
 const _categoriasDespesa = [
   'Aluguel', 'Produtos', 'Salários', 'Comissões', 'Energia', 'Água',
   'Internet', 'Telefone', 'Marketing', 'Manutenção', 'Equipamentos',
@@ -432,7 +432,7 @@ class _Card extends StatelessWidget {
 }
 
 /// Linha de atalhos do formulário de lançamento: toque preenche o campo de
-/// texto logo abaixo. O campo continua editável — isto acelera o caso comum
+/// texto logo abaixo. O campo continua editável, isto acelera o caso comum
 /// sem fechar a porta para uma categoria própria.
 class _Sugestoes extends StatelessWidget {
   final List<String> opcoes;

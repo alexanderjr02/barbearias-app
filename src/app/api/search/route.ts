@@ -10,9 +10,9 @@ interface SearchResult {
   href: string;
 }
 
-// GET /api/search?q= — feeds the web command palette (Cmd/Ctrl+K). Busca
+// GET /api/search?q=, feeds the web command palette (Cmd/Ctrl+K). Busca
 // clientes com conta E clientes que só existem como agendamento (walk-in /
-// convidado) — os dois aparecem na tela de Clientes, então a busca precisa
+// convidado), os dois aparecem na tela de Clientes, então a busca precisa
 // achar os dois. Também busca serviços e equipe. Tudo escopado à barbearia.
 export async function GET(request: NextRequest) {
   const session = await requireBarbershopSession();
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }),
     // Clientes que existem SÓ como agendamento (walk-in / convidado, sem conta).
     // A tela de Clientes já mostra estes; a busca global precisava mostrar também
-    // — senão um cliente visível na lista "não é encontrado" pela busca (o bug
+    //, senão um cliente visível na lista "não é encontrado" pela busca (o bug
     // confirmado na auditoria).
     prisma.appointment.findMany({
       where: {

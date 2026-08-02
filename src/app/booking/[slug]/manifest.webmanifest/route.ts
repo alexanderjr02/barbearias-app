@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 // Manifest PWA POR BARBEARIA. O manifest fixo em /public/manifest.json diz
-// "rukz" — então o cliente White Label, que paga justamente para NÃO ver a
+// "rukz", então o cliente White Label, que paga justamente para NÃO ver a
 // nossa marca, instalava um app chamado rukz na tela dele. Aqui cada
 // barbearia ganha o seu, com nome, ícone e cor dela.
 //
@@ -25,7 +25,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ slug: stri
   const start = `/booking/${slug}`;
 
   // Se a barbearia subiu um logo, ele vira o ícone do app. Sem logo, usamos um
-  // ícone GERADO com as iniciais e a cor dela — nunca os ícones padrão, que
+  // ícone GERADO com as iniciais e a cor dela, nunca os ícones padrão, que
   // têm a marca rukz e apareceriam justamente para o cliente White Label que
   // ainda não subiu logo.
   const generated = { src: `/booking/${slug}/icon.svg`, sizes: "any", type: "image/svg+xml" };
@@ -40,7 +40,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ slug: stri
       ];
 
   const manifest = {
-    name: isWhiteLabel ? shop.name : `${shop.name} — rukz`,
+    name: isWhiteLabel ? shop.name : `${shop.name}, rukz`,
     short_name: shop.name.slice(0, 12),
     description: shop.description || `Agende seu horário na ${shop.name}.`,
     // Escopo preso à página da barbearia: o app instalado abre direto nela e

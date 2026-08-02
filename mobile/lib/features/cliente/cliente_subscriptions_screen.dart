@@ -30,7 +30,7 @@ String _formatDate(String iso) {
 }
 
 /// Entry point: a client may have booked at more than one barbershop, so this
-/// resolves which shop(s) to offer subscriptions for — straight to the plans
+/// resolves which shop(s) to offer subscriptions for, straight to the plans
 /// if there's just one, a picker if there's more.
 class ClientSubscriptionsScreen extends StatefulWidget {
   const ClientSubscriptionsScreen({super.key});
@@ -302,7 +302,7 @@ class _BarbershopPlansBodyState extends State<_BarbershopPlansBody> {
 
 /// Payment step: Pix (decorative QR, matches the "no real gateway" pattern
 /// used everywhere else in the app) or credit card (Luhn-validated, same
-/// spirit as the web's plan-upgrade checkout) — then a success state.
+/// spirit as the web's plan-upgrade checkout), then a success state.
 class _SubscribeSheet extends StatefulWidget {
   final ClientSubscriptionPlan plan;
   final ClientSubscriptionRepository repository;
@@ -326,7 +326,7 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
   @override
   void initState() {
     super.initState();
-    // Começa na primeira forma que o plano REALMENTE aceita — num plano só de
+    // Começa na primeira forma que o plano REALMENTE aceita, num plano só de
     // cartão, o padrão 'PIX' deixaria o cliente com nada selecionado e o botão
     // gerando uma cobrança que a barbearia não recebe.
     if (!widget.plan.paymentMethods.contains(_method) && widget.plan.paymentMethods.isNotEmpty) {
@@ -387,7 +387,7 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
           setState(() => _error = 'O pagamento não foi concluído. Tente novamente.');
         }
       } catch (_) {
-        // transient — keep polling
+        // transient, keep polling
       }
     });
   }
@@ -433,7 +433,7 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
               Text(
                 _method == 'PIX'
                     ? 'Você recebe um QR Code Pix para pagar agora.'
-                    : 'Cobrança mensal automática no cartão — cancele quando quiser.',
+                    : 'Cobrança mensal automática no cartão, cancele quando quiser.',
                 style: TextStyle(color: palette.textFaint, fontSize: 12),
               ),
               const FieldLabel('CPF (para o pagamento)'),
@@ -555,7 +555,7 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
   }
 }
 
-/// A real "membership card" instead of a settings-row box — gradient in the
+/// A real "membership card" instead of a settings-row box, gradient in the
 /// plan's own color, a card-chip decoration, and a watermark, so having a
 /// subscription feels like carrying a premium card, not a line in a list.
 class _MembershipCard extends StatelessWidget {
@@ -665,7 +665,7 @@ class _CardChip extends StatelessWidget {
 }
 
 /// What most subscription products never show: not "your billing status" but
-/// "what you actually got for your money" — visits taken, value received,
+/// "what you actually got for your money", visits taken, value received,
 /// and the running savings versus paying per visit, so the client sees the
 /// membership paying for itself instead of just being charged every month.
 class _UsageCard extends StatelessWidget {

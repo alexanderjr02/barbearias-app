@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 // POST /api/v1/push/unsubscribe
 //
 // Remove a assinatura de push deste aparelho (a pessoa desligou as
-// notificações). Apaga só a assinatura DELA — o filtro por userId impede que
+// notificações). Apaga só a assinatura DELA, o filtro por userId impede que
 // um endpoint chutado apague a inscrição de outra pessoa.
 export async function POST(request: NextRequest) {
   const session = await getSession();

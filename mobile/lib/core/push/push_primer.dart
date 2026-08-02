@@ -12,7 +12,7 @@ import 'push_service.dart';
 /// Notification.requestPermission() só funciona a partir de um toque e só pode
 /// ser pedido uma vez. Então mostramos primeiro esta folha; o pedido real do
 /// iOS só dispara quando a pessoa toca em "Ativar". Quem tocaria em "Agora não"
-/// não gasta a permissão — e pode ser convidado de novo pelo Perfil.
+/// não gasta a permissão, e pode ser convidado de novo pelo Perfil.
 class PushPrimer extends StatefulWidget {
   final Widget child;
   const PushPrimer({super.key, required this.child});
@@ -35,7 +35,7 @@ class _PushPrimerState extends State<PushPrimer> {
   Future<void> _maybePrompt() async {
     // Só quando dá para ativar de verdade e a pessoa ainda não decidiu.
     // 'granted'/'denied' já resolvidos, 'needs-install'/'unsupported' não têm
-    // como suceder aqui — o Perfil cuida desses casos com a explicação certa.
+    // como suceder aqui, o Perfil cuida desses casos com a explicação certa.
     if (pushStatus() != 'default') return;
 
     final prefs = await SharedPreferences.getInstance();

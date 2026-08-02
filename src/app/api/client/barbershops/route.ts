@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/client/barbershops — barbershops the logged-in client can book
+// GET /api/client/barbershops, barbershops the logged-in client can book
 // at: ones they were pre-registered at (BarbershopClient) plus ones from
 // their appointment history (in case they booked as a guest before linking).
 export async function GET() {

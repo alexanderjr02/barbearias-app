@@ -3,18 +3,18 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { verifyPhoneNumber, exchangeCodeForToken, embeddedSignupConfigured } from "@/lib/whatsappConnect";
 
-// POST /api/whatsapp/connect — conecta o WhatsApp DESTA barbearia. Dois modos:
+// POST /api/whatsapp/connect, conecta o WhatsApp DESTA barbearia. Dois modos:
 //
-//   mode:"manual"   — o gestor cola o token permanente e o phone_number_id
+//   mode:"manual"  , o gestor cola o token permanente e o phone_number_id
 //                     (ex.: do número de teste grátis da Meta). Testável JÁ.
-//   mode:"embedded" — fecha o Embedded Signup: recebe o `code` do SDK da Meta
+//   mode:"embedded", fecha o Embedded Signup: recebe o `code` do SDK da Meta
 //                     e o phone_number_id/wabaId, troca o code por token e
 //                     guarda. Só funciona depois da plataforma ser aprovada
-//                     como Tech Provider (FACEBOOK_APP_ID/SECRET) — senão
+//                     como Tech Provider (FACEBOOK_APP_ID/SECRET), senão
 //                     responde 501, sem quebrar.
 //
 // Em qualquer modo, as credenciais são VERIFICADAS contra a Meta antes de
-// salvar (pergunta o número legível) — nada de gravar token que não presta.
+// salvar (pergunta o número legível), nada de gravar token que não presta.
 export async function POST(request: NextRequest) {
   const session = await requireBarbershopSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   if (mode === "embedded") {
     if (!embeddedSignupConfigured()) {
       return NextResponse.json(
-        { error: "Conexão automática ainda não disponível — aguardando aprovação da sua plataforma pela Meta." },
+        { error: "Conexão automática ainda não disponível, aguardando aprovação da sua plataforma pela Meta." },
         { status: 501 }
       );
     }
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Verifica contra a Meta — confirma o par e já pega o número legível.
+  // Verifica contra a Meta, confirma o par e já pega o número legível.
   const check = await verifyPhoneNumber(accessToken, phoneNumberId);
   if (!check.ok) {
     return NextResponse.json({ error: `Não consegui validar na Meta: ${check.error}` }, { status: 400 });

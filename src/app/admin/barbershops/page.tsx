@@ -49,7 +49,7 @@ interface ListResponse {
 }
 
 // useSearchParams() opts this page out of static prerendering unless it's
-// wrapped in Suspense — without it, `next build` fails to prerender this page.
+// wrapped in Suspense, without it, `next build` fails to prerender this page.
 export default function AdminBarbershopsPage() {
   return (
     <Suspense fallback={null}>

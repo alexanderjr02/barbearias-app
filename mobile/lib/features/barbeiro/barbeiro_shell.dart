@@ -12,7 +12,7 @@ import 'client_ranking_screen.dart';
 import 'ganhos_screen.dart';
 
 /// Bottom-tab shell for the barbeiro role: Início / Agenda / Clientes /
-/// Ganhos / Perfil — same five-tab shape as the Gestor shell, scoped to
+/// Ganhos / Perfil, same five-tab shape as the Gestor shell, scoped to
 /// what a barber actually needs day to day.
 class BarbeiroShell extends StatefulWidget {
   const BarbeiroShell({super.key});

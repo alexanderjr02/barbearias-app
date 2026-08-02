@@ -11,7 +11,7 @@ const _dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 
 
 /// Real self-service autonomy for the barber over their own agenda: pick a
 /// custom weekly schedule (or follow the shop's default), and block one-off
-/// days (vacation, appointments, etc.) — no gestor needed. Mirrors the
+/// days (vacation, appointments, etc.), no gestor needed. Mirrors the
 /// "Horário" editor the gestor has for each barber on the web dashboard,
 /// backed by the exact same GET/PUT /staff/{id}/availability and
 /// GET/POST/DELETE /staff/{id}/time-off endpoints.
@@ -150,7 +150,7 @@ class _BarbeiroScheduleScreenState extends State<BarbeiroScheduleScreen> {
     }
   }
 
-  // StaffTimeOff.date is a UTC-midnight instant — format it in UTC so it
+  // StaffTimeOff.date is a UTC-midnight instant, format it in UTC so it
   // doesn't silently shift a day back for negative-offset timezones.
   String _formatBlockedDate(String iso) {
     final d = DateTime.parse(iso).toUtc();

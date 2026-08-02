@@ -11,7 +11,7 @@ import path from "path";
 
 const MODEL = process.env.CHATBOT_MODEL || "claude-opus-4-8";
 
-// POST /api/client/style-advisor { imageUrl, barbershopId } — the "provador de
+// POST /api/client/style-advisor { imageUrl, barbershopId }, the "provador de
 // corte": the client sends a selfie and the AI reads their face shape + hair
 // and recommends the cuts/beards that suit them, choosing from THIS shop's real
 // menu and inviting them to book. Pro+ + Anthropic key; degrades gracefully.
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     // O erro cru NÃO vai para a tela: quem lê isto é o cliente da barbearia.
     // A mensagem da Anthropic quando a conta fica sem crédito é literalmente
-    // "Your credit balance is too low..." — mostrar isso para o cliente final
+    // "Your credit balance is too low...", mostrar isso para o cliente final
     // expõe a situação de pagamento da plataforma numa tela de corte de
     // cabelo. O detalhe fica no log do servidor, onde é útil.
     console.error("[style-advisor] falhou:", e);

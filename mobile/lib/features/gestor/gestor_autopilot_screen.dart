@@ -4,7 +4,7 @@ import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
 import '../../core/utils/moeda.dart';
 
-/// Auto-piloto — the automations that run by themselves (via the daily cron):
+/// Auto-piloto, the automations that run by themselves (via the daily cron):
 /// auto-confirm tomorrow's appointments, birthday messages, and win-back of
 /// clients who just went quiet. The gestor flips them on/off here (or by
 /// talking to the Copiloto). Pro+ feature.

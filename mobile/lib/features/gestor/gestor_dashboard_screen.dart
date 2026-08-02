@@ -41,7 +41,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
       final list = await _repository.activeAnnouncements();
       if (mounted) setState(() => _announcements = list);
     } catch (_) {
-      // Non-critical — the bell just stays empty if this fails.
+      // Non-critical, the bell just stays empty if this fails.
     }
   }
 
@@ -50,7 +50,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
       final result = await _repository.notifications();
       if (mounted) setState(() => _unreadNotifications = result.unreadCount);
     } catch (_) {
-      // Non-critical — the bell just stays empty if this fails.
+      // Non-critical, the bell just stays empty if this fails.
     }
   }
 
@@ -66,7 +66,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
         NpsPromptSheet.show(context, repository: _repository);
       }
     } catch (_) {
-      // Non-critical — simply skip the prompt this session.
+      // Non-critical, simply skip the prompt this session.
     }
   }
 
@@ -222,7 +222,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      // HOJE — a primeira pergunta de todo dono: como esta o dia?
+                      // HOJE, a primeira pergunta de todo dono: como esta o dia?
                       // Ja entrou, ainda entra, e quanto da casa esta vendido.
                       RiseIn(
                         // IntrinsicHeight da altura da lista: sem ele, 'stretch'
@@ -263,7 +263,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Cadeira vazia e dinheiro que nao volta — por isso ocupacao
+                      // Cadeira vazia e dinheiro que nao volta, por isso ocupacao
                       // aparece junto do caixa, nao escondida num relatorio.
                       RiseIn(
                         delay: const Duration(milliseconds: 40),
@@ -312,7 +312,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // O MES — estou no caminho? Projecao pelo ritmo atual, e
+                      // O MES, estou no caminho? Projecao pelo ritmo atual, e
                       // comparacao com o MESMO DIA do mes passado: contra o mes
                       // fechado, todo dia 5 diria "caiu 60%".
                       RiseIn(
@@ -407,7 +407,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                                     border: Border.all(color: palette.border),
                                   ),
                                   child: Text(
-                                    'Sem meta definida. Com uma meta, esta faixa mostra quanto falta e se o ritmo atual chega lá — defina em Financeiro.',
+                                    'Sem meta definida. Com uma meta, esta faixa mostra quanto falta e se o ritmo atual chega lá. Defina em Financeiro.',
                                     style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.4),
                                   ),
                                 ),
@@ -417,7 +417,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                         ),
                       ),
 
-                      // PRECISA DE VOCE — o painel so serve se virar decisao. Some
+                      // PRECISA DE VOCE, o painel so serve se virar decisao. Some
                       // inteiro quando nao ha pendencia: painel que sempre alerta
                       // e painel que ninguem le.
                       if (s.unconfirmedToday > 0 || s.noShowsToday > 0 || s.lowStock.isNotEmpty) ...[
@@ -603,7 +603,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
   }
 }
 
-// Cartao do dia: numero grande, rotulo e nota curta. Sem icone — o rotulo ja
+// Cartao do dia: numero grande, rotulo e nota curta. Sem icone, o rotulo ja
 // diz o que e, e o icone so competia com o numero.
 class _CardDia extends StatelessWidget {
   final String rotulo;

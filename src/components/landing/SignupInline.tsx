@@ -18,7 +18,7 @@ import { Check, Loader2, ArrowRight } from "lucide-react";
  *
  * Os benefícios listados são os de verdade: saem de FEATURES_BY_PLAN
  * (src/context/PlanContext.tsx) e dos limites de DEFAULT_PLAN_PRICING. Se um
- * plano deixar de liberar algo lá, a lista aqui precisa mudar junto — prometer
+ * plano deixar de liberar algo lá, a lista aqui precisa mudar junto, prometer
  * na landing o que o sistema bloqueia depois é o jeito mais rápido de perder
  * um cliente que já pagou.
  */

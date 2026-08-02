@@ -77,7 +77,7 @@ class TipInfo {
   final String? pixKey;
   final bool hasTip;
   final double? amount;
-  /// True quando a chave é do próprio barbeiro — muda o rótulo mostrado, pra
+  /// True quando a chave é do próprio barbeiro, muda o rótulo mostrado, pra
   /// o cliente saber que o dinheiro não passa pelo caixa.
   final bool pixGoesToBarber;
 
@@ -152,7 +152,7 @@ class LoyaltyReward {
 }
 
 /// Carteira de fidelidade do cliente numa barbearia. Tudo aqui é ditado pela
-/// configuração do gestor — se ele desligou o cartão, stampEnabled vem false e
+/// configuração do gestor, se ele desligou o cartão, stampEnabled vem false e
 /// a seção nem aparece.
 class LoyaltyStatus {
   final bool pointsEnabled;
@@ -297,7 +297,7 @@ class ClientRepository {
   }
 
   /// Sends a message to the barbershop's virtual assistant. Returns the bot's
-  /// reply — AI-powered when the shop is on Pro+ and a key is configured on the
+  /// reply. AI-powered when the shop is on Pro+ and a key is configured on the
   /// server, otherwise the backend's canned answers.
   Future<String> chatbotSend({required String message, required String sessionId, required String barbershopId}) async {
     final data = await ApiClient.instance.post('/chatbot', data: {
@@ -308,14 +308,14 @@ class ClientRepository {
     return (data as Map<String, dynamic>)['response'] as String? ?? '';
   }
 
-  /// Personalized, logged-in client assistant — knows the client, remembers the
+  /// Personalized, logged-in client assistant, knows the client, remembers the
   /// conversation. Preferred over [chatbotSend] when the client is signed in.
   Future<String> clientChatSend({required String message, required String barbershopId}) async {
     final data = await ApiClient.instance.post('/client/chat', data: {'message': message, 'barbershopId': barbershopId});
     return (data as Map<String, dynamic>)['response'] as String? ?? '';
   }
 
-  /// The proactive opener — the "agente que se antecipa". When the client is
+  /// The proactive opener, the "agente que se antecipa". When the client is
   /// due for a cut it proposes the next slot (their usual). Empty string means
   /// "no proactive nudge" (fall back to the canned welcome).
   Future<({String greeting, bool proactive})> clientChatGreeting(String barbershopId) async {

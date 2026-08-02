@@ -1,6 +1,6 @@
 // Stub para plataformas sem navegador (build nativo). Push web não existe aqui.
 // Quando houver push nativo (APNs/FCM), é este arquivo que ganha uma
-// implementação de verdade — a UI não muda.
+// implementação de verdade, a UI não muda.
 
 String pushStatus() => 'unsupported';
 

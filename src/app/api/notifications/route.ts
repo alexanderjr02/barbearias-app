@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// GET /api/notifications — last 30 personal events for this barbershop
+// GET /api/notifications, last 30 personal events for this barbershop
 // (new booking, cancellation, support reply), plus the unread count used to
 // badge the bell alongside platform Avisos.
 export async function GET() {

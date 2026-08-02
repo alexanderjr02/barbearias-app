@@ -13,7 +13,7 @@ function getBotResponse(message: string): string {
     return "Ótimo! Para agendar, acesse nossa página de agendamento online ou me diga:\n\n• Qual serviço você deseja?\n• Qual dia e horário prefere?\n\nVou te ajudar a encontrar o melhor horário!";
   }
   if (lower.match(/serviço|serviços|preço|valor|quanto|corte|barba/)) {
-    return "Nossos serviços:\n\nCorte Simples — R$ 35 (30min)\nCorte Degradê — R$ 45 (45min)\nCorte + Barba — R$ 55 (60min)\nBarba Completa — R$ 25 (30min)\nTratamento Capilar — R$ 45 (60min)\n\nQual te interessa?";
+    return "Nossos serviços:\n\nCorte Simples. R$ 35 (30min)\nCorte Degradê. R$ 45 (45min)\nCorte + Barba. R$ 55 (60min)\nBarba Completa. R$ 25 (30min)\nTratamento Capilar. R$ 45 (60min)\n\nQual te interessa?";
   }
   if (lower.match(/horário|funciona|abre|fecha|quando/)) {
     return "Nosso funcionamento:\n\nSegunda a Sexta: 9h às 20h\nSábado: 9h às 18h\nDomingo: 10h às 16h\n\nTemos horários disponíveis hoje! Quer agendar?";
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Generate bot response — a real AI assistant (with tool use: booking,
+    // Generate bot response, a real AI assistant (with tool use: booking,
     // rescheduling, availability) when an Anthropic key is configured, else the
     // simple canned answers below.
     // The AI assistant is a paid feature (Pro+). On the Essencial tier the bot

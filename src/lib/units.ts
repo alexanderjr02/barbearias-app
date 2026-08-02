@@ -1,12 +1,12 @@
 import { prisma } from "./db";
 
 // Rede de unidades. Um dono (OWNER) pode ter várias barbearias; a sessão
-// carrega UMA delas por vez — a "unidade atual" do painel. Este módulo é a
+// carrega UMA delas por vez, a "unidade atual" do painel. Este módulo é a
 // única fonte de verdade sobre qual é essa unidade, para que login, refresh e
 // troca de unidade nunca discordem entre si.
 //
 // A rede é implícita: "as barbearias com o mesmo ownerId". Não há um modelo
-// Network separado de propósito — as 72 rotas já filtram por barbershopId, e
+// Network separado de propósito, as 72 rotas já filtram por barbershopId, e
 // um modelo a mais só adicionaria migração e risco sem mudar o comportamento.
 
 /** A unidade primária de um dono: a mais antiga. Carrega o preço-base do
@@ -23,7 +23,7 @@ export async function primaryBarbershopId(ownerId: string): Promise<string | nul
 /**
  * Resolve a unidade que a sessão deve usar para um dono.
  *
- * Sempre revalida que a unidade escolhida ainda pertence a ele — assim uma
+ * Sempre revalida que a unidade escolhida ainda pertence a ele, assim uma
  * unidade removida (ou um activeBarbershopId adulterado) cai de volta para a
  * primária em vez de vazar dados de outra rede.
  */
@@ -65,7 +65,7 @@ export async function listUnits(ownerId: string, currentBarbershopId: string | n
   }));
 }
 
-/** Quantas unidades o dono tem — base da cobrança por unidade adicional. */
+/** Quantas unidades o dono tem, base da cobrança por unidade adicional. */
 export async function countUnits(ownerId: string): Promise<number> {
   return prisma.barbershop.count({ where: { ownerId } });
 }

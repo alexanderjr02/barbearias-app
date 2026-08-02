@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// (see docs/api-v1.md in the main repo).
 ///
 /// flutter_secure_storage's web implementation needs a secure browsing
-/// context (HTTPS or localhost) — it throws on a plain http LAN address,
+/// context (HTTPS or localhost), it throws on a plain http LAN address,
 /// which is how this app gets tested on a phone before native builds exist.
 /// Native platforms (the real publish target) keep real secure storage; web
 /// falls back to SharedPreferences.
@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// store is hit constantly. On web that store has also shown itself to be
 /// occasionally slow/unreliable in practice, and a failure there must never
 /// take down an unrelated API call. So reads are served from an in-memory
-/// cache after the first successful (or failed) hydration — the persistent
+/// cache after the first successful (or failed) hydration, the persistent
 /// store is only touched once per app session, plus on explicit save/clear.
 class TokenStorage {
   TokenStorage._();
@@ -27,7 +27,7 @@ class TokenStorage {
   static const _refreshKey = 'rukz_refresh_token';
 
   // Chaves da marca antiga. Lidas UMA vez na hidratação e regravadas nas novas,
-  // pra quem já estava logado continuar logado depois do rebrand — sem isso, a
+  // pra quem já estava logado continuar logado depois do rebrand, sem isso, a
   // troca de nome de chave deslogaria todo mundo silenciosamente.
   static const _legacyAccessKey = 'cortix_access_token';
   static const _legacyRefreshKey = 'cortix_refresh_token';

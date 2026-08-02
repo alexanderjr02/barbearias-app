@@ -112,7 +112,7 @@ class BarbershopDetail {
 }
 
 /// One candidate appointment time, tagged with why it either is or isn't
-/// bookable — mirrors GET /appointments/slots on the backend, which is the
+/// bookable, mirrors GET /appointments/slots on the backend, which is the
 /// single source of truth for working hours, staff days off, and
 /// already-booked times (no more computing this client-side).
 class AppointmentSlot {

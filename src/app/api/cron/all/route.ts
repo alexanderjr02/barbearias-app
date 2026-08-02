@@ -13,7 +13,7 @@ import { cronSecretFrom } from "@/lib/cronAuth";
 // separados (é assim que o Render os chama, um por horário); esta rota só os
 // agrupa para caber num único gatilho.
 //
-// O relatório semanal só roda de fato às segundas — chamá-lo todo dia mandaria
+// O relatório semanal só roda de fato às segundas, chamá-lo todo dia mandaria
 // o resumo da semana sete vezes.
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;

@@ -9,7 +9,7 @@ const dayNamesShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const monthNamesShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 /// Step widgets shared by the gestor's and the barbeiro's own "Novo
-/// agendamento" wizards — the only difference between the two flows is
+/// agendamento" wizards, the only difference between the two flows is
 /// whether a staff-picking step is shown at all (the barbeiro's is always
 /// himself), everything else (service, date/time, client, confirmation) is
 /// identical UI and behavior.

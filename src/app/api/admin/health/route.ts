@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAnyAdminSession, denyAdmin } from "@/lib/apiAuth";
 
-// GET /api/admin/health — o que está de pé e o que está faltando configurar.
+// GET /api/admin/health, o que está de pé e o que está faltando configurar.
 //
 // Existe por um caso concreto: o e-mail deste sistema passou dias saindo pelo
 // remetente de teste da Resend, e isso só foi descoberto quando alguém
 // precisou de um link de recuperação que não chegou. Integração quebrada em
-// silêncio é a pior espécie — ela não avisa, e quando avisa é pelo cliente.
+// silêncio é a pior espécie, ela não avisa, e quando avisa é pelo cliente.
 //
 // Só reporta o que dá para afirmar sem chamar terceiros: presença de
 // credencial, estado do banco, e a última vez que o cron rodou. Não sai
@@ -59,9 +59,9 @@ export async function GET() {
     nome: "E-mail (Resend)",
     nivel: !temResend ? "faltando" : sandbox ? "atencao" : "ok",
     detalhe: !temResend
-      ? "RESEND_API_KEY não configurada — nenhum e-mail sai"
+      ? "RESEND_API_KEY não configurada, nenhum e-mail sai"
       : sandbox
-        ? `Saindo por remetente de teste (${from || "onboarding@resend.dev"}). Só chega no e-mail dono da conta Resend — cliente real NÃO recebe.`
+        ? `Saindo por remetente de teste (${from || "onboarding@resend.dev"}). Só chega no e-mail dono da conta Resend, cliente real NÃO recebe.`
         : `Remetente próprio: ${from}`,
     acao: sandbox ? "Verifique um domínio na Resend e ajuste EMAIL_FROM" : undefined,
   });
@@ -71,7 +71,7 @@ export async function GET() {
     nome: "IA (Anthropic)",
     nivel: process.env.ANTHROPIC_API_KEY ? "ok" : "atencao",
     detalhe: process.env.ANTHROPIC_API_KEY
-      ? "Chave configurada — o Copiloto responde de verdade"
+      ? "Chave configurada, o Copiloto responde de verdade"
       : "Sem chave: o Copiloto cai no modo simulado, sem quebrar",
     acao: process.env.ANTHROPIC_API_KEY ? undefined : "Configure ANTHROPIC_API_KEY com crédito",
   });
@@ -81,7 +81,7 @@ export async function GET() {
   itens.push({
     nome: "Notificações push",
     nivel: temPush ? "ok" : "faltando",
-    detalhe: temPush ? "Chaves VAPID configuradas" : "Sem chaves VAPID — nenhum push é entregue",
+    detalhe: temPush ? "Chaves VAPID configuradas" : "Sem chaves VAPID, nenhum push é entregue",
   });
 
   // --- WhatsApp ---
@@ -114,7 +114,7 @@ export async function GET() {
       horas === null
         ? "O Copiloto ainda não registrou nenhuma ação"
         : `Última ação há ${horas < 1 ? "menos de 1 hora" : `${Math.floor(horas)} hora(s)`}`,
-    acao: horas !== null && horas >= 48 ? "O cron roda 11h UTC — confira se está agendado" : undefined,
+    acao: horas !== null && horas >= 48 ? "O cron roda 11h UTC. Confira se está agendado" : undefined,
   });
 
   const resumo = {

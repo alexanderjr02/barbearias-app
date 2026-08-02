@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   // Only a 2FA-enabled account (opt-in, SUPER_ADMIN only today) ever reaches
-  // this second step — everyone else's login completes in one round trip.
+  // this second step, everyone else's login completes in one round trip.
   const [pendingToken, setPendingToken] = useState<string | null>(null);
   const [code, setCode] = useState("");
 
@@ -173,7 +173,7 @@ export default function LoginPage() {
         </Link>
       </p>
 
-      {/* Entrada social — o mesmo par do app: Google e Apple. Sempre visível.
+      {/* Entrada social, o mesmo par do app: Google e Apple. Sempre visível.
           O Google usa o fluxo oficial quando a chave (NEXT_PUBLIC_GOOGLE_CLIENT_ID)
           está configurada; sem ela, cai num botão-espelho que avisa em vez de
           renderizar nada. O Apple ainda não está ligado (nem no app), então
@@ -286,7 +286,7 @@ export default function LoginPage() {
 
 // O erro fica entre os campos e o botão, no caminho do olho de quem acabou de
 // clicar e voltou. `role="alert"` porque leitor de tela não vê texto vermelho
-// aparecer — precisa ouvir.
+// aparecer, precisa ouvir.
 function Erro({ mensagem }: { mensagem: string | null }) {
   if (!mensagem) return null;
   return (
@@ -315,7 +315,7 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-// A maçã da Apple, desenhada — mesma marca do botão do app. Herda a cor do
+// A maçã da Apple, desenhada, mesma marca do botão do app. Herda a cor do
 // texto (currentColor), então acompanha o tema do botão sem arquivo à parte.
 function AppleIcon({ className }: { className?: string }) {
   return (

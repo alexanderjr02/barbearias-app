@@ -13,7 +13,7 @@ interface ReviewRow {
   appointment: { service: { name: string } | null } | null;
 }
 
-// GET /api/reviews — the barbershop's client reviews (post-service ratings),
+// GET /api/reviews, the barbershop's client reviews (post-service ratings),
 // with overall and per-barber averages, for the gestor's "Avaliações" screen.
 export async function GET() {
   const session = await requireBarbershopSession();

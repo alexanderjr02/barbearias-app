@@ -9,7 +9,7 @@ const DB_STATUS: Record<InvoiceStatus, string> = {
   cancelled: "CANCELLED",
 };
 
-// POST /api/invoices/webhook — fiscal provider callback (Focus NFe posts here
+// POST /api/invoices/webhook, fiscal provider callback (Focus NFe posts here
 // when a nota changes state). We locate the invoice by our `ref` (= invoice id)
 // and re-fetch the authoritative status from the provider.
 export async function POST(request: NextRequest) {

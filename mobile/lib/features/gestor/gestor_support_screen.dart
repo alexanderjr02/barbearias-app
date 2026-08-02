@@ -12,7 +12,7 @@ const _statusColor = {
   'CLOSED': Color(0xFF9CA3AF),
 };
 
-/// Full ticket history — the destination behind "Ver histórico completo" in
+/// Full ticket history, the destination behind "Ver histórico completo" in
 /// [FloatingSupportButton] and behind the "Suporte" tile in "Mais", mirroring
 /// the web's /dashboard/support list page.
 class GestorSupportScreen extends StatefulWidget {

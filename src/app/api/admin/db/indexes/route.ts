@@ -3,17 +3,17 @@ import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 
-// GET/POST /api/admin/db/indexes — mostra e aplica os índices de escala.
+// GET/POST /api/admin/db/indexes, mostra e aplica os índices de escala.
 //
 // Por que isto é uma rota e não `prisma migrate deploy`: o datasource não tem
 // `url` (a conexão vem do adaptador libsql em runtime), então as ferramentas
 // de migração do Prisma não alcançam o Turso deste projeto. E as credenciais
-// de produção são marcadas como sensíveis na Vercel — nem aparecem num
+// de produção são marcadas como sensíveis na Vercel, nem aparecem num
 // `vercel env pull`. Quem tem acesso ao banco é a aplicação rodando. Então a
 // aplicação aplica.
 //
 // Seguro de repetir: todo comando é IF NOT EXISTS. Índice não altera nenhum
-// dado — só cria caminho de busca. Se algo der errado, `DROP INDEX <nome>`.
+// dado, só cria caminho de busca. Se algo der errado, `DROP INDEX <nome>`.
 export const maxDuration = 300;
 
 // Escolhidos a partir da contagem real de uso no `where` das consultas:
@@ -38,7 +38,7 @@ const INDEXES: { name: string; sql: string }[] = [
  * O segredo existe para o exato problema que travou esta migração: só o super
  * admin pode acionar, e ele perdeu a senha justo quando o e-mail de
  * recuperação parou de chegar. Mesma variável de
- * /api/admin/recovery/reset-link — uma chave de emergência, não duas. Sem
+ * /api/admin/recovery/reset-link, uma chave de emergência, não duas. Sem
  * `ADMIN_RECOVERY_SECRET` configurado, este caminho não existe e continua
  * valendo só a sessão.
  */
@@ -62,7 +62,7 @@ async function existingIndexes(): Promise<string[]> {
   return rows.map((r) => r.name);
 }
 
-/** Só mostra o estado — não altera nada. */
+/** Só mostra o estado, não altera nada. */
 export async function GET(request: NextRequest) {
   if (!(await autorizado(request))) return denyAdmin();
 

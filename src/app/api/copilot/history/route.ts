@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/copilot/history?conversationId= — messages of one conversation
+// GET /api/copilot/history?conversationId=, messages of one conversation
 // thread, so it picks up where it left off. Without conversationId, returns the
 // most recent thread's messages (continuity on open).
 export async function GET(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   });
 }
 
-// DELETE /api/copilot/history?conversationId= — deletes one conversation.
+// DELETE /api/copilot/history?conversationId=, deletes one conversation.
 export async function DELETE(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

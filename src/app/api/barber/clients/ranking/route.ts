@@ -12,7 +12,7 @@ interface RankingEntry {
   lastVisit: string;
 }
 
-// GET /api/barber/clients/ranking — the logged-in barber's own clients,
+// GET /api/barber/clients/ranking, the logged-in barber's own clients,
 // ranked by loyalty (completed visit count, tie-broken by amount spent).
 // Powers the "clientes fiéis" ranking shown on the barber's app home.
 export async function GET() {

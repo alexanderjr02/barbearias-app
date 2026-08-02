@@ -1,13 +1,13 @@
-// Transactional email sending — Resend by default (REST API, no SDK needed).
+// Transactional email sending. Resend by default (REST API, no SDK needed).
 //
 // Configure via env:
-//   RESEND_API_KEY   — your Resend API key (starts with "re_")
-//   EMAIL_FROM       — verified sender, e.g. "rukz <nao-responda@seudominio.com>"
-//   APP_URL          — optional base URL used to build links in emails; when
+//   RESEND_API_KEY  , your Resend API key (starts with "re_")
+//   EMAIL_FROM      , verified sender, e.g. "rukz <nao-responda@seudominio.com>"
+//   APP_URL         , optional base URL used to build links in emails; when
 //                      unset, routes fall back to the request's own origin.
 //
 // When RESEND_API_KEY is absent (local dev before credentials are wired), we
-// don't fail — we log the message (and any link) to the server console so the
+// don't fail, we log the message (and any link) to the server console so the
 // whole flow is testable immediately. Swapping providers later means changing
 // only this file.
 
@@ -22,7 +22,7 @@ const DEFAULT_FROM = "rukz <onboarding@resend.dev>";
 
 // Há provedor de e-mail configurado? Quem chama usa isto para distinguir
 // "não enviei porque falhou" de "não enviei porque ninguém ligou o e-mail
-// ainda" — a diferença entre um alerta perdido e um alerta que nunca teve
+// ainda", a diferença entre um alerta perdido e um alerta que nunca teve
 // para onde ir.
 export function isMailerConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
@@ -33,9 +33,9 @@ export async function sendMail({ to, subject, html, text }: SendMailInput): Prom
   const from = process.env.EMAIL_FROM || DEFAULT_FROM;
 
   if (!apiKey) {
-    // Dev fallback — no provider configured yet.
+    // Dev fallback, no provider configured yet.
     console.warn(
-      `[mailer] RESEND_API_KEY não configurado — e-mail NÃO enviado.\n` +
+      `[mailer] RESEND_API_KEY não configurado, e-mail NÃO enviado.\n` +
         `  Para: ${to}\n  Assunto: ${subject}\n\n${text}\n`
     );
     return;
@@ -60,7 +60,7 @@ export async function sendMail({ to, subject, html, text }: SendMailInput): Prom
   // um e-mail que nunca foi tentado: quem investiga fica sem saber se olha o
   // spam, o provedor ou o código. O id é o mesmo que aparece no painel da
   // Resend, então dá para seguir a entrega de ponta a ponta. Nunca registra o
-  // corpo — ele carrega link de redefinição de senha.
+  // corpo, ele carrega link de redefinição de senha.
   const { id } = ((await res.json().catch(() => ({}))) as { id?: string }) ?? {};
   console.log(`[mailer] enviado id=${id ?? "?"} de=${from} para=${to} assunto="${subject}"`);
 }
@@ -77,7 +77,7 @@ export function passwordResetEmail(name: string, resetUrl: string): { subject: s
     `Recebemos um pedido para redefinir a senha da sua conta rukz.\n` +
     `Abra o link abaixo para criar uma nova senha (válido por 1 hora):\n\n` +
     `${resetUrl}\n\n` +
-    `Se você não pediu isso, pode ignorar este e-mail — sua senha continua a mesma.\n\n` +
+    `Se você não pediu isso, pode ignorar este e-mail, sua senha continua a mesma.\n\n` +
     `Equipe rukz`;
 
   const html = `<!-- password reset -->
@@ -100,7 +100,7 @@ export function passwordResetEmail(name: string, resetUrl: string): { subject: s
       </p>
       <hr style="border:none;border-top:1px solid #27272a;margin:24px 0;"/>
       <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;">
-        Se você não solicitou a redefinição, ignore este e-mail — sua senha continua a mesma.
+        Se você não solicitou a redefinição, ignore este e-mail, sua senha continua a mesma.
       </p>
     </div>
   </div>
@@ -109,7 +109,7 @@ export function passwordResetEmail(name: string, resetUrl: string): { subject: s
   return { subject, html, text };
 }
 
-// Alerta operacional da PLATAFORMA para o dono do sistema (você) — cobrança
+// Alerta operacional da PLATAFORMA para o dono do sistema (você), cobrança
 // falhou, barbearia suspensa, login de IP novo, health score caindo. Não vai
 // para barbearia nem para cliente final.
 export function platformAlertEmail(

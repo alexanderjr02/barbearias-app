@@ -5,7 +5,7 @@ import { startOfUtcMonth, addUtcMonths } from "@/lib/dateRange";
 import { phoneKey } from "@/lib/phone";
 
 // Relatório de ATRIBUIÇÃO: de onde vieram os contatos, como avançaram no funil,
-// quanto geraram e — informando a verba — quanto custou cada cliente novo.
+// quanto geraram e, informando a verba, quanto custou cada cliente novo.
 // Endpoint SEPARADO do /dashboard/reports (operacional) de propósito.
 //
 // Coorte por MÊS de competência (capturedAt no mês); o funil conta quantos
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
   const { period, start, end } = monthBounds(request.nextUrl.searchParams.get("month"));
 
   // Blindagem: qualquer falha (client Prisma desatualizado, tabela ausente,
-  // query) devolve um relatório VAZIO em vez de 500 — a tela mostra o estado
+  // query) devolve um relatório VAZIO em vez de 500, a tela mostra o estado
   // "sem contatos" e o usuário nunca leva os toasts vermelhos de "erro na
   // requisição". Um relatório vazio é melhor que uma tela quebrada.
   try {
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       select: { channel: true, campaign: true, isNewClient: true, scheduledAt: true, showedAt: true, phoneKey: true },
     }),
     // TODAS as concluídas (sem filtro de data) para o LTV por campanha (#2); a
-    // receita do mês é derivada filtrando a data em memória — mesmo padrão do
+    // receita do mês é derivada filtrando a data em memória, mesmo padrão do
     // relatório operacional, que já carrega o histórico de agendamentos.
     prisma.appointment.findMany({
       where: { barbershopId, status: "COMPLETED" },
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       where: { barbershopId_period: { barbershopId, period } },
       select: { amount: true },
     }),
-    // Marca da barbearia — reaproveitada no PDF do relatório mensal.
+    // Marca da barbearia, reaproveitada no PDF do relatório mensal.
     prisma.barbershop.findUnique({
       where: { id: barbershopId },
       select: { name: true, logo: true, primaryColor: true },
@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => b.ltv - a.ltv)
     .slice(0, 12);
 
-  // Custo por resultado — só faz sentido com a verba informada.
+  // Custo por resultado, só faz sentido com a verba informada.
   const spend = spendRow?.amount ?? 0;
   const cost = {
     spend,

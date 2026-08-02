@@ -60,7 +60,7 @@ function monthLabelOf(period: string): string {
   return `${MONTH_NAMES[m - 1] ?? ""} ${y}`;
 }
 
-// Cor por canal — verde do WhatsApp para o anúncio (canal principal), cinza
+// Cor por canal, verde do WhatsApp para o anúncio (canal principal), cinza
 // neutro para "não identificado" (não competimos por atenção com o desconhecido).
 const CHANNEL_COLORS: Record<string, string> = {
   CTWA: "#25D366",
@@ -398,7 +398,7 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        {/* Verba investida — a agência informa (não vem do sistema) */}
+        {/* Verba investida, a agência informa (não vem do sistema) */}
         <div className="flex flex-wrap items-end gap-2 mb-6 bg-zinc-800/30 border border-zinc-800 rounded-xl p-3">
           <Wallet className="w-4 h-4 text-amber-400 mb-1.5" />
           <div>
@@ -471,11 +471,11 @@ export default function ReportsPage() {
           </div>
         )}
 
-        {/* Rodapé de honestidade — sempre visível */}
+        {/* Rodapé de honestidade, sempre visível */}
         <div className="mt-6 pt-4 border-t border-zinc-800 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-zinc-400 leading-relaxed">
-            <span className="text-amber-300 font-semibold">{attribution?.totals.unidentifiedPct ?? 0}%</span> dos contatos estão com <span className="text-zinc-300">origem não identificada</span> — e nunca os distribuímos entre as campanhas por estimativa. Um número honesto vale mais do que um número inflado.
+            <span className="text-amber-300 font-semibold">{attribution?.totals.unidentifiedPct ?? 0}%</span> dos contatos estão com <span className="text-zinc-300">origem não identificada</span>, e nunca os distribuímos entre as campanhas por estimativa. Um número honesto vale mais do que um número inflado.
           </p>
         </div>
       </div>
@@ -489,7 +489,7 @@ export default function ReportsPage() {
           ) : null}
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{attribution?.shop.name || "Barbearia"}</h1>
-            <p style={{ fontSize: 13, color: "#555", margin: 0 }}>Relatório de Marketing — {monthLabelOf(month)}</p>
+            <p style={{ fontSize: 13, color: "#555", margin: 0 }}>Relatório de Marketing, {monthLabelOf(month)}</p>
           </div>
         </div>
 
@@ -543,7 +543,7 @@ export default function ReportsPage() {
         </table>
 
         <p style={{ fontSize: 11, color: "#666", borderTop: "1px solid #ccc", paddingTop: 8 }}>
-          {attribution?.totals.unidentifiedPct ?? 0}% dos contatos estão com origem não identificada — e não foram distribuídos entre as campanhas por estimativa.
+          {attribution?.totals.unidentifiedPct ?? 0}% dos contatos estão com origem não identificada, e não foram distribuídos entre as campanhas por estimativa.
         </p>
       </div>
 

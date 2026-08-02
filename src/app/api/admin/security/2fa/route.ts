@@ -4,7 +4,7 @@ import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 import { generateSecret, buildOtpAuthUri, verifyCode } from "@/lib/twoFactor";
 
-// GET — current 2FA status for the logged-in admin.
+// GET, current 2FA status for the logged-in admin.
 export async function GET() {
   const session = await requireSuperAdminSession();
   if (!session) {
@@ -14,8 +14,8 @@ export async function GET() {
   return NextResponse.json({ enabled: user?.twoFactorEnabled ?? false });
 }
 
-// POST — starts enrollment: generates a secret and stores it (not yet
-// active — twoFactorEnabled stays false until PATCH confirms a real code),
+// POST, starts enrollment: generates a secret and stores it (not yet
+// active, twoFactorEnabled stays false until PATCH confirms a real code),
 // so the admin can scan/enter it into an authenticator app before it's live.
 export async function POST() {
   const session = await requireSuperAdminSession();
@@ -29,7 +29,7 @@ export async function POST() {
   return NextResponse.json({ secret, otpauthUri: buildOtpAuthUri(session.email, secret) });
 }
 
-// PATCH — confirms enrollment with a real code from the authenticator app.
+// PATCH, confirms enrollment with a real code from the authenticator app.
 export async function PATCH(request: NextRequest) {
   const session = await requireSuperAdminSession();
   if (!session) {
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest) {
   return NextResponse.json({ enabled: true });
 }
 
-// DELETE — disables 2FA for the logged-in admin.
+// DELETE, disables 2FA for the logged-in admin.
 export async function DELETE() {
   const session = await requireSuperAdminSession();
   if (!session) {

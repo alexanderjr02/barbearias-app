@@ -26,7 +26,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   // Grant a login to an existing profile-only staff member (never changes an
-  // existing login's email/password — use a dedicated flow for that later).
+  // existing login's email/password, use a dedicated flow for that later).
   let userId: string | undefined;
   if (!staff.userId && body.email && body.password) {
     if (body.password.length < 8) {

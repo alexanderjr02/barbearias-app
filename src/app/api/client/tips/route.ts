@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
 
-// GET /api/client/tips?appointmentId= — what the tip screen needs: the shop's
+// GET /api/client/tips?appointmentId=, what the tip screen needs: the shop's
 // PIX key, the barber's name, and whether a tip was already left.
 export async function GET(request: NextRequest) {
   const session = await getSession();
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   });
 }
 
-// POST /api/client/tips { appointmentId, amount } — record a digital tip. The
+// POST /api/client/tips { appointmentId, amount }, record a digital tip. The
 // money moves via the shop's PIX (outside the app); we only log the intent so
 // the barber sees it in Ganhos and can confirm receipt.
 export async function POST(request: NextRequest) {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   // Para onde o dinheiro foi decide se a barbearia deve algo. Se o barbeiro
   // tem chave própria, o cliente pagou direto a ele e a loja nunca viu esse
   // valor; senão caiu na chave da loja e vira repasse a pagar. Sem gravar
-  // isso na hora, depois não há como reconstruir — a chave do barbeiro pode
+  // isso na hora, depois não há como reconstruir, a chave do barbeiro pode
   // ser cadastrada ou removida a qualquer momento.
   const staff = await prisma.staff.findUnique({ where: { id: appt.staffId }, select: { pixKey: true } });
   const paidToBarber = !!staff?.pixKey;
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
     "NEW_APPOINTMENT",
     "Gorjeta recebida",
     paidToBarber
-      ? `${appt.clientName} deixou R$ ${amount.toFixed(2)} de gorjeta — foi direto para o barbeiro`
-      : `${appt.clientName} deixou R$ ${amount.toFixed(2)} de gorjeta — repassar ao barbeiro`,
+      ? `${appt.clientName} deixou R$ ${amount.toFixed(2)} de gorjeta, foi direto para o barbeiro`
+      : `${appt.clientName} deixou R$ ${amount.toFixed(2)} de gorjeta, repassar ao barbeiro`,
     "/dashboard"
   );
   return NextResponse.json(tip, { status: 201 });

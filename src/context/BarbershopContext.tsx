@@ -14,8 +14,8 @@ const BarbershopContext = createContext<BarbershopContextType>({
 });
 
 export function BarbershopProvider({ children }: { children: ReactNode }) {
-  // store.getCurrentShop() is safe to call on the server too — it's guarded
-  // internally and returns null when there's no window/localStorage — so a
+  // store.getCurrentShop() is safe to call on the server too, it's guarded
+  // internally and returns null when there's no window/localStorage, so a
   // lazy initializer reads it immediately instead of only after a mount effect.
   const [barbershop, setBarbershop] = useState<Barbershop | null>(() => store.getCurrentShop());
 

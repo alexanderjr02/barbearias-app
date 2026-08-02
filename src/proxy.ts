@@ -14,7 +14,7 @@ const CORS_HEADERS = {
 export async function proxy(request: NextRequest) {
   // /uploads/* are static files served from `public/`, but the Flutter app's
   // renderer fetches images via XHR (not a plain <img> tag) so the browser
-  // enforces CORS on them just like an API call — needs the same open policy
+  // enforces CORS on them just like an API call, needs the same open policy
   // as /api/v1 or every uploaded photo/logo/cover 404s from a LAN device.
   if (request.nextUrl.pathname.startsWith("/uploads")) {
     if (request.method === "OPTIONS") {
@@ -28,7 +28,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // /api/v1/* is a token-based API for the web app and the future Flutter
-  // client — CORS-enabled, and auth is enforced per-route (401 JSON), not
+  // client. CORS-enabled, and auth is enforced per-route (401 JSON), not
   // by redirecting to the login page like the dashboard/admin sections below.
   if (request.nextUrl.pathname.startsWith("/api/v1")) {
     if (request.method === "OPTIONS") {

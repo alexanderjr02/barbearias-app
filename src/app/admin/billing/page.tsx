@@ -134,7 +134,7 @@ export default function AdminBillingPage() {
   const total = invoiceList?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  // Real months keep `total`; forecast months only have `projected` — the
+  // Real months keep `total`; forecast months only have `projected`, the
   // last real month carries both so the dashed projection line visually
   // continues from the solid revenue line instead of leaving a gap.
   const revenueWithForecast = useMemo(() => {
@@ -155,7 +155,7 @@ export default function AdminBillingPage() {
       <PageHeader
         icon={CreditCard}
         title="Faturamento"
-        subtitle="Saúde financeira da plataforma — MRR, churn, projeção e faturas"
+        subtitle="Saúde financeira da plataforma. MRR, churn, projeção e faturas"
         accent="mono"
         action={
           <button onClick={runRenewals} disabled={running} className="flex items-center gap-2 px-3.5 py-2 bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-50">
@@ -232,7 +232,7 @@ export default function AdminBillingPage() {
             <div className="flex items-center justify-between mb-1">
               <h3 className="text-base font-bold text-white">Movimentação de MRR</h3>
             </div>
-            <p className="text-xs text-zinc-500 mb-5">Novo, expansão, contração e churn por mês — de onde vem o crescimento e onde está a perda</p>
+            <p className="text-xs text-zinc-500 mb-5">Novo, expansão, contração e churn por mês, de onde vem o crescimento e onde está a perda</p>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={movementData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -264,7 +264,7 @@ export default function AdminBillingPage() {
                 <span className="flex items-center gap-1.5 text-zinc-400"><span className="w-2.5 h-0.5 bg-white inline-block" style={{ borderTop: "1px dashed" }} /> Projeção</span>
               </div>
             </div>
-            <p className="text-xs text-zinc-500 mb-5">Últimos 12 meses reais + 3 meses projetados pela tendência recente — não é uma garantia, é uma estimativa simples.</p>
+            <p className="text-xs text-zinc-500 mb-5">Últimos 12 meses reais + 3 meses projetados pela tendência recente, não é uma garantia, é uma estimativa simples.</p>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={revenueWithForecast} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
                 <defs>

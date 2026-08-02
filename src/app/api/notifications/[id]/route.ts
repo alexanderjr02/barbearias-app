@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// PATCH /api/notifications/{id} — mark one notification as read.
+// PATCH /api/notifications/{id}, mark one notification as read.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireBarbershopSession();
   if (!session) {

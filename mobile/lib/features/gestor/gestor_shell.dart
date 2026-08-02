@@ -12,8 +12,8 @@ import 'gestor_more_screen.dart';
 import 'gestor_staff_screen.dart';
 
 /// Bottom-tab shell for OWNER/MANAGER on mobile: Dashboard / Agenda /
-/// Clientes / Equipe / Mais. The remaining web sidebar sections — Relatórios,
-/// Serviços, Estoque, Marketing and Configurações — live one level deeper,
+/// Clientes / Equipe / Mais. The remaining web sidebar sections. Relatórios,
+/// Serviços, Estoque, Marketing and Configurações, live one level deeper,
 /// linked from "Mais", to keep the bottom nav to five primary destinations.
 class GestorShell extends StatefulWidget {
   const GestorShell({super.key});

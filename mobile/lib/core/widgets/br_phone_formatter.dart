@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 
 /// Live-formats digits into "(XX) XXXXX-XXXX" (or the 8-digit landline
-/// variant) as the user types — small polish for any phone field in the app.
+/// variant) as the user types, small polish for any phone field in the app.
 class BrPhoneFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {

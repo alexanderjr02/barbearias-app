@@ -44,7 +44,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   });
 }
 
-// POST — admin reply. Replying auto-advances OPEN -> IN_PROGRESS.
+// POST, admin reply. Replying auto-advances OPEN -> IN_PROGRESS.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAnyAdminSession();
   if (!session) {
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   return NextResponse.json(message, { status: 201 });
 }
 
-// PATCH — admin can set any status.
+// PATCH, admin can set any status.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAnyAdminSession();
   if (!session) {

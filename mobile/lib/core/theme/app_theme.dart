@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Picks black or white for legible text over [background] — needed because
+/// Picks black or white for legible text over [background], needed because
 /// the brand accent is merchant-chosen (Configurações > Aparência) and can
 /// land anywhere from bright gold to pure black, so a hardcoded "always use
 /// black text on the accent" breaks the moment a shop picks a dark color.
@@ -18,7 +18,7 @@ const Color kDangerColor = Color(0xFFF2685C);
 const Color kWarningColor = Color(0xFFFBBF66);
 
 /// Shared status→color mapping for appointments (Gestor and Barbeiro agenda
-/// screens) — one minimal, semantic scale instead of a different hue per
+/// screens), one minimal, semantic scale instead of a different hue per
 /// status.
 Color appointmentStatusColor(String status, AppPalette palette) {
   switch (status) {
@@ -33,7 +33,7 @@ Color appointmentStatusColor(String status, AppPalette palette) {
 }
 
 /// Semantic colors every screen should pull from instead of hardcoding hex
-/// values — this is what makes the light/dark toggle actually work, rather
+/// values, this is what makes the light/dark toggle actually work, rather
 /// than just swapping the Scaffold background and leaving white-on-white
 /// text everywhere.
 class AppPalette {
@@ -73,7 +73,7 @@ class AppPalette {
 
   // Claro moderno: neutro e limpo, no lugar do bege amarelado de antes (que
   // dava cara datada). Fundo levemente frio, cartão branco puro, cinzas
-  // neutros e alto contraste no texto — o padrão de app premium (Apple, Linear)
+  // neutros e alto contraste no texto, o padrão de app premium (Apple, Linear)
   // em vez de "papel envelhecido".
   static const light = AppPalette(
     bg: Color(0xFFF4F4F6),
@@ -91,7 +91,7 @@ class AppPalette {
 
 /// Builds a full ThemeData for a given brand seed + brightness. Deliberately
 /// pins [ColorScheme.primary] to the exact seed instead of letting
-/// [ColorScheme.fromSeed] tonal-map it — Material 3's dark-mode tone curve
+/// [ColorScheme.fromSeed] tonal-map it. Material 3's dark-mode tone curve
 /// desaturates warm ambers into a washed-out pink, which read as a bug.
 ThemeData buildRukzTheme({required Color seed, required Brightness brightness}) {
   final isDark = brightness == Brightness.dark;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// PATCH /api/clients/{id} — sets a client's profile photo. Only works for
+// PATCH /api/clients/{id}, sets a client's profile photo. Only works for
 // clients with a linked User account (id is a userId, not a guest phone
 // number) who have at least one appointment at this barbershop.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

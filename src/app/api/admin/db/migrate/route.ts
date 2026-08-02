@@ -3,14 +3,14 @@ import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 
-// GET/POST /api/admin/db/migrate — aplica as mudancas de esquema pendentes.
+// GET/POST /api/admin/db/migrate, aplica as mudancas de esquema pendentes.
 //
 // Por que existe: o datasource nao tem `url` (a conexao vem do adaptador
 // libsql em runtime), entao `prisma migrate deploy` nao alcanca o Turso deste
 // projeto. Quem tem acesso ao banco de producao e a aplicacao rodando.
 //
 // Por que o SQL e escrito a mao e nao copiado do Prisma: para adicionar
-// coluna, o Prisma gera "RedefineTables" — cria uma tabela nova, copia tudo,
+// coluna, o Prisma gera "RedefineTables", cria uma tabela nova, copia tudo,
 // DROPA a original e renomeia. Num banco de producao isso e uma faca: se
 // falhar entre o DROP e o RENAME, a tabela sumiu. O SQLite aceita
 // `ALTER TABLE ADD COLUMN` para coluna nula ou com padrao, que e o caso aqui.
@@ -41,7 +41,7 @@ async function columnExists(table: string, column: string): Promise<boolean> {
 
 const STEPS: Step[] = [
   {
-    // Produtos de finalização e bebidas oferecidos pela barbearia — alimentam
+    // Produtos de finalização e bebidas oferecidos pela barbearia, alimentam
     // as preferências que o cliente escolhe ao agendar.
     name: "Barbershop.finishProducts",
     applied: () => columnExists("Barbershop", "finishProducts"),
@@ -116,7 +116,7 @@ const STEPS: Step[] = [
     ],
   },
   {
-    // Atribuicao de marketing (Onda 1). Tabela nova, puramente aditiva — o caso
+    // Atribuicao de marketing (Onda 1). Tabela nova, puramente aditiva, o caso
     // seguro: nao move nenhum dado existente. SQL identico a migration.sql.
     name: "Lead",
     applied: () => tableExists("Lead"),
@@ -151,7 +151,7 @@ const STEPS: Step[] = [
   },
   {
     // Onda 3: colunas de controle dos eventos ja devolvidos a Meta (CAPI).
-    // ADD COLUMN nulo e aditivo — nao move dado. Separado do CREATE acima para
+    // ADD COLUMN nulo e aditivo, nao move dado. Separado do CREATE acima para
     // funcionar mesmo se a tabela Lead ja tiver sido criada sem estas colunas.
     name: "Lead.metaScheduleSentAt",
     applied: () => columnExists("Lead", "metaScheduleSentAt"),

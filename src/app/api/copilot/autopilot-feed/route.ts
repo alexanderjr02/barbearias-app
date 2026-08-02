@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { startOfUtcMonth } from "@/lib/dateRange";
 
-// GET /api/copilot/autopilot-feed — the "o que o Copiloto fez por você" activity
+// GET /api/copilot/autopilot-feed, the "o que o Copiloto fez por você" activity
 // feed + the "receita recuperada" number (this month), the ROI proof.
 export async function GET() {
   const session = await requireBarbershopSession();

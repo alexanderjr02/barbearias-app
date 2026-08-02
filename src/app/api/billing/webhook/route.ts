@@ -4,7 +4,7 @@ import { recordPlanChangeInvoice, PLANS, type PlatformPlan } from "@/lib/billing
 import { getSubscription, decodeExternalReference } from "@/lib/mercadopago";
 
 // Mercado Pago pings this URL on subscription events. We NEVER trust the
-// payload's contents beyond the resource id — we re-fetch the subscription
+// payload's contents beyond the resource id, we re-fetch the subscription
 // straight from MP (authenticated with our token) to learn its real status
 // and which barbershop/plan it belongs to. So a forged request can't flip a
 // plan: the id has to map to a genuine preapproval in our own account.
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         data: { plan, mpPreapprovalId: sub.id, mpSubscriptionStatus: "authorized" },
       });
     } else if (sub.status === "cancelled" || sub.status === "paused") {
-      // Only downgrade if this is the barbershop's CURRENT subscription — an
+      // Only downgrade if this is the barbershop's CURRENT subscription, an
       // old, superseded preapproval being cancelled must not knock down a
       // newer active plan.
       if (shop.mpPreapprovalId === sub.id) {

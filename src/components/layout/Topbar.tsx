@@ -103,7 +103,7 @@ export function Topbar() {
 
   return (
     <>
-      {/* Rendered as a sibling, not a header child — backdrop-blur on <header> would
+      {/* Rendered as a sibling, not a header child, backdrop-blur on <header> would
           otherwise become the containing block for this modal's fixed positioning. */}
       <NewAppointmentModal open={newAptOpen} onClose={() => setNewAptOpen(false)} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />

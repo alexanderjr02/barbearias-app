@@ -4,7 +4,7 @@ import { forgotPasswordSchema, firstFieldError } from "@/lib/validation";
 import { generatePasswordResetToken } from "@/lib/passwordReset";
 import { sendMail, passwordResetEmail } from "@/lib/mailer";
 
-// POST /api/auth/forgot-password — kicks off the reset flow.
+// POST /api/auth/forgot-password, kicks off the reset flow.
 //
 // Always responds 200 with the same body whether or not the e-mail exists:
 // revealing "this e-mail has no account" would let anyone enumerate who's
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("[forgot-password]", error);
-    // Still return the generic success below — we don't want to leak whether
+    // Still return the generic success below, we don't want to leak whether
     // the failure was "no account" or "email provider down".
   }
 

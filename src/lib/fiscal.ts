@@ -2,7 +2,7 @@
 // of src/lib/payments.ts. A barbershop connects a fiscal integrator at deploy
 // time; until then invoices run in a simulated mode (see /api/invoices).
 //
-// Concrete integration: Focus NFe (https://focusnfe.com.br) — the most common
+// Concrete integration: Focus NFe (https://focusnfe.com.br), the most common
 // NFS-e gateway in Brazil. NFe.io is stubbed as an extension point.
 
 export type FiscalProvider = "FOCUSNFE" | "NFEIO";

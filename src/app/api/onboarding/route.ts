@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { getOnboardingStatus } from "@/lib/onboarding";
 
-// GET /api/onboarding — the "primeiros passos" checklist for this barbershop.
+// GET /api/onboarding, the "primeiros passos" checklist for this barbershop.
 export async function GET() {
   const session = await requireBarbershopSession();
   if (!session) {
@@ -14,7 +14,7 @@ export async function GET() {
   return NextResponse.json(status);
 }
 
-// PATCH /api/onboarding — the gestor can hide the checklist manually before
+// PATCH /api/onboarding, the gestor can hide the checklist manually before
 // all steps are done.
 export async function PATCH(request: NextRequest) {
   const session = await requireBarbershopSession();

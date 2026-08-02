@@ -33,7 +33,7 @@ class _TypewriterTextState extends State<TypewriterText> {
 
   void _start() {
     _shown = 0;
-    // Pace by length so long answers don't crawl — total ~1.2s max.
+    // Pace by length so long answers don't crawl, total ~1.2s max.
     final total = widget.text.length;
     final stepMs = total == 0 ? 20 : (1200 / total).clamp(8, 32).round();
     _timer?.cancel();

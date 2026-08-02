@@ -9,7 +9,7 @@ import { googleAuthSchema, firstFieldError } from "@/lib/validation";
 // Verifies a Google Identity Services ID token (sent by the web button or
 // the mobile app's google_sign_in package) and either logs in an existing
 // account or creates a brand-new CLIENT one. Deliberately *not* used for
-// OWNER signup — creating a barbershop needs a form Google can't fill in
+// OWNER signup, creating a barbershop needs a form Google can't fill in
 // for us, so a new owner still goes through /api/auth/register.
 export async function POST(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (existingByEmail) {
-        // Same person, first time using the Google button — link it.
+        // Same person, first time using the Google button, link it.
         user = await prisma.user.update({
           where: { id: existingByEmail.id },
           data: { googleId, avatar: existingByEmail.avatar ?? avatar },
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         });
       } else {
         // Brand new account. Google can't hand us a barbershop, so this is
-        // always a CLIENT — owners still sign up through the full form.
+        // always a CLIENT, owners still sign up through the full form.
         user = await prisma.user.create({
           data: { name, email, googleId, avatar, role: "CLIENT" },
           include: { barbershop: true, staffProfile: { include: { barbershop: true } } },

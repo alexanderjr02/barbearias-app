@@ -27,7 +27,7 @@ const _opcoesConversa = [('conversar', 'Boa conversa'), ('tanto_faz', 'Tanto faz
 
 
 /// Le uma lista configurada pela barbearia ("um por linha"). Volta pro padrao
-/// quando o gestor ainda nao preencheu — melhor uma lista sensata do que
+/// quando o gestor ainda nao preencheu, melhor uma lista sensata do que
 /// nenhuma opcao.
 List<String> _listaDaBarbearia(String? bruto, List<String> padrao) {
   final itens = (bruto ?? '')
@@ -79,7 +79,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   final _clientRepo = ClientRepository();
 
   // Preferencias do cliente, opcionais, no proprio agendamento. Antes so
-  // existiam numa aba separada que a maioria nunca abria — e o barbeiro
+  // existiam numa aba separada que a maioria nunca abria, e o barbeiro
   // recebia o cliente sem saber maquina, produto ou alergia.
   // Toque em vez de digitacao: no celular, escrever "maquina 2 nas laterais"
   // durante um agendamento e atrito o bastante pra ninguem preencher. Cada
@@ -158,7 +158,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
       setState(() {
         _detail = detail;
         _loadingDetail = false;
-        // A single barber is the common case for small shops — pick them
+        // A single barber is the common case for small shops, pick them
         // automatically so the client goes straight to choosing a service.
         if (detail.staff.length == 1) _selectedStaff = detail.staff.first;
       });
@@ -184,7 +184,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
     _loadSlots();
   }
 
-  // Real, server-computed times for the chosen staff/date/service — respects
+  // Real, server-computed times for the chosen staff/date/service, respects
   // working hours, the staff's own days off, already-booked appointments,
   // and (for today) the current time. Replaces the old client-side
   // computation that only looked at the shop's generic weekly hours.
@@ -371,7 +371,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
         'drink': _prefBebida ?? '',
         'allergies': _temAlergia ? _prefAlergia.text.trim() : '',
       }).catchError((_) {}));
-      // Remember the number for next time — only when it's new or changed,
+      // Remember the number for next time, only when it's new or changed,
       // and never lets a save failure block the booking that already went
       // through.
       if (_savePhoneToProfile && phone != (session.phone ?? '')) {
@@ -743,7 +743,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                           Expanded(child: OutlinedButton.icon(onPressed: _pickFromWallet, icon: const Icon(Icons.content_cut_rounded, size: 18), label: const Text('Da Carteira'), style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)))),
                         ]),
 
-                      // Preferencias — opcionais. Recolhidas por padrao pra nao
+                      // Preferencias, opcionais. Recolhidas por padrao pra nao
                       // alongar o agendamento de quem so quer marcar e sair.
                       const SizedBox(height: 18),
                       GestureDetector(
@@ -764,7 +764,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                       Text(
                         _prefsAbertas
                             ? 'O barbeiro vê isso antes de te atender. Fica salvo pras próximas.'
-                            : 'Toque pra escolher — o barbeiro já chega sabendo do seu jeito.',
+                            : 'Toque pra escolher, o barbeiro já chega sabendo do seu jeito.',
                         style: TextStyle(color: palette.textFaint, fontSize: 11.5),
                       ),
                       if (_prefsAbertas) ...[
@@ -869,14 +869,14 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   }
 }
 
-/// A "barber card" — photo, first name, specialties tag — used for the
+/// A "barber card", photo, first name, specialties tag, used for the
 /// professional-picking step of the booking flow instead of a plain text
 /// chip, so the client sees who they're actually booking with.
 /// Etapa numerada, que vira um "check" quando resolvida.
 ///
 /// Agendar é uma sequência (quem → o quê → quando), mas a tela mostrava só
 /// quatro títulos soltos do mesmo tamanho. Numerar e marcar o que já foi
-/// feito é o que transforma uma lista de campos num progresso visível — o
+/// feito é o que transforma uma lista de campos num progresso visível, o
 /// padrão de todo fluxo de reserva bom.
 class _StepLabel extends StatelessWidget {
   final int step;
@@ -1068,7 +1068,7 @@ class _BarberCard extends StatelessWidget {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                // A foto é o que o cliente realmente usa para escolher — ela
+                // A foto é o que o cliente realmente usa para escolher, ela
                 // ganha anel da cor da marca quando selecionada, do mesmo jeito
                 // que a logo da barbearia aparece no topo.
                 Container(
@@ -1136,8 +1136,8 @@ class _BarberCard extends StatelessWidget {
   }
 }
 
-/// A richer service row (vs. a plain chip) — leading image/icon, name +
-/// description, duration and price — shown once a barber is picked, framed
+/// A richer service row (vs. a plain chip), leading image/icon, name +
+/// description, duration and price, shown once a barber is picked, framed
 /// as "services with {barber}" even though the catalog itself isn't
 /// filtered per barber server-side.
 class _ServiceCard extends StatelessWidget {
@@ -1203,9 +1203,9 @@ class _ServiceCard extends StatelessWidget {
 }
 
 /// Campo curto de preferência dentro do agendamento. Rótulo em cima, sem
-/// moldura pesada — o agendamento já é um formulário longo.
+/// moldura pesada, o agendamento já é um formulário longo.
 /// Grupo de preferência: título curto e opções em chips. Tocar na opção já
-/// marcada desmarca — nada aqui é obrigatório, e sem isso não haveria como
+/// marcada desmarca, nada aqui é obrigatório, e sem isso não haveria como
 /// voltar atrás depois de escolher.
 class _GrupoPreferencia extends StatelessWidget {
   final IconData icone;

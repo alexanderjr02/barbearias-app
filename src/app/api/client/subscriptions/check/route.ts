@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { fetchMembershipStatus, isPaymentProvider } from "@/lib/payments";
 
-// POST /api/client/subscriptions/check { subscriptionId } — the app polls this
+// POST /api/client/subscriptions/check { subscriptionId }, the app polls this
 // after showing the Pix/checkout so the payment confirms IN the app, without
 // waiting on the provider webhook. Re-fetches the real status from the
 // barbershop's provider and flips the subscription to ACTIVE when paid.

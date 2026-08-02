@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 
-// PATCH /api/admin/coupons/[id] — liga/desliga um cupom.
+// PATCH /api/admin/coupons/[id], liga/desliga um cupom.
 //
 // Revogar em vez de apagar: quem já resgatou continua com o acesso, e o
 // histórico de a quem se deu cortesia sobrevive. Cupom apagado leva junto a

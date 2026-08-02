@@ -19,7 +19,7 @@ interface OnboardingStatus {
   dismissed: boolean;
 }
 
-// "Primeiros passos" card — appears at the top of the gestor Dashboard until
+// "Primeiros passos" card, appears at the top of the gestor Dashboard until
 // the barbershop clears the same 4 signals the admin panel's activation
 // funnel tracks platform-wide (getActivationFunnel in src/lib/analytics.ts),
 // scoped here to just this barbershop.

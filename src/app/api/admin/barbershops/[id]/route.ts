@@ -99,7 +99,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     data.slug = parsed.data;
   }
 
-  // Cortesia e validade do plano — o que o cupom concede, editável à mão.
+  // Cortesia e validade do plano, o que o cupom concede, editável à mão.
   if (typeof body.isComplimentary === "boolean") data.isComplimentary = body.isComplimentary;
   if (typeof body.compReason === "string") data.compReason = body.compReason.trim() || null;
   if (body.planExpiresAt === null) data.planExpiresAt = null;
@@ -140,12 +140,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   return NextResponse.json(barbershop);
 }
 
-// DELETE /api/admin/barbershops/[id] — apaga a barbearia e tudo que pende
+// DELETE /api/admin/barbershops/[id], apaga a barbearia e tudo que pende
 // dela (agendamentos, clientes, financeiro) via cascade do banco.
 //
 // Irreversível e sem lixeira, então tem duas travas:
 //  1. exige ?confirm=<slug> na URL. Digitar o link da barbearia é o mesmo
-//     padrão do GitHub para apagar repositório — obriga a ler o que se está
+//     padrão do GitHub para apagar repositório, obriga a ler o que se está
 //     apagando em vez de confirmar no automático;
 //  2. recusa barbearia ATIVA. Para apagar, suspenda antes. Assim nenhuma
 //     operação em funcionamento some com um clique errado.
@@ -164,7 +164,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   if (!shop) return NextResponse.json({ error: "Barbearia não encontrada" }, { status: 404 });
 
   if (shop.isActive) {
-    return NextResponse.json({ error: "Suspenda a barbearia antes de apagar — é a trava que impede apagar operação em funcionamento." }, { status: 409 });
+    return NextResponse.json({ error: "Suspenda a barbearia antes de apagar, é a trava que impede apagar operação em funcionamento." }, { status: 409 });
   }
   if (request.nextUrl.searchParams.get("confirm") !== shop.slug) {
     return NextResponse.json({ error: `Confirme digitando o link da barbearia: ${shop.slug}` }, { status: 400 });
@@ -184,7 +184,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       // Os agendamentos saem PRIMEIRO, e isso não é detalhe: Appointment
       // aponta para Staff e Service SEM cascade (Restrict, o padrão do
       // Prisma). Ao apagar a barbearia, o banco tenta remover barbeiros,
-      // serviços e agendamentos de uma vez — se o barbeiro sair antes do
+      // serviços e agendamentos de uma vez, se o barbeiro sair antes do
       // agendamento que o referencia, o Restrict barra tudo e a exclusão
       // falha inteira.
       //
@@ -197,7 +197,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     });
   } catch (error) {
     // Sem este bloco a rota estourava um 500 sem corpo, e a tela mostrava só
-    // "Erro na requisição" — que não diz nada a quem está tentando resolver.
+    // "Erro na requisição", que não diz nada a quem está tentando resolver.
     console.error("[barbershop.delete]", error);
     return NextResponse.json(
       { error: "Não consegui apagar: algum registro ainda depende desta barbearia. O erro foi registrado no log do servidor." },

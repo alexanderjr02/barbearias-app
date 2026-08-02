@@ -4,7 +4,7 @@ import { requireBarbershopSession } from "@/lib/apiAuth";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// GET /api/nps — whether this gestor should be prompted (hasn't answered in
+// GET /api/nps, whether this gestor should be prompted (hasn't answered in
 // the last 30 days). Kept deliberately simple: no scheduling infra, just a
 // "have I asked recently" check done at request time.
 export async function GET() {

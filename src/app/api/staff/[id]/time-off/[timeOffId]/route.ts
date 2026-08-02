@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStaffScheduleAccess } from "@/lib/apiAuth";
 
-// DELETE /api/staff/{id}/time-off/{timeOffId} — unblock a day.
+// DELETE /api/staff/{id}/time-off/{timeOffId}, unblock a day.
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string; timeOffId: string }> }) {
   const { id, timeOffId } = await params;
   const access = await requireStaffScheduleAccess(id);

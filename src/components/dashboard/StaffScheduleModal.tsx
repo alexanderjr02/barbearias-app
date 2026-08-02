@@ -50,7 +50,7 @@ interface DayState {
 const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 // StaffTimeOff.date is a UTC-midnight instant (from a "YYYY-MM-DD" string,
-// see src/lib/dateRange.ts) — formatting it with the browser's local
+// see src/lib/dateRange.ts), formatting it with the browser's local
 // timezone would shift it back a day for any negative UTC offset (e.g.
 // Brazil), so this reads the calendar day back out in UTC instead.
 function formatBlockedDate(iso: string) {
@@ -82,7 +82,7 @@ export function StaffScheduleModal({ staffId, staffName, onClose }: Props) {
     queryFn: () => apiGet<ApiTimeOff[]>(`/api/staff/${staffId}/time-off`),
   });
 
-  // Seed local editable state from the fetched availability — adjusted during
+  // Seed local editable state from the fetched availability, adjusted during
   // render (not an effect) since it only reacts to `data` arriving/changing.
   const [syncedData, setSyncedData] = useState<AvailabilityResponse | undefined>(undefined);
   if (data && data !== syncedData) {

@@ -6,7 +6,7 @@ import { runAssistant, assistantEnabled, type ChatTurn } from "@/lib/chatbot/ass
 import { rhythmContextLine } from "@/lib/copilot/clientAgent";
 import { aiQuota } from "@/lib/ai/usage";
 
-// POST /api/client/chat { message, barbershopId } — the logged-in client's
+// POST /api/client/chat { message, barbershopId }, the logged-in client's
 // personalized assistant. Unlike the anonymous /api/chatbot, it knows WHO the
 // client is: greets by name, remembers past visits/preferences, and the
 // conversation persists across app sessions (per client). AI is Pro+ + key.
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ response: reply });
 }
 
-// GET /api/client/chat?barbershopId= — the persisted conversation, so the chat
+// GET /api/client/chat?barbershopId=, the persisted conversation, so the chat
 // picks up where it left off.
 export async function GET(request: NextRequest) {
   const session = await getSession();

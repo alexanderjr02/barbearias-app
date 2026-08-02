@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle, X } from "lucide-react";
 import { subscribeToasts, toast as toastStore, type ToastItem } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
-// Mounted once in AppProviders — renders whatever's in the module-level
+// Mounted once in AppProviders, renders whatever's in the module-level
 // toast store (src/lib/toast.ts), which is how apiClient.ts can fire a
 // toast without being inside a component. Built on @radix-ui/react-toast
 // (already a dependency, previously unused) for correct focus/ARIA handling.

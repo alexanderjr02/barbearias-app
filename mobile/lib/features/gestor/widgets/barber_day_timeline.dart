@@ -9,7 +9,7 @@ const int _rangeStartHour = 7;
 const int _rangeEndHour = 21;
 const double _hourRowHeight = 64;
 
-// A warm, non-brand palette reserved for client identity — distinct from the
+// A warm, non-brand palette reserved for client identity, distinct from the
 // barber color set so the two never get confused at a glance.
 const List<Color> _clientAvatarPalette = [
   Color(0xFFE07A5F),
@@ -37,7 +37,7 @@ String _initialsFor(String name) {
   return (parts.first.substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
 }
 
-/// One barber's full day, full width — the same richness the web dashboard's
+/// One barber's full day, full width, the same richness the web dashboard's
 /// "Dia" column gives (hour grid, shaded free time, a live "now" line) but
 /// laid out for a phone: roomy enough to actually read, one barber on screen
 /// at a time. Meant to sit inside a PageView the gestor swipes through
@@ -51,7 +51,7 @@ class BarberDayTimeline extends StatelessWidget {
   final void Function(GestorAppointment) onTapAppointment;
 
   /// When set, free (open, unbooked) blocks become tappable and invoke this
-  /// with the block's start-of-day minute — lets a screen jump straight into
+  /// with the block's start-of-day minute, lets a screen jump straight into
   /// a pre-filled booking flow instead of making the barber pick a date and
   /// time from scratch after already seeing exactly where they're free.
   final void Function(int startMinuteOfDay)? onTapFreeSlot;
@@ -242,7 +242,7 @@ class BarberDayTimeline extends StatelessWidget {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             // Folga generosa embaixo pra as últimas horas (20h-21h) subirem
-            // acima do botão "+" e da barra de navegação — antes ficavam
+            // acima do botão "+" e da barra de navegação, antes ficavam
             // escondidas atrás deles e dava a impressão de não rolar.
             padding: const EdgeInsets.only(bottom: 120),
             child: Stack(
@@ -360,7 +360,7 @@ class BarberDayTimeline extends StatelessWidget {
                                     child: tappable
                                         ? GestureDetector(
                                             // Where inside the block you tap
-                                            // matters — jump to the time the
+                                            // matters, jump to the time the
                                             // finger actually landed on
                                             // (snapped to the same 30 min
                                             // grid the booking slots use),
@@ -600,8 +600,8 @@ class BarberDayTimeline extends StatelessWidget {
 
 /// A "who's-with-who" avatar for the appointment card: the client's own
 /// photo (or a name-derived colored monogram when there isn't one) framed by
-/// a ring in the barber's color — so a single glance tells you both who's
-/// coming in and who's serving them — with a small status dot notched into
+/// a ring in the barber's color, so a single glance tells you both who's
+/// coming in and who's serving them, with a small status dot notched into
 /// the corner, the way a messaging app shows presence. Three signals, one
 /// shape, instead of a name and a stray dot spread across the card.
 // Pílula que segue o dedo enquanto arrasta um agendamento.

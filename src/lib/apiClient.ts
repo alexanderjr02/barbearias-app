@@ -5,7 +5,7 @@ async function handle<T>(res: Response): Promise<T> {
     const body = await res.json().catch(() => ({}));
     const message = body.error || "Erro na requisição";
     // Every apiGet/apiPost/... call funnels through here, so this is the one
-    // place that guarantees a failure is never silent — even in screens that
+    // place that guarantees a failure is never silent, even in screens that
     // don't render their own inline error state (e.g. a bare delete button).
     //
     // Exceção: 401 depois da tentativa de renovar não é "deu erro", é "não tem
@@ -22,7 +22,7 @@ async function handle<T>(res: Response): Promise<T> {
 // long-lived refresh cookie. Nothing was renewing the access token, so a long
 // editing session (e.g. tweaking the app appearance for a while) started
 // 401-ing mid-work. On a 401 we transparently hit the refresh endpoint once —
-// which rotates the cookies — and retry the original request. A single shared
+// which rotates the cookies, and retry the original request. A single shared
 // promise prevents a stampede when several calls 401 at the same time.
 let refreshing: Promise<boolean> | null = null;
 function tryRefresh(): Promise<boolean> {
@@ -44,7 +44,7 @@ async function withAuth<T>(doFetch: () => Promise<Response>): Promise<T> {
       res = await doFetch();
     } else {
       // Renovar falhou: a sessão acabou de verdade. Sem isto o clique
-      // simplesmente não fazia nada — nem erro, nem tela nova — e a pessoa
+      // simplesmente não fazia nada, nem erro, nem tela nova, e a pessoa
       // ficava clicando num painel morto sem entender por quê.
       // A checagem de rota evita laço em quem já está na tela de entrada.
       if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {

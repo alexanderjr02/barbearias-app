@@ -45,7 +45,7 @@ const ICONS: Record<string, typeof TrendingUp> = {
   box: Package,
 };
 
-// One-tap shortcuts to the Copiloto's heaviest superpowers — the "10 segundos
+// One-tap shortcuts to the Copiloto's heaviest superpowers, the "10 segundos
 // que valem horas" commands, for gestores who'd rather tap than type.
 const POWER_CHIPS: { icon: string; label: string; prompt: string }[] = [
   { icon: "", label: "Onde perco dinheiro", prompt: "Onde estou perdendo dinheiro? Me dá o plano." },
@@ -56,7 +56,7 @@ const POWER_CHIPS: { icon: string; label: string; prompt: string }[] = [
   { icon: "", label: "Responder avaliações", prompt: "Como está minha reputação? Me ajuda a responder as avaliações." },
 ];
 
-// The Copiloto — a business assistant surfaced as an always-reachable floating
+// The Copiloto, a business assistant surfaced as an always-reachable floating
 // chat, replacing the old support bubble (support now lives in the sidebar).
 // Shows the proactive daily briefing with one-tap actions plus a chat that
 // answers about the business. Works in "simulated" mode until an Anthropic key
@@ -78,7 +78,7 @@ export function FloatingCopilotWidget() {
   const [showHistory, setShowHistory] = useState(false);
   const [speak, setSpeak] = useState(false);
   // Some ao rolar para baixo (some da frente do conteúdo) e volta ao rolar
-  // para cima — assim o botão nunca tapa informação de forma permanente.
+  // para cima, assim o botão nunca tapa informação de forma permanente.
   const [hiddenOnScroll, setHiddenOnScroll] = useState(false);
   const lastScrollY = useRef(0);
 
@@ -213,7 +213,7 @@ export function FloatingCopilotWidget() {
       setMessages((m) => [...m.map((msg, i) => (i === idx ? { ...msg, undone: true } : msg)), { role: "assistant" as const, content: `Desfeito. ${res.message}` }]);
       refetchBriefing();
     } catch {
-      setMessages((m) => [...m, { role: "assistant" as const, content: "Não consegui desfazer — o prazo pode ter passado ou algo mudou depois." }]);
+      setMessages((m) => [...m, { role: "assistant" as const, content: "Não consegui desfazer, o prazo pode ter passado ou algo mudou depois." }]);
     } finally {
       setBusyAction(null);
       scrollToEnd();
@@ -221,7 +221,7 @@ export function FloatingCopilotWidget() {
   };
 
   const startNewChat = () => {
-    // New thread — keeps the old conversation in history.
+    // New thread, keeps the old conversation in history.
     setMessages([]);
     setActionMsg(null);
     setShowHistory(false);
@@ -338,7 +338,7 @@ export function FloatingCopilotWidget() {
             </div>
           ) : (
           <div ref={scrollRef} className="flex-1 overflow-y-auto">
-            {/* Estado inicial — limpo, estilo ChatGPT/Claude */}
+            {/* Estado inicial, limpo, estilo ChatGPT/Claude */}
             {messages.length === 0 && (
               <div className="px-4 py-6">
                 {briefing?.locked ? (
@@ -353,7 +353,7 @@ export function FloatingCopilotWidget() {
                       </div>
                       <p className="text-lg font-semibold text-white">Como posso ajudar?</p>
                     </div>
-                    {/* Atalhos dos superpoderes — 1 toque, pra quem não quer digitar */}
+                    {/* Atalhos dos superpoderes, 1 toque, pra quem não quer digitar */}
                     <div className="mb-6 flex flex-wrap justify-center gap-2">
                       {POWER_CHIPS.map((c) => (
                         <button
@@ -401,7 +401,7 @@ export function FloatingCopilotWidget() {
               </div>
             )}
 
-            {/* Mensagens — estilo GPT/Claude (assistente em linha, usuário em balão sutil) */}
+            {/* Mensagens, estilo GPT/Claude (assistente em linha, usuário em balão sutil) */}
             {messages.map((m, i) =>
               m.role === "user" ? (
                 <div key={i} className="flex justify-end px-4 py-1.5">
@@ -461,7 +461,7 @@ export function FloatingCopilotWidget() {
 
           {note && <p className="px-4 pt-2 text-[11px] text-zinc-500">{note}</p>}
 
-          {/* Input — caixa estilo ChatGPT */}
+          {/* Input, caixa estilo ChatGPT */}
           <div className="p-3">
             <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-zinc-800 px-2 py-1.5 transition focus-within:border-amber-500/50">
               <input
@@ -494,7 +494,7 @@ export function FloatingCopilotWidget() {
         </div>
       </div>
 
-      {/* Launcher — plano, sem gradiente nem brilho. Circular e discreto; some
+      {/* Launcher, plano, sem gradiente nem brilho. Circular e discreto; some
           ao rolar para baixo para não tapar o conteúdo. */}
       <button
         onClick={() => setOpen((o) => !o)}

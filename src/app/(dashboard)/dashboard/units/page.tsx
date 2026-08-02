@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Store, Plus, TrendingUp, TrendingDown, Users, Ticket, CalendarClock,
-  Sparkles, ArrowRight, Loader2, Crown, Check, Building2,
+  ArrowRight, Loader2, Crown, Check,
 } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { formatCurrency, cn } from "@/lib/utils";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { RukzLetraR } from "@/components/brand/RukzLogo";
 
 interface Unit {
   id: string;
@@ -102,28 +104,24 @@ export default function UnitsPage() {
   const { totals, units } = data;
   const isNetwork = units.length > 1;
 
-  // Leitura do Copiloto — derivada dos números da própria tela (sem chamar a
+  // Leitura do Copiloto, derivada dos números da própria tela (sem chamar a
   // IA no carregamento, que custaria em toda visita).
   const insight = buildInsight(data);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-amber-400" /> Unidades
-          </h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            {isNetwork ? `Sua rede tem ${units.length} unidades.` : "Abra outra unidade para comparar o desempenho lado a lado."}
-          </p>
-        </div>
-        <button
-          onClick={() => setFormOpen((v) => !v)}
-          className="flex items-center gap-2 h-10 px-4 bg-amber-500 text-zinc-900 text-sm font-semibold rounded-xl hover:from-amber-400 hover:to-amber-300 transition-all shadow-lg shadow-amber-500/20"
-        >
-          <Plus className="w-4 h-4" /> Nova unidade
-        </button>
-      </div>
+      <PageHeader
+        title="Unidades"
+        subtitle={isNetwork ? `Sua rede tem ${units.length} unidades.` : "Abra outra unidade para comparar o desempenho lado a lado."}
+        action={
+          <button
+            onClick={() => setFormOpen((v) => !v)}
+            className="flex h-10 items-center gap-2 rounded-xl bg-amber-500 px-4 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
+          >
+            <Plus className="h-4 w-4" /> Nova unidade
+          </button>
+        }
+      />
 
       {formOpen && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 sm:items-end">
@@ -166,9 +164,9 @@ export default function UnitsPage() {
 
       {/* Leitura do Copiloto */}
       {insight && (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] p-4 flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-4 h-4 text-amber-400" />
+        <div className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950">
+            <RukzLetraR className="h-4 w-4 text-amber-400" />
           </div>
           <div className="min-w-0">
             <p className="text-xs font-bold text-amber-400 uppercase tracking-wide">Leitura do Copiloto</p>
@@ -206,16 +204,20 @@ export default function UnitsPage() {
                 {isBest && <Crown className="w-4 h-4 text-amber-400 flex-shrink-0" aria-label="Maior faturamento" />}
               </div>
 
-              <div className="mt-3 flex items-baseline gap-2">
+              <div className="mt-3">
                 <span className="text-xl font-bold text-white">{formatCurrency(u.monthRevenue)}</span>
-                {u.weekDeltaPercent !== null && (
-                  <span className={cn("text-xs font-semibold flex items-center gap-0.5", u.weekDeltaPercent >= 0 ? "text-emerald-400" : "text-red-400")}>
-                    {u.weekDeltaPercent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                    {Math.abs(u.weekDeltaPercent)}%
-                  </span>
-                )}
+                <p className="text-[11px] text-zinc-600">no mês · {u.appointments} atendimentos</p>
               </div>
-              <p className="text-[11px] text-zinc-600">no mês · {u.appointments} atendimentos</p>
+              {/* A variação compara SEMANAS, não meses. Colada no valor do mês
+                  ela dizia "R$ 0,00 caiu 100%" quando o mês só tinha começado:
+                  número certo, leitura errada. */}
+              {u.weekDeltaPercent !== null && (
+                <p className={cn("mt-1.5 flex items-center gap-1 text-[11px] font-semibold", u.weekDeltaPercent >= 0 ? "text-emerald-400" : "text-red-400")}>
+                  {u.weekDeltaPercent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {Math.abs(u.weekDeltaPercent)}%
+                  <span className="font-normal text-zinc-600">na semana vs. a anterior</span>
+                </p>
+              )}
 
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Metric label="Ticket médio" value={formatCurrency(u.avgTicket)} />
@@ -255,7 +257,7 @@ export default function UnitsPage() {
   );
 }
 
-/** Insight determinístico dos números da tela — sem custo de IA por visita. */
+/** Insight determinístico dos números da tela, sem custo de IA por visita. */
 function buildInsight(d: Overview): string | null {
   const { units } = d;
   if (units.length < 2) {
@@ -268,7 +270,7 @@ function buildInsight(d: Overview): string | null {
   if (efficient && worst && efficient.name !== worst.name && worst.revenuePerBarber > 0) {
     const ratio = Math.round((efficient.revenuePerBarber / worst.revenuePerBarber - 1) * 100);
     if (ratio >= 15) {
-      return `${efficient.name} rende ${formatCurrency(efficient.revenuePerBarber)} por barbeiro — ${ratio}% a mais que ${worst.name} (${formatCurrency(worst.revenuePerBarber)}). Faturamento bruto engana: a loja com mais gente pode ser a menos eficiente.`;
+      return `${efficient.name} rende ${formatCurrency(efficient.revenuePerBarber)} por barbeiro, ${ratio}% a mais que ${worst.name} (${formatCurrency(worst.revenuePerBarber)}). Faturamento bruto engana: a loja com mais gente pode ser a menos eficiente.`;
     }
   }
   if (best) {

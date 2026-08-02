@@ -57,11 +57,11 @@ const STATUS_STYLES: Record<string, { label: string; text: string; bg: string; c
 const statusOf = (s: string) => STATUS_STYLES[s] ?? STATUS_STYLES.SCHEDULED;
 
 // Stable per-barber color identity used everywhere a barber needs to be told
-// apart at a glance (month chips, week blocks, day columns) — mirrors the
+// apart at a glance (month chips, week blocks, day columns), mirrors the
 // same palette the Flutter app uses so a barber's color means the same thing
 // on the phone and the desktop.
 // Isto continua sendo dado, não enfeite: é como se sabe de quem é o horário na
-// agenda do mês, e a landing vende exatamente isso. O que mudou foi o tom — a
+// agenda do mês, e a landing vende exatamente isso. O que mudou foi o tom, a
 // roda antiga era néon (fúcsia, lima, ciano) e transformava agenda cheia em
 // confete. Estes oito são dessaturados de propósito: separam à distância, e
 // nenhum disputa atenção com o amarelo da marca, que fica com o primeiro
@@ -213,7 +213,7 @@ export default function AppointmentsPage() {
   const [newApptOpen, setNewApptOpen] = useState(false);
   const [hoverPreview, setHoverPreview] = useState<{ key: string; day: Date; top: number; left: number } | null>(null);
   // Arrastar-e-soltar (mouse) na visão de dia: barbeiro sobre o qual o cursor
-  // está com um agendamento seguro — usado só para o destaque da coluna.
+  // está com um agendamento seguro, usado só para o destaque da coluna.
   const [dragOverStaff, setDragOverStaff] = useState<string | null>(null);
   // Dia (week view) sobre o qual um agendamento está sendo arrastado.
   const [dragOverDay, setDragOverDay] = useState<string | null>(null);
@@ -222,13 +222,13 @@ export default function AppointmentsPage() {
   const draggingRef = useRef(false);
 
   // Diálogo de "encaixar mesmo assim" quando o destino já tem cliente naquele
-  // horário — a saída para o conflito, em vez de um beco sem saída. `payload`
+  // horário, a saída para o conflito, em vez de um beco sem saída. `payload`
   // é o movimento completo (barbeiro/dia/horário), reenviado com force.
   const [pendingMove, setPendingMove] = useState<{ id: string; payload: MovePayload; label: string } | null>(null);
 
   const queryClient = useQueryClient();
   // Um único "mover": arrastar pode mudar barbeiro (coluna), dia e/ou horário
-  // (altura) — o servidor valida tudo junto.
+  // (altura), o servidor valida tudo junto.
   const moveAppt = useMutation({
     mutationFn: ({ id, payload, force }: { id: string; payload: MovePayload; force?: boolean }) =>
       apiPatch(`/api/appointments/${id}`, { ...payload, ...(force ? { force: true } : {}) }),
@@ -303,7 +303,7 @@ export default function AppointmentsPage() {
   });
 
   // Batched open/close hours for every active staff across the visible
-  // range — the single source powering free-hours everywhere (month badge,
+  // range, the single source powering free-hours everywhere (month badge,
   // week badge + sparkline, day columns) so "Xh livres" means the same
   // thing no matter which view you're looking at.
   const { data: scheduleByStaff = {} } = useQuery({
@@ -344,7 +344,7 @@ export default function AppointmentsPage() {
     return best?.id ?? null;
   }, [appointments, showTeamColors]);
 
-  // Shared by month/week badges, the hover preview, and the day view — so a
+  // Shared by month/week badges, the hover preview, and the day view, so a
   // gestor sees the exact same "Xh livres" for the exact same staff+day
   // everywhere in the page.
   const computeFreeInfo = (staffId: string, k: string) => {
@@ -429,7 +429,7 @@ export default function AppointmentsPage() {
     <div className="space-y-6">
       <NewAppointmentModal open={newApptOpen} onClose={() => setNewApptOpen(false)} />
 
-      {/* Saída para o conflito: o destino já tem cliente no horário — deixa o
+      {/* Saída para o conflito: o destino já tem cliente no horário, deixa o
           gestor encaixar mesmo assim (sobrepor) ou desistir, em vez de só
           recusar. O servidor confirma o encaixe com force. */}
       {pendingMove && (
@@ -465,7 +465,7 @@ export default function AppointmentsPage() {
         </div>
       )}
 
-      {/* Shared hover preview — one team barber avatar per row with their
+      {/* Shared hover preview, one team barber avatar per row with their
           free-hour label for the hovered day. position: fixed so it escapes
           any overflow-hidden ancestor (month grid cells, week header row). */}
       {hoverPreview && teamColumns.length > 0 && (
@@ -686,7 +686,7 @@ export default function AppointmentsPage() {
         </div>
       )}
 
-      {/* MONTH VIEW — a single unified calendar (not split per-barber): each
+      {/* MONTH VIEW, a single unified calendar (not split per-barber): each
           day cell shows up to 4 colored dots (one per barber with a booking)
           plus a muted "Xh livres" hint; clicking drills straight into the
           Day view instead of a modal, and a legend row explains the colors
@@ -884,7 +884,7 @@ export default function AppointmentsPage() {
                           const conflict = dayList.some((a) => a.id !== data.id && a.staff.id === data.staffId && a.status !== "CANCELLED" && a.status !== "NO_SHOW" && overlaps(newStart, newEnd, a.startTime, a.endTime));
                           if (conflict) setPendingMove({ id: data.id, payload, label: `Já há um agendamento desse barbeiro às ${newStart} nesse dia.` });
                           else moveAppt.mutate({ id: data.id, payload });
-                        } catch { /* payload inesperado — ignora */ }
+                        } catch { /* payload inesperado, ignora */ }
                       }}
                       className={cn("relative border-l border-zinc-800/80 transition-colors", dragOverDay === k && "bg-amber-500/[0.06] ring-1 ring-inset ring-amber-500/50")}
                     >
@@ -956,9 +956,9 @@ export default function AppointmentsPage() {
         </div>
       )}
 
-      {/* DAY VIEW — one column per active barber, side by side: photo/name
+      {/* DAY VIEW, one column per active barber, side by side: photo/name
           header, real free time shaded in, a live "now" line, and a
-          FOLGA/FECHADO overlay when off — the same team-wide day the gestor
+          FOLGA/FECHADO overlay when off, the same team-wide day the gestor
           gets on the web's month/week drill-down and the Flutter app. */}
       {viewMode === "day" && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
@@ -1022,7 +1022,7 @@ export default function AppointmentsPage() {
                           const conflict = dayApts.some((a) => a.id !== data.id && a.status !== "CANCELLED" && a.status !== "NO_SHOW" && overlaps(newStart, newEnd, a.startTime, a.endTime));
                           if (conflict) setPendingMove({ id: data.id, payload, label: `${s.name} já tem um cliente às ${newStart}.` });
                           else moveAppt.mutate({ id: data.id, payload });
-                        } catch { /* payload inesperado — ignora */ }
+                        } catch { /* payload inesperado, ignora */ }
                       }}
                       className={cn(
                         "flex-1 min-w-[200px] border-l border-zinc-800 relative transition-colors",
@@ -1089,7 +1089,7 @@ export default function AppointmentsPage() {
                                 setDragOverStaff(null);
                                 clearDrag();
                                 // Some browsers disparam um click logo após o
-                                // drag — este sinal descarta esse click fantasma
+                                // drag, este sinal descarta esse click fantasma
                                 // (que abriria os detalhes sem querer).
                                 setTimeout(() => { draggingRef.current = false; }, 0);
                               }}

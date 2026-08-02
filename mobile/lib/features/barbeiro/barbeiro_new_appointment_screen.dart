@@ -23,7 +23,7 @@ String _minutesToTime(int minutes) {
   return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 }
 
-/// The barbeiro's own booking flow — the same trusted engine as the gestor's
+/// The barbeiro's own booking flow, the same trusted engine as the gestor's
 /// (real availability, real slots, same confirmation screen) but with the
 /// staff-picking step removed entirely: a barber can only ever book time on
 /// their own agenda, never anyone else's. When opened from a tap on a free

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../brand/rukz_symbol.dart';
 import '../theme/app_theme.dart';
 
-/// The Copiloto launcher — a floating round button pinned to the bottom-left,
+/// The Copiloto launcher, a floating round button pinned to the bottom-left,
 /// exactly where the client's chatbot bubble and the old support button sit,
 /// so it reads as "the assistant" across every role. Traz o "r" da marca no
 /// meio (não um ícone genérico). Returns a full Stack (not a bare Positioned)
@@ -33,7 +33,7 @@ class FloatingCopilotButton extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: accent,
-                // Sombra escura discreta só pra dar relevo — sem o glow amarelo
+                // Sombra escura discreta só pra dar relevo, sem o glow amarelo
                 // de antes (que virava um borrão de cor atrás do botão).
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.28), blurRadius: 12, offset: const Offset(0, 4))],
               ),

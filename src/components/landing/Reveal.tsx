@@ -7,7 +7,7 @@ import { useEffect, useRef, type ReactNode } from "react";
  *
  * O IntersectionObserver dispara também para o que já está visível no
  * carregamento, então o mesmo mecanismo dá a entrada escalonada do topo da
- * página e a revelação das seções de baixo — sem dois sistemas de animação.
+ * página e a revelação das seções de baixo, sem dois sistemas de animação.
  *
  * Desconecta no primeiro disparo: revelar de novo a cada rolagem cansa e
  * mantém observer vivo à toa.

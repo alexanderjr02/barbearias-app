@@ -4,7 +4,7 @@
 // tentar login. Sem isso, um script cria mil barbearias fantasma numa tarde.
 //
 // LIMITAÇÃO IMPORTANTE, e ela é real: em ambiente sem servidor cada instância
-// tem a própria memória, então o teto efetivo é por instância, não global — e
+// tem a própria memória, então o teto efetivo é por instância, não global, e
 // a memória some quando a instância morre. Isso é um quebra-molas, não um
 // muro. Quem quer muro põe o limitador na borda (WAF/rate limiting da
 // hospedagem) ou num armazenamento compartilhado. O quebra-molas ainda vale:

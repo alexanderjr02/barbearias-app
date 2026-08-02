@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { undoAction, latestUndoable } from "@/lib/copilot/undo";
 
-// GET  /api/copilot/undo        — a última ação reversível (para oferecer o botão)
-// POST /api/copilot/undo {id}   — desfaz
+// GET  /api/copilot/undo       , a última ação reversível (para oferecer o botão)
+// POST /api/copilot/undo {id}  , desfaz
 //
 // O desfazer é escopado à barbearia da sessão E ao usuário que executou: um
 // gerente não desfaz o que o dono fez em outra unidade.

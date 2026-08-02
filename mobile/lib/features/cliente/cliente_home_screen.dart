@@ -48,7 +48,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
       final result = await _repository.notifications();
       if (mounted) setState(() => _unreadNotifications = result.unreadCount);
     } catch (_) {
-      // Non-critical — the bell just stays empty if this fails.
+      // Non-critical, the bell just stays empty if this fails.
     }
   }
 
@@ -441,7 +441,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                                           children: [
                                             Text('Hora do corte?', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
                                             const SizedBox(height: 2),
-                                            Text('Você costuma cortar a cada ${(suggestion.cadenceDays / 7).round()} semana(s) — já faz ${suggestion.daysSince} dias.', style: TextStyle(color: palette.textSecondary, fontSize: 11.5)),
+                                            Text('Você costuma cortar a cada ${(suggestion.cadenceDays / 7).round()} semana(s), já faz ${suggestion.daysSince} dias.', style: TextStyle(color: palette.textSecondary, fontSize: 11.5)),
                                           ],
                                         ),
                                       ),
@@ -532,7 +532,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
       ),
       // Alinhado com o balão do chat, que fica do outro lado da tela na mesma
       // linha. Sem isto o Scaffold posiciona o botão pela altura da barra e o
-      // chat por coordenada absoluta — dois cálculos diferentes para a mesma
+      // chat por coordenada absoluta, dois cálculos diferentes para a mesma
       // linha, e eles nunca batem.
       floatingActionButtonLocation: const _ChatAlignedFabLocation(),
       floatingActionButton: FloatingActionButton.extended(
@@ -553,17 +553,17 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
 
 /// O cartão de pontos.
 ///
-/// Antes era um anel pequeno num carrossel horizontal — o número que deveria
+/// Antes era um anel pequeno num carrossel horizontal, o número que deveria
 /// ser o troféu do cliente aparecia menor que o nome da barbearia. Aqui ele é
 /// o assunto: ocupa a largura toda, o número domina, e o progresso até a
 /// próxima faixa vira uma barra com meta explícita ("faltam 150 pts"), que é
 /// o que faz alguém querer voltar. A cor sai da faixa, então subir de nível
-/// muda o visual do cartão — a recompensa é visível, não só numérica.
+/// muda o visual do cartão, a recompensa é visível, não só numérica.
 /// Coloca o "Agendar" na mesma linha do balão do chat.
 ///
 /// O chat vive no Stack do shell e se posiciona a partir da BASE DA TELA. Já
 /// este Scaffold vive DENTRO do shell, então a altura dele termina onde a
-/// barra começa — a folga da barra já está descontada.
+/// barra começa, a folga da barra já está descontada.
 ///
 /// Foi exatamente aí que eu errei antes: descontei a folga de novo e o botão
 /// subiu demais. Aqui só resta a diferença entre onde o chat flutua e onde o
@@ -572,7 +572,7 @@ class _ChatAlignedFabLocation extends FloatingActionButtonLocation {
   const _ChatAlignedFabLocation();
 
   /// O balão tem 60 de altura e o botão estendido, 48. Metade da diferença
-  /// alinha os CENTROS — alinhar bordas deixaria 12px de desnível visível.
+  /// alinha os CENTROS, alinhar bordas deixaria 12px de desnível visível.
   static const double _bubbleSize = 60;
 
   @override
@@ -637,7 +637,7 @@ class _PointsHeroCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // Halo da faixa — dá profundidade sem pesar a leitura.
+              // Halo da faixa, dá profundidade sem pesar a leitura.
               Positioned(
                 top: -46,
                 right: -26,
@@ -799,7 +799,7 @@ class _TierBadge extends StatelessWidget {
   }
 }
 
-/// Cabeçalho de seção padronizado — antes cada um era um Text solto com estilo
+/// Cabeçalho de seção padronizado, antes cada um era um Text solto com estilo
 /// próprio, o que fazia a página parecer montada em pedaços.
 class _SectionTitle extends StatelessWidget {
   final String label;
@@ -894,7 +894,7 @@ class _EmptyAppointments extends StatelessWidget {
           Text(
             hasNext
                 ? 'Quando marcar mais horários, eles aparecem nesta lista.'
-                : 'Escolha o serviço, o barbeiro e o horário — leva menos de um minuto.',
+                : 'Escolha o serviço, o barbeiro e o horário, leva menos de um minuto.',
             textAlign: TextAlign.center,
             style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.45),
           ),
@@ -984,7 +984,7 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
   }
 
   /// "2026-07-20" -> (20, "JUL"). Bloco de calendário lê mais rápido que
-  /// "20/07" corrido — é o mesmo motivo de todo app de viagem usar isso.
+  /// "20/07" corrido, é o mesmo motivo de todo app de viagem usar isso.
   (String, String) _dayMonth() {
     const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
     try {
@@ -1022,7 +1022,7 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
       animation: _controller,
       builder: (context, child) {
         // O brilho só pulsa quando algo está acontecendo de verdade. Card
-        // parado piscando é ruído — vira aquele banner que a pessoa aprende
+        // parado piscando é ruído, vira aquele banner que a pessoa aprende
         // a ignorar.
         final glow = live ? 0.22 + _controller.value * 0.26 : 0.16;
         return Container(
@@ -1304,7 +1304,7 @@ class _NextAppointmentCardState extends State<_NextAppointmentCard> with SingleT
   }
 }
 
-/// Ponto "ao vivo" com halo pulsante — o mesmo sinal que apps de entrega usam
+/// Ponto "ao vivo" com halo pulsante, o mesmo sinal que apps de entrega usam
 /// para dizer "isto está acontecendo agora", sem precisar escrever.
 class _LiveDot extends StatelessWidget {
   final Color color;
@@ -1431,7 +1431,7 @@ class _HistoryTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // O serviço passa a ser o título. O nome da barbearia liderava
-                // uma lista onde quase tudo é da mesma barbearia — repetia sem
+                // uma lista onde quase tudo é da mesma barbearia, repetia sem
                 // distinguir nada.
                 Text(apt.serviceName,
                     maxLines: 1,

@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 import 'app_toast.dart';
 
 /// Square tap-to-upload photo tile shared by every Gestor create/edit form
-/// (services, products, staff) — picks an image, uploads it through
+/// (services, products, staff), picks an image, uploads it through
 /// [upload], and reports back the URL the backend returned.
 class PhotoPickerTile extends StatefulWidget {
   final String? imageUrl;

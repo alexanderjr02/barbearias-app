@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/client/cuts — the logged-in client's "cut passport" (photos of
+// GET /api/client/cuts, the logged-in client's "cut passport" (photos of
 // past haircuts), newest first.
 export async function GET() {
   const session = await getSession();
@@ -15,7 +15,7 @@ export async function GET() {
   return NextResponse.json(cuts);
 }
 
-// POST /api/client/cuts { imageUrl, note? } — add a photo to the passport.
+// POST /api/client/cuts { imageUrl, note? }, add a photo to the passport.
 export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

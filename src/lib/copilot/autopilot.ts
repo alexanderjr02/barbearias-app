@@ -23,17 +23,17 @@ export interface WeekFillResult {
 }
 
 /**
- * "Encher a semana" — a campanha proativa que transforma horário vago (dinheiro
+ * "Encher a semana", a campanha proativa que transforma horário vago (dinheiro
  * parado) em agendamento. O Copiloto olha os próximos dias, vê a capacidade
  * ociosa e convida um punhado de clientes ativos a preencher.
  *
  * As TRÊS travas que impedem virar spam (marketing automático precisa de
  * coleira):
- *  1. Nível — sozinho só no "auto" (Agir sozinho). O `manual: true` é quando o
+ *  1. Nível, sozinho só no "auto" (Agir sozinho). O `manual: true` é quando o
  *     gestor toca "Enviar" no modo Sugerir (decisão consciente dele).
- *  2. Frequência — no automático roda no máximo uma vez a cada 6 dias; e nunca
+ *  2. Frequência, no automático roda no máximo uma vez a cada 6 dias; e nunca
  *     manda para quem recebeu QUALQUER aviso nos últimos 7 dias.
- *  3. Consentimento — notifyClientMarketing só entrega a quem aceitou (LGPD).
+ *  3. Consentimento, notifyClientMarketing só entrega a quem aceitou (LGPD).
  * Além disso, público limitado (máx 20) e só a clientes ativos.
  */
 export async function runWeekFillCampaign(
@@ -100,12 +100,12 @@ export async function runWeekFillCampaign(
     if (ok) sent++;
   }
   if (sent > 0) {
-    await logAutopilot(barbershopId, "fill_week", `Convidei ${sent} cliente(s) pra preencher os ${week.totalFree} horários vagos da semana.`);
+    await logAutopilot(barbershopId, "fill_week", `Convidei ${sent} ${sent === 1 ? "cliente" : "clientes"} pra preencher ${week.totalFree === 1 ? "o horário vago" : `os ${week.totalFree} horários vagos`} da semana.`);
   }
   return { sent, freeSlots: week.totalFree, audience: audience.length };
 }
 
-/** Fired the instant a slot frees (a cancellation) — the real-time 24/7 fill:
+/** Fired the instant a slot frees (a cancellation), the real-time 24/7 fill:
  * ping the waitlist, and if it's empty, offer the opening to a few clients who
  * went quiet. Logs the recovered value (the service price). */
 export async function onSlotOpened(barbershopId: string, freed: { startTime?: string; price?: number | null }): Promise<void> {
@@ -128,7 +128,7 @@ export async function onSlotOpened(barbershopId: string, freed: { startTime?: st
   // No one waiting? Offer it to a few clients who've gone quiet.
   if (reached === 0) {
     // Puxar cliente sumido é MARKETING (ele não pediu para ser avisado), ao
-    // contrário da fila de espera acima, que é transacional — quem entrou na
+    // contrário da fila de espera acima, que é transacional, quem entrou na
     // fila pediu exatamente esse aviso.
     const churned = (await churnedClients(barbershopId, 30, 10)).filter((c) => c.clientId).slice(0, 3);
     for (const c of churned) {
@@ -138,6 +138,6 @@ export async function onSlotOpened(barbershopId: string, freed: { startTime?: st
   }
 
   if (reached > 0) {
-    await logAutopilot(barbershopId, "slot_filled", `Horário${whenTxt} vagou — avisei ${reached} cliente(s) na hora.`, freed.price ?? null);
+    await logAutopilot(barbershopId, "slot_filled", `Horário${whenTxt} vagou, avisei ${reached} ${reached === 1 ? "cliente" : "clientes"} na hora.`, freed.price ?? null);
   }
 }

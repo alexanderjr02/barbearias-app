@@ -1,4 +1,4 @@
-// Helpers da conexão de WhatsApp por barbearia — verificação contra a Meta e
+// Helpers da conexão de WhatsApp por barbearia, verificação contra a Meta e
 // troca do código do Embedded Signup por um token. Separado das rotas para o
 // teste e a leitura ficarem simples.
 
@@ -7,7 +7,7 @@ const VERSION = process.env.WHATSAPP_API_VERSION || "v21.0";
 
 // Confirma que o par (token, phoneNumberId) é válido de verdade, perguntando à
 // Meta o número legível daquele phone_number_id. Se responder, as credenciais
-// prestam — e ainda ganhamos o número pra mostrar no painel. Serve tanto pro
+// prestam, e ainda ganhamos o número pra mostrar no painel. Serve tanto pro
 // cadastro manual quanto pra fechar o Embedded Signup.
 export async function verifyPhoneNumber(
   accessToken: string,
@@ -30,7 +30,7 @@ export async function verifyPhoneNumber(
 }
 
 // Embedded Signup: troca o `code` que o SDK da Meta devolve por um token de
-// acesso. Só funciona com FACEBOOK_APP_ID/SECRET definidos — que só existem
+// acesso. Só funciona com FACEBOOK_APP_ID/SECRET definidos, que só existem
 // depois da sua plataforma ser aprovada como Tech Provider. Sem eles, devolve
 // null e a rota responde "aguardando aprovação da Meta".
 export function embeddedSignupConfigured(): boolean {

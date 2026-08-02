@@ -119,8 +119,8 @@ export default function AdminUsersPage() {
         <div>
           <label className={labelCls}>Papel</label>
           <select name="role" defaultValue="SUPPORT_ADMIN" className={fieldCls}>
-            <option value="SUPPORT_ADMIN">Admin de Suporte — só Dashboard, Analytics e Suporte</option>
-            <option value="SUPER_ADMIN">Super Admin — acesso total</option>
+            <option value="SUPPORT_ADMIN">Admin de Suporte, só Dashboard, Analytics e Suporte</option>
+            <option value="SUPER_ADMIN">Super Admin, acesso total</option>
           </select>
         </div>
         <p className="text-xs text-zinc-500 flex items-center gap-1.5">

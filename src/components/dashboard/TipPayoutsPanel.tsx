@@ -20,7 +20,7 @@ interface StaffPayout {
 /**
  * Repasse de gorjetas.
  *
- * Gorjeta não é receita da barbearia — é dinheiro do barbeiro que passou pela
+ * Gorjeta não é receita da barbearia, é dinheiro do barbeiro que passou pela
  * conta dela. Por isso fica fora do faturamento (contá-la inflaria lucro e
  * margem com dinheiro alheio) e aparece aqui como dívida a quitar.
  *
@@ -47,7 +47,7 @@ export function TipPayoutsPanel() {
   const totalPending = data?.totalPending ?? 0;
   const withPending = staff.filter((s) => s.pending > 0);
 
-  // Sem gorjeta nenhuma registrada, o painel não tem o que dizer — some em vez
+  // Sem gorjeta nenhuma registrada, o painel não tem o que dizer, some em vez
   // de ocupar espaço com uma caixa vazia.
   if (staff.length === 0) return null;
 
@@ -61,7 +61,7 @@ export function TipPayoutsPanel() {
           <div>
             <h3 className="text-sm font-bold text-white">Gorjetas a repassar</h3>
             <p className="mt-0.5 text-xs text-zinc-600">
-              Não entra no faturamento — é dinheiro do barbeiro que passou pela sua conta
+              Não entra no faturamento, é dinheiro do barbeiro que passou pela sua conta
             </p>
           </div>
         </div>
@@ -105,7 +105,7 @@ export function TipPayoutsPanel() {
                     {s.pendingCount} {s.pendingCount === 1 ? "gorjeta" : "gorjetas"}
                   </span>
                   {/* A chave aparece aqui porque é o que o dono precisa na hora
-                      de mandar o PIX — sem ela ele teria que abrir a Equipe. */}
+                      de mandar o PIX, sem ela ele teria que abrir a Equipe. */}
                   {s.pixKey ? (
                     <button
                       onClick={() => {

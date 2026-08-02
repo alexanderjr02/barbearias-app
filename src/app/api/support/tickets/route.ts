@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// GET /api/support/tickets — every ticket opened by this barbershop.
+// GET /api/support/tickets, every ticket opened by this barbershop.
 export async function GET() {
   const session = await requireBarbershopSession();
   if (!session) {
@@ -27,7 +27,7 @@ export async function GET() {
       messageCount: t._count.messages,
       lastMessage: t.messages[0]?.body ?? null,
       // Lets the UI flag "the rukz team replied and you haven't answered
-      // yet" without a separate read/unread table — derived straight from
+      // yet" without a separate read/unread table, derived straight from
       // who wrote the most recent message.
       lastMessageIsAdmin: t.messages[0] ? ["SUPER_ADMIN", "SUPPORT_ADMIN"].includes(t.messages[0].author.role) : false,
       createdAt: t.createdAt,
@@ -36,7 +36,7 @@ export async function GET() {
   );
 }
 
-// POST /api/support/tickets — opens a new ticket with its first message.
+// POST /api/support/tickets, opens a new ticket with its first message.
 export async function POST(request: NextRequest) {
   const session = await requireBarbershopSession();
   if (!session) {

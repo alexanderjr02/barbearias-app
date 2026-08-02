@@ -4,7 +4,7 @@ import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
 
-// PATCH /api/admin/billing/invoices/[id] — manual reconciliation for a
+// PATCH /api/admin/billing/invoices/[id], manual reconciliation for a
 // PENDING/FAILED invoice (there's no real payment gateway to auto-confirm
 // this, so the admin marks it by hand once payment is confirmed off-platform).
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

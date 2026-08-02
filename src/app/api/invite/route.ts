@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { loyaltyConfig } from "@/lib/loyalty/engine";
 
-// GET /api/invite — tudo que a tela de divulgação precisa:
+// GET /api/invite, tudo que a tela de divulgação precisa:
 // o link de instalação da barbearia e a lista de clientes para convidar,
 // cada um com o progresso do cartão de selos.
 //
@@ -43,7 +43,7 @@ export async function GET() {
   const stampsByUser = new Map<string, number>((cards as CardRow[]).map((c: CardRow) => [c.userId, c.stamps]));
 
   const clients = (links as LinkRow[])
-    // Sem telefone não há como mandar no WhatsApp — some da lista em vez de
+    // Sem telefone não há como mandar no WhatsApp, some da lista em vez de
     // virar uma linha com botão que não funciona.
     .filter((l: LinkRow) => (l.user.phone ?? "").replace(/\D/g, "").length >= 10)
     .map((l: LinkRow) => ({

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// POST /api/client/reviews — the logged-in client rates a COMPLETED
+// POST /api/client/reviews, the logged-in client rates a COMPLETED
 // appointment of theirs. One review per appointment, ever.
 export async function POST(request: NextRequest) {
   const session = await getSession();

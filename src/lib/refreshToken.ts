@@ -1,7 +1,7 @@
 import { randomBytes, createHash } from "crypto";
 import { REFRESH_TOKEN_TTL } from "./auth";
 
-// Uses Node's crypto module — only import this from Route Handlers
+// Uses Node's crypto module, only import this from Route Handlers
 // (Node.js runtime), never from Middleware (Edge runtime).
 export function generateRefreshToken() {
   const token = randomBytes(48).toString("hex");

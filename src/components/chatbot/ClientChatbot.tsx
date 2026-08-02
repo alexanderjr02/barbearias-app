@@ -27,7 +27,7 @@ const DEFAULT_CONFIG: ChatbotConfig = {
   primaryColor: "#D4AF37",
   faqItems: [],
   whatsapp: "(11) 99999-9999",
-  address: "Rua das Barbearias, 123 — São Paulo, SP",
+  address: "Rua das Barbearias, 123. São Paulo, SP",
   hours: "Seg–Sex: 9h–20h | Sáb: 9h–18h",
 };
 

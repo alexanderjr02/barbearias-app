@@ -6,7 +6,7 @@ import { completeLogin } from "@/lib/completeLogin";
 import { verifyCode } from "@/lib/twoFactor";
 import { getClientIp, isSecureRequest } from "@/lib/requestIp";
 
-// POST /api/auth/verify-2fa — second step of login for a 2FA-enabled
+// POST /api/auth/verify-2fa, second step of login for a 2FA-enabled
 // account. Body: { pendingToken, code }.
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);

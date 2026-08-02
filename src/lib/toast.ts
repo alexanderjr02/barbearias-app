@@ -7,7 +7,7 @@ export interface ToastItem {
 type Listener = (toasts: ToastItem[]) => void;
 
 // A plain module-level store (no React context) so toast.success()/error()
-// can be called from anywhere — including apiClient.ts, which runs outside
+// can be called from anywhere, including apiClient.ts, which runs outside
 // any component tree. <Toaster /> (mounted once in AppProviders) subscribes
 // to render whatever is currently in the list.
 let toasts: ToastItem[] = [];

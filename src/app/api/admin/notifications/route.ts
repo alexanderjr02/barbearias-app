@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 
-// GET /api/admin/notifications?type=&page=&pageSize= — the log of everything
+// GET /api/admin/notifications?type=&page=&pageSize=, the log of everything
 // that WOULD have gone out over email (see src/lib/notifications.ts).
 export async function GET(request: NextRequest) {
   const session = await requireSuperAdminSession();

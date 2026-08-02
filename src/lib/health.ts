@@ -16,7 +16,7 @@ function bandFor(score: number): HealthBand {
   return "CRITICAL";
 }
 
-// A transparent, explainable score (not ML) — starts at 100 and loses points
+// A transparent, explainable score (not ML), starts at 100 and loses points
 // for real warning signs: an owner who hasn't logged in, a shop with zero
 // recent bookings, a failed payment, or an urgent support ticket left open.
 function computeScore(params: {
@@ -66,7 +66,7 @@ export async function getBarbershopHealth(barbershopId: string): Promise<Barbers
   return all.get(barbershopId) ?? { score: 100, band: "HEALTHY", reasons: [] };
 }
 
-// Batched version — one round trip per signal instead of N+1 — used by the
+// Batched version, one round trip per signal instead of N+1, used by the
 // Barbearias list where every row needs a score.
 export async function getHealthScores(barbershopIds?: string[]): Promise<Map<string, BarbershopHealth>> {
   const shops = await prisma.barbershop.findMany({

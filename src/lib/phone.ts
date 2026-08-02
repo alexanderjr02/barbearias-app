@@ -2,7 +2,7 @@ import { onlyDigits } from "./br";
 
 // Normalização ÚNICA de telefone (a função que o plano de atribuição exige em
 // TODOS os pontos de entrada). Existe para o mesmo cliente não virar dois
-// registros por causa de formato — "+55 (21) 99999-8888" e "5521999998888"
+// registros por causa de formato, "+55 (21) 99999-8888" e "5521999998888"
 // precisam bater. WhatsApp entrega DDI+DDD+número; formulários às vezes vêm sem
 // o 55.
 export function normalizePhone(raw: string | null | undefined): string {

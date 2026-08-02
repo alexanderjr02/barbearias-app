@@ -5,12 +5,12 @@ import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 import { PLANS, type PlatformPlan } from "@/lib/billing";
 
-// GET/POST /api/admin/coupons — os códigos que dão acesso sem passar pela
+// GET/POST /api/admin/coupons, os códigos que dão acesso sem passar pela
 // tela de pagamento.
 //
 // "Vitalício" aqui é só `durationDays: null`. Modelar como DURAÇÃO e não como
 // um sim/não de vitalício é o que permite dar 30 dias de teste, 12 meses de
-// cortesia e acesso permanente com a mesma peça — e é o que impede o
+// cortesia e acesso permanente com a mesma peça, e é o que impede o
 // vitalício de virar a única opção por falta de alternativa. Cortesia sem
 // prazo nem controle é dinheiro saindo sem ninguém ver: seis meses depois não
 // se sabe quantos foram dados nem para quem.
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
   const note = typeof body.note === "string" ? body.note.trim().slice(0, 200) || null : null;
 
   // Colisão de código é praticamente impossível, mas "praticamente" não é
-  // "nunca" e o campo é único — tentar de novo custa menos que um erro 500.
+  // "nunca" e o campo é único, tentar de novo custa menos que um erro 500.
   let coupon = null;
   for (let tentativa = 0; tentativa < 5 && !coupon; tentativa++) {
     const code = gerarCodigo();

@@ -1,15 +1,15 @@
 // Meta Marketing API (Ads Insights): busca o gasto (spend) da conta de anúncios
-// para automatizar a verba do relatório de atribuição — assim o custo por
+// para automatizar a verba do relatório de atribuição, assim o custo por
 // cliente novo e o ROI deixam de depender de digitação manual (#1).
 //
 // INERTE POR PADRÃO: sem META_ADS_TOKEN + META_AD_ACCOUNT_ID, não chama a Meta
 // (devolve null). O mesmo padrão da CAPI e do cron semanal.
 //
 // Credenciais (env):
-//   META_ADS_TOKEN        — access token com permissão ads_read na conta.
-//   META_AD_ACCOUNT_ID    — id da conta de anúncios (com ou sem o prefixo act_).
+//   META_ADS_TOKEN       , access token com permissão ads_read na conta.
+//   META_AD_ACCOUNT_ID   , id da conta de anúncios (com ou sem o prefixo act_).
 //   META_ADS_BARBERSHOP_ID— (usado pelo cron) barbearia dona dessa verba.
-//   META_GRAPH_VERSION    — (opcional) versão da Graph API. Default v21.0.
+//   META_GRAPH_VERSION   , (opcional) versão da Graph API. Default v21.0.
 
 const GRAPH_VERSION = process.env.META_GRAPH_VERSION || "v21.0";
 

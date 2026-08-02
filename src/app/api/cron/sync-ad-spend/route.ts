@@ -3,7 +3,7 @@ import { cronSecretFrom } from "@/lib/cronAuth";
 import { prisma } from "@/lib/db";
 import { metaAdsEnabled, fetchAdSpend } from "@/lib/metaAdsInsights";
 
-// GET /api/cron/sync-ad-spend — puxa o gasto do mês na Meta e grava em
+// GET /api/cron/sync-ad-spend, puxa o gasto do mês na Meta e grava em
 // CampaignSpend, para o custo por cliente novo / ROI do relatório de atribuição
 // serem AUTOMÁTICOS (#1) em vez de digitados. A digitação manual continua
 // funcionando quando a Meta não está configurada.

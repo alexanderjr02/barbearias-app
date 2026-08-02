@@ -49,7 +49,7 @@ function contrastText(hex: string) {
   return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#000000" : "#ffffff";
 }
 // Contraste WCAG entre duas cores (1 a 21). Serve pra avisar quando a cor
-// escolhida some no fundo — a marca do gestor não pode deixar o texto ilegível.
+// escolhida some no fundo, a marca do gestor não pode deixar o texto ilegível.
 function relLuminance(hex: string) {
   const { r, g, b } = hexToRgb(hex);
   const f = (c: number) => {
@@ -211,7 +211,7 @@ export default function AppearancePage() {
     setBgGradient(true);
     setBgEffect("none");
     setTagline("Sua barbearia, no estilo certo.");
-    // Restaurar o padrão é voltar à rukz de fábrica — inclui tirar a logo e
+    // Restaurar o padrão é voltar à rukz de fábrica, inclui tirar a logo e
     // a capa da barbearia, senão "padrão" ainda ficava com a marca de quem
     // estava editando.
     setLogo(null);
@@ -303,7 +303,7 @@ export default function AppearancePage() {
               <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.07] p-2.5">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                 <p className="text-[11px] leading-relaxed text-amber-200/90">
-                  Essa cor tem pouco contraste com o fundo {mode === "light" ? "claro" : "escuro"} — links e textos na cor da marca podem ficar difíceis de ler. Um tom mais {mode === "light" ? "escuro" : "claro"} lê melhor.
+                  Essa cor tem pouco contraste com o fundo {mode === "light" ? "claro" : "escuro"}, links e textos na cor da marca podem ficar difíceis de ler. Um tom mais {mode === "light" ? "escuro" : "claro"} lê melhor.
                 </p>
               </div>
             )}
@@ -449,7 +449,7 @@ export default function AppearancePage() {
                 </div>
               </div>
             ) : (
-              /* Início — fiel ao app do cliente (cliente_home_screen.dart): um
+              /* Início, fiel ao app do cliente (cliente_home_screen.dart): um
                  banner de capa com a saudação por cima, depois os cards. A
                  capa só aparece com fundo "Imagem" (é assim no app real:
                  brandCover exige bgType image). */
@@ -474,7 +474,7 @@ export default function AppearancePage() {
                 </div>
 
                 <div className="px-4 -mt-1 flex-1 overflow-hidden">
-                  {/* Próximo agendamento — sem gradiente, cor da marca cheia */}
+                  {/* Próximo agendamento, sem gradiente, cor da marca cheia */}
                   <div className="rounded-2xl p-3.5" style={{ background: accent }}>
                     <p className="text-[9px] font-black tracking-wide" style={{ color: onAccent, opacity: 0.8 }}>PRÓXIMO · EM 2H</p>
                     <p className="text-sm font-black mt-0.5" style={{ color: onAccent }}>Corte + Barba</p>

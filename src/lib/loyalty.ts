@@ -2,7 +2,7 @@ import { prisma } from "./db";
 import { tierFor, addStampForAppointment, completeReferralIfFirstVisit } from "./loyalty/engine";
 
 // Matches the tier bands from the product spec (Bronze/Prata/Ouro).
-// Discount % is informational for now — there's no automatic pricing engine
+// Discount % is informational for now, there's no automatic pricing engine
 // yet to apply it at checkout.
 export const TIER_THRESHOLDS = {
   BRONZE: { min: 0, discount: 0 },

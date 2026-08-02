@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// DELETE /api/waitlist/[id] — remove someone from the queue (attended or gave up).
+// DELETE /api/waitlist/[id], remove someone from the queue (attended or gave up).
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireBarbershopSession();
   if (!session) {

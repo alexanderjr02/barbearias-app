@@ -115,7 +115,7 @@ export default function WhatsappPage() {
               <h2 className="font-semibold text-zinc-100">Conectar automático</h2>
             </div>
             <p className="mt-1 text-sm text-zinc-500">
-              Você entra na sua conta da Meta, autoriza e pronto — sem copiar código nenhum.
+              Você entra na sua conta da Meta, autoriza e pronto, sem copiar código nenhum.
             </p>
             {data?.embeddedSignupAvailable ? (
               <button
@@ -205,7 +205,7 @@ export default function WhatsappPage() {
 // Carrega o SDK da Meta e define window.launchWhatsAppSignup. Só faz algo quando
 // a plataforma tem FACEBOOK_APP_ID publicado (embeddedSignupAvailable). O
 // NEXT_PUBLIC_FACEBOOK_APP_ID e o NEXT_PUBLIC_META_CONFIG_ID são preenchidos
-// depois da aprovação da Meta — até lá, este componente fica quieto.
+// depois da aprovação da Meta, até lá, este componente fica quieto.
 function EmbeddedSignupScript({ available, onDone }: { available: boolean; onDone: () => void }) {
   useEffect(() => {
     if (!available) return;
@@ -223,7 +223,7 @@ function EmbeddedSignupScript({ available, onDone }: { available: boolean; onDon
           sessionInfo = { phone_number_id: d.data.phone_number_id, waba_id: d.data.waba_id };
         }
       } catch {
-        /* mensagem não-JSON do SDK — ignora */
+        /* mensagem não-JSON do SDK, ignora */
       }
     }
     window.addEventListener("message", onMessage);

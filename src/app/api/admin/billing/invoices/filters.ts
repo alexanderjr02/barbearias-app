@@ -1,5 +1,5 @@
 // Shared between the paginated list and the CSV export so an export always
-// matches exactly what the admin was looking at on screen — never a silent
+// matches exactly what the admin was looking at on screen, never a silent
 // "export everything" behind a filtered view.
 export function buildInvoiceWhere(searchParams: URLSearchParams) {
   const status = searchParams.get("status");

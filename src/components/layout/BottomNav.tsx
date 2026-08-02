@@ -99,7 +99,7 @@ export function BottomNav() {
         </div>
       )}
 
-      {/* Bottom tab bar — MOBILE ONLY (hidden on lg+) */}
+      {/* Bottom tab bar. MOBILE ONLY (hidden on lg+) */}
       <nav className="fixed bottom-0 left-0 right-0 bg-zinc-950/95 backdrop-blur-md border-t border-zinc-800/80 z-30 lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-1">

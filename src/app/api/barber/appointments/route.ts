@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { startOfUtcDay } from "@/lib/dateRange";
 
-// GET /api/barber/appointments?from=YYYY-MM-DD&to=YYYY-MM-DD — the logged-in
+// GET /api/barber/appointments?from=YYYY-MM-DD&to=YYYY-MM-DD, the logged-in
 // barber's own schedule. Requires Role.BARBER linked to a Staff row via
 // Staff.userId. Without from/to: today onward, excluding cancelled, capped
 // at 50 (the home screen's upcoming list). With from/to: every appointment

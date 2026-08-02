@@ -57,7 +57,7 @@ String _formatDate(String iso) {
 }
 
 /// ROI = how many times the plan already paid for itself in real services
-/// delivered — the signal that turns a subscriber list into something the
+/// delivered, the signal that turns a subscriber list into something the
 /// gestor can act on before a quiet client churns.
 ({String label, Color color, IconData icon}) _roiBadge(GestorSubscriber sub) {
   final ratio = sub.totalPaid > 0 ? sub.valueConsumed / sub.totalPaid : 0.0;
@@ -693,7 +693,7 @@ class _LockedView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Center(child: Text('Troca o plano da barbearia para fins de demonstração — sem cobrança real.', style: TextStyle(color: palette.textFaint, fontSize: 11), textAlign: TextAlign.center)),
+        Center(child: Text('Troca o plano da barbearia para fins de demonstração, sem cobrança real.', style: TextStyle(color: palette.textFaint, fontSize: 11), textAlign: TextAlign.center)),
       ],
     );
   }

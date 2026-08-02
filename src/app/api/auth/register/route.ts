@@ -15,7 +15,7 @@ const PLAN_BY_FORM_VALUE: Record<string, string> = {
   "white-label": "ENTERPRISE",
 };
 
-// POST /api/auth/register — creates an OWNER account *and* their barbershop
+// POST /api/auth/register, creates an OWNER account *and* their barbershop
 // in one step (mandatory: an ownerless account has nothing to manage). For
 // a client signing up for themselves, see /api/auth/register/client instead.
 export async function POST(request: NextRequest) {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       prisma.user.findUnique({ where: { email } }),
       prisma.barbershop.findUnique({ where: { slug: barbershopSlug } }),
       // Um CNPJ, uma barbearia. Sem isto o mesmo documento abre quantas
-      // barbearias quiser — que é exatamente como se monta uma fileira de
+      // barbearias quiser, que é exatamente como se monta uma fileira de
       // fantasmas com aparência de legítima.
       prisma.barbershop.findFirst({ where: { cnpj }, select: { id: true } }),
     ]);
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cupom: confere ANTES de criar qualquer coisa. Se o código não presta, a
-    // pessoa precisa saber agora — não depois de já existir uma conta no plano
+    // pessoa precisa saber agora, não depois de já existir uma conta no plano
     // errado que alguém vai ter que consertar à mão.
     const couponCode = typeof body.couponCode === "string" ? body.couponCode.trim() : "";
     let grant = null;
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Transaction: a User with no Barbershop (or vice versa) is a broken
-    // account — either both rows land, or neither does.
+    // account, either both rows land, or neither does.
     const { user, barbershop } = await prisma.$transaction(async (tx: typeof prisma) => {
       const user = await tx.user.create({
         data: { name, email, password: hashedPassword, phone, role: "OWNER" },
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Sem este log, um 500 aqui é indepurável: a pessoa vê "erro ao criar
     // conta" e nós não vemos nada. A mensagem para fora continua genérica, que
-    // é o certo — quem tenta cadastrar não precisa (nem deve) saber o que
+    // é o certo, quem tenta cadastrar não precisa (nem deve) saber o que
     // quebrou por dentro.
     console.error("[register]", error);
     return NextResponse.json({ error: "Erro ao criar conta" }, { status: 500 });

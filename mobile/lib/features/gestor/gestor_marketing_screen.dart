@@ -3,7 +3,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
 
-/// Copiloto de Marketing — espelha a página web 1:1 e com dado REAL: onde tem
+/// Copiloto de Marketing, espelha a página web 1:1 e com dado REAL: onde tem
 /// dinheiro parado agora (horário vago da semana, cliente sumido), quanto vale
 /// cada um deles (ticket médio) e um toque pra disparar a campanha. O nível de
 /// autonomia é o mesmo do Auto-piloto (off/suggest/auto). Pro+.
@@ -15,12 +15,12 @@ class GestorMarketingScreen extends StatefulWidget {
 }
 
 const _levels = [
-  ('off', 'Pausado', 'Em pausa — o Copiloto não dispara nada.'),
-  ('suggest', 'Sugerir', 'Achando oportunidades — você aprova cada envio.'),
-  ('auto', 'Automático', 'No comando — dispara na hora certa e te conta depois.'),
+  ('off', 'Pausado', 'Em pausa, o Copiloto não dispara nada.'),
+  ('suggest', 'Sugerir', 'Achando oportunidades, você aprova cada envio.'),
+  ('auto', 'Automático', 'No comando, dispara na hora certa e te conta depois.'),
 ];
 
-/// R$ 1.234,50 — sem depender de pacote de i18n.
+/// R$ 1.234,50, sem depender de pacote de i18n.
 String _money(double v) {
   final parts = v.abs().toStringAsFixed(2).split('.');
   final int0 = parts[0].replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]}.');
@@ -140,7 +140,7 @@ class _GestorMarketingScreenState extends State<GestorMarketingScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                     children: [
                       Text(
-                        'O Copiloto acha onde tem dinheiro parado — você aprova, ele traz o cliente.',
+                        'O Copiloto acha onde tem dinheiro parado, você aprova, ele traz o cliente.',
                         style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.4),
                       ),
                       const SizedBox(height: 14),

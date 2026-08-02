@@ -17,7 +17,7 @@ function formatDateOnly(d: Date | null): string {
   return d ? d.toISOString().slice(0, 10) : "";
 }
 
-// GET /api/admin/billing/invoices/export?<same filters as the list> — every
+// GET /api/admin/billing/invoices/export?<same filters as the list>, every
 // export is written to the audit log, since a CSV of financial data leaving
 // the app is exactly the kind of action that should be traceable later.
 export async function GET(request: NextRequest) {

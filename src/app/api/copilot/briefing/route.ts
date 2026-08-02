@@ -4,7 +4,7 @@ import { requireBarbershopSession } from "@/lib/apiAuth";
 import { planHasAI } from "@/lib/billing";
 import { buildBriefing } from "@/lib/copilot/insights";
 
-// GET /api/copilot/briefing — the proactive "bom dia" panel for the gestor:
+// GET /api/copilot/briefing, the proactive "bom dia" panel for the gestor:
 // churned clients, empty slots today, unconfirmed appointments, low stock and
 // the week's revenue, each with a one-tap action id. Pro+ feature.
 export async function GET() {

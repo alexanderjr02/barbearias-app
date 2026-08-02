@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/client/notifications — the logged-in client's own notifications
+// GET /api/client/notifications, the logged-in client's own notifications
 // (their appointment was confirmed/cancelled/completed by the shop). Distinct
 // from /api/notifications, which is the shop-wide feed gestor/staff see.
 export async function GET() {

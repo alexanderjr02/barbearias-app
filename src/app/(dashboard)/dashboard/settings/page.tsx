@@ -28,6 +28,7 @@ import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { cn } from "@/lib/utils";
 import { apiGet, apiPatch } from "@/lib/apiClient";
 import { TagListInput } from "@/components/dashboard/TagListInput";
+import { RukzLetraR } from "@/components/brand/RukzLogo";
 
 interface BarbershopMe {
   id: string;
@@ -58,7 +59,7 @@ const tabs = [
   { id: "hours", label: "Horários", icon: Clock },
   { id: "notifications", label: "Notificações", icon: Bell },
   { id: "chatbot", label: "Chatbot", icon: MessageSquareText },
-  { id: "autopilot", label: "Auto-piloto", icon: Sparkles },
+  { id: "autopilot", label: "Auto-piloto", icon: RukzLetraR },
   { id: "billing", label: "Plano", icon: CreditCard },
 ];
 
@@ -392,7 +393,7 @@ export default function SettingsPage() {
 
               {/* Dependência honesta: as mensagens só saem com o Auto-piloto
                   ligado. Sem isto, o gestor ligaria um toggle e nada aconteceria
-                  — mais um "parece que funciona". */}
+                 , mais um "parece que funciona". */}
               {barbershop?.autopilotLevel === "off" && (
                 <button
                   onClick={() => setActiveTab("autopilot")}
@@ -407,7 +408,7 @@ export default function SettingsPage() {
 
               <RealToggle
                 label="Confirmação de agendamento"
-                desc="Na véspera, confirma os horários do dia seguinte e avisa cada cliente — reduz faltas."
+                desc="Na véspera, confirma os horários do dia seguinte e avisa cada cliente, reduz faltas."
                 checked={Boolean(barbershop?.autoConfirm)}
                 pending={updateBarbershop.isPending}
                 onChange={(v) => updateBarbershop.mutate({ autoConfirm: v })}
@@ -481,7 +482,7 @@ export default function SettingsPage() {
               ) : (
                 <>
                   <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4">
-                    {/* Ligar/desligar salva NA HORA no servidor — o assistente
+                    {/* Ligar/desligar salva NA HORA no servidor, o assistente
                         do app respeita de verdade (greeting some, chat recusa
                         educadamente). */}
                     <div className="flex items-center justify-between gap-3">
@@ -537,7 +538,7 @@ export default function SettingsPage() {
                     <div>
                       <label className="block text-sm font-semibold text-white mb-1">Informações e regras (FAQ)</label>
                       <p className="text-xs text-zinc-500 mb-2">
-                        A IA usa isto para responder dúvidas da sua barbearia — formas de pagamento, estacionamento,
+                        A IA usa isto para responder dúvidas da sua barbearia, formas de pagamento, estacionamento,
                         política de atraso, o que quiser. Escreva livre, como se explicasse para um cliente.
                       </p>
                       <textarea
@@ -562,7 +563,7 @@ export default function SettingsPage() {
             const levels = [
               { val: "off", label: "Desligado", Icon: Eye, tag: "Pausado", blurb: "O Copiloto observa, mas não envia nada nem age por conta própria." },
               { val: "suggest", label: "Sugerir", Icon: Lightbulb, tag: "Você aprova", blurb: "Ele encontra as oportunidades e te avisa. Nada sai sem o seu toque." },
-              { val: "auto", label: "Agir sozinho", Icon: Zap, tag: "Autônomo", blurb: "Ele resolve na hora, sem te interromper — e depois te conta o que fez." },
+              { val: "auto", label: "Agir sozinho", Icon: Zap, tag: "Autônomo", blurb: "Ele resolve na hora, sem te interromper, e depois te conta o que fez." },
             ] as const;
             const current = levels.find((l) => l.val === level) ?? levels[1];
             const active = level !== "off";
@@ -573,7 +574,7 @@ export default function SettingsPage() {
                 <div>
                   <h2 className="text-lg font-bold text-white">Auto-piloto</h2>
                   <p className="text-sm text-zinc-500 mt-1">
-                    Seu Copiloto cuidando da agenda e dos clientes 24 horas — no nível de autonomia que você escolher.
+                    Seu Copiloto cuidando da agenda e dos clientes 24 horas, no nível de autonomia que você escolher.
                   </p>
                 </div>
 
@@ -607,7 +608,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {/* O que ele faz por você — as capacidades, explicadas. */}
+                {/* O que ele faz por você, as capacidades, explicadas. */}
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">O que ele faz por você</p>
                   <div className="space-y-2">
@@ -637,7 +638,7 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                {/* Prova de valor — receita recuperada real (AutopilotLog). */}
+                {/* Prova de valor, receita recuperada real (AutopilotLog). */}
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
                   <div className="flex items-center gap-2 text-zinc-400">
                     <TrendingUp className="h-4 w-4 text-amber-400" />
@@ -681,14 +682,14 @@ export default function SettingsPage() {
                       <Activity className="mx-auto h-6 w-6 text-zinc-600" />
                       <p className="mt-2 text-sm text-zinc-400">Ainda sem ações este mês</p>
                       <p className="mt-0.5 text-xs text-zinc-600">
-                        Quando o Auto-piloto agir — preencher um horário, confirmar, reativar um cliente — aparece aqui.
+                        Quando o Auto-piloto agir, preencher um horário, confirmar, reativar um cliente, aparece aqui.
                       </p>
                     </div>
                   )}
                 </div>
 
                 <p className="text-xs text-zinc-600">
-                  Também dá para comandar tudo isso conversando com o Copiloto — ex.: &quot;agir sozinho&quot; ou &quot;liga a confirmação automática&quot;.
+                  Também dá para comandar tudo isso conversando com o Copiloto, ex.: &quot;agir sozinho&quot; ou &quot;liga a confirmação automática&quot;.
                 </p>
               </div>
             );
@@ -758,7 +759,7 @@ export default function SettingsPage() {
                 })}
               </div>
               <p className="text-xs text-zinc-600">
-                &ldquo;Ver como&rdquo; troca o plano da sua barbearia instantaneamente, para fins de demonstração — sem cobrança real.
+                &ldquo;Ver como&rdquo; troca o plano da sua barbearia instantaneamente, para fins de demonstração, sem cobrança real.
               </p>
             </div>
           )}
@@ -785,7 +786,7 @@ function actionIcon(action: string): LucideIcon {
   }
 }
 
-// Tempo relativo curto ("há 2h", "ontem") para o histórico — mais legível que
+// Tempo relativo curto ("há 2h", "ontem") para o histórico, mais legível que
 // uma data crua num feed de atividade.
 function relativeTime(input: string | Date): string {
   const d = typeof input === "string" ? new Date(input) : input;

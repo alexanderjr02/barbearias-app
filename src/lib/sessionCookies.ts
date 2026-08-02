@@ -40,7 +40,7 @@ export function setAccessCookie(response: NextResponse, accessToken: string, sec
 export function clearSessionCookies(response: NextResponse) {
   response.cookies.delete(ACCESS_COOKIE);
   response.cookies.delete(REFRESH_COOKIE);
-  // Some também o par da marca antiga — senão ele sobrevive ao logout e a
+  // Some também o par da marca antiga, senão ele sobrevive ao logout e a
   // leitura com reserva ressuscitaria a sessão na requisição seguinte.
   response.cookies.delete(LEGACY_ACCESS_COOKIE);
   response.cookies.delete(LEGACY_REFRESH_COOKIE);

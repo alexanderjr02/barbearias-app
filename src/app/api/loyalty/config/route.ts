@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { loyaltyConfig } from "@/lib/loyalty/engine";
 
-// GET/PATCH /api/loyalty/config — o gestor desenha o próprio programa:
+// GET/PATCH /api/loyalty/config, o gestor desenha o próprio programa:
 // pontos por real, faixas, cartão de selos e indicação. Nada é regra fixa.
 export async function GET() {
   const session = await requireBarbershopSession();

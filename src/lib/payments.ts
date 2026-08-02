@@ -34,7 +34,7 @@ export interface ChargeInput {
 }
 
 // Either the client pays a Pix QR right in the app, or is sent to the
-// provider's hosted checkout — both apps already handle these two shapes.
+// provider's hosted checkout, both apps already handle these two shapes.
 export type ChargeResult =
   | { kind: "pix"; id: string; qrCode: string; qrCodeBase64: string }
   | { kind: "redirect"; id: string; initPoint: string };
@@ -75,7 +75,7 @@ export async function createMembershipCharge(
     return createPagBankCharge(apiKey, input);
   }
 
-  // ASAAS — true recurring (Pix/cartão/boleto) via a monthly subscription; the
+  // ASAAS, true recurring (Pix/cartão/boleto) via a monthly subscription; the
   // client pays the first charge on Asaas's hosted invoice page.
   return createAsaasCharge(apiKey, input);
 }
@@ -173,7 +173,7 @@ function mapAsaasStatus(status: string): ChargeStatus {
   return "pending";
 }
 
-// Webhook confirmation (by payment id) — re-fetch instead of trusting the body.
+// Webhook confirmation (by payment id), re-fetch instead of trusting the body.
 export async function fetchAsaasPaymentStatus(apiKey: string, paymentId: string): Promise<ChargeStatus> {
   try {
     const payment = await asaas(apiKey, `/payments/${paymentId}`, "GET");
@@ -195,7 +195,7 @@ async function fetchAsaasSubscriptionStatus(apiKey: string, subscriptionId: stri
 }
 
 // ---------------------------------------------------------------------------
-// Stripe — recurring card subscription via Checkout (hosted). Best for cards /
+// Stripe, recurring card subscription via Checkout (hosted). Best for cards /
 // international; Pix support in BR is limited, so we always use the card flow.
 // ---------------------------------------------------------------------------
 
@@ -246,7 +246,7 @@ async function fetchStripeSessionStatus(secretKey: string, sessionId: string): P
 }
 
 // ---------------------------------------------------------------------------
-// PagBank (PagSeguro) — hosted Checkout where the client pays by Pix or card on
+// PagBank (PagSeguro), hosted Checkout where the client pays by Pix or card on
 // PagBank's page. Money lands in the barbershop's PagBank account.
 // ---------------------------------------------------------------------------
 

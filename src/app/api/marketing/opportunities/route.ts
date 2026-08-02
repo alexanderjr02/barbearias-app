@@ -4,7 +4,7 @@ import { requireBarbershopSession } from "@/lib/apiAuth";
 import { emptySlotsThisWeek, churnedClients } from "@/lib/copilot/insights";
 import { startOfUtcMonth } from "@/lib/dateRange";
 
-// GET /api/marketing/opportunities — os números REAIS que alimentam os cards de
+// GET /api/marketing/opportunities, os números REAIS que alimentam os cards de
 // oportunidade do Marketing (nada de dado inventado): horários vagos da semana,
 // clientes sumidos, o nível do Autopilot, quanto o Copiloto já recuperou e o
 // que ele fez. É a base do "o app acha a campanha, você só aprova".
@@ -23,7 +23,7 @@ export async function GET() {
     churnedClients(bid, shop?.autoWinbackDays ?? 45, 500),
     prisma.autopilotLog.aggregate({ where: { barbershopId: bid, createdAt: { gte: startOfUtcMonth(new Date()) } }, _sum: { recoveredValue: true }, _count: { _all: true } }),
     prisma.autopilotLog.findMany({ where: { barbershopId: bid }, orderBy: { createdAt: "desc" }, take: 8, select: { action: true, detail: true, createdAt: true } }),
-    // Ticket médio real (só concluídos) — o valor de CADA horário vago/cliente
+    // Ticket médio real (só concluídos), o valor de CADA horário vago/cliente
     // recuperado, pra mostrar o dinheiro em jogo.
     prisma.appointment.aggregate({ where: { barbershopId: bid, status: "COMPLETED" }, _avg: { totalPrice: true } }),
   ]);

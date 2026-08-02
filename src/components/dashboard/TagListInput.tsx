@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { X, Plus } from "lucide-react";
 
 interface TagListInputProps {
-  /** Nome do campo no form — o valor sai como texto, um item por linha. */
+  /** Nome do campo no form, o valor sai como texto, um item por linha. */
   name: string;
   defaultValue?: string | null;
   placeholder?: string;
@@ -44,7 +44,7 @@ export function TagListInput({ name, defaultValue, placeholder, suggestions = []
 
   const aoTeclar = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === "," || e.key === ";") {
-      // Enter aqui adiciona o item, não envia o formulário inteiro — senão o
+      // Enter aqui adiciona o item, não envia o formulário inteiro, senão o
       // gestor salva a tela toda sem querer no meio do preenchimento.
       e.preventDefault();
       adiciona(rascunho);

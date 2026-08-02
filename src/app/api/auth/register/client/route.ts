@@ -7,8 +7,8 @@ import { setSessionCookies } from "@/lib/sessionCookies";
 import { isSecureRequest } from "@/lib/requestIp";
 import { registerClientSchema, firstFieldError } from "@/lib/validation";
 
-// POST /api/auth/register/client — a client creating their own account
-// (web and mobile app "Criar conta"). Not tied to a barbershop yet — that
+// POST /api/auth/register/client, a client creating their own account
+// (web and mobile app "Criar conta"). Not tied to a barbershop yet, that
 // link (BarbershopClient) is created the first time they book or a gestor
 // adds them. Distinct from /api/auth/register, which always creates an
 // OWNER + their Barbershop together.

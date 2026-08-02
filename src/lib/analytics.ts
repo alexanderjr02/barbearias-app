@@ -3,7 +3,7 @@ import { getPlanPricing, PLANS, type PlatformPlan } from "./billing";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Real DAU/WAU/MAU from LoginEvent (one row per successful login) — there is
+// Real DAU/WAU/MAU from LoginEvent (one row per successful login), there is
 // no fabricated history here: before this feature shipped, no events exist,
 // so counts naturally start at 0 and grow from real logins going forward.
 export async function getActiveUserCounts() {
@@ -35,7 +35,7 @@ export async function getDailyActiveTrend(days = 14) {
   return buckets.map((b) => ({ label: b.label, activeUsers: b.users.size }));
 }
 
-// Real usage of the (rule-based, no-LLM) chatbot — messages/day and which
+// Real usage of the (rule-based, no-LLM) chatbot, messages/day and which
 // barbershops actually use it, from the existing ChatMessage model.
 export async function getChatbotUsage() {
   const from = new Date(Date.now() - 30 * DAY_MS);
@@ -79,7 +79,7 @@ export interface CohortRow {
   retention: (number | null)[]; // % of the cohort with an owner login that month; null = month hasn't happened yet
 }
 
-// Retention by signup cohort — only meaningful from the day LoginEvent
+// Retention by signup cohort, only meaningful from the day LoginEvent
 // started being recorded (Fase 2), so early cohorts will show mostly zeros
 // for now. That's correct, not a bug: no history is being invented.
 export async function getRetentionCohorts(maxOffset = 3): Promise<CohortRow[]> {
@@ -131,7 +131,7 @@ export interface ActivationStep {
 }
 
 // Where a new gestor drops off before ever becoming a real, engaged
-// customer — cadastro is the widest part of the funnel, "1º concluído" is
+// customer, cadastro is the widest part of the funnel, "1º concluído" is
 // the narrowest (and the point at which they've genuinely gotten value).
 export async function getActivationFunnel(): Promise<ActivationStep[]> {
   const shops = await prisma.barbershop.findMany({
@@ -162,7 +162,7 @@ export interface PlanLimitUsageRow {
   staffUsedPct: number | null;
 }
 
-// Barbershops running hot against their plan's limits this month — the
+// Barbershops running hot against their plan's limits this month, the
 // clearest, least pushy upsell signal there is: they're already trying to
 // use more than they're paying for.
 export async function getPlanLimitUsage(): Promise<PlanLimitUsageRow[]> {
@@ -209,7 +209,7 @@ export interface NewIpLoginRow {
 
 // Simple, no-geolocation security signal: a login from an IP never seen
 // before for that specific user. No external service, no fabricated "risk
-// level" — just "this is new."
+// level", just "this is new."
 export async function getNewIpLogins(limit = 20): Promise<NewIpLoginRow[]> {
   const events = await prisma.loginEvent.findMany({
     where: { isNewIp: true },

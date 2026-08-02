@@ -27,9 +27,9 @@ const DURACOES = [
   { val: 365, label: "12 meses" },
 ] as const;
 
-// /admin/barbershops/new — cadastrar uma barbearia inteira sem ela passar
+// /admin/barbershops/new, cadastrar uma barbearia inteira sem ela passar
 // pela tela de pagamento. É o que permite fechar no WhatsApp e entregar a
-// conta pronta, em vez de "se cadastra aí que depois eu ajeito" — que perde
+// conta pronta, em vez de "se cadastra aí que depois eu ajeito", que perde
 // gente no meio do caminho.
 export default function NovaBarbeariaPage() {
   const router = useRouter();
@@ -147,7 +147,7 @@ export default function NovaBarbeariaPage() {
             <input type="checkbox" checked={f.isComplimentary} onChange={(e) => set("isComplimentary", e.target.checked)}
               className="mt-0.5 h-4 w-4 accent-white" />
             <span className="text-xs leading-relaxed text-zinc-400">
-              <strong className="text-white">Cortesia</strong> — não paga. Marque para o faturamento não contar esta conta como assinante;
+              <strong className="text-white">Cortesia</strong>, não paga. Marque para o faturamento não contar esta conta como assinante;
               sem isso seu número de receita fica maior do que a realidade.
             </span>
           </label>

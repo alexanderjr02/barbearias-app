@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         include: { workingHours: true },
       });
       if (!barbershop) return NextResponse.json(null);
-      // Never expose the raw payment credential — just whether it's connected.
+      // Never expose the raw payment credential, just whether it's connected.
       const { paymentApiKey, fiscalApiKey, ...safe } = barbershop;
       return NextResponse.json({ ...safe, paymentConnected: Boolean(paymentApiKey), fiscalConnected: Boolean(fiscalApiKey) });
     }
@@ -77,7 +77,7 @@ const PROFILE_FIELDS = [
   "drinks",
 ] as const;
 
-// PATCH /api/barbershop — updates the caller's own barbershop profile/branding/hours,
+// PATCH /api/barbershop, updates the caller's own barbershop profile/branding/hours,
 // and (demo/self-service) plan changes triggered from the Upgrade modal.
 export async function PATCH(request: NextRequest) {
   const session = await requireBarbershopSession();
@@ -96,7 +96,7 @@ export async function PATCH(request: NextRequest) {
   }
   // Logo e capa: string vazia significa "remover" (o botão Restaurar padrão da
   // aparência). Guardar "" deixaria o app tentando carregar uma imagem vazia e
-  // mostrando ícone quebrado — null some limpo.
+  // mostrando ícone quebrado, null some limpo.
   if (typeof body.logo === "string") data.logo = body.logo.trim() || null;
   if (typeof body.coverImage === "string") data.coverImage = body.coverImage.trim() || null;
 
@@ -124,13 +124,13 @@ export async function PATCH(request: NextRequest) {
     else data.name = n;
   }
   if (typeof body.appTagline === "string") data.appTagline = body.appTagline.trim().slice(0, 140) || null;
-  // Connecting/disconnecting a payment provider is money-sensitive — owner only.
+  // Connecting/disconnecting a payment provider is money-sensitive, owner only.
   if (session.role === "OWNER" && typeof body.paymentApiKey === "string") {
     const key = body.paymentApiKey.trim();
     data.paymentApiKey = key || null;
     data.paymentProvider = key && isPaymentProvider(body.paymentProvider) ? body.paymentProvider : null;
   }
-  // Fiscal (NFS-e) config — owner only (fiscal identity + credential).
+  // Fiscal (NFS-e) config, owner only (fiscal identity + credential).
   if (session.role === "OWNER") {
     if (typeof body.fiscalApiKey === "string") {
       const fkey = body.fiscalApiKey.trim();

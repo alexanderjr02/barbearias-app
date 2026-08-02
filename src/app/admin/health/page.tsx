@@ -27,7 +27,7 @@ const ESTILO: Record<Nivel, { Icon: typeof CheckCircle2; cor: string; borda: str
   faltando: { Icon: XCircle, cor: "text-red-400", borda: "border-red-500/30", rotulo: "Faltando" },
 };
 
-// /admin/health — o que está de pé e o que está faltando configurar.
+// /admin/health, o que está de pé e o que está faltando configurar.
 //
 // Existe por um caso concreto: o e-mail ficou dias saindo pelo remetente de
 // teste e ninguém soube, até alguém precisar de um link que não chegou.

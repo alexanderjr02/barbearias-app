@@ -26,7 +26,7 @@ export async function GET() {
   });
 }
 
-// PATCH /api/auth/me — self-service profile edit (name, phone, avatar).
+// PATCH /api/auth/me, self-service profile edit (name, phone, avatar).
 // Also mirrors the name onto the linked Staff row so the gestor's Equipe
 // page stays in sync with what the barber sets for themselves.
 export async function PATCH(request: NextRequest) {
@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
   if (typeof body.phone === "string" || body.phone === null) data.phone = body.phone;
   if (typeof body.avatar === "string" || body.avatar === null) data.avatar = body.avatar;
-  // Nascimento habilita a campanha de aniversário — por isso o cliente pode
+  // Nascimento habilita a campanha de aniversário, por isso o cliente pode
   // preencher sozinho, sem depender do gestor cadastrar por ele.
   if (typeof body.dateOfBirth === "string" && body.dateOfBirth.trim()) {
     const d = new Date(body.dateOfBirth);

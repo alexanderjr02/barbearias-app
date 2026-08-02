@@ -6,18 +6,18 @@ import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Calendário do rukz — substitui o `<input type="date">` do navegador.
+ * Calendário do rukz, substitui o `<input type="date">` do navegador.
  *
  * O nativo tem três problemas que aparecem todo dia: ele muda de cara em cada
  * navegador e sistema (o do Chrome no Windows não é o do Safari no iPhone),
  * não dá para estilizar junto com o resto da interface, e escolher uma data de
- * nascimento nele é uma sucessão de cliques na seta de mês — quarenta anos,
+ * nascimento nele é uma sucessão de cliques na seta de mês, quarenta anos,
  * quatrocentos e oitenta cliques. Aqui o cabeçalho abre a lista de anos.
  *
  * Serve aos três jeitos que o app já usa data:
  *  - controlado (`value` + `onChange`);
  *  - não controlado com `defaultValue`;
- *  - dentro de <form>, via `name` — um input escondido carrega o valor, então
+ *  - dentro de <form>, via `name`, um input escondido carrega o valor, então
  *    FormData e react-hook-form continuam funcionando sem saber que trocou.
  *
  * O valor entra e sai sempre como "YYYY-MM-DD", igual ao nativo: trocar o
@@ -28,7 +28,7 @@ const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julh
 const DIAS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 /** "YYYY-MM-DD" → Date LOCAL. `new Date("2026-07-22")` seria meia-noite UTC,
- *  que no Brasil cai no dia 21 — o clássico "escolhi 22 e salvou 21". */
+ *  que no Brasil cai no dia 21, o clássico "escolhi 22 e salvou 21". */
 function paraData(iso: string | undefined | null): Date | null {
   if (!iso) return null;
   const [a, m, d] = iso.split("-").map(Number);
@@ -88,7 +88,7 @@ export function DatePicker({
     : { fundo: "bg-amber-500", texto: "text-zinc-950", anel: "focus:border-amber-500/60", suave: "bg-amber-500/15 text-amber-400" };
 
   // Reposiciona quando abre. Em portal, para o calendário não ser cortado por
-  // um modal com overflow escondido — que é onde metade destes campos vive.
+  // um modal com overflow escondido, que é onde metade destes campos vive.
   useEffect(() => {
     if (!aberto || !gatilho.current) return;
     const r = gatilho.current.getBoundingClientRect();

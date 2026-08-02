@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import { planHasAI } from "@/lib/billing";
 import { copilotGreeting, type CopilotRole } from "@/lib/chatbot/copilot";
 
-// GET /api/copilot/greeting — a short, personalized opener written from the
+// GET /api/copilot/greeting, a short, personalized opener written from the
 // shop's real data, shown when the Copiloto opens. Pro+ feature.
 export async function GET() {
   const session = await getSession();

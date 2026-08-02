@@ -78,7 +78,7 @@ export async function undoAction(actionId: string, barbershopId: string, userId:
     case "appointment_created": {
       const appt = await prisma.appointment.findUnique({ where: { id: data.appointmentId }, select: { status: true, startTime: true } });
       if (!appt) return { ok: false, message: "O agendamento não existe mais." };
-      if (appt.status === "COMPLETED") return { ok: false, message: "O atendimento já foi concluído — não dá para desfazer." };
+      if (appt.status === "COMPLETED") return { ok: false, message: "O atendimento já foi concluído, não dá para desfazer." };
       await prisma.appointment.update({ where: { id: data.appointmentId }, data: { status: "CANCELLED" } });
       message = `Agendamento das ${appt.startTime} desfeito (cancelado).`;
       break;

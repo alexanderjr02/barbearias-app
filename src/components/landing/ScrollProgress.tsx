@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  *
  * Antes isto era um poste de barbeiro girando, com listras em gradiente. Saiu
  * junto com os gradientes: a identidade nova não tem enfeite, tem contraste. O
- * que sobrou é a informação crua — uma linha que enche — na única cor que a
+ * que sobrou é a informação crua, uma linha que enche, na única cor que a
  * marca usa para apontar coisas.
  *
  * Três pixels de altura, então animar `width` sai barato e não pesa a rolagem.

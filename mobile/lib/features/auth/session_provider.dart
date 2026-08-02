@@ -56,7 +56,7 @@ class SessionProvider extends ChangeNotifier {
     try {
       await _repository.login(email: email, password: password);
       // The login response's user object doesn't include staffId (only /me
-      // does) — fetch the full session so a freshly-logged-in barber has it
+      // does), fetch the full session so a freshly-logged-in barber has it
       // right away, same as a restored session does.
       session = await _repository.me();
       status = SessionStatus.authenticated;

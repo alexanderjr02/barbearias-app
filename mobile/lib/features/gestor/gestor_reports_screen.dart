@@ -9,7 +9,7 @@ import '../../core/utils/moeda.dart';
 
 /// Mirrors the web "Relatórios" page: KPIs, receita-vs-despesas chart,
 /// services-distribution donut, staff performance list and a
-/// novos-vs-retornantes bar chart — all from the single
+/// novos-vs-retornantes bar chart, all from the single
 /// GET /dashboard/reports endpoint.
 class GestorReportsScreen extends StatefulWidget {
   const GestorReportsScreen({super.key});
@@ -341,7 +341,7 @@ const _monthNamesFull = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
-/// Origem dos clientes (atribuição) — espelha a seção do web. Por mês: funil,
+/// Origem dos clientes (atribuição), espelha a seção do web. Por mês: funil,
 /// clientes novos, faturamento, custo por cliente novo e retorno, contatos por
 /// canal, por campanha, e o rodapé honesto de "origem não identificada".
 class _AttributionSection extends StatefulWidget {
@@ -609,7 +609,7 @@ class _AttributionSectionState extends State<_AttributionSection> {
                     children: [
                       Icon(Icons.info_outline_rounded, size: 15, color: accent),
                       const SizedBox(width: 8),
-                      Expanded(child: Text('${a.unidentifiedPct}% dos contatos estão com origem não identificada — e nunca os distribuímos entre as campanhas por estimativa.', style: TextStyle(color: palette.textFaint, fontSize: 11, height: 1.35))),
+                      Expanded(child: Text('${a.unidentifiedPct}% dos contatos estão com origem não identificada, e nunca os distribuímos entre as campanhas por estimativa.', style: TextStyle(color: palette.textFaint, fontSize: 11, height: 1.35))),
                     ],
                   ),
                 ),

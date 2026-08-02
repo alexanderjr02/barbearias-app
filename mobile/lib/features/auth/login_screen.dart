@@ -107,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   // full host to load them.
   String? _abs(String? url) {
     // String vazia = SEM asset → null, não "". Antes retornava "", e o login
-    // tentava carregar NetworkImage("") — o tile ficava só com a cor, sem a
+    // tentava carregar NetworkImage(""), o tile ficava só com a cor, sem a
     // tesoura de fallback. É o bug de "removi a logo e sumiu tudo".
     if (url == null || url.isEmpty) return null;
     if (url.startsWith('http')) return url;
@@ -142,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       media = img;
     } else {
       // Fundo padrão da rukz: preto seco, sem lavagem de cor. A marca vive na
-      // marca d'água e no ícone — não num glow amarelo.
+      // marca d'água e no ícone, não num glow amarelo.
       media = const ColoredBox(color: _bg);
     }
 
@@ -330,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           RiseIn(
                             child: Column(
                               children: [
-                                // Marca: a MESMA da web — o símbolo (bigode + "r")
+                                // Marca: a MESMA da web, o símbolo (bigode + "r")
                                 // recortado justo, com a palavra "rukz" embaixo.
                                 // Antes era um ícone pequeno num tile grande, que
                                 // fazia o "r" parecer menor e a marca "diferente"

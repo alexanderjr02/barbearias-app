@@ -29,7 +29,7 @@ export async function GET() {
         preferredStaff: { select: { id: true, name: true } },
       },
     }),
-    // Active/past-due memberships at this barbershop — surfaced to whoever's
+    // Active/past-due memberships at this barbershop, surfaced to whoever's
     // looking at the client list (gestor on the web, barber on the app) so
     // the person about to serve someone knows they're a subscriber before
     // ever asking.
@@ -58,7 +58,7 @@ export async function GET() {
 
   type RegisteredRow = (typeof registeredClients)[number];
   // Ficha do cliente nesta barbearia. Vale tanto para quem foi pré-cadastrado
-  // quanto para quem só apareceu via agendamento — por isso é lookup por
+  // quanto para quem só apareceu via agendamento, por isso é lookup por
   // userId e não algo montado só no laço dos pré-cadastrados.
   const profileByUserId = new Map<string, ReturnType<typeof profileOf>>(
     registeredClients.map((rc: RegisteredRow) => [rc.userId, profileOf(rc)])
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
   }
   const { name, email, password, phone, dateOfBirth, cpf, neighborhood, profession, instagram, howFoundUs, preferredStaffId } = parsed.data;
 
-  // Barbeiro preferido tem que ser desta barbearia — senão o gestor apontaria
+  // Barbeiro preferido tem que ser desta barbearia, senão o gestor apontaria
   // o cliente para alguém de outra unidade sem querer.
   if (preferredStaffId) {
     const staff = await prisma.staff.findUnique({ where: { id: preferredStaffId }, select: { barbershopId: true } });
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
 
-  // Reaproveitar uma conta existente é legítimo — o cliente pode já ser
+  // Reaproveitar uma conta existente é legítimo, o cliente pode já ser
   // cliente de outra barbearia. Mas duas coisas precisam ser ditas em voz
   // alta, porque antes acontecia em silêncio:
   //
@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
       name: user.name,
       email: user.email,
       // Diz à tela se a senha digitada valeu. Quando a conta já existia, ela
-      // não vale — e o gestor precisa saber, senão entrega ao cliente uma
+      // não vale, e o gestor precisa saber, senão entrega ao cliente uma
       // senha que nunca vai funcionar.
       reusedExistingAccount: !!existingUser,
     },

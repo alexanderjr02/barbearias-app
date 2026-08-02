@@ -10,7 +10,7 @@ export type PlanPricing = {
   staffLimit: number | null;
 };
 
-// Falls back to these if a PlatformSetting row hasn't been seeded yet — keeps
+// Falls back to these if a PlatformSetting row hasn't been seeded yet, keeps
 // the app from crashing on a fresh DB before `npm run db:seed` has run.
 // Compartilhado com prisma/seed.ts para os dois nunca divergirem.
 const DEFAULT_PRICING: Record<PlatformPlan, PlanPricing> = DEFAULT_PLAN_PRICING;
@@ -24,13 +24,13 @@ export function planHasAI(plan: string | null | undefined): boolean {
 
 // Preços da REDE. A unidade primária (a mais antiga de cada dono) paga o plano
 // cheio; as demais entram como unidade adicional. Sem isto, cada unidade nova
-// seria faturada pelo preço do plano inteiro — uma rede de 3 lojas pagaria
+// seria faturada pelo preço do plano inteiro, uma rede de 3 lojas pagaria
 // 3x R$897 em vez de R$897 + 2x R$149.
 export const EXTRA_UNIT_PRICE = Number(process.env.EXTRA_UNIT_PRICE) || 149;
 
 // Taxa de implantação do White Label. ZERADA de propósito: ela existia para
 // pagar a publicação nas lojas (contas Apple/Google + o trabalho de submeter e
-// encarar a revisão), e o produto decidiu ficar no PWA — o cliente instala
+// encarar a revisão), e o produto decidiu ficar no PWA, o cliente instala
 // pelo link, no mesmo dia, sem loja. Sem esse custo, "sem taxa de implantação"
 // virou argumento de venda contra quem cobra setup.
 //
@@ -62,7 +62,7 @@ export async function getNetworkPricing(): Promise<NetworkPricing> {
 /**
  * Marca, para cada barbearia, se ela é a primária do seu dono (a mais antiga).
  * Feito em lote justamente porque as rotinas de faturamento percorrem todas as
- * barbearias — uma consulta por loja viraria N+1.
+ * barbearias, uma consulta por loja viraria N+1.
  */
 export function markPrimaries<T extends { id: string; ownerId: string; createdAt: Date }>(shops: T[]): Map<string, boolean> {
   const oldestByOwner = new Map<string, T>();
@@ -157,7 +157,7 @@ export async function recordPlanChangeInvoice(
     });
 
     // Taxa de implantação: uma única vez por barbearia, na PRIMEIRA entrada no
-    // White Label. Quem sai e volta não paga de novo — por isso a checagem por
+    // White Label. Quem sai e volta não paga de novo, por isso a checagem por
     // fatura existente em vez de simplesmente cobrar toda vez.
     const alreadyCharged = await prisma.platformInvoice.findFirst({
       where: { barbershopId, reason: "SETUP" },
@@ -181,7 +181,7 @@ export async function recordPlanChangeInvoice(
 
 // No cron/background-job infrastructure exists anywhere in this app, so
 // renewals are generated lazily and idempotently whenever an admin dashboard
-// or billing route is loaded — each barbershop only ever gets one invoice
+// or billing route is loaded, each barbershop only ever gets one invoice
 // per period (guarded by periodEnd/periodStart continuity), and renewal
 // status is tied to the shop's real isActive flag instead of randomness.
 export async function ensureMonthlyRenewals(): Promise<number> {
@@ -238,7 +238,7 @@ function planPriceOf(pricing: Record<PlatformPlan, PlanPricing>, plan: string): 
   return pricing[PLANS.includes(plan as PlatformPlan) ? (plan as PlatformPlan) : "FREE"].price;
 }
 
-// Single source of truth for "current MRR" — sum of the active plan price
+// Single source of truth for "current MRR", sum of the active plan price
 // across every active barbershop. Reused by the dashboard, billing summary,
 // and the forecast/churn functions below so they can never silently drift
 // from each other.
@@ -248,7 +248,7 @@ export async function getCurrentMrr(): Promise<number> {
     getPlanPricing(),
     getNetworkPricing(),
   ]);
-  // Conta unidade extra pelo preço de unidade extra — senão o MRR ficaria
+  // Conta unidade extra pelo preço de unidade extra, senão o MRR ficaria
   // inflado e toda a previsão/churn em cima dele viria errada.
   type S = { id: string; plan: string; ownerId: string; createdAt: Date };
   const list = shops as S[];
@@ -269,7 +269,7 @@ export interface MrrMovementPoint {
 // each month. New comes from real signups, Expansion/Contraction from real
 // PLAN_CHANGE invoices (now that they record previousPlan), Churn from the
 // real "barbershop.suspended" audit trail already written by the admin
-// barbershop-suspend action — no synthetic history, no invented numbers.
+// barbershop-suspend action, no synthetic history, no invented numbers.
 export async function getMrrMovement(months = 6): Promise<MrrMovementPoint[]> {
   const pricing = await getPlanPricing();
   const now = new Date();
@@ -327,7 +327,7 @@ export async function getMrrMovement(months = 6): Promise<MrrMovementPoint[]> {
 }
 
 // Customer churn (% of the customer base lost this month) and revenue churn
-// (% of MRR lost this month) — reconstructed from the real
+// (% of MRR lost this month), reconstructed from the real
 // "barbershop.suspended" audit trail, not a stored historical snapshot.
 export async function getChurnMetrics() {
   const now = new Date();
@@ -354,7 +354,7 @@ export async function getChurnMetrics() {
   const churnedMrr = churnedShops.reduce((sum: number, s: { plan: string }) => sum + planPriceOf(pricing, s.plan), 0);
 
   const currentMrr = await getCurrentMrr();
-  const mrrAtStart = currentMrr + churnedMrr; // reverses only this month's churn — a simple, explainable approximation
+  const mrrAtStart = currentMrr + churnedMrr; // reverses only this month's churn, a simple, explainable approximation
 
   return {
     customerChurnRate: activeAtStart > 0 ? churnedIds.length / activeAtStart : 0,
@@ -364,7 +364,7 @@ export async function getChurnMetrics() {
   };
 }
 
-// Money currently stuck on unpaid/failed invoices — a number every SaaS
+// Money currently stuck on unpaid/failed invoices, a number every SaaS
 // operator watches, since it's revenue already earned but not yet collected.
 export async function getRevenueAtRisk() {
   const result = await prisma.platformInvoice.aggregate({
@@ -380,8 +380,8 @@ export interface MrrForecastPoint {
   projectedMrr: number;
 }
 
-// A transparent, explainable projection — average Net MRR movement of the
-// last 3 real months, applied forward — not a statistical model. Always
+// A transparent, explainable projection, average Net MRR movement of the
+// last 3 real months, applied forward, not a statistical model. Always
 // rendered as a clearly separate "projection" series, never blended with
 // real historical data.
 export async function getMrrForecast(months = 3): Promise<MrrForecastPoint[]> {

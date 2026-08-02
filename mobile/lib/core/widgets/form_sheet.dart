@@ -4,7 +4,7 @@ import '../theme/app_theme.dart';
 import 'rukz_date_picker.dart';
 
 /// A bottom-sheet form scaffold shared by every "create/edit X" flow in the
-/// Gestor app (services, products, staff, clients, transactions...) — mirrors
+/// Gestor app (services, products, staff, clients, transactions...), mirrors
 /// the web's `FormModal` component so every CRUD form gets the same busy /
 /// error / submit behavior for free instead of each screen re-implementing it.
 class FormSheet extends StatefulWidget {
@@ -187,7 +187,7 @@ class RukzField extends StatelessWidget {
 /// Era um campo de texto "um por linha": o gestor digitava as cegas, sem saber
 /// se o formato estava certo, e cada erro de digitacao virava uma opcao
 /// estranha na tela do cliente. Aqui cada item vira uma etiqueta assim que ele
-/// confirma — o que ele ve e exatamente o que o cliente vai ver.
+/// confirma, o que ele ve e exatamente o que o cliente vai ver.
 ///
 /// Escreve de volta no mesmo [TextEditingController] (itens separados por
 /// quebra de linha), entao a tela que salva nao muda em nada.

@@ -13,11 +13,11 @@ interface Me {
   role: string;
 }
 
-// /admin/account — a conta do próprio administrador.
+// /admin/account, a conta do próprio administrador.
 //
 // Existia um buraco básico: o dono da plataforma não conseguia trocar o
 // próprio nome, e-mail ou senha por lugar nenhum. A única saída era o
-// "esqueci a senha" por e-mail — ou seja, uma operação de dentro do sistema
+// "esqueci a senha" por e-mail, ou seja, uma operação de dentro do sistema
 // dependia de o e-mail estar entregando, coisa que nem sempre está.
 export default function AdminAccountPage() {
   const queryClient = useQueryClient();

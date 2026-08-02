@@ -20,7 +20,7 @@ export default async function DashboardLayout({
 
   // `imp` só existe em sessão aberta por um admin via "entrar como o gestor".
   // O nome da barbearia vem daqui (servidor) para a faixa já chegar pronta na
-  // primeira pintura — um aviso que aparece meio segundo depois é um aviso
+  // primeira pintura, um aviso que aparece meio segundo depois é um aviso
   // que alguém não leu.
   const impersonating = Boolean(session.imp);
   const shop = impersonating && session.barbershopId
@@ -28,7 +28,7 @@ export default async function DashboardLayout({
     : null;
 
   // O plano só é consultado aqui dentro, onde já existe sessão garantida pelo
-  // redirect acima — no layout raiz ele batia nas páginas públicas e devolvia
+  // redirect acima, no layout raiz ele batia nas páginas públicas e devolvia
   // 401 na cara de quem estava só tentando entrar.
   return (
     <PlanProvider>

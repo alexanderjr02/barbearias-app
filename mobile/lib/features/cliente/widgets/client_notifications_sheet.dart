@@ -9,7 +9,7 @@ const _notifIcon = {
 };
 
 /// The client's own notifications (their appointment was confirmed/cancelled/
-/// completed by the shop) — a single list, no Avisos tab, since platform
+/// completed by the shop), a single list, no Avisos tab, since platform
 /// announcements are a gestor/staff-only channel.
 class ClientNotificationsSheet extends StatefulWidget {
   final Future<GestorNotificationsResult> Function() onFetch;

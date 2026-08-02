@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email },
-      // barbershops (plural) — um dono pode ter várias unidades; a atual é
+      // barbershops (plural), um dono pode ter várias unidades; a atual é
       // resolvida abaixo por resolveActiveBarbershopId.
       include: { barbershops: { orderBy: { createdAt: "asc" } }, staffProfile: { include: { barbershop: true } } },
     });
@@ -30,10 +30,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "E-mail ou senha inválidos" }, { status: 401 });
     }
 
-    // Google-only account (see /api/auth/google) — never had a password to
+    // Google-only account (see /api/auth/google), never had a password to
     // check against, so bcrypt.compare(_, null) would throw either way.
     if (!user.password) {
-      return NextResponse.json({ error: "Esta conta usa login com Google — use o botão \"Continuar com Google\"" }, { status: 401 });
+      return NextResponse.json({ error: "Esta conta usa login com Google, use o botão \"Continuar com Google\"" }, { status: 401 });
     }
 
     if (!(await bcrypt.compare(password, user.password))) {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // Password is correct, but a 2FA-enabled account (opt-in, only relevant
     // for SUPER_ADMIN today) needs a second step before a real session is
-    // issued — see /api/auth/verify-2fa.
+    // issued, see /api/auth/verify-2fa.
     if (user.twoFactorEnabled) {
       const pendingToken = await signPendingTwoFactorToken(user.id);
       return NextResponse.json({ requiresTwoFactor: true, pendingToken });

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { startOfUtcMonth } from "@/lib/dateRange";
 
-// GET /api/barber/tips — the logged-in barber's digital tips (gorjetas) for
+// GET /api/barber/tips, the logged-in barber's digital tips (gorjetas) for
 // the current month, shown in the Ganhos screen.
 export async function GET() {
   const session = await getSession();

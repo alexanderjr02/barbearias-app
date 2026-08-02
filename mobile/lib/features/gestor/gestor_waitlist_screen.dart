@@ -73,7 +73,7 @@ class _GestorWaitlistScreenState extends State<GestorWaitlistScreen> {
     final firstName = e.clientName.split(' ').first;
     final msg = 'Olá, $firstName! Abriu um horário aqui na barbearia. Quer garantir? (${e.clientPhone})';
     Clipboard.setData(ClipboardData(text: msg));
-    AppToast.success(context, 'Mensagem copiada — cole no WhatsApp');
+    AppToast.success(context, 'Mensagem copiada, cole no WhatsApp');
   }
 
   Future<void> _remove(WaitlistEntry e) async {

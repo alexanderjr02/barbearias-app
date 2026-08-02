@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession, signAccessToken, ACCESS_COOKIE, ACCESS_TOKEN_TTL } from "@/lib/auth";
 import { isSecureRequest } from "@/lib/requestIp";
 
-// POST /api/units/switch { barbershopId } — troca a unidade que o painel está
+// POST /api/units/switch { barbershopId }, troca a unidade que o painel está
 // vendo. Duas coisas acontecem juntas, e ambas são necessárias:
 //   1. grava a escolha em User.activeBarbershopId, para o /auth/refresh não
 //      devolver o dono à unidade primária a cada 15 minutos;
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   const barbershopId = String(body?.barbershopId ?? "");
   if (!barbershopId) return NextResponse.json({ error: "Informe a unidade." }, { status: 400 });
 
-  // Só troca para uma unidade que é realmente dele — senão a sessão viraria
+  // Só troca para uma unidade que é realmente dele, senão a sessão viraria
   // uma porta para os dados de outra rede.
   const unit = await prisma.barbershop.findFirst({
     where: { id: barbershopId, ownerId: session.sub },
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   const accessToken = await signAccessToken({ ...session, barbershopId: unit.id });
   // O token vai no corpo TAMBÉM porque o app mobile autentica por
-  // `Authorization: Bearer` e não enxerga o cookie — sem isto a troca de
+  // `Authorization: Bearer` e não enxerga o cookie, sem isto a troca de
   // unidade funcionaria no web e falharia silenciosamente no celular.
   const response = NextResponse.json({ unit: { id: unit.id, name: unit.name }, accessToken });
   response.cookies.set(ACCESS_COOKIE, accessToken, {

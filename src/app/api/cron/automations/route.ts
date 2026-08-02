@@ -5,7 +5,7 @@ import { churnedClients, tomorrowAppointments } from "@/lib/copilot/insights";
 import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
 import { autopilotActive, logAutopilot, runWeekFillCampaign } from "@/lib/copilot/autopilot";
 
-// GET /api/cron/automations?secret=CRON_SECRET — the AUTO-PILOTO. Runs the
+// GET /api/cron/automations?secret=CRON_SECRET, the AUTO-PILOTO. Runs the
 // automations each Pro+ shop turned on: auto-confirm tomorrow's appointments,
 // birthday messages, and win-back of clients who just crossed the "sumido"
 // threshold. Idempotent-ish (confirm only flips SCHEDULED once; win-back fires
@@ -13,7 +13,7 @@ import { autopilotActive, logAutopilot, runWeekFillCampaign } from "@/lib/copilo
 //
 // ESCALA: antes isto carregava TODAS as lojas de uma vez e as percorria uma a
 // uma, com ~11 consultas cada. Em 100 mil lojas seriam ~1 milhão de consultas
-// em série — horas de trabalho dentro de um limite de segundos, ou seja,
+// em série, horas de trabalho dentro de um limite de segundos, ou seja,
 // estouro de tempo com a maioria das lojas nunca rodando. Agora percorre por
 // página com cursor, trata um punhado em paralelo e para antes do limite
 // devolvendo `nextCursor`, de onde a próxima chamada continua. A lógica POR
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
   while (Date.now() - startedAt < TIME_BUDGET_MS) {
     const shops: Shop[] = await prisma.barbershop.findMany({
-      // Inclui lojas em "Agir sozinho" (auto) mesmo sem os outros flags — é o
+      // Inclui lojas em "Agir sozinho" (auto) mesmo sem os outros flags, é o
       // que liga a campanha "encher a semana".
       where: { isActive: true, OR: [{ autoConfirm: true }, { autoBirthday: true }, { autoWinbackDays: { not: null } }, { autopilotLevel: "auto" }] },
       select: { id: true, name: true, plan: true, autopilotLevel: true, autoConfirm: true, autoBirthday: true, autoWinbackDays: true },
@@ -111,7 +111,7 @@ async function runForShop(shop: Shop, tMonth: number, tDay: number, counts: Coun
         counts.confirmed++;
         n++;
       }
-      if (n > 0) await logAutopilot(shop.id, "confirmed", `Confirmei ${n} agendamento(s) de amanhã pra reduzir falta.`);
+      if (n > 0) await logAutopilot(shop.id, "confirmed", `Confirmei ${n} ${n === 1 ? "agendamento" : "agendamentos"} de amanhã pra reduzir falta.`);
     }
 
     // 2) Aniversariantes de hoje.
@@ -149,10 +149,10 @@ async function runForShop(shop: Shop, tMonth: number, tDay: number, counts: Coun
           n++;
         }
       }
-      if (n > 0) await logAutopilot(shop.id, "winback", `Chamei ${n} cliente(s) que estavam sumindo.`);
+      if (n > 0) await logAutopilot(shop.id, "winback", `Chamei ${n} ${n === 1 ? "cliente que estava sumindo" : "clientes que estavam sumindo"}.`);
     }
 
-    // 4) Encher a semana — proativo, só no "Agir sozinho" (as travas de
+    // 4) Encher a semana, proativo, só no "Agir sozinho" (as travas de
     // frequência/consentimento/público estão dentro da função).
     const fill = await runWeekFillCampaign(shop.id, shop.name, shop.plan, shop.autopilotLevel);
     counts.weekFills += fill.sent;

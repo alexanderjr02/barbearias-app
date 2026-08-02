@@ -33,7 +33,7 @@ interface Props {
 }
 
 // Renders Google's own "Sign in with Google" button via Google Identity
-// Services — nothing to install, nothing to keep in sync visually with
+// Services, nothing to install, nothing to keep in sync visually with
 // Google's branding guidelines. Silently renders nothing when
 // NEXT_PUBLIC_GOOGLE_CLIENT_ID isn't configured, instead of showing a
 // button that can only ever fail.

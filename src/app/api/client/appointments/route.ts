@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/client/appointments — the logged-in client's own booking history,
+// GET /api/client/appointments, the logged-in client's own booking history,
 // used by the cliente app. There is no dedicated Client entity yet (see
 // docs/api-v1.md), so appointments are matched by clientId (if linked) or
 // by the account's email as a fallback for guest bookings made pre-signup.

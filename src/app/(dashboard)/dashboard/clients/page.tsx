@@ -112,7 +112,7 @@ export default function ClientsPage() {
   const queryClient = useQueryClient();
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: () => apiGet<ApiClient[]>("/api/clients") });
 
-  // Só para o select de barbeiro preferido — carrega junto com o modal aberto.
+  // Só para o select de barbeiro preferido, carrega junto com o modal aberto.
   const { data: staffList = [] } = useQuery({
     queryKey: ["staff"],
     queryFn: () => apiGet<{ id: string; name: string; isActive: boolean }[]>("/api/staff"),
@@ -133,7 +133,7 @@ export default function ClientsPage() {
     onSuccess: (res) => {
       invalidate();
       setModalOpen(false);
-      // Conta que já existia mantém a senha antiga — avisar aqui evita o
+      // Conta que já existia mantém a senha antiga, avisar aqui evita o
       // gestor entregar ao cliente uma senha que não funciona.
       if (res?.reusedExistingAccount) {
         toast.success("Cliente vinculado. A conta já existia, então ele entra com a senha que já usava.");
@@ -249,7 +249,7 @@ export default function ClientsPage() {
 
         <div className="pt-3 border-t border-zinc-800 space-y-3">
           <p className="text-xs text-zinc-500">
-            Ficha do cliente — tudo opcional. Quanto mais preenchido, melhor o Copiloto entende quem é ele.
+            Ficha do cliente, tudo opcional. Quanto mais preenchido, melhor o Copiloto entende quem é ele.
           </p>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -323,7 +323,7 @@ export default function ClientsPage() {
               );
             })}
           </div>
-          <p className="mt-1.5 text-[11px] text-zinc-600">Você pode compartilhar essa senha com o cliente — ele poderá alterá-la depois.</p>
+          <p className="mt-1.5 text-[11px] text-zinc-600">Você pode compartilhar essa senha com o cliente, ele poderá alterá-la depois.</p>
         </div>
       </FormModal>
 
@@ -341,7 +341,7 @@ export default function ClientsPage() {
 
       {/* KPIs + distribuição de níveis lado a lado. */}
       <div className="grid gap-4 lg:grid-cols-5">
-        {/* KPI tiles refinados — sem ícones coloridos aleatórios. */}
+        {/* KPI tiles refinados, sem ícones coloridos aleatórios. */}
         <div className="grid grid-cols-2 gap-4 lg:col-span-2">
           <Kpi label="Total de clientes" value={`${clients.length}`} loading={isLoading} />
           <Kpi label="Assinantes" value={`${subscriberCount}`} loading={isLoading} />
@@ -349,7 +349,7 @@ export default function ClientsPage() {
           <Kpi label="Ticket médio" value={formatCurrency(avgTicketAll)} loading={isLoading} />
         </div>
 
-        {/* Distribuição por nível — a leitura rápida do mix da base. */}
+        {/* Distribuição por nível, a leitura rápida do mix da base. */}
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 lg:col-span-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Distribuição por nível</p>

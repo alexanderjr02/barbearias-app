@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { startOfUtcMonth } from "@/lib/dateRange";
 
-// GET /api/barber/stats — the logged-in barber's own earnings snapshot
+// GET /api/barber/stats, the logged-in barber's own earnings snapshot
 // for the current month, plus their all-time average rating.
 export async function GET() {
   const session = await getSession();

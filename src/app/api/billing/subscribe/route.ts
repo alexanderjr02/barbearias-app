@@ -13,7 +13,7 @@ const PAID_PLANS: PlatformPlan[] = ["PRO", "ENTERPRISE"];
 
 // POST /api/billing/subscribe { plan: "PRO" | "ENTERPRISE" }
 // Starts a Mercado Pago recurring subscription for the gestor's barbershop and
-// returns the checkout URL to redirect to. The plan is NOT activated here — it
+// returns the checkout URL to redirect to. The plan is NOT activated here, it
 // flips only when Mercado Pago confirms payment via /api/billing/webhook.
 export async function POST(request: NextRequest) {
   const session = await requireBarbershopSession();

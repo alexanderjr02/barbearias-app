@@ -62,7 +62,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   final _emailCtrl = TextEditingController();
   final _instaCtrl = TextEditingController();
   final _pixCtrl = TextEditingController();
-  // O que a barbearia oferece — vira as opcoes que o cliente escolhe ao
+  // O que a barbearia oferece, vira as opcoes que o cliente escolhe ao
   // agendar. Antes essas listas eram fixas no app.
   final _produtosCtrl = TextEditingController();
   final _bebidasCtrl = TextEditingController();
@@ -479,7 +479,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
 
   // Chatbot: os MESMOS tres campos que a web salva no servidor
   // (Barbershop.chatbotName / chatbotWelcome / faqText). Antes esta aba
-  // guardava um JSON so no aparelho — nome, endereco, horario, WhatsApp e uma
+  // guardava um JSON so no aparelho, nome, endereco, horario, WhatsApp e uma
   // lista de FAQ que o chatbot de verdade nunca leu, porque ele roda no
   // servidor. Configurar aqui nao mudava nada pro cliente; agora muda.
   Widget _chatbotTab(AppPalette palette, Color accent) {
@@ -547,7 +547,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
-            'Uma informação por linha. O assistente responde com base nisso — quanto mais completo, menos pergunta chega pra você.',
+            'Uma informação por linha. O assistente responde com base nisso, quanto mais completo, menos pergunta chega pra você.',
             style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.35),
           ),
         ),
@@ -628,7 +628,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
           );
         }),
         Text(
-          '"Ver como" troca o plano da sua barbearia instantaneamente, para fins de demonstração — sem cobrança real.',
+          '"Ver como" troca o plano da sua barbearia instantaneamente, para fins de demonstração, sem cobrança real.',
           style: TextStyle(color: palette.textFaint, fontSize: 10.5),
         ),
       ],
@@ -698,6 +698,6 @@ class _InlineTextFieldState extends State<_InlineTextField> {
   }
 }
 
-/// Prévia da tela de entrada do app do cliente — a mesma de
+/// Prévia da tela de entrada do app do cliente, a mesma de
 /// auth/login_screen.dart, a única em que a marca da barbearia aparece para
 /// ele. Reage à cor e à logo escolhidas na aba de aparência, ao vivo.

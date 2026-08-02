@@ -6,7 +6,7 @@ import { passwordSchema } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 import { getClientIp } from "@/lib/requestIp";
 
-// POST /api/admin/me/password — o admin troca a própria senha.
+// POST /api/admin/me/password, o admin troca a própria senha.
 //
 // Antes não existia: a única forma de trocar era o fluxo de "esqueci a senha"
 // por e-mail, o que deixava o dono da plataforma dependente de o e-mail estar

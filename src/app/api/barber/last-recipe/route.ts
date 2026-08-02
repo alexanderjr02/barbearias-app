@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/barber/last-recipe?clientId= — the most recent cut "recipe" (ficha
+// GET /api/barber/last-recipe?clientId=, the most recent cut "recipe" (ficha
 // técnica) recorded for this client at this barbershop, so the barber can
 // replicate the exact same cut. Returns null when there's none yet.
 export async function GET(request: NextRequest) {

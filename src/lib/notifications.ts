@@ -9,11 +9,11 @@ export const NOTIFICATION_TYPES = [
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
-// Alertas operacionais da PLATAFORMA para o dono do sistema — cobrança que
+// Alertas operacionais da PLATAFORMA para o dono do sistema, cobrança que
 // falhou, barbearia suspensa, login de IP novo, health score despencando.
 //
 // O destinatário é você, não a barbearia. Sem PLATFORM_ALERT_EMAIL definido,
-// cai no e-mail do primeiro SUPER_ADMIN cadastrado — assim o alerta tem para
+// cai no e-mail do primeiro SUPER_ADMIN cadastrado, assim o alerta tem para
 // onde ir mesmo sem configuração extra.
 async function alertRecipient(): Promise<string | null> {
   const fromEnv = process.env.PLATFORM_ALERT_EMAIL?.trim();
@@ -49,7 +49,7 @@ export async function notify(type: NotificationType, subject: string, body: stri
 
   // Um alerta que não sai NUNCA pode derrubar a ação que o gerou. notify()
   // roda dentro do login (NEW_IP_LOGIN): se a Resend estiver fora do ar, o
-  // certo é registrar FAILED e deixar a pessoa entrar — não recusar o login
+  // certo é registrar FAILED e deixar a pessoa entrar, não recusar o login
   // por causa de um e-mail de aviso.
   try {
     const to = await alertRecipient();

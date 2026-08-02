@@ -164,7 +164,7 @@ export function BookingWizard({ shop, channel, campaign }: { shop: Shop; channel
           clientPhone,
           clientEmail: clientEmail.trim() || undefined,
           totalPrice: selectedService.price,
-          // Origem do link rastreado (?ch=/&c=), quando houver — vira a origem
+          // Origem do link rastreado (?ch=/&c=), quando houver, vira a origem
           // do lead para o relatório de atribuição.
           channel,
           campaign,

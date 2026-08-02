@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireSuperAdminSession, denyAdmin } from "@/lib/apiAuth";
 import { logAdminAction } from "@/lib/audit";
 
-// GET /api/admin/backup — exporta os dados do sistema como JSON.
+// GET /api/admin/backup, exporta os dados do sistema como JSON.
 //
 // Antes esta rota fazia readFile("dev.db") e devolvia o arquivo SQLite. Isso
 // funcionava só na máquina do desenvolvedor: em produção o banco é o Turso
@@ -12,7 +12,7 @@ import { logAdminAction } from "@/lib/audit";
 // respondia "não foi possível ler o arquivo do banco". Backup que só funciona
 // onde não é necessário é pior que nenhum, porque dá sensação de segurança.
 //
-// O que isto É: uma cópia legível e portável dos dados de negócio — boa para
+// O que isto É: uma cópia legível e portável dos dados de negócio, boa para
 // auditoria, migração e para responder "o que havia no dia tal".
 //
 // O que isto NÃO É: recuperação de desastre. Para isso vale o backup do

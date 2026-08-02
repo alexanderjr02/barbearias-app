@@ -58,7 +58,7 @@ export default function AdminWhiteLabelPage() {
       <PageHeader
         icon={Sparkles}
         title="White Label"
-        subtitle="Fila de solicitações de branding personalizado — sem pipeline automático, você avança manualmente"
+        subtitle="Fila de solicitações de branding personalizado, sem pipeline automático, você avança manualmente"
         accent="mono"
       />
 

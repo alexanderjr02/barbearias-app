@@ -132,7 +132,7 @@ class _ClientRankingScreenState extends State<ClientRankingScreen> {
               ]);
             }
 
-            // Only clients with an actual visit earn a podium spot — a
+            // Only clients with an actual visit earn a podium spot, a
             // freshly registered client still shows up, just in the plain
             // list below rather than on the loyalty podium.
             final podium = all.where((c) => c.visits > 0).take(3).toList();

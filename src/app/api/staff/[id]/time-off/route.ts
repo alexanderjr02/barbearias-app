@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireStaffScheduleAccess } from "@/lib/apiAuth";
 import { shopNow } from "@/lib/scheduling";
 
-// GET /api/staff/{id}/time-off — upcoming blocked days (vacation, folga,
+// GET /api/staff/{id}/time-off, upcoming blocked days (vacation, folga,
 // etc.) for this staff member, soonest first.
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json(timeOff);
 }
 
-// POST /api/staff/{id}/time-off — block a single day. body: { date: "YYYY-MM-DD", reason? }
+// POST /api/staff/{id}/time-off, block a single day. body: { date: "YYYY-MM-DD", reason? }
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const access = await requireStaffScheduleAccess(id);

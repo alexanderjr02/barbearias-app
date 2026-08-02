@@ -10,12 +10,12 @@ import '../chatbot/chatbot_responses.dart';
 import 'booking_repository.dart';
 import 'client_repository.dart';
 
-/// O Copiloto do cliente — a MESMA tela cheia do copiloto do barbeiro e do
+/// O Copiloto do cliente, a MESMA tela cheia do copiloto do barbeiro e do
 /// gestor (abre por Navigator.push a partir do botão flutuante), agora com o
 /// backend do cliente: marca horário, vê pontos, guarda referência na Carteira
 /// de Cortes e roda o "provador de corte" (styleAdvisor). Antes isso vivia num
 /// painelzinho flutuante (FloatingChatbot) que abria diferente dos outros
-/// papéis — aqui a experiência fica igual para os três.
+/// papéis, aqui a experiência fica igual para os três.
 class ClienteCopilotScreen extends StatefulWidget {
   const ClienteCopilotScreen({super.key});
 
@@ -268,7 +268,7 @@ class _ClienteCopilotScreenState extends State<ClienteCopilotScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    // O provador de corte primeiro — é o que mais encanta.
+                    // O provador de corte primeiro, é o que mais encanta.
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ActionChip(

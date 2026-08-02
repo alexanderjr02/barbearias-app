@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// POST /api/whatsapp/disconnect — remove a conexão de WhatsApp desta barbearia.
+// POST /api/whatsapp/disconnect, remove a conexão de WhatsApp desta barbearia.
 // A partir daí ela volta a não enviar (ou cai no número único da plataforma via
 // env, se houver). deleteMany para ser idempotente: desconectar duas vezes não
 // dá erro.

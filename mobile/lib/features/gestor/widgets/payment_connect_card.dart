@@ -12,7 +12,7 @@ const _providers = <String, (String, String)>{
 };
 
 /// Lets the gestor connect their OWN payment account (choosing the provider)
-/// so client memberships are charged straight into it — mirrors the web
+/// so client memberships are charged straight into it, mirrors the web
 /// "Conectar recebimento" card.
 class PaymentConnectCard extends StatefulWidget {
   const PaymentConnectCard({super.key});

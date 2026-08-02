@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 
 const FIELDS = ["machine", "products", "allergies", "drink", "chat", "notes"] as const;
 
-// GET /api/client/preferences — the logged-in client's grooming preferences.
+// GET /api/client/preferences, the logged-in client's grooming preferences.
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -12,7 +12,7 @@ export async function GET() {
   return NextResponse.json(prefs ?? {});
 }
 
-// PUT /api/client/preferences — upsert the client's preferences.
+// PUT /api/client/preferences, upsert the client's preferences.
 export async function PUT(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

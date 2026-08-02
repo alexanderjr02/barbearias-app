@@ -5,7 +5,7 @@ import '../../core/models/notification_models.dart';
 
 export '../../core/models/notification_models.dart';
 
-/// The "receita do corte" (ficha técnica) — how a cut was executed, so it can
+/// The "receita do corte" (ficha técnica), how a cut was executed, so it can
 /// be reproduced identically on the next visit.
 class CutRecipe {
   final String? machine;
@@ -229,7 +229,7 @@ class ClientMembership {
 }
 
 /// A client as registered on the barbershop (not just the ones with a
-/// completed visit under this barber) — used so a client the barber just
+/// completed visit under this barber), used so a client the barber just
 /// registered shows up immediately, before they've ever been served.
 class BarberClientEntry {
   final String id;
@@ -405,7 +405,7 @@ class BarberRepository {
   }
 
   /// Every client on the barbershop, regardless of whether they've had a
-  /// completed visit yet — unlike [clientRanking], which only ever includes
+  /// completed visit yet, unlike [clientRanking], which only ever includes
   /// clients with at least one completed appointment.
   Future<List<BarberClientEntry>> allClients() async {
     final data = await ApiClient.instance.get('/clients') as List;

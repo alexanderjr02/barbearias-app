@@ -16,7 +16,7 @@ class DashboardSummary {
   final double avgTicket;
   final List<TopBarber> topBarbers;
   final List<RecentAppointment> recentAppointments;
-  /// Marcado pra hoje e ainda nao concluido — o que ainda entra no caixa.
+  /// Marcado pra hoje e ainda nao concluido, o que ainda entra no caixa.
   final double todayExpected;
   /// % da capacidade de hoje (horario x barbeiros) ja vendida.
   final int todayOccupancy;
@@ -204,7 +204,7 @@ class GestorStaff {
   final double? avgRating;
   final int reviewCount;
   // Recorte do MES (e assim que comissao fecha), ritmo da semana e quanto
-  // da agenda ja esta preenchido — os mesmos numeros que o painel web usa.
+  // da agenda ja esta preenchido, os mesmos numeros que o painel web usa.
   final int monthAppointments;
   final double monthRevenue;
   final List<int> last7;
@@ -704,7 +704,7 @@ class ReportsData {
       );
 }
 
-/// Atribuição de marketing (Origem dos clientes) — de onde veio cada contato,
+/// Atribuição de marketing (Origem dos clientes), de onde veio cada contato,
 /// como avançou no funil, quanto gerou e, com a verba, quanto custou.
 class AttributionChannel {
   final String channel;
@@ -1100,7 +1100,7 @@ class CashBarberEntry {
       );
 }
 
-/// The "Caixa do Dia" — everything to close the till for a given day.
+/// The "Caixa do Dia", everything to close the till for a given day.
 class DailyCash {
   final String date;
   final double totalRevenue;
@@ -1249,7 +1249,7 @@ class CopilotReply {
   final String note;
   final List<String> suggestions;
   final List<CopilotAction> actions;
-  /// Presente quando esta resposta executou algo reversível — vira o botão
+  /// Presente quando esta resposta executou algo reversível, vira o botão
   /// "Desfazer" logo abaixo da mensagem.
   final ({String id, String label})? undo;
 
@@ -1782,7 +1782,7 @@ class GestorRepository {
 
   /// As oportunidades REAIS de marketing: horário vago da semana, cliente
   /// sumido, ticket médio (o valor de cada um deles) e o que o Copiloto já
-  /// recuperou. Nada aqui é inventado — é o que alimenta a tela de Marketing.
+  /// recuperou. Nada aqui é inventado, é o que alimenta a tela de Marketing.
   Future<({
     String autopilotLevel,
     String plan,
@@ -1812,7 +1812,7 @@ class GestorRepository {
 
   /// Dispara a campanha "encher a semana" agora. O servidor mantém as travas de
   /// consentimento e de frequência por cliente, então pode voltar ok:false com
-  /// o motivo — a tela mostra a mensagem como veio.
+  /// o motivo, a tela mostra a mensagem como veio.
   Future<({bool ok, int sent, String message})> fillWeek() async {
     final data = await ApiClient.instance.post('/marketing/fill-week', data: {}) as Map<String, dynamic>;
     return (ok: data['ok'] as bool? ?? false, sent: (data['sent'] as num?)?.toInt() ?? 0, message: data['message'] as String? ?? 'Nada enviado agora.');
@@ -1828,7 +1828,7 @@ class GestorRepository {
 
   /// Troca a unidade que o app está vendo. O backend devolve um access token
   /// novo (o app autentica por Bearer, não por cookie), então ele PRECISA ser
-  /// salvo — senão as próximas chamadas continuariam na unidade antiga.
+  /// salvo, senão as próximas chamadas continuariam na unidade antiga.
   Future<void> switchUnit(String barbershopId) async {
     final data = await ApiClient.instance.post('/units/switch', data: {'barbershopId': barbershopId}) as Map<String, dynamic>;
     final token = data['accessToken'] as String?;

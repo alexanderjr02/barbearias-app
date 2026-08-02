@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
-// GET /api/client/waitlist — the client's active "avise-me" entries.
+// GET /api/client/waitlist, the client's active "avise-me" entries.
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -14,7 +14,7 @@ export async function GET() {
   return NextResponse.json(entries);
 }
 
-// POST /api/client/waitlist { barbershopId } — "avise-me se abrir um horário".
+// POST /api/client/waitlist { barbershopId }, "avise-me se abrir um horário".
 export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

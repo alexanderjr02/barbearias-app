@@ -5,7 +5,7 @@ import { createMembershipCharge, isPaymentProvider, providerRequiresCpf } from "
 
 const CYCLE_DAYS: Record<string, number> = { MONTHLY: 30, QUARTERLY: 90, ANNUAL: 365 };
 
-// GET /api/client/subscription-plans?barbershopId=X — the plans a barbershop
+// GET /api/client/subscription-plans?barbershopId=X, the plans a barbershop
 // offers, plus the logged-in client's own subscription there (if any), so
 // the app can show either "assinar" or "sua assinatura" for that shop.
 export async function GET(request: NextRequest) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     mine.find((s: SubscriptionRow) => s.status === "ACTIVE" || s.status === "PAST_DUE") ?? mine[0] ?? null;
 
   // The same "what did I actually get for my money" math the gestor sees,
-  // mirrored back to the client — most subscription products only ever show
+  // mirrored back to the client, most subscription products only ever show
   // billing status; showing the client their own value earned is the part
   // that doesn't exist anywhere else.
   let usage: { visitCount: number; valueConsumed: number; totalPaid: number } | null = null;
@@ -79,9 +79,9 @@ export async function GET(request: NextRequest) {
   });
 }
 
-// POST /api/client/subscription-plans — the logged-in client subscribes to
+// POST /api/client/subscription-plans, the logged-in client subscribes to
 // one of the barbershop's plans. One active (or past-due) membership per
-// barbershop at a time — subscribing again while already subscribed doesn't
+// barbershop at a time, subscribing again while already subscribed doesn't
 // make sense until the existing one is cancelled.
 export async function POST(request: NextRequest) {
   const session = await getSession();

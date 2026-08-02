@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { getRangeScheduleByStaff } from "@/lib/scheduling";
 
-// GET /api/staff/month-schedule?from=YYYY-MM-DD&to=YYYY-MM-DD — every active
+// GET /api/staff/month-schedule?from=YYYY-MM-DD&to=YYYY-MM-DD, every active
 // staff member's full schedule (open/closed + hours) for each day in the
 // range, batched. Powers the Agenda page's month-view free-hours indicator.
 export async function GET(request: NextRequest) {

@@ -22,7 +22,7 @@ interface RecurringExpense {
  *
  * Cadastrar aqui é o que tira o gestor da redigitação: uma vez por conta, e o
  * lançamento nasce sozinho todo mês no dia certo. É também o que faz o "Lucro
- * líquido" da tela acima parar de mentir para cima — sem as fixas, ele conta
+ * líquido" da tela acima parar de mentir para cima, sem as fixas, ele conta
  * a receita inteira e quase nenhuma despesa.
  */
 export function RecurringExpensesPanel() {
@@ -112,7 +112,7 @@ export function RecurringExpensesPanel() {
           <input name="category" className={fieldCls} placeholder="Fixas" defaultValue="Fixas" />
         </div>
         <p className="text-[11px] leading-relaxed text-zinc-600">
-          O dia vai até 28 porque 29, 30 e 31 não existem em todo mês — uma conta marcada para o dia 31 sumiria
+          O dia vai até 28 porque 29, 30 e 31 não existem em todo mês, uma conta marcada para o dia 31 sumiria
           em fevereiro.
         </p>
       </FormModal>

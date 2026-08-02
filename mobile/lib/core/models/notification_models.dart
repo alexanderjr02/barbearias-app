@@ -1,7 +1,7 @@
 // Shared shapes for the two "bell" concepts used by every role's app:
 // platform Avisos (gestor/barbeiro only, from /announcements/active) and the
 // personal Notification feed (/notifications for gestor+barbeiro,
-// /client/notifications for cliente — same JSON shape, different scope).
+// /client/notifications for cliente, same JSON shape, different scope).
 
 class GestorAnnouncement {
   final String id;

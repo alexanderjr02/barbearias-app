@@ -5,7 +5,7 @@ import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_toast.dart';
 
-/// Card de "Notificações no aparelho" — liga/desliga o Web Push. Aparece na
+/// Card de "Notificações no aparelho", liga/desliga o Web Push. Aparece na
 /// tela de perfil (todos os papéis). Fora do web, ou em navegador sem suporte,
 /// some sozinho (pushStatus == 'unsupported').
 class PushNotificationCard extends StatefulWidget {
@@ -64,7 +64,7 @@ class _PushNotificationCardState extends State<PushNotificationCard> {
 
   @override
   Widget build(BuildContext context) {
-    // Navegador sem suporte: não mostra nada — nada pior que um botão que
+    // Navegador sem suporte: não mostra nada, nada pior que um botão que
     // promete algo que o aparelho não faz.
     if (_status == 'unsupported') return const SizedBox.shrink();
 
@@ -144,7 +144,7 @@ class _PushNotificationCardState extends State<PushNotificationCard> {
       );
     }
 
-    // 'default', 'denied' ou 'error' — oferece ativar.
+    // 'default', 'denied' ou 'error', oferece ativar.
     final denied = _status == 'denied';
     return Row(
       children: [
@@ -159,7 +159,7 @@ class _PushNotificationCardState extends State<PushNotificationCard> {
               const SizedBox(height: 2),
               Text(denied
                   ? 'Permissão negada antes. Libere as notificações nas configurações do navegador e tente de novo.'
-                  : 'Receba agendamentos e lembretes na hora, como uma mensagem — mesmo com o app fechado.',
+                  : 'Receba agendamentos e lembretes na hora, como uma mensagem, mesmo com o app fechado.',
                   style: TextStyle(color: palette.textFaint, fontSize: 12, height: 1.35)),
             ],
           ),

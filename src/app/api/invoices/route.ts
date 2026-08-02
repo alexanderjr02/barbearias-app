@@ -10,7 +10,7 @@ const DB_STATUS: Record<InvoiceStatus, string> = {
   cancelled: "CANCELLED",
 };
 
-// GET /api/invoices — the barbershop's issued notas fiscais.
+// GET /api/invoices, the barbershop's issued notas fiscais.
 export async function GET() {
   const session = await requireBarbershopSession();
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -22,7 +22,7 @@ export async function GET() {
   return NextResponse.json(invoices);
 }
 
-// POST /api/invoices — emit an NFS-e for an appointment (or an ad-hoc sale).
+// POST /api/invoices, emit an NFS-e for an appointment (or an ad-hoc sale).
 // Body: { appointmentId } OR { amount, clientName, description?, clientDoc? }.
 // When the barbershop has a fiscal provider connected, it issues for real;
 // otherwise it records a simulated invoice so the flow is testable pre-deploy.
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(updated, { status: 201 });
   }
 
-  // Simulated mode — no fiscal provider connected yet.
+  // Simulated mode, no fiscal provider connected yet.
   const simulated = await prisma.serviceInvoice.update({
     where: { id: invoice.id },
     data: {

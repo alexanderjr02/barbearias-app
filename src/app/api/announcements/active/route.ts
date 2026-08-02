@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
-// GET /api/announcements/active — active announcements targeted at this
+// GET /api/announcements/active, active announcements targeted at this
 // gestor's plan tier, excluding ones they've already dismissed. Powers the
 // bell icon in the gestor Topbar (previously purely decorative).
 export async function GET() {

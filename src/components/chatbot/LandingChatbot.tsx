@@ -18,19 +18,19 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["preço", "valor", "quanto", "custa", "plano", "planos", "mensalidade", "assinatura"],
-    answer: "Temos 3 planos:\n\n**Essencial** — R$ 50/mês\n• Agenda online 24/7 • Cadastro de clientes • Fila de espera • Caixa do dia • Até 3 barbeiros\n\n**Pro** — R$ 350/mês\n• Tudo do Essencial • Copiloto com IA • Financeiro completo e comissões • Estoque • Fidelidade • Clube de assinatura • Até 10 barbeiros\n\n**White Label** — R$ 897/mês\n• Tudo do Pro • App instalável com a SUA marca • Painel e Copiloto de rede • Nota fiscal automática • Barbeiros ilimitados • Atendimento dedicado\n• Rede: + R$ 149 por unidade adicional\n• **Sem taxa de implantação** — no ar no mesmo dia\n\nOs planos Pro e White Label têm **14 dias de teste grátis** (sem cartão de crédito). Quer saber mais sobre algum deles?",
+    answer: "Temos 3 planos:\n\n**Essencial**. R$ 50/mês\n• Agenda online 24/7 • Cadastro de clientes • Fila de espera • Caixa do dia • Até 3 barbeiros\n\n**Pro**. R$ 350/mês\n• Tudo do Essencial • Copiloto com IA • Financeiro completo e comissões • Estoque • Fidelidade • Clube de assinatura • Até 10 barbeiros\n\n**White Label**. R$ 897/mês\n• Tudo do Pro • App instalável com a SUA marca • Painel e Copiloto de rede • Nota fiscal automática • Barbeiros ilimitados • Atendimento dedicado\n• Rede: + R$ 149 por unidade adicional\n• **Sem taxa de implantação**, no ar no mesmo dia\n\nOs planos Pro e White Label têm **14 dias de teste grátis** (sem cartão de crédito). Quer saber mais sobre algum deles?",
   },
   {
     keywords: ["diferença", "comparar", "comparação", "qual escolher", "melhor plano", "qual plano"],
-    answer: "Depende do tamanho da sua operação:\n\n**Essencial (R$ 50/mês)** — você trabalha sozinho ou com até 3 barbeiros e quer sair da agenda de papel/WhatsApp.\n\n**Pro (R$ 350/mês)** — sua equipe tem até 10 barbeiros e você quer o Copiloto com IA, financeiro completo, fidelização e assinatura.\n\n**White Label (R$ 897/mês)** — você quer um app próprio com a sua marca, nota fiscal automática e sem limite de equipe.\n\nQuer que eu te ajude a decidir com base no tamanho da sua barbearia?",
+    answer: "Depende do tamanho da sua operação:\n\n**Essencial (R$ 50/mês)**, você trabalha sozinho ou com até 3 barbeiros e quer sair da agenda de papel/WhatsApp.\n\n**Pro (R$ 350/mês)**, sua equipe tem até 10 barbeiros e você quer o Copiloto com IA, financeiro completo, fidelização e assinatura.\n\n**White Label (R$ 897/mês)**, você quer um app próprio com a sua marca, nota fiscal automática e sem limite de equipe.\n\nQuer que eu te ajude a decidir com base no tamanho da sua barbearia?",
   },
   {
     keywords: ["funcionalidade", "recurso", "o que faz", "features", "o que tem", "inclui", "sistema faz"],
-    answer: "O rukz cobre o essencial da gestão de uma barbearia:\n\n**Agendamento online** — página personalizada 24/7\n**Agenda com visão diária, semanal e mensal** — veja toda a equipe de uma vez ou filtre por barbeiro\n**Chatbot** no site (e no WhatsApp nos planos Pro/White Label)\n**Financeiro** — receitas, despesas e comissões\n**Relatórios** de faturamento e performance da equipe\n**Clientes** — histórico, avaliações e programa de pontos/fidelidade (Bronze, Prata, Ouro)\n**Equipe** — controle de barbeiros, comissões e agenda de cada um\n**App para barbeiro e cliente** — agenda, ganhos e avaliações para o barbeiro; histórico, cancelamento/remarcação e avaliação de atendimento para o cliente\n**Estoque** de produtos, com foto de cada item\n\nQuer ver a demonstração ao vivo?",
+    answer: "O rukz cobre o essencial da gestão de uma barbearia:\n\n**Agendamento online**, página personalizada 24/7\n**Agenda com visão diária, semanal e mensal**, veja toda a equipe de uma vez ou filtre por barbeiro\n**Chatbot** no site (e no WhatsApp nos planos Pro/White Label)\n**Financeiro**, receitas, despesas e comissões\n**Relatórios** de faturamento e performance da equipe\n**Clientes**, histórico, avaliações e programa de pontos/fidelidade (Bronze, Prata, Ouro)\n**Equipe**, controle de barbeiros, comissões e agenda de cada um\n**App para barbeiro e cliente**, agenda, ganhos e avaliações para o barbeiro; histórico, cancelamento/remarcação e avaliação de atendimento para o cliente\n**Estoque** de produtos, com foto de cada item\n\nQuer ver a demonstração ao vivo?",
   },
   {
     keywords: ["app", "aplicativo", "celular", "download", "baixar"],
-    answer: "Sim! Além do painel web para o gestor, o barbeiro tem um app próprio com:\n\nAgenda do dia\nGanhos — receita, comissão e ticket médio do mês\nAvaliações recebidas dos clientes\nHistórico de cada cliente ao tocar no agendamento\n\nE o cliente tem um app para:\n\nVer histórico de agendamentos e o saldo de pontos\nCancelar ou remarcar um horário\nAvaliar o atendimento depois de concluído\n\nO app com a marca 100% personalizada da sua barbearia — que o cliente instala na tela do celular pelo seu link, sem passar por loja de aplicativo — é exclusivo do plano **White Label**.",
+    answer: "Sim! Além do painel web para o gestor, o barbeiro tem um app próprio com:\n\nAgenda do dia\nGanhos, receita, comissão e ticket médio do mês\nAvaliações recebidas dos clientes\nHistórico de cada cliente ao tocar no agendamento\n\nE o cliente tem um app para:\n\nVer histórico de agendamentos e o saldo de pontos\nCancelar ou remarcar um horário\nAvaliar o atendimento depois de concluído\n\nO app com a marca 100% personalizada da sua barbearia, que o cliente instala na tela do celular pelo seu link, sem passar por loja de aplicativo, é exclusivo do plano **White Label**.",
   },
   {
     keywords: ["avaliação", "avaliações", "nota", "review", "reviews", "estrela", "estrelas"],
@@ -38,15 +38,15 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["cancelar horário", "remarcar", "reagendar", "desmarcar", "mudar horário", "trocar horário"],
-    answer: "O cliente pode cancelar ou remarcar o próprio horário direto pelo app, sem precisar ligar para a barbearia. Ao remarcar, o horário antigo é liberado automaticamente e o cliente escolhe um novo — tudo aparece em tempo real na agenda do gestor e do barbeiro.",
+    answer: "O cliente pode cancelar ou remarcar o próprio horário direto pelo app, sem precisar ligar para a barbearia. Ao remarcar, o horário antigo é liberado automaticamente e o cliente escolhe um novo, tudo aparece em tempo real na agenda do gestor e do barbeiro.",
   },
   {
     keywords: ["agenda", "calendário", "visão semanal", "visão mensal", "mês", "semana"],
-    answer: "A agenda do painel do gestor tem 3 visões:\n\n**Lista** — busca e filtro por status\n**Semana** — grade por horário, ideal para ver a ocupação do dia a dia\n**Mês** — visão panorâmica de todos os agendamentos\n\nEm qualquer visão dá para filtrar por barbeiro específico. O barbeiro também acompanha a própria agenda direto pelo app dele.",
+    answer: "A agenda do painel do gestor tem 3 visões:\n\n**Lista**, busca e filtro por status\n**Semana**, grade por horário, ideal para ver a ocupação do dia a dia\n**Mês**, visão panorâmica de todos os agendamentos\n\nEm qualquer visão dá para filtrar por barbeiro específico. O barbeiro também acompanha a própria agenda direto pelo app dele.",
   },
   {
     keywords: ["ponto", "pontos", "fidelidade", "fidelização", "cashback", "recompensa"],
-    answer: "O programa de fidelidade do rukz funciona por pontos:\n\n**Bronze** — 0 a 500 pontos\n**Prata** — 501 a 1.500 pontos (5% de desconto)\n**Ouro** — a partir de 1.501 pontos (10% de desconto)\n\nOs pontos são creditados automaticamente quando um atendimento é concluído, e o gestor pode configurar quantos pontos valem por real gasto. Disponível a partir do plano **Pro**.",
+    answer: "O programa de fidelidade do rukz funciona por pontos:\n\n**Bronze**, 0 a 500 pontos\n**Prata**, 501 a 1.500 pontos (5% de desconto)\n**Ouro**, a partir de 1.501 pontos (10% de desconto)\n\nOs pontos são creditados automaticamente quando um atendimento é concluído, e o gestor pode configurar quantos pontos valem por real gasto. Disponível a partir do plano **Pro**.",
   },
   {
     keywords: ["whatsapp", "integração", "api", "mensagem automática"],
@@ -54,7 +54,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["teste", "grátis", "free", "trial", "experimentar", "começar", "cadastro", "cadastrar"],
-    answer: "Você pode começar agora mesmo:\n\n**Plano Essencial** — R$ 50/mês, sem contrato de fidelidade.\n**Planos Pro e White Label** — 14 dias de teste grátis, sem cartão de crédito.\n\nClique em **Começar grátis** no topo da página para criar sua conta em menos de 2 minutos.\n\nPrecisa de ajuda durante o cadastro?",
+    answer: "Você pode começar agora mesmo:\n\n**Plano Essencial**. R$ 50/mês, sem contrato de fidelidade.\n**Planos Pro e White Label**, 14 dias de teste grátis, sem cartão de crédito.\n\nClique em **Começar grátis** no topo da página para criar sua conta em menos de 2 minutos.\n\nPrecisa de ajuda durante o cadastro?",
   },
   {
     keywords: ["cancelar", "fidelidade", "contrato", "multa"],
@@ -62,7 +62,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["cardápio", "configurar", "personalizar", "logo", "cor", "aparência"],
-    answer: "Cada barbearia tem sua identidade visual no rukz:\n\nCores, logo e capa personalizadas (planos Pro e White Label)\nURL própria — ex: rukz.app/sua-barbearia\nServiços, preços e horários configuráveis\n\nTudo pelo painel, sem precisar de programação.",
+    answer: "Cada barbearia tem sua identidade visual no rukz:\n\nCores, logo e capa personalizadas (planos Pro e White Label)\nURL própria, ex: rukz.app/sua-barbearia\nServiços, preços e horários configuráveis\n\nTudo pelo painel, sem precisar de programação.",
   },
   {
     keywords: ["suporte", "ajuda", "problema", "contato", "falar", "vendas", "comercial"],
@@ -74,11 +74,11 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["múltiplas", "unidades", "franquia", "rede", "várias"],
-    answer: "Para redes de barbearia, o plano **White Label** (R$ 897/mês + R$ 149 por unidade) foi feito para isso:\n\nApp instalável com a marca da sua rede — o cliente adiciona na tela do celular\nPainel da rede: compare suas lojas lado a lado\nCopiloto que responde \"qual unidade está puxando o faturamento pra baixo?\"\nSem marca do rukz em lugar nenhum\nBarbeiros e unidades ilimitados\n\nFale com nossa equipe comercial: **vendas@rukz.app**",
+    answer: "Para redes de barbearia, o plano **White Label** (R$ 897/mês + R$ 149 por unidade) foi feito para isso:\n\nApp instalável com a marca da sua rede, o cliente adiciona na tela do celular\nPainel da rede: compare suas lojas lado a lado\nCopiloto que responde \"qual unidade está puxando o faturamento pra baixo?\"\nSem marca do rukz em lugar nenhum\nBarbeiros e unidades ilimitados\n\nFale com nossa equipe comercial: **vendas@rukz.app**",
   },
   {
     keywords: ["quanto tempo", "implanta", "implementar", "migrar", "trocar de sistema", "demora"],
-    answer: "A configuração inicial leva minutos: você cria a conta, cadastra serviços/horários e já tem um link de agendamento no ar. Se você já usa outro sistema, nossa equipe de suporte te ajuda a migrar os dados — é só chamar no suporte@rukz.app.",
+    answer: "A configuração inicial leva minutos: você cria a conta, cadastra serviços/horários e já tem um link de agendamento no ar. Se você já usa outro sistema, nossa equipe de suporte te ajuda a migrar os dados, é só chamar no suporte@rukz.app.",
   },
 ];
 
@@ -199,7 +199,7 @@ export function LandingChatbot() {
             <div ref={endRef} />
           </div>
 
-          {/* Quick questions — always available as an escape hatch */}
+          {/* Quick questions, always available as an escape hatch */}
           {!typing && (
             <div className="px-4 pb-2 flex flex-wrap gap-1.5">
               {QUICK_QUESTIONS.map(q => (

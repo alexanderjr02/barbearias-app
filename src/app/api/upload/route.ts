@@ -12,12 +12,12 @@ const ALLOWED_TYPES: Record<string, string> = {
 };
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
-// POST /api/upload — guarda a imagem e devolve a URL pública.
+// POST /api/upload, guarda a imagem e devolve a URL pública.
 //
 // Dois destinos, escolhidos pelo ambiente:
 //
 // - Com BLOB_READ_WRITE_TOKEN (produção na Vercel): vai para o Vercel Blob.
-//   Obrigatório lá, porque o disco de uma função serverless é efêmero — toda
+//   Obrigatório lá, porque o disco de uma função serverless é efêmero, toda
 //   foto de perfil, logo e foto de corte sumiria no deploy seguinte, e o
 //   banco ficaria cheio de URLs apontando para o vazio.
 // - Sem o token (desenvolvimento): grava em public/uploads como sempre, para
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       access: "public",
       contentType: file.type,
       // O nome já é um UUID, então não precisa do sufixo aleatório que o
-      // Blob acrescenta por padrão — e sem ele a URL fica previsível.
+      // Blob acrescenta por padrão, e sem ele a URL fica previsível.
       addRandomSuffix: false,
     });
     return NextResponse.json({ url }, { status: 201 });

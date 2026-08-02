@@ -154,7 +154,7 @@ async function runTool(barbershopId: string, name: string, input: Record<string,
         status: "SCHEDULED",
       },
     });
-    // Atribuição (Onda 1): fecha o ciclo — o lead que chegou pelo WhatsApp
+    // Atribuição (Onda 1): fecha o ciclo, o lead que chegou pelo WhatsApp
     // (possivelmente de um anúncio) agora agendou. Best-effort.
     try {
       await advanceLead(barbershopId, String(input.clientPhone ?? ""), "SCHEDULED", { scheduledAt: new Date(dateKey) });
@@ -177,7 +177,7 @@ async function runTool(barbershopId: string, name: string, input: Record<string,
     if (appts.length === 0) return "Nenhum agendamento futuro encontrado para esse telefone.";
     return appts
       .map((a: { id: string; date: Date; startTime: string; service: { name: string } | null; staff: { name: string } | null }) =>
-        `id ${a.id} — ${a.date.toISOString().slice(0, 10)} ${a.startTime}, ${a.service?.name ?? "serviço"} com ${a.staff?.name ?? "barbeiro"}`)
+        `id ${a.id}, ${a.date.toISOString().slice(0, 10)} ${a.startTime}, ${a.service?.name ?? "serviço"} com ${a.staff?.name ?? "barbeiro"}`)
       .join("\n");
   }
 
@@ -236,18 +236,18 @@ export async function runAssistant(barbershopId: string, history: ChatTurn[], cl
   const identity = botName
     ? `Você é ${botName}, o assistente virtual da barbearia "${shop?.name ?? "nossa barbearia"}". Quando fizer sentido se apresentar, use esse nome.`
     : `Você é o assistente virtual da barbearia "${shop?.name ?? "nossa barbearia"}".`;
-  const system = `${identity} Fale em português do Brasil, simpático mas direto e objetivo — como um recepcionista esperto, não um robô. Hoje é ${now.dateKey}.
+  const system = `${identity} Fale em português do Brasil, simpático mas direto e objetivo, como um recepcionista esperto, não um robô. Hoje é ${now.dateKey}.
 
-FORMATO (a resposta aparece num balão de chat): texto limpo, sem markdown — nada de **negrito**, ## ou listas com "-". Se listar serviços/horários, use "•" e vá direto. Respostas curtas (2–5 frases). Comece pela resposta, sem "Claro!" nem repetir a pergunta.
+FORMATO (a resposta aparece num balão de chat): texto limpo, sem markdown, nada de **negrito**, ## ou listas com "-". Se listar serviços/horários, use "•" e vá direto. Respostas curtas (2–5 frases). Comece pela resposta, sem "Claro!" nem repetir a pergunta.
 
-Você pode AGENDAR, REAGENDAR e CANCELAR de verdade, além de tirar dúvidas. Use as ferramentas para dados reais — nunca invente horários ou preços.
+Você pode AGENDAR, REAGENDAR e CANCELAR de verdade, além de tirar dúvidas. Use as ferramentas para dados reais, nunca invente horários ou preços.
 
 Serviços:
 ${serviceList}
 
 Barbeiros:
 ${staffList}
-${shop?.faqText ? `\nInformações e regras desta barbearia (use para responder dúvidas específicas; se a resposta estiver aqui, siga à risca):\n${shop.faqText}\n` : ""}${clientContext ? `\nSOBRE O CLIENTE COM QUEM VOCÊ ESTÁ FALANDO (use pra personalizar — chame pelo primeiro nome, lembre do histórico e ofereça repetir o de sempre; ao agendar, use estes dados sem pedir de novo):\n${clientContext}\n` : ""}
+${shop?.faqText ? `\nInformações e regras desta barbearia (use para responder dúvidas específicas; se a resposta estiver aqui, siga à risca):\n${shop.faqText}\n` : ""}${clientContext ? `\nSOBRE O CLIENTE COM QUEM VOCÊ ESTÁ FALANDO (use pra personalizar, chame pelo primeiro nome, lembre do histórico e ofereça repetir o de sempre; ao agendar, use estes dados sem pedir de novo):\n${clientContext}\n` : ""}
 Regras:
 - Para oferecer horários, sempre use check_availability (não invente).
 - Antes de agendar, colete nome e telefone/WhatsApp do cliente e confirme serviço, barbeiro, data e horário.

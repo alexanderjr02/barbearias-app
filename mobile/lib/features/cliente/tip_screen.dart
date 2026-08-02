@@ -6,7 +6,7 @@ import '../../core/widgets/app_toast.dart';
 import 'client_repository.dart';
 import '../../core/utils/moeda.dart';
 
-/// Gorjeta digital via PIX — the client picks an amount, copies the shop's PIX
+/// Gorjeta digital via PIX, the client picks an amount, copies the shop's PIX
 /// key to pay directly, and the tip is logged so the barber sees it in Ganhos.
 class TipScreen extends StatefulWidget {
   final String appointmentId;

@@ -6,7 +6,7 @@ import '../../core/widgets/app_toast.dart';
 /// Configuração do programa de fidelidade pelo celular do gestor.
 ///
 /// Mesma ideia da web: o gestor não configura às cegas. A prévia do cartão do
-/// cliente fica no topo e muda enquanto ele mexe — sem isso, "10 selos" é um
+/// cliente fica no topo e muda enquanto ele mexe, sem isso, "10 selos" é um
 /// número abstrato e ele desiste no meio.
 class GestorLoyaltyScreen extends StatefulWidget {
   const GestorLoyaltyScreen({super.key});
@@ -162,7 +162,7 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
         Text(
           cfg.stampEnabled
               ? 'Os selos acima são só demonstração. Quem manda no cartão é "Cortes para fechar", logo abaixo.'
-              : 'O cartão de selos está DESLIGADO — o cliente não vê nada disso. Ligue no botão abaixo para configurar.',
+              : 'O cartão de selos está DESLIGADO, o cliente não vê nada disso. Ligue no botão abaixo para configurar.',
           style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.35),
         ),
         const SizedBox(height: 22),
@@ -196,7 +196,7 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
               onCommit: (v) => _save({'stampRewardLabel': v}),
             ),
             const SizedBox(height: 14),
-            // Só mexe no cartão de demonstração lá de cima — não salva nada e
+            // Só mexe no cartão de demonstração lá de cima, não salva nada e
             // não altera o cartão de nenhum cliente. O rótulo diz isso.
             Text('Simular a prévia', style: TextStyle(color: palette.textFaint, fontSize: 11.5, fontWeight: FontWeight.w700)),
             Row(
@@ -224,7 +224,7 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
         _SectionCard(
           icon: Icons.group_add_rounded,
           title: 'Indicação',
-          hint: 'Cada cliente vira vendedor. Os dois lados ganham — e o prêmio só cai quando o amigo conclui o 1º corte.',
+          hint: 'Cada cliente vira vendedor. Os dois lados ganham, e o prêmio só cai quando o amigo conclui o 1º corte.',
           enabled: cfg.referralEnabled,
           onToggle: (v) => _save({'referralEnabled': v}),
           palette: palette,
@@ -254,7 +254,7 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
         _SectionCard(
           icon: Icons.workspace_premium_rounded,
           title: 'Pontos e faixas',
-          hint: 'Cada real vira ponto. Faixa é status — e status é o que traz o cliente de volta.',
+          hint: 'Cada real vira ponto. Faixa é status, e status é o que traz o cliente de volta.',
           enabled: cfg.loyaltyEnabled,
           onToggle: (v) => _save({'loyaltyEnabled': v}),
           palette: palette,
@@ -301,7 +301,7 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: palette.bg, borderRadius: BorderRadius.circular(12)),
               child: Text(
-                'Com ${cfg.pointsPerReal} pts por real, um corte de R\$ 50 rende ${cfg.pointsPerReal * 50} pontos — '
+                'Com ${cfg.pointsPerReal} pts por real, um corte de R\$ 50 rende ${cfg.pointsPerReal * 50} pontos, '
                 'a Prata chega em ${(cfg.silverThreshold / (cfg.pointsPerReal * 50)).ceil().clamp(1, 999)} cortes.',
                 style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.5),
               ),
@@ -565,7 +565,7 @@ class _SectionCard extends StatelessWidget {
               ],
             ),
           ),
-          // Some quando desligado — campo que não faz nada só polui a tela.
+          // Some quando desligado, campo que não faz nada só polui a tela.
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 220),
             crossFadeState: enabled ? CrossFadeState.showFirst : CrossFadeState.showSecond,

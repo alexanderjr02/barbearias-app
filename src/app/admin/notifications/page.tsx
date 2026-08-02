@@ -63,10 +63,10 @@ export default function AdminNotificationsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <PageHeader icon={Bell} title="Notificações" subtitle="Tudo que seria enviado por e-mail — sem provedor real configurado ainda" accent="mono" />
+      <PageHeader icon={Bell} title="Notificações" subtitle="Tudo que seria enviado por e-mail, sem provedor real configurado ainda" accent="mono" />
 
       <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm text-amber-400">
-        Nenhum e-mail é enviado de verdade hoje. Esta tela registra o que seria disparado — quando você configurar um provedor (Resend, SendGrid...), é só me avisar que eu ligo o envio real.
+        Nenhum e-mail é enviado de verdade hoje. Esta tela registra o que seria disparado, quando você configurar um provedor (Resend, SendGrid...), é só me avisar que eu ligo o envio real.
       </div>
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">

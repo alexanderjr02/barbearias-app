@@ -1,6 +1,6 @@
 // Small helpers for the chat widgets (AdminChatbot, ChatbotWidget, ClientChatbot,
 // LandingChatbot). Message IDs and simulated typing delays don't need to be
-// truly random/time-based — pulling Math.random()/Date.now() out of the
+// truly random/time-based, pulling Math.random()/Date.now() out of the
 // component body keeps those components' render output pure.
 
 let messageIdCounter = 0;

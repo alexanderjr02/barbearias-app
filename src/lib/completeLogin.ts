@@ -15,7 +15,7 @@ export async function completeLogin(session: SessionPayload, ipAddress: string |
   await prisma.refreshToken.create({ data: { userId: session.sub, tokenHash, expiresAt } });
   await prisma.user.update({ where: { id: session.sub }, data: { lastLoginAt: new Date() } });
 
-  // A login from an IP never seen before for this user — only meaningful
+  // A login from an IP never seen before for this user, only meaningful
   // when we actually have an IP (local/dev requests often don't carry one).
   let isNewIp = false;
   if (ipAddress) {

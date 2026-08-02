@@ -7,7 +7,7 @@ import { recordAutoIncome } from "@/lib/finance/autoEntry";
 //
 // Venda de balcão: baixa o estoque e lança a receita no financeiro numa só
 // ação. Antes o gestor tinha que fazer as duas coisas à mão, em telas
-// diferentes — e na prática fazia só a primeira, então o estoque batia e o
+// diferentes, e na prática fazia só a primeira, então o estoque batia e o
 // financeiro não.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireBarbershopSession();
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // recusar: some a informação de que faltou produto.
   if (product.quantity < quantity) {
     return NextResponse.json(
-      { error: `Estoque insuficiente — restam ${product.quantity} ${product.quantity === 1 ? "unidade" : "unidades"}` },
+      { error: `Estoque insuficiente, restam ${product.quantity} ${product.quantity === 1 ? "unidade" : "unidades"}` },
       { status: 400 }
     );
   }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   // A baixa de estoque é o que não pode se perder (é ela que o gestor confere
   // olhando a prateleira). Se o lançamento financeiro falhar, a venda continua
-  // registrada e ele lança à mão — o contrário deixaria estoque e caixa
+  // registrada e ele lança à mão, o contrário deixaria estoque e caixa
   // divergentes sem ninguém perceber.
   let recorded = true;
   try {

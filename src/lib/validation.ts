@@ -2,13 +2,13 @@ import { z } from "zod";
 import { isValidCnpj, isValidCpf, onlyDigits } from "./br";
 
 // Accepts formatted ("(11) 99999-9999") or plain-digit Brazilian phone
-// numbers — landline (10 digits) or mobile (11 digits), area code required.
+// numbers, landline (10 digits) or mobile (11 digits), area code required.
 export const phoneSchema = z
   .string()
   .trim()
   .transform((v) => v.replace(/\D/g, ""))
   .refine((v) => v.length === 10 || v.length === 11, {
-    message: "Telefone inválido — use DDD + número",
+    message: "Telefone inválido, use DDD + número",
   });
 
 export const optionalPhoneSchema = z
@@ -17,7 +17,7 @@ export const optionalPhoneSchema = z
   .optional()
   .transform((v) => (v ? v.replace(/\D/g, "") : v))
   .refine((v) => !v || v.length === 10 || v.length === 11, {
-    message: "Telefone inválido — use DDD + número",
+    message: "Telefone inválido, use DDD + número",
   });
 
 export const emailSchema = z
@@ -26,7 +26,7 @@ export const emailSchema = z
   .toLowerCase()
   .email("E-mail inválido");
 
-// At least 8 chars, at least one letter and one number — enough friction to
+// At least 8 chars, at least one letter and one number, enough friction to
 // discourage "12345678" without demanding a symbol nobody remembers.
 export const passwordSchema = z
   .string()
@@ -41,7 +41,7 @@ export const nameSchema = z
   .min(2, "Nome muito curto")
   .max(120, "Nome muito longo");
 
-// Becomes part of the public booking URL — lowercase letters, numbers and
+// Becomes part of the public booking URL, lowercase letters, numbers and
 // hyphens only, can't start/end with a hyphen.
 export const slugSchema = z
   .string()
@@ -54,8 +54,8 @@ export const slugSchema = z
 /**
  * CNPJ obrigatório e REAL (dígitos verificadores conferidos).
  *
- * Antes era opcional e só checava o tamanho, então "00000000000000" — ou
- * nada — abria barbearia. Isso é a porta da barbearia fantasma: sem documento
+ * Antes era opcional e só checava o tamanho, então "00000000000000", ou
+ * nada, abria barbearia. Isso é a porta da barbearia fantasma: sem documento
  * verificável não há como distinguir negócio de cadastro descartável.
  * Guardamos só os dígitos, para busca e unicidade não dependerem de quem
  * digitou com ponto e quem digitou sem.
@@ -65,10 +65,10 @@ export const cnpjSchema = z
   .trim()
   .min(1, "CNPJ é obrigatório")
   .transform((v) => onlyDigits(v))
-  .refine((v) => v.length === 14, { message: "CNPJ inválido — deve ter 14 dígitos" })
-  .refine((v) => isValidCnpj(v), { message: "CNPJ inválido — confira os números" });
+  .refine((v) => v.length === 14, { message: "CNPJ inválido, deve ter 14 dígitos" })
+  .refine((v) => isValidCnpj(v), { message: "CNPJ inválido. Confira os números" });
 
-// Brazilian state — the two-letter UF code. Optional at signup, but must be
+// Brazilian state, the two-letter UF code. Optional at signup, but must be
 // a real UF when present.
 const BR_UF = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
@@ -82,15 +82,15 @@ export const optionalStateSchema = z
   .optional()
   .refine((v) => !v || (BR_UF as readonly string[]).includes(v), { message: "UF inválida" });
 
-// CEP — 8 digits when present.
+// CEP, 8 digits when present.
 export const optionalCepSchema = z
   .string()
   .trim()
   .optional()
   .transform((v) => (v ? v.replace(/\D/g, "") : v))
-  .refine((v) => !v || v.length === 8, { message: "CEP inválido — deve ter 8 dígitos" });
+  .refine((v) => !v || v.length === 8, { message: "CEP inválido, deve ter 8 dígitos" });
 
-// Instagram handle — stored without the leading "@".
+// Instagram handle, stored without the leading "@".
 export const optionalInstagramSchema = z
   .string()
   .trim()
@@ -98,7 +98,7 @@ export const optionalInstagramSchema = z
   .transform((v) => (v ? v.replace(/^@+/, "").trim() : v))
   .refine((v) => !v || /^[a-zA-Z0-9._]{1,30}$/.test(v), { message: "@ do Instagram inválido" });
 
-/** Vínculo do barbeiro com a barbearia — decide encargo e forma de pagamento. */
+/** Vínculo do barbeiro com a barbearia, decide encargo e forma de pagamento. */
 export const EMPLOYMENT_TYPES = ["CLT", "PJ", "AUTONOMO", "PARCEIRO"] as const;
 
 /**
@@ -114,7 +114,7 @@ export const cpfSchema = z
 const MIN_CLIENT_AGE = 13;
 const MAX_AGE = 120;
 
-// "YYYY-MM-DD" (native <input type="date"> format) — must be a real past
+// "YYYY-MM-DD" (native <input type="date"> format), must be a real past
 // date and imply an age between MIN_CLIENT_AGE and MAX_AGE.
 export const dateOfBirthSchema = z
   .string()
@@ -150,7 +150,7 @@ function ageFromDate(date: Date): number {
   return age;
 }
 
-// POST /api/auth/register — owner creating their account + barbershop in one
+// POST /api/auth/register, owner creating their account + barbershop in one
 // step. Barbershop fields are mandatory: this route only ever creates an
 // OWNER, and an ownerless account serves no purpose in this app.
 export const registerOwnerSchema = z.object({
@@ -171,7 +171,7 @@ export const registerOwnerSchema = z.object({
   plan: z.string().optional(),
 });
 
-// POST /api/auth/register/client — client self-signup. Not tied to a
+// POST /api/auth/register/client, client self-signup. Not tied to a
 // barbershop at creation time (that happens via BarbershopClient once they
 // book/interact with a specific shop).
 export const registerClientSchema = z.object({
@@ -186,18 +186,18 @@ export const googleAuthSchema = z.object({
   idToken: z.string().min(20, "Token do Google ausente ou inválido"),
 });
 
-// POST /api/auth/forgot-password — request a reset link by e-mail.
+// POST /api/auth/forgot-password, request a reset link by e-mail.
 export const forgotPasswordSchema = z.object({
   email: emailSchema,
 });
 
-// POST /api/auth/reset-password — set a new password using the emailed token.
+// POST /api/auth/reset-password, set a new password using the emailed token.
 export const resetPasswordSchema = z.object({
   token: z.string().min(20, "Token de redefinição inválido"),
   password: passwordSchema,
 });
 
-// POST /api/clients — gestor pre-registering a client from the dashboard.
+// POST /api/clients, gestor pre-registering a client from the dashboard.
 export const clientCreateSchema = z.object({
   name: nameSchema,
   email: emailSchema,
@@ -212,7 +212,7 @@ export const clientCreateSchema = z.object({
   preferredStaffId: z.string().optional(),
 });
 
-// POST /api/staff — email/password are optional (profile-only staff has
+// POST /api/staff, email/password are optional (profile-only staff has
 // neither), but must be valid *when present*.
 export const staffCreateSchema = z.object({
   name: nameSchema,

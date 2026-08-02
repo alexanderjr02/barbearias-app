@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { aiSpendThisMonth, aiQuota } from "@/lib/ai/usage";
 
-// GET /api/copilot/ai-usage — this shop's AI spend this month + today's quota.
+// GET /api/copilot/ai-usage, this shop's AI spend this month + today's quota.
 // The margin dashboard: what the Copiloto/assistant is costing and how much of
 // the daily cap is left. Lets you (and the gestor) see cost, never be surprised.
 export async function GET() {

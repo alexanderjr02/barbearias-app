@@ -1,12 +1,12 @@
 // WhatsApp messaging via the official Meta WhatsApp Cloud API (Graph API),
-// called with fetch — no SDK.
+// called with fetch, no SDK.
 //
 // MULTI-BARBEARIA: as credenciais (token + número) vêm da conexão de CADA
 // barbearia (tabela WhatsappConnection), não mais de uma variável única. Toda
 // função de envio recebe o barbershopId e resolve o remetente daquela loja.
 //
 // Fallback: se a barbearia não tiver conexão própria, cai para as variáveis de
-// ambiente WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID — o "número único da
+// ambiente WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID, o "número único da
 // plataforma", útil para testar antes de existir conexão por barbearia. Sem
 // nenhum dos dois, a mensagem vira log (não quebra o fluxo).
 //
@@ -70,7 +70,7 @@ async function send(barbershopId: string, payload: Record<string, unknown>): Pro
   const version = process.env.WHATSAPP_API_VERSION || "v21.0";
 
   if (!creds) {
-    console.warn(`[whatsapp] barbearia ${barbershopId} sem conexão — mensagem NÃO enviada:\n${JSON.stringify(payload)}`);
+    console.warn(`[whatsapp] barbearia ${barbershopId} sem conexão, mensagem NÃO enviada:\n${JSON.stringify(payload)}`);
     return;
   }
 
@@ -119,11 +119,11 @@ export interface BookingConfirmationInput {
 }
 
 /**
- * Confirmação de agendamento — o caminho que a Meta EXIGE para mensagem
+ * Confirmação de agendamento, o caminho que a Meta EXIGE para mensagem
  * iniciada pela empresa.
  *
  * Texto livre não chega a um cliente novo: a Meta só o entrega a quem mandou
- * mensagem para a empresa nas últimas 24h — o que um cliente recém-agendado
+ * mensagem para a empresa nas últimas 24h, o que um cliente recém-agendado
  * NÃO fez. Por isso, se a barbearia tem um template aprovado, manda por ele;
  * sem template, cai no texto livre (certo em dev e válido dentro da janela).
  *
@@ -156,7 +156,7 @@ export async function sendBookingConfirmation(barbershopId: string, toPhone: str
   ]);
 }
 
-// Booking confirmation copy, shared so tone stays consistent. Sem emojis — as
+// Booking confirmation copy, shared so tone stays consistent. Sem emojis, as
 // mensagens automáticas do sistema seguem essa linha.
 export function bookingConfirmationText(input: BookingConfirmationInput): string {
   const firstName = input.clientName.trim().split(/\s+/)[0] || "";

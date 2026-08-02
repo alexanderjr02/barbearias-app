@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
  * Lê o segredo do cron da requisição, nos três formatos que os hosts usam.
  *
  * A Vercel manda `Authorization: Bearer <segredo>` sozinha quando a variável
- * CRON_SECRET existe — não dá para pôr a variável no path do agendamento. O
+ * CRON_SECRET existe, não dá para pôr a variável no path do agendamento. O
  * Render chama pela query string. O header x-cron-secret fica para chamada
  * manual.
  *

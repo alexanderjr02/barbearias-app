@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ users: shaped, total, page, pageSize });
 }
 
-// POST /api/admin/users — creates another SUPER_ADMIN (bus-factor: Alexander
+// POST /api/admin/users, creates another SUPER_ADMIN (bus-factor: Alexander
 // shouldn't be the only person who can ever get into /admin).
 export async function POST(request: NextRequest) {
   const session = await requireSuperAdminSession();

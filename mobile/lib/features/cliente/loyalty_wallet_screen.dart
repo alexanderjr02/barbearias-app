@@ -8,12 +8,12 @@ import 'client_repository.dart';
 /// e o código de indicação.
 ///
 /// O cartão de selos é o coração disto. Fidelidade só funciona quando o
-/// cliente VÊ o quanto falta — um contador escondido num relatório não traz
+/// cliente VÊ o quanto falta, um contador escondido num relatório não traz
 /// ninguém de volta; a cartela quase cheia traz.
 class LoyaltyWalletScreen extends StatefulWidget {
   final String barbershopId;
   final String? barbershopName;
-  /// Quando vive dentro de uma aba não há para onde voltar — some o botão de
+  /// Quando vive dentro de uma aba não há para onde voltar, some o botão de
   /// voltar e o título vira cabeçalho da aba, não de uma tela empilhada.
   final bool embedded;
   const LoyaltyWalletScreen({super.key, required this.barbershopId, this.barbershopName, this.embedded = false});
@@ -134,7 +134,7 @@ class _LoyaltyWalletScreenState extends State<LoyaltyWalletScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 6, 16, 32),
                     children: [
                       // Prêmio a resgatar vem SEMPRE primeiro. É a única coisa
-                      // aqui que exige ação no balcão — enterrar isso embaixo
+                      // aqui que exige ação no balcão, enterrar isso embaixo
                       // do saldo seria esconder o que o cliente já ganhou.
                       if (d.rewards.isNotEmpty) ...[
                         _SectionLabel('Para resgatar', palette: palette, count: d.rewards.length, accent: accent),
@@ -234,7 +234,7 @@ class _SectionLabel extends StatelessWidget {
 /// O que faz alguém querer fechar não é o número de selos: é ver o espaço
 /// vazio ao lado dos preenchidos. Por isso os que faltam são pontilhados (têm
 /// presença, mas nítida ausência), o último traz o presente à mostra desde o
-/// começo — o cliente sabe o que está perseguindo — e os preenchidos entram
+/// começo, o cliente sabe o que está perseguindo, e os preenchidos entram
 /// com escala animada, um após o outro, como carimbo batendo.
 class _StampCard extends StatelessWidget {
   final int stamps, goal, completed;
@@ -416,7 +416,7 @@ class _Stamp extends StatelessWidget {
   }
 }
 
-/// Prêmio disponível, em forma de bilhete — com os recortes laterais que todo
+/// Prêmio disponível, em forma de bilhete, com os recortes laterais que todo
 /// cupom tem. É o que separa "mais um card" de algo que parece destacável.
 class _RewardTicket extends StatelessWidget {
   final String label;
@@ -495,7 +495,7 @@ class _TicketClipper extends CustomClipper<Path> {
 }
 
 /// Pontos com a distância até a próxima faixa. A cor sai da faixa atual, então
-/// subir de nível muda o cartão — a recompensa fica visível, não só numérica.
+/// subir de nível muda o cartão, a recompensa fica visível, não só numérica.
 class _PointsCard extends StatelessWidget {
   final int points;
   final String tier;
@@ -681,7 +681,7 @@ class _ReferralCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Seu amigo ganha $reward — e você também.',
+                  'Seu amigo ganha $reward, e você também.',
                   style: TextStyle(color: palette.textSecondary, fontSize: 13, height: 1.35),
                 ),
               ),

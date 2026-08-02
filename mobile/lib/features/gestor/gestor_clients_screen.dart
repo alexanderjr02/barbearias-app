@@ -183,7 +183,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
 
             return Column(
               children: [
-                // Distribuição por nível — barra proporcional + contagem por
+                // Distribuição por nível, barra proporcional + contagem por
                 // tier, igual ao web. A leitura rápida do mix da base.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),

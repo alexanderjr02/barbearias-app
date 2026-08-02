@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
-/// A marca rukz desenhada — o bigode + o "r" — a partir dos traçados oficiais
+/// A marca rukz desenhada, o bigode + o "r", a partir dos traçados oficiais
 /// do pacote de marca (os MESMOS do componente RukzLogo da web). É vetor, então
 /// fica nítido em qualquer tamanho e aceita cor: o [bigode] pinta o bigode e o
 /// [r] pinta a letra (o acento amarelo). Num fundo amarelo, passe o mesmo tom
@@ -22,7 +22,7 @@ class RukzSymbol extends StatelessWidget {
 
   /// Em [tight] = false o símbolo é desenhado dentro do quadrado 1024 do ícone
   /// do app (com a mesma folga do ícone instalado). Em [tight] = true ele é
-  /// recortado justo — preenche a largura [size], sem margem — igual à logo da
+  /// recortado justo, preenche a largura [size], sem margem, igual à logo da
   /// web. Nesse modo a altura é [size] / 2.147 (a proporção do símbolo).
   final bool tight;
 
@@ -43,7 +43,7 @@ class RukzSymbol extends StatelessWidget {
   }
 }
 
-/// Só o "r" da marca (sem o bigode), recortado justo e centralizado — para
+/// Só o "r" da marca (sem o bigode), recortado justo e centralizado, para
 /// espaços pequenos, tipo o botão do copiloto. Mesmo traçado oficial da logo.
 class RukzR extends StatelessWidget {
   const RukzR({super.key, this.size = 28, this.color = const Color(0xFFFFC300)});
@@ -90,7 +90,7 @@ const _bigodePath =
 const _rPath =
     'M 13.52 -0.00 L 13.52 -121.48 L 51.76 -121.48 L 51.76 -0.00 L 13.52 -0.00 Z M 51.76 -66.76 L 35.74 -79.26 Q 40.51 -100.51 51.76 -112.23 Q 63.01 -123.98 83.01 -123.98 Q 91.76 -123.98 98.36 -121.37 Q 105.00 -118.75 110.00 -113.24 L 87.27 -84.49 Q 84.77 -87.27 81.02 -88.75 Q 77.27 -90.23 72.50 -90.23 Q 63.01 -90.23 57.38 -84.38 Q 51.76 -78.52 51.76 -66.76 Z';
 
-/// Parser mínimo de path SVG — só o que estes traçados usam (M/L/Q/Z absolutos,
+/// Parser mínimo de path SVG, só o que estes traçados usam (M/L/Q/Z absolutos,
 /// com repetição implícita de pares após o comando, como manda a spec).
 Path _parse(String d) {
   final path = Path();
@@ -142,7 +142,7 @@ class _RukzPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (tight) {
       // Encaixa a caixa justa do símbolo (194.5,364.16 · 634.9×295.67, do
-      // arquivo de marca) na largura toda — sem a margem do ícone quadrado.
+      // arquivo de marca) na largura toda, sem a margem do ícone quadrado.
       final s = size.width / 634.9;
       canvas.scale(s);
       canvas.translate(-194.5, -364.16);

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 import { getEffectiveSchedule } from "@/lib/scheduling";
 
-// GET /api/staff/day-schedule?date=YYYY-MM-DD — every active staff member's
+// GET /api/staff/day-schedule?date=YYYY-MM-DD, every active staff member's
 // effective hours for one day (shop default, personal override, or a day
 // off), batched in a single call. Powers the Agenda page's "Dia" team view,
 // so the gestor can see at a glance who's off before even opening a column.

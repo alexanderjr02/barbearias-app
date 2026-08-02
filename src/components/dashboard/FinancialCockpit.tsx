@@ -156,7 +156,7 @@ export function FinancialCockpit() {
             Barra e porcentagem exigem interpretação: o gestor precisa olhar
             onde a barra parou, cruzar com o dia do mês e concluir sozinho se
             está bom. Aqui a conclusão vem pronta, e o gráfico abaixo passa a
-            ser a comprovação — não o enunciado. */}
+            ser a comprovação, não o enunciado. */}
         <Verdict
           goal={derived.goal}
           monthRevenue={derived.monthRevenue}
@@ -166,7 +166,7 @@ export function FinancialCockpit() {
           monthExpenses={derived.monthExpenses}
         />
 
-        {/* THERMOMETER — meta + ponto de equilíbrio numa só imagem */}
+        {/* THERMOMETER, meta + ponto de equilíbrio numa só imagem */}
         <div className="relative mb-2">
           <div className="flex items-end justify-between mb-2">
             <div>
@@ -241,7 +241,7 @@ export function FinancialCockpit() {
               <>
                 <p className="text-xl font-black text-emerald-400">Custos cobertos</p>
                 <p className="text-xs text-emerald-400/80 mt-1">
-                  {derived.breakEvenDay ? `virada no dia ${derived.breakEvenDay} — daí em diante é lucro` : "tudo o que entrar é lucro"}
+                  {derived.breakEvenDay ? `virada no dia ${derived.breakEvenDay}, daí em diante é lucro` : "tudo o que entrar é lucro"}
                 </p>
               </>
             ) : (
@@ -309,7 +309,7 @@ export function FinancialCockpit() {
  *
  * Compara o que já entrou com o que DEVERIA ter entrado a esta altura do mês
  * (meta rateada por dia). É isso que diz se "60% da meta" é bom ou ruim: no
- * dia 12 é ótimo, no dia 28 é problema — e essa conta o gestor não deveria
+ * dia 12 é ótimo, no dia 28 é problema, e essa conta o gestor não deveria
  * refazer de cabeça toda vez que abre a tela.
  */
 function Verdict({
