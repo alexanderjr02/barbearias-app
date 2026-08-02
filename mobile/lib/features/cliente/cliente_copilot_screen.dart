@@ -271,7 +271,6 @@ class _ClienteCopilotScreenState extends State<ClienteCopilotScreen> {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ActionChip(
-                        avatar: Icon(Icons.auto_awesome_rounded, color: accent, size: 15),
                         label: Text('Meu corte ideal', style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w700)),
                         backgroundColor: accent.withValues(alpha: 0.14),
                         side: BorderSide(color: accent.withValues(alpha: 0.4)),
