@@ -765,7 +765,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                           )
                         else ...[
                           _GrupoPreferencia(
-                            icone: Icons.content_cut_rounded,
+                            icone: Icons.straighten_rounded,
                             titulo: 'Laterais',
                             opcoes: _opcoesMaquina,
                             selecionada: _prefMaquina,
@@ -774,7 +774,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                             accent: accent,
                           ),
                           _GrupoPreferencia(
-                            icone: Icons.auto_fix_high_rounded,
+                            icone: Icons.water_drop_rounded,
                             titulo: 'Finalização',
                             opcoes: _opcoesFinalizacao,
                             selecionada: _prefFinalizacao,
