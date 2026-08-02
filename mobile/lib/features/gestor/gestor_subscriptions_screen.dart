@@ -8,7 +8,13 @@ import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
 import 'widgets/payment_connect_card.dart';
 
-const _colorSwatches = ['#FFC300', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#F97316'];
+// Paleta do cartão do plano. Eram 6 cores; com mais de um plano (Bronze,
+// Prata, Ouro, Black...) elas acabavam e dois planos ficavam iguais na tela.
+const _colorSwatches = [
+  '#FFC300', '#F59E0B', '#F97316', '#EF4444', '#EC4899', '#D946EF',
+  '#8B5CF6', '#6366F1', '#3B82F6', '#06B6D4', '#10B981', '#84CC16',
+  '#A16207', '#78716C', '#64748B', '#111111',
+];
 const _cycleLabels = {'MONTHLY': 'mês', 'QUARTERLY': 'trimestre', 'ANNUAL': 'ano'};
 const _statusLabels = {'ACTIVE': 'Ativo', 'PAST_DUE': 'Atrasado', 'CANCELLED': 'Cancelado'};
 
@@ -121,6 +127,9 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
     final benefitsCtrl = TextEditingController(text: editing?.benefits ?? '');
     String cycle = editing?.billingCycle ?? 'MONTHLY';
     String color = editing?.color ?? _colorSwatches[0];
+    // Formas que ESTE plano aceita. Plano sem nenhuma nao poderia ser
+    // assinado, entao o formulario impede desmarcar as duas.
+    final formas = <String>{...(editing?.paymentMethods ?? const ['PIX', 'CREDIT_CARD'])};
 
     final saved = await FormSheet.show(
       context,
@@ -138,6 +147,7 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
             price: price,
             billingCycle: cycle,
             benefits: benefitsCtrl.text,
+            paymentMethods: formas.toList(),
             color: color,
           );
         } else {
@@ -147,6 +157,7 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
             price: price,
             billingCycle: cycle,
             benefits: benefitsCtrl.text,
+            paymentMethods: formas.toList(),
             color: color,
           );
         }
@@ -163,6 +174,24 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
           value: cycle,
           options: const [('MONTHLY', 'Mensal'), ('QUARTERLY', 'Trimestral'), ('ANNUAL', 'Anual')],
           onChanged: (v) => cycle = v,
+        ),
+        const FieldLabel('Formas de cobrança aceitas'),
+        StatefulBuilder(
+          builder: (context, setSheetState) => Row(
+            children: [
+              Expanded(child: _FormaChip(label: 'Pix', icon: Icons.qr_code_rounded, ativa: formas.contains('PIX'), onTap: () => setSheetState(() {
+                if (formas.contains('PIX') && formas.length > 1) { formas.remove('PIX'); } else { formas.add('PIX'); }
+              }))),
+              const SizedBox(width: 10),
+              Expanded(child: _FormaChip(label: 'Cartão', icon: Icons.credit_card_rounded, ativa: formas.contains('CREDIT_CARD'), onTap: () => setSheetState(() {
+                if (formas.contains('CREDIT_CARD') && formas.length > 1) { formas.remove('CREDIT_CARD'); } else { formas.add('CREDIT_CARD'); }
+              }))),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 4),
+          child: Text('O cliente só vê estas opções na hora de assinar.', style: TextStyle(color: AppPalette.of(context).textFaint, fontSize: 11.5)),
         ),
         const FieldLabel('Benefícios (um por linha)'),
         RukzField(controller: benefitsCtrl, maxLines: 4, hint: 'Cortes ilimitados\nPrioridade no agendamento'),
@@ -754,6 +783,48 @@ class _Chip extends StatelessWidget {
           if (dot != null) ...[Container(width: 6, height: 6, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)), const SizedBox(width: 5)],
           Text(label, style: TextStyle(color: fg, fontSize: 10.5, fontWeight: FontWeight.w700)),
         ],
+      ),
+    );
+  }
+}
+
+/// Botão de forma de cobrança aceita pelo plano (Pix / Cartão). Marcado = o
+/// cliente vê essa opção na hora de assinar.
+class _FormaChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool ativa;
+  final VoidCallback onTap;
+
+  const _FormaChip({required this.label, required this.icon, required this.ativa, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final accent = Theme.of(context).colorScheme.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: ativa ? accent.withValues(alpha: 0.15) : palette.surfaceAlt,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: ativa ? accent : palette.border),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 17, color: ativa ? accent : palette.textFaint),
+            const SizedBox(width: 7),
+            Text(label,
+                style: TextStyle(
+                  color: ativa ? accent : palette.textSecondary,
+                  fontSize: 13,
+                  fontWeight: ativa ? FontWeight.w800 : FontWeight.w500,
+                )),
+          ],
+        ),
       ),
     );
   }

@@ -8,6 +8,8 @@ class ClientSubscriptionPlan {
   final String billingCycle; // MONTHLY | QUARTERLY | ANNUAL
   final String benefits;
   final String color;
+  // Formas que este plano aceita; o cliente so ve estas na hora de assinar.
+  final List<String> paymentMethods;
 
   ClientSubscriptionPlan({
     required this.id,
@@ -17,6 +19,7 @@ class ClientSubscriptionPlan {
     required this.billingCycle,
     required this.benefits,
     required this.color,
+    required this.paymentMethods,
   });
 
   factory ClientSubscriptionPlan.fromJson(Map<String, dynamic> json) => ClientSubscriptionPlan(
@@ -27,6 +30,7 @@ class ClientSubscriptionPlan {
         billingCycle: json['billingCycle'],
         benefits: json['benefits'] ?? '',
         color: json['color'] ?? '#FFC300',
+        paymentMethods: ((json['paymentMethods'] as List?) ?? const ['PIX', 'CREDIT_CARD']).map((e) => e.toString()).toList(),
       );
 }
 

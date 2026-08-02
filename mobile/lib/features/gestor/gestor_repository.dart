@@ -837,6 +837,8 @@ class GestorSubscriptionPlan {
   final String billingCycle; // MONTHLY | QUARTERLY | ANNUAL
   final String benefits;
   final String color;
+  // Formas de cobranca aceitas por este plano: PIX e/ou CREDIT_CARD.
+  final List<String> paymentMethods;
   final bool isActive;
   final List<GestorSubscriber> subscriptions;
 
@@ -848,6 +850,7 @@ class GestorSubscriptionPlan {
     required this.billingCycle,
     required this.benefits,
     required this.color,
+    required this.paymentMethods,
     required this.isActive,
     required this.subscriptions,
   });
@@ -860,6 +863,7 @@ class GestorSubscriptionPlan {
         billingCycle: json['billingCycle'],
         benefits: json['benefits'] ?? '',
         color: json['color'] ?? '#FFC300',
+        paymentMethods: ((json['paymentMethods'] as List?) ?? const ['PIX', 'CREDIT_CARD']).map((e) => e.toString()).toList(),
         isActive: json['isActive'] == true,
         subscriptions: (json['subscriptions'] as List).map((e) => GestorSubscriber.fromJson(e)).toList(),
       );
@@ -1794,6 +1798,7 @@ class GestorRepository {
     required String billingCycle,
     required String benefits,
     required String color,
+    required List<String> paymentMethods,
   }) async {
     await ApiClient.instance.post('/subscription-plans', data: {
       'name': name,
@@ -1802,6 +1807,7 @@ class GestorRepository {
       'billingCycle': billingCycle,
       'benefits': benefits,
       'color': color,
+      'paymentMethods': paymentMethods,
     });
   }
 
@@ -1813,6 +1819,7 @@ class GestorRepository {
     String? billingCycle,
     String? benefits,
     String? color,
+    List<String>? paymentMethods,
     bool? isActive,
   }) async {
     await ApiClient.instance.patch('/subscription-plans/$id', data: {
@@ -1822,6 +1829,7 @@ class GestorRepository {
       if (billingCycle != null) 'billingCycle': billingCycle,
       if (benefits != null) 'benefits': benefits,
       if (color != null) 'color': color,
+      if (paymentMethods != null) 'paymentMethods': paymentMethods,
       if (isActive != null) 'isActive': isActive,
     });
   }

@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireBarbershopSession } from "@/lib/apiAuth";
 
+// As formas aceitas chegam como lista; guardamos "PIX,CREDIT_CARD". Plano sem
+// nenhuma forma marcada nao poderia ser assinado, entao cai no padrao.
+function normalizarFormas(valor: unknown): string | undefined {
+  const validas = ["PIX", "CREDIT_CARD"];
+  if (!Array.isArray(valor)) return undefined;
+  const escolhidas = valor.filter((v) => typeof v === "string" && validas.includes(v));
+  return escolhidas.length ? escolhidas.join(",") : "PIX,CREDIT_CARD";
+}
+
 const FORBIDDEN = { error: "Assinaturas de clientes é um recurso exclusivo do plano White Label." };
 
 export async function GET() {
@@ -50,6 +59,7 @@ export async function GET() {
     description: plan.description,
     price: plan.price,
     billingCycle: plan.billingCycle,
+    paymentMethods: plan.paymentMethods.split(",").filter(Boolean),
     benefits: plan.benefits,
     color: plan.color,
     isActive: plan.isActive,
@@ -101,6 +111,7 @@ export async function POST(request: NextRequest) {
       description: typeof body.description === "string" ? body.description : undefined,
       price: body.price,
       billingCycle: ["MONTHLY", "QUARTERLY", "ANNUAL"].includes(body.billingCycle) ? body.billingCycle : "MONTHLY",
+      paymentMethods: normalizarFormas(body.paymentMethods) ?? "PIX,CREDIT_CARD",
       benefits: typeof body.benefits === "string" ? body.benefits : "",
       color: typeof body.color === "string" ? body.color : "#D4AF37",
       barbershopId: session.barbershopId,

@@ -865,6 +865,10 @@ model SubscriptionPlan {
   description   String?
   price         Float
   billingCycle  String   @default("MONTHLY") // MONTHLY | QUARTERLY | ANNUAL
+  // Formas de cobrança que ESTE plano aceita, separadas por vírgula
+  // (PIX,CREDIT_CARD). Antes o cliente sempre via as duas opções, mesmo na
+  // barbearia que só recebe Pix — e a assinatura no cartão morria depois.
+  paymentMethods String  @default("PIX,CREDIT_CARD")
   benefits      String   // bullet points, one per line
   color         String   @default("#D4AF37")
   isActive      Boolean  @default(true)

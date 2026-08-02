@@ -324,6 +324,17 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
   final _cpfCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Começa na primeira forma que o plano REALMENTE aceita — num plano só de
+    // cartão, o padrão 'PIX' deixaria o cliente com nada selecionado e o botão
+    // gerando uma cobrança que a barbearia não recebe.
+    if (!widget.plan.paymentMethods.contains(_method) && widget.plan.paymentMethods.isNotEmpty) {
+      _method = widget.plan.paymentMethods.first;
+    }
+  }
+
+  @override
   void dispose() {
     _pollTimer?.cancel();
     _cpfCtrl.dispose();
@@ -411,9 +422,11 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
             if (_step == 'method') ...[
               Row(
                 children: [
-                  Expanded(child: _PaymentOptionTile(icon: Icons.qr_code_rounded, label: 'Pix', selected: _method == 'PIX', color: color, onTap: () => setState(() => _method = 'PIX'))),
-                  const SizedBox(width: 10),
-                  Expanded(child: _PaymentOptionTile(icon: Icons.credit_card_rounded, label: 'Cartão', selected: _method == 'CREDIT_CARD', color: color, onTap: () => setState(() => _method = 'CREDIT_CARD'))),
+                  if (widget.plan.paymentMethods.contains('PIX'))
+                    Expanded(child: _PaymentOptionTile(icon: Icons.qr_code_rounded, label: 'Pix', selected: _method == 'PIX', color: color, onTap: () => setState(() => _method = 'PIX'))),
+                  if (widget.plan.paymentMethods.length > 1) const SizedBox(width: 10),
+                  if (widget.plan.paymentMethods.contains('CREDIT_CARD'))
+                    Expanded(child: _PaymentOptionTile(icon: Icons.credit_card_rounded, label: 'Cartão', selected: _method == 'CREDIT_CARD', color: color, onTap: () => setState(() => _method = 'CREDIT_CARD'))),
                 ],
               ),
               const SizedBox(height: 12),
