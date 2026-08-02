@@ -69,6 +69,9 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
   final PageController _pageController = PageController(viewportFraction: 1);
   final ScrollController _tabScrollController = ScrollController();
   int _currentPage = 0;
+  // Tira de barbeiros recolhida: devolve ~80px pra linha do tempo e ainda
+  // mostra o que o gestor procura ali — quanto cada um tem livre hoje.
+  bool _barbeirosCompacto = false;
 
   static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
   static String _dateKey(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -323,6 +326,68 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
   /// barber gets a full, legible page — reached by swiping the timeline
   /// below or tapping their card here. The card doubles as a status pulse
   /// (activity ring showing busy vs. free share of the day) and as a tab.
+
+  /// Tira compacta: uma linha por barbeiro com quanto ele tem LIVRE hoje —
+  /// que é o que o gestor procura quando abre a agenda pra encaixar alguém.
+  /// Ocupa ~40px por barbeiro em vez dos 108 dos cartões, e a linha do tempo
+  /// abaixo ganha o espaço.
+  Widget _tiraCompacta(List<dynamic> cards, List<String> orderedIds, AppPalette palette, Color accent) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      child: Column(
+        children: cards.asMap().entries.map((entry) {
+          final i = entry.key;
+          final c = entry.value;
+          final cor = barberColorFor(orderedIds, c.member.id);
+          final selecionado = i == _currentPage;
+          return GestureDetector(
+            onTap: () => _goToPage(i),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: selecionado ? cor.withValues(alpha: 0.12) : palette.surface,
+                borderRadius: BorderRadius.circular(11),
+                border: Border.all(color: selecionado ? cor.withValues(alpha: 0.5) : palette.border),
+              ),
+              child: Row(
+                children: [
+                  Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, color: c.isOff ? palette.textFaint : cor)),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      c.member.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: c.isOff ? palette.textFaint : palette.textPrimary,
+                        fontSize: 13,
+                        fontWeight: selecionado ? FontWeight.w800 : FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (c.isOff)
+                    Text(c.offLabel, style: TextStyle(color: palette.textFaint, fontSize: 11.5))
+                  else ...[
+                    Text('${c.count} agend.', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(color: cor.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(20)),
+                      child: Text('${formatFreeHours(c.freeMinutes)} livre',
+                          style: TextStyle(color: cor, fontSize: 11, fontWeight: FontWeight.w800)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _barberTabStrip(AppPalette palette, Color accent) {
     if (_loadingSchedule && _daySchedule.isEmpty) {
       return const SizedBox(height: 108, child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))));
@@ -355,6 +420,8 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
     final topEarnerId = cards.where((c) => c.revenue > 0).isEmpty
         ? null
         : cards.reduce((a, b) => a.revenue >= b.revenue ? a : b).member.id;
+
+    if (_barbeirosCompacto) return _tiraCompacta(cards, orderedIds, palette, accent);
 
     return SizedBox(
       height: 108,
@@ -638,6 +705,21 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
                 children: [
                   Expanded(child: Text(_selectedDayLabel(), style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14.5))),
                   if (_loading) const Padding(padding: EdgeInsets.only(right: 10), child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))),
+                  // Recolher a tira de barbeiros devolve altura pra linha do
+                  // tempo — com 2+ barbeiros os cartões comiam metade da tela.
+                  if (_staffList.length > 1)
+                    GestureDetector(
+                      onTap: () => setState(() => _barbeirosCompacto = !_barbeirosCompacto),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(
+                          _barbeirosCompacto ? Icons.unfold_more_rounded : Icons.unfold_less_rounded,
+                          size: 18,
+                          color: _barbeirosCompacto ? accent : palette.textSecondary,
+                        ),
+                      ),
+                    ),
                   GestureDetector(
                     onTap: _openFilterSheet,
                     child: Stack(
