@@ -19,13 +19,13 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Agende seu horário na barbearia.">
-  <meta name="theme-color" content="%%CORTIX_THEME_COLOR%%">
+  <meta name="theme-color" content="%%RUKZ_THEME_COLOR%%">
 
   <!--
     PWA / iOS "Adicionar à Tela de Início" — marca por barbearia.
 
     Isto NÃO é mais preenchido por JavaScript depois que a página carrega.
-    Os marcadores CORTIX_ abaixo são substituídos pelo SERVIDOR, antes de
+    Os marcadores rukz_ abaixo são substituídos pelo SERVIDOR, antes de
     qualquer byte chegar ao navegador — veja mobile/web-deploy-src/api/index.js.
     A troca por JS que existia aqui tinha uma corrida real com o Safari: quem
     tocasse em "Adicionar à Tela de Início" antes do script terminar (ou com o
@@ -35,14 +35,14 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="%%CORTIX_NAME%%">
-  <link rel="apple-touch-icon" href="%%CORTIX_ICON_URL%%">
+  <meta name="apple-mobile-web-app-title" content="%%RUKZ_NAME%%">
+  <link rel="apple-touch-icon" href="%%RUKZ_ICON_URL%%">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>%%CORTIX_NAME%%</title>
-  <link rel="manifest" href="%%CORTIX_MANIFEST_URL%%" crossorigin="anonymous">
+  <title>%%RUKZ_NAME%%</title>
+  <link rel="manifest" href="%%RUKZ_MANIFEST_URL%%" crossorigin="anonymous">
 
   <script>
     // Limpa o service worker de CACHE do Flutter de instalações anteriores —
@@ -91,7 +91,7 @@
 
     // Ponte de push chamada pelo app Flutter. Toda a mecânica do navegador
     // (permissão, service worker, assinatura) mora aqui em JS puro; o Dart só
-    // chama window.cortixPush.enable(token, apiBase) num toque de botão e lê o
+    // chama window.rukzPush.enable(token, apiBase) num toque de botão e lê o
     // resultado. Feito assim porque requestPermission() do iOS exige ser
     // chamado dentro do gesto do usuário e com o mínimo de espera antes.
     (function () {
@@ -123,7 +123,7 @@
         return Notification.permission; // 'granted' | 'denied' | 'default'
       }
 
-      window.cortixPush = {
+      window.rukzPush = {
         status: function () { return statusNow(); },
 
         enable: function (token, apiBase) {
@@ -164,7 +164,7 @@
                 return 'granted';
               });
           }).catch(function (e) {
-            console.error('[cortixPush] enable falhou', e);
+            console.error('[rukzPush] enable falhou', e);
             return 'error';
           });
         },
@@ -184,7 +184,7 @@
                 }).then(function () { return 'ok'; });
               });
             })
-            .catch(function (e) { console.error('[cortixPush] disable falhou', e); return 'error'; });
+            .catch(function (e) { console.error('[rukzPush] disable falhou', e); return 'error'; });
         },
       };
     })();

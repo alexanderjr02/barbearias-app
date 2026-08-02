@@ -9,7 +9,7 @@ import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cn } from "@/lib/utils";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://cortix-app-mu.vercel.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://rukz-app.vercel.app";
 
 interface InviteData {
   shop: { name: string; slug: string; logo: string | null; primaryColor: string; plan: string };

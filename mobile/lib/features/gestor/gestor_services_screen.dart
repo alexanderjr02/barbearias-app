@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/photo_picker_tile.dart';
 import 'gestor_repository.dart';
@@ -88,19 +88,19 @@ class _GestorServicesScreenState extends State<GestorServicesScreen> {
                 onChanged: (url) => setSheetState(() => image = url),
               ),
               const FieldLabel('Nome'),
-              CortixField(controller: nameCtrl, hint: 'Ex: Corte Degradê'),
+              RukzField(controller: nameCtrl, hint: 'Ex: Corte Degradê'),
               const FieldLabel('Descrição'),
-              CortixField(controller: descCtrl, hint: 'Opcional'),
+              RukzField(controller: descCtrl, hint: 'Opcional'),
               const FieldLabel('Categoria'),
-              CortixChoiceRow(
+              RukzChoiceRow(
                 value: category,
                 options: _categoryLabels.entries.map((e) => (e.key, e.value)).toList(),
                 onChanged: (v) => setSheetState(() => category = v),
               ),
               const FieldLabel('Duração (min)'),
-              CortixField(controller: durationCtrl, keyboardType: TextInputType.number),
+              RukzField(controller: durationCtrl, keyboardType: TextInputType.number),
               const FieldLabel('Preço (R\$)'),
-              CortixField(controller: priceCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+              RukzField(controller: priceCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
             ],
           ),
         ),

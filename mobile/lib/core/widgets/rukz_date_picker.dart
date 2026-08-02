@@ -8,7 +8,7 @@ import '../theme/app_theme.dart';
 /// aqui herda o acento, abre de baixo (onde o polegar está) e, quando o
 /// intervalo é longo, deixa saltar direto para o ano: escolher 1995 paginando
 /// mês a mês são 370 toques.
-Future<DateTime?> showCortixDatePicker({
+Future<DateTime?> showRukzDatePicker({
   required BuildContext context,
   required DateTime initialDate,
   required DateTime firstDate,
@@ -19,7 +19,7 @@ Future<DateTime?> showCortixDatePicker({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _CortixDatePicker(
+    builder: (_) => _RukzDatePicker(
       initialDate: initialDate,
       firstDate: firstDate,
       lastDate: lastDate,
@@ -28,10 +28,10 @@ Future<DateTime?> showCortixDatePicker({
   );
 }
 
-class _CortixDatePicker extends StatefulWidget {
+class _RukzDatePicker extends StatefulWidget {
   final DateTime initialDate, firstDate, lastDate;
   final String title;
-  const _CortixDatePicker({
+  const _RukzDatePicker({
     required this.initialDate,
     required this.firstDate,
     required this.lastDate,
@@ -39,10 +39,10 @@ class _CortixDatePicker extends StatefulWidget {
   });
 
   @override
-  State<_CortixDatePicker> createState() => _CortixDatePickerState();
+  State<_RukzDatePicker> createState() => _RukzDatePickerState();
 }
 
-class _CortixDatePickerState extends State<_CortixDatePicker> {
+class _RukzDatePickerState extends State<_RukzDatePicker> {
   late DateTime _selected;
   late DateTime _month;
   bool _pickingYear = false;

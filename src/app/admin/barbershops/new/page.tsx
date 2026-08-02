@@ -63,7 +63,7 @@ export default function NovaBarbeariaPage() {
   };
 
   if (criada) {
-    const credenciais = `Acesso rukz\nE-mail: ${criada.email}\nSenha: ${criada.senhaInicial}\nLink: https://cortix-pied.vercel.app/login`;
+    const credenciais = `Acesso rukz\nE-mail: ${criada.email}\nSenha: ${criada.senhaInicial}\nLink: https://rukz.vercel.app/login`;
     return (
       <div className="mx-auto max-w-xl space-y-5">
         <PageHeader icon={Store} title="Barbearia criada" subtitle="Repasse estes dados ao gestor" accent="mono" />

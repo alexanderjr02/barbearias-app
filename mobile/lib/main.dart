@@ -16,11 +16,11 @@ import 'features/gestor/gestor_shell.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('pt_BR', null);
-  runApp(const CortixApp());
+  runApp(const RukzApp());
 }
 
-class CortixApp extends StatelessWidget {
-  const CortixApp({super.key});
+class RukzApp extends StatelessWidget {
+  const RukzApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +46,8 @@ class CortixApp extends StatelessWidget {
             // ao toque no celular.
             scrollBehavior: const _AppScrollBehavior(),
             themeMode: themeController.mode,
-            theme: buildCortixTheme(seed: seed, brightness: Brightness.light),
-            darkTheme: buildCortixTheme(seed: seed, brightness: Brightness.dark),
+            theme: buildRukzTheme(seed: seed, brightness: Brightness.light),
+            darkTheme: buildRukzTheme(seed: seed, brightness: Brightness.dark),
             locale: const Locale('pt', 'BR'),
             supportedLocales: const [Locale('pt', 'BR')],
             localizationsDelegates: const [

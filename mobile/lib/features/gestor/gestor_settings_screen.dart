@@ -399,21 +399,21 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         ),
         const SizedBox(height: 32),
         const FieldLabel('Nome da barbearia'),
-        CortixField(controller: _nameCtrl),
+        RukzField(controller: _nameCtrl),
         const FieldLabel('Telefone / WhatsApp'),
-        CortixField(controller: _phoneCtrl, keyboardType: TextInputType.phone, hint: '(11) 99999-9999'),
+        RukzField(controller: _phoneCtrl, keyboardType: TextInputType.phone, hint: '(11) 99999-9999'),
         const FieldLabel('E-mail'),
-        CortixField(controller: _emailCtrl, keyboardType: TextInputType.emailAddress),
+        RukzField(controller: _emailCtrl, keyboardType: TextInputType.emailAddress),
         const FieldLabel('Instagram'),
-        CortixField(controller: _instaCtrl, hint: '@suabarbearia'),
+        RukzField(controller: _instaCtrl, hint: '@suabarbearia'),
         const FieldLabel('Chave PIX (gorjetas)'),
-        CortixField(controller: _pixCtrl, hint: 'CPF, e-mail, telefone ou chave aleatória'),
+        RukzField(controller: _pixCtrl, hint: 'CPF, e-mail, telefone ou chave aleatória'),
         const FieldLabel('Perguntas frequentes (o chatbot responde com isso)'),
-        CortixField(controller: _faqCtrl, maxLines: 4, hint: 'Ex: Aceita PIX e cartão. Tem estacionamento. Atende criança a partir de 3 anos.'),
+        RukzField(controller: _faqCtrl, maxLines: 4, hint: 'Ex: Aceita PIX e cartão. Tem estacionamento. Atende criança a partir de 3 anos.'),
         const FieldLabel('Cidade'),
-        CortixField(controller: _cityCtrl),
+        RukzField(controller: _cityCtrl),
         const FieldLabel('Descrição'),
-        CortixField(controller: _descCtrl, maxLines: 3),
+        RukzField(controller: _descCtrl, maxLines: 3),
         const SizedBox(height: 20),
         _saveButton(onPressed: _saveProfile, busy: _savingProfile, saved: _savedProfile, label: 'Salvar alterações', accent: accent),
       ],
@@ -836,7 +836,7 @@ class _InlineTextFieldState extends State<_InlineTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return CortixField(controller: _controller, hint: widget.hint, maxLines: widget.maxLines);
+    return RukzField(controller: _controller, hint: widget.hint, maxLines: widget.maxLines);
   }
 }
 

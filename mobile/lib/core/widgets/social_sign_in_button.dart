@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/cortix_theme.dart';
+import '../theme/rukz_theme.dart';
 
 /// A branded "Continuar com X" pill button (Google/Apple/etc), shared by the
 /// login and client-registration screens.

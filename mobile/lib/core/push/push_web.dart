@@ -1,17 +1,17 @@
-// Implementação web da ponte de push: chama window.cortixPush (definido em
+// Implementação web da ponte de push: chama window.rukzPush (definido em
 // web/index.html). Só é compilada no web (ver push_service.dart).
 import 'dart:js_interop';
 
-@JS('cortixPush')
+@JS('rukzPush')
 external JSObject? get _bridge;
 
-@JS('cortixPush.status')
+@JS('rukzPush.status')
 external JSString _statusJS();
 
-@JS('cortixPush.enable')
+@JS('rukzPush.enable')
 external JSPromise<JSString> _enableJS(JSString token, JSString apiBase);
 
-@JS('cortixPush.disable')
+@JS('rukzPush.disable')
 external JSPromise<JSString> _disableJS(JSString token, JSString apiBase);
 
 // Estados possíveis (mesmos que o JS devolve):

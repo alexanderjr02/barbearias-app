@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/cortix_bottom_nav.dart';
+import '../../core/widgets/rukz_bottom_nav.dart';
 import '../../core/widgets/floating_copilot_button.dart';
 import '../profile/profile_screen.dart';
 import 'client_preferences_screen.dart';
@@ -40,16 +40,16 @@ class _ClienteShellState extends State<ClienteShell> {
         Scaffold(
           backgroundColor: palette.bg,
           body: IndexedStack(index: _index, children: _screens),
-          bottomNavigationBar: CortixBottomNav(
+          bottomNavigationBar: RukzBottomNav(
             index: _index,
             onTap: (i) => setState(() => _index = i),
             items: const [
-              CortixNavItem(Icons.home_rounded, 'Início'),
-              CortixNavItem(Icons.content_cut_rounded, 'Cortes'),
-              CortixNavItem(Icons.card_giftcard_rounded, 'Fidelidade'),
-              CortixNavItem(Icons.workspace_premium_rounded, 'Clube'),
-              CortixNavItem(Icons.tune_rounded, 'Preferências'),
-              CortixNavItem(Icons.person_rounded, 'Perfil'),
+              RukzNavItem(Icons.home_rounded, 'Início'),
+              RukzNavItem(Icons.content_cut_rounded, 'Cortes'),
+              RukzNavItem(Icons.card_giftcard_rounded, 'Fidelidade'),
+              RukzNavItem(Icons.workspace_premium_rounded, 'Clube'),
+              RukzNavItem(Icons.tune_rounded, 'Preferências'),
+              RukzNavItem(Icons.person_rounded, 'Perfil'),
             ],
           ),
         ),

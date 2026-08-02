@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
 import 'widgets/revenue_chart_card.dart';

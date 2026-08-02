@@ -76,15 +76,15 @@ function main() {
 
   // 3. index.html vira um molde embutido na função — não um arquivo servido.
   const indexHtml = fs.readFileSync(path.join(BUILD_WEB, "index.html"), "utf8");
-  if (!indexHtml.includes("%%CORTIX_NAME%%")) {
+  if (!indexHtml.includes("%%RUKZ_NAME%%")) {
     console.error(
-      "build/web/index.html não tem os marcadores %%CORTIX_...%% — mobile/web/index.html foi editado corretamente?"
+      "build/web/index.html não tem os marcadores %%RUKZ_...%% — mobile/web/index.html foi editado corretamente?"
     );
     process.exit(1);
   }
   const templateModule =
     "// GERADO por scripts/build-web-deploy.js — não editar à mão.\n" +
-    "// Molde extraído de build/web/index.html; os pontos %%CORTIX_...%% são\n" +
+    "// Molde extraído de build/web/index.html; os pontos %%RUKZ_...%% são\n" +
     "// preenchidos em api/index.js.\n" +
     "module.exports = " + JSON.stringify(indexHtml) + ";\n";
   fs.mkdirSync(path.join(OUT, "api"), { recursive: true });

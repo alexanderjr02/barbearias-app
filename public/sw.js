@@ -1,4 +1,4 @@
-// CORTIX Service Worker v1
+// rukz Service Worker v1
 // Provides offline support and caching for the PWA
 
 const CACHE_VERSION = 'cortix-v1';
@@ -96,7 +96,7 @@ async function networkFirst(request) {
     if (cached) return cached;
     // Return offline page fallback
     return caches.match('/') || new Response(
-      '<h1>Você está offline</h1><p>Conecte-se à internet para usar o CORTIX.</p>',
+      '<h1>Você está offline</h1><p>Conecte-se à internet para usar o rukz.</p>',
       { headers: { 'Content-Type': 'text/html' }, status: 503 }
     );
   }
@@ -107,7 +107,7 @@ self.addEventListener('push', event => {
   if (!event.data) return;
   const { title, body, icon, url } = event.data.json();
   event.waitUntil(
-    self.registration.showNotification(title || 'CORTIX', {
+    self.registration.showNotification(title || 'rukz', {
       body,
       icon: icon || '/icons/icon.svg',
       badge: '/icons/icon.svg',

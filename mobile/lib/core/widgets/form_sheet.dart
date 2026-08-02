@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
-import 'cortix_date_picker.dart';
+import 'rukz_date_picker.dart';
 
 /// A bottom-sheet form scaffold shared by every "create/edit X" flow in the
 /// Gestor app (services, products, staff, clients, transactions...) — mirrors
@@ -141,7 +141,7 @@ class FieldLabel extends StatelessWidget {
 
 /// Styled [TextField] matching the app's dark-glass form language, themed via
 /// [AppPalette] so it also works correctly in light mode.
-class CortixField extends StatelessWidget {
+class RukzField extends StatelessWidget {
   final TextEditingController controller;
   final String? hint;
   final TextInputType? keyboardType;
@@ -149,7 +149,7 @@ class CortixField extends StatelessWidget {
   final int maxLines;
   final List<TextInputFormatter>? inputFormatters;
 
-  const CortixField({
+  const RukzField({
     super.key,
     required this.controller,
     this.hint,
@@ -188,20 +188,20 @@ String? formatDobKey(DateTime? date) {
   return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 }
 
-/// A tappable date field matching [CortixField], backed by a [ValueNotifier]
+/// A tappable date field matching [RukzField], backed by a [ValueNotifier]
 /// so the parent form can read the chosen date without managing its own state.
 /// Used for the client's birthday in the gestor/barber "cadastrar cliente"
 /// flows (birthday marketing) and anywhere else a date is collected.
-class CortixDateField extends StatelessWidget {
+class RukzDateField extends StatelessWidget {
   final ValueNotifier<DateTime?> value;
   final String hint;
 
-  const CortixDateField({super.key, required this.value, this.hint = 'Selecionar'});
+  const RukzDateField({super.key, required this.value, this.hint = 'Selecionar'});
 
   Future<void> _pick(BuildContext context) async {
     final now = DateTime.now();
     final current = value.value;
-    final picked = await showCortixDatePicker(
+    final picked = await showRukzDatePicker(
       context: context,
       initialDate: current ?? DateTime(now.year - 20, now.month, now.day),
       firstDate: DateTime(now.year - 120),
@@ -249,12 +249,12 @@ class CortixDateField extends StatelessWidget {
 }
 
 /// A segmented single-select row of chips, used for category/type pickers.
-class CortixChoiceRow extends StatelessWidget {
+class RukzChoiceRow extends StatelessWidget {
   final List<(String value, String label)> options;
   final String value;
   final ValueChanged<String> onChanged;
 
-  const CortixChoiceRow({super.key, required this.options, required this.value, required this.onChanged});
+  const RukzChoiceRow({super.key, required this.options, required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {

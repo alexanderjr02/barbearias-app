@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/skeleton.dart';
@@ -76,13 +76,13 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
           style: TextStyle(color: AppPalette.of(context).textFaint, fontSize: 12),
         ),
         const FieldLabel('Nome'),
-        CortixField(controller: nameCtrl, hint: 'Ex: Maria Souza'),
+        RukzField(controller: nameCtrl, hint: 'Ex: Maria Souza'),
         const FieldLabel('E-mail'),
-        CortixField(controller: emailCtrl, keyboardType: TextInputType.emailAddress),
+        RukzField(controller: emailCtrl, keyboardType: TextInputType.emailAddress),
         const FieldLabel('Telefone'),
-        CortixField(controller: phoneCtrl, keyboardType: TextInputType.phone, hint: '(11) 99999-9999'),
+        RukzField(controller: phoneCtrl, keyboardType: TextInputType.phone, hint: '(11) 99999-9999'),
         const FieldLabel('Data de nascimento'),
-        CortixDateField(value: dobNotifier),
+        RukzDateField(value: dobNotifier),
         Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Row(
@@ -99,7 +99,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
           ),
         ),
         const FieldLabel('Senha inicial'),
-        CortixField(controller: passwordCtrl, obscureText: true, hint: 'Mínimo 8 caracteres'),
+        RukzField(controller: passwordCtrl, obscureText: true, hint: 'Mínimo 8 caracteres'),
       ],
     );
     if (saved == true) {

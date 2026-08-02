@@ -52,7 +52,7 @@ const PLANOS: Plano[] = [
   {
     valor: "pro",
     nome: "Pro",
-    preco: "250",
+    preco: "350",
     paraQuem: "Para a barbearia que quer crescer",
     herda: "Tudo do Essencial, mais:",
     destaque: true,

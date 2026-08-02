@@ -67,7 +67,7 @@ class _FinanceCockpitCardState extends State<FinanceCockpitCard> {
           style: TextStyle(color: AppPalette.of(context).textFaint, fontSize: 12),
         ),
         const FieldLabel('Meta (R\$)'),
-        CortixField(controller: ctrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), hint: suggested > 0 ? 'Ex: ${suggested.toStringAsFixed(0)}' : 'Ex: 30000'),
+        RukzField(controller: ctrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), hint: suggested > 0 ? 'Ex: ${suggested.toStringAsFixed(0)}' : 'Ex: 30000'),
       ],
     );
     if (saved == true) _reload();

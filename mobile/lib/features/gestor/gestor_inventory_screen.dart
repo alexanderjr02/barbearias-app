@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/photo_picker_tile.dart';
 import 'gestor_repository.dart';
@@ -63,21 +63,21 @@ class _GestorInventoryScreenState extends State<GestorInventoryScreen> {
               const FieldLabel('Foto'),
               PhotoPickerTile(imageUrl: image, upload: _repository.uploadImage, placeholderIcon: Icons.inventory_2_outlined, onChanged: (url) => setSheetState(() => image = url)),
               const FieldLabel('Nome'),
-              CortixField(controller: nameCtrl, hint: 'Ex: Pomada Cabelo Black'),
+              RukzField(controller: nameCtrl, hint: 'Ex: Pomada Cabelo Black'),
               const FieldLabel('Marca'),
-              CortixField(controller: brandCtrl),
+              RukzField(controller: brandCtrl),
               const FieldLabel('SKU'),
-              CortixField(controller: skuCtrl),
+              RukzField(controller: skuCtrl),
               const FieldLabel('Categoria'),
-              CortixField(controller: categoryCtrl, hint: 'Finalizadores'),
+              RukzField(controller: categoryCtrl, hint: 'Finalizadores'),
               const FieldLabel('Preço de venda (R\$)'),
-              CortixField(controller: priceCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+              RukzField(controller: priceCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
               const FieldLabel('Preço de custo (R\$)'),
-              CortixField(controller: costCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+              RukzField(controller: costCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
               const FieldLabel('Quantidade'),
-              CortixField(controller: qtyCtrl, keyboardType: TextInputType.number),
+              RukzField(controller: qtyCtrl, keyboardType: TextInputType.number),
               const FieldLabel('Estoque mínimo'),
-              CortixField(controller: minQtyCtrl, keyboardType: TextInputType.number),
+              RukzField(controller: minQtyCtrl, keyboardType: TextInputType.number),
             ],
           ),
         ),

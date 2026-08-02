@@ -49,7 +49,7 @@ const RESPONSES: { keywords: string[]; answer: string }[] = [
   },
   {
     keywords: ["plano", "upgrade", "pro", "premium", "assinar"],
-    answer: "Você está no **plano Essencial**.\n\nUpgrade para o **Pro (R$ 250/mês)** e desbloqueie:\nCopiloto com IA (fecha o mês, acha onde você perde dinheiro)\nFinanceiro completo, metas e comissões\nControle de estoque\nFidelização e clube de assinatura\nAté 10 barbeiros\nSuporte prioritário\n\nClique em **Fazer upgrade** no menu lateral para assinar com 14 dias grátis!",
+    answer: "Você está no **plano Essencial**.\n\nUpgrade para o **Pro (R$ 350/mês)** e desbloqueie:\nCopiloto com IA (fecha o mês, acha onde você perde dinheiro)\nFinanceiro completo, metas e comissões\nControle de estoque\nFidelização e clube de assinatura\nAté 10 barbeiros\nSuporte prioritário\n\nClique em **Fazer upgrade** no menu lateral para assinar com 14 dias grátis!",
   },
   {
     keywords: ["estoque", "produto", "compras"],

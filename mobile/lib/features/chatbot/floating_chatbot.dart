@@ -1,5 +1,5 @@
 import 'dart:async';
-import '../../core/widgets/cortix_bottom_nav.dart';
+import '../../core/widgets/rukz_bottom_nav.dart';
 import 'dart:math';
 import 'dart:ui';
 

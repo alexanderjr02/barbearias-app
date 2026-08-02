@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import '../../core/api/api_client.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/social_sign_in_button.dart';
 import 'auth_repository.dart';
 import 'google_auth_service.dart';

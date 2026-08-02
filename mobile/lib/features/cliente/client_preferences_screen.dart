@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'client_repository.dart';
@@ -99,22 +99,22 @@ class _ClientPreferencesScreenState extends State<ClientPreferencesScreen> {
                   ),
                 ),
                 const FieldLabel('Laterais / máquina'),
-                CortixField(controller: _machine, hint: 'Ex: máquina 2 nas laterais, tesoura em cima'),
+                RukzField(controller: _machine, hint: 'Ex: máquina 2 nas laterais, tesoura em cima'),
                 const FieldLabel('Produtos'),
-                CortixField(controller: _products, hint: 'Ex: sem produto / pomada matte'),
+                RukzField(controller: _products, hint: 'Ex: sem produto / pomada matte'),
                 const FieldLabel('Alergias'),
-                CortixField(controller: _allergies, hint: 'Ex: alérgico a talco'),
+                RukzField(controller: _allergies, hint: 'Ex: alérgico a talco'),
                 const FieldLabel('Bebida favorita'),
-                CortixField(controller: _drink, hint: 'Ex: café, água com gás'),
+                RukzField(controller: _drink, hint: 'Ex: café, água com gás'),
                 const FieldLabel('Conversa'),
                 const SizedBox(height: 2),
-                CortixChoiceRow(
+                RukzChoiceRow(
                   options: const [('conversar', 'Adoro conversar'), ('tanto_faz', 'Tanto faz'), ('silencio', 'Prefiro silêncio')],
                   value: _chat,
                   onChanged: (v) => setState(() => _chat = v),
                 ),
                 const FieldLabel('Observações'),
-                CortixField(controller: _notes, hint: 'Qualquer detalhe que ajude o barbeiro', maxLines: 3),
+                RukzField(controller: _notes, hint: 'Qualquer detalhe que ajude o barbeiro', maxLines: 3),
                 const SizedBox(height: 24),
                 PulseButton(
                   onPressed: _saving ? null : _save,

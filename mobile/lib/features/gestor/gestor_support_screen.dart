@@ -50,17 +50,17 @@ class _GestorSupportScreenState extends State<GestorSupportScreen> {
       },
       children: [
         const FieldLabel('Assunto'),
-        CortixField(controller: subjectCtrl, hint: 'Ex: Erro ao gerar relatório'),
+        RukzField(controller: subjectCtrl, hint: 'Ex: Erro ao gerar relatório'),
         const FieldLabel('Prioridade'),
         StatefulBuilder(
-          builder: (context, setLocal) => CortixChoiceRow(
+          builder: (context, setLocal) => RukzChoiceRow(
             options: const [('LOW', 'Baixa'), ('NORMAL', 'Normal'), ('HIGH', 'Alta')],
             value: priority,
             onChanged: (v) => setLocal(() => priority = v),
           ),
         ),
         const FieldLabel('Mensagem'),
-        CortixField(controller: bodyCtrl, maxLines: 5, hint: 'Descreva o que está acontecendo...'),
+        RukzField(controller: bodyCtrl, maxLines: 5, hint: 'Descreva o que está acontecendo...'),
       ],
     );
     if (saved == true) _refresh();

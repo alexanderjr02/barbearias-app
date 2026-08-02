@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'booking_repository.dart';
@@ -424,7 +424,7 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
                 style: TextStyle(color: palette.textFaint, fontSize: 12),
               ),
               const FieldLabel('CPF (para o pagamento)'),
-              CortixField(controller: _cpfCtrl, hint: '000.000.000-00', keyboardType: TextInputType.number),
+              RukzField(controller: _cpfCtrl, hint: '000.000.000-00', keyboardType: TextInputType.number),
               const SizedBox(height: 18),
               if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5))),
               SizedBox(

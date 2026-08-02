@@ -6,9 +6,9 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/br_phone_formatter.dart';
-import '../../core/widgets/cortix_date_picker.dart';
+import '../../core/widgets/rukz_date_picker.dart';
 import '../auth/session_provider.dart';
 import 'booking_repository.dart';
 import 'client_repository.dart';
@@ -181,7 +181,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final picked = await showCortixDatePicker(
+    final picked = await showRukzDatePicker(
       context: context,
       initialDate: _selectedDate ?? now,
       firstDate: now,

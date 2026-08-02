@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/photo_picker_tile.dart';
 import 'gestor_repository.dart';
@@ -77,16 +77,16 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
               const FieldLabel('Foto de perfil'),
               PhotoPickerTile(imageUrl: avatar, upload: _repository.uploadImage, placeholderIcon: Icons.person_outline, onChanged: (url) => setSheetState(() => avatar = url)),
               const FieldLabel('Nome'),
-              CortixField(controller: nameCtrl, hint: 'Ex: João Silva'),
+              RukzField(controller: nameCtrl, hint: 'Ex: João Silva'),
               const FieldLabel('Cargo'),
-              CortixField(controller: roleCtrl, hint: 'BARBER'),
+              RukzField(controller: roleCtrl, hint: 'BARBER'),
               const FieldLabel('Especialidades'),
-              CortixField(controller: specialtiesCtrl, hint: 'Degradê, Navalhado'),
+              RukzField(controller: specialtiesCtrl, hint: 'Degradê, Navalhado'),
               const FieldLabel('Comissão (%)'),
-              CortixField(controller: commissionCtrl, keyboardType: TextInputType.number),
+              RukzField(controller: commissionCtrl, keyboardType: TextInputType.number),
               if (editing != null) ...[
                 const FieldLabel('Status'),
-                CortixChoiceRow(
+                RukzChoiceRow(
                   value: isActive ? 'true' : 'false',
                   options: const [('true', 'Ativo'), ('false', 'Inativo')],
                   onChanged: (v) => setSheetState(() => isActive = v == 'true'),
@@ -96,9 +96,9 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
                 const SizedBox(height: 12),
                 Text('Opcional: crie um acesso para esse barbeiro usar o app rukz.', style: TextStyle(color: AppPalette.of(context).textFaint, fontSize: 11.5)),
                 const FieldLabel('E-mail de acesso'),
-                CortixField(controller: emailCtrl, keyboardType: TextInputType.emailAddress, hint: 'barbeiro@email.com'),
+                RukzField(controller: emailCtrl, keyboardType: TextInputType.emailAddress, hint: 'barbeiro@email.com'),
                 const FieldLabel('Senha de acesso'),
-                CortixField(controller: passwordCtrl, obscureText: true, hint: 'Mínimo 8 caracteres'),
+                RukzField(controller: passwordCtrl, obscureText: true, hint: 'Mínimo 8 caracteres'),
               ] else
                 Padding(
                   padding: const EdgeInsets.only(top: 12),

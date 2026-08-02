@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/bell_sheet.dart';
 import '../auth/session_provider.dart';

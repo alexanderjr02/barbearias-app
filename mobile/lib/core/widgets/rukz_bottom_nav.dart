@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-class CortixNavItem {
+class RukzNavItem {
   final IconData icon;
   final String label;
-  const CortixNavItem(this.icon, this.label);
+  const RukzNavItem(this.icon, this.label);
 }
 
 /// Medidas da barra, exportadas porque outras coisas flutuam por cima dela.
@@ -27,11 +27,11 @@ const double kNavClearance = kNavContentHeight + kNavBottomMargin + 12;
 /// (cliente / barbeiro / gestor). Inactive items show just the icon; the
 /// active item expands into an accent pill with its label. Sits above content
 /// (use a normal Scaffold, not extendBody) so nothing is ever hidden behind it.
-class CortixBottomNav extends StatelessWidget {
+class RukzBottomNav extends StatelessWidget {
   final int index;
-  final List<CortixNavItem> items;
+  final List<RukzNavItem> items;
   final ValueChanged<int> onTap;
-  const CortixBottomNav({super.key, required this.index, required this.items, required this.onTap});
+  const RukzBottomNav({super.key, required this.index, required this.items, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

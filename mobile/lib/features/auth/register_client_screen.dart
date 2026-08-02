@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/aurora_background.dart';
 import '../../core/widgets/br_phone_formatter.dart';
-import '../../core/widgets/cortix_date_picker.dart';
+import '../../core/widgets/rukz_date_picker.dart';
 import '../../core/widgets/social_sign_in_button.dart';
 import 'google_auth_service.dart';
 import 'session_provider.dart';
@@ -39,7 +39,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
 
   Future<void> _pickDateOfBirth() async {
     final now = DateTime.now();
-    final picked = await showCortixDatePicker(
+    final picked = await showRukzDatePicker(
       context: context,
       initialDate: DateTime(now.year - 20, now.month, now.day),
       firstDate: DateTime(now.year - 120),

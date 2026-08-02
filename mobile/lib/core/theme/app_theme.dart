@@ -93,7 +93,7 @@ class AppPalette {
 /// pins [ColorScheme.primary] to the exact seed instead of letting
 /// [ColorScheme.fromSeed] tonal-map it — Material 3's dark-mode tone curve
 /// desaturates warm ambers into a washed-out pink, which read as a bug.
-ThemeData buildCortixTheme({required Color seed, required Brightness brightness}) {
+ThemeData buildRukzTheme({required Color seed, required Brightness brightness}) {
   final isDark = brightness == Brightness.dark;
   final palette = isDark ? AppPalette.dark : AppPalette.light;
   final base = ColorScheme.fromSeed(seedColor: seed, brightness: brightness).copyWith(

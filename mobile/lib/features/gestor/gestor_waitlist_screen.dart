@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/br_phone_formatter.dart';
 import '../../core/widgets/form_sheet.dart';
@@ -56,11 +56,11 @@ class _GestorWaitlistScreenState extends State<GestorWaitlistScreen> {
       },
       children: [
         const FieldLabel('Nome do cliente'),
-        CortixField(controller: nameCtrl, hint: 'Ex: Lucas Pereira'),
+        RukzField(controller: nameCtrl, hint: 'Ex: Lucas Pereira'),
         const FieldLabel('Telefone / WhatsApp'),
-        CortixField(controller: phoneCtrl, keyboardType: TextInputType.phone, hint: '(11) 99999-9999', inputFormatters: [BrPhoneFormatter()]),
+        RukzField(controller: phoneCtrl, keyboardType: TextInputType.phone, hint: '(11) 99999-9999', inputFormatters: [BrPhoneFormatter()]),
         const FieldLabel('Observação (opcional)'),
-        CortixField(controller: noteCtrl, hint: 'Ex: corte + barba, prefere o Rafael'),
+        RukzField(controller: noteCtrl, hint: 'Ex: corte + barba, prefere o Rafael'),
       ],
     );
     if (saved == true) {

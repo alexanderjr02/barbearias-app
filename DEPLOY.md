@@ -1,4 +1,4 @@
-# 🚀 Colocar o CORTIX no ar (e começar a vender)
+# 🚀 Colocar o rukz no ar (e começar a vender)
 
 Guia direto pra publicar o sistema **com HTTPS**, sem depender ainda do seu
 domínio próprio (você adiciona por último). HTTPS é obrigatório: sem ele o

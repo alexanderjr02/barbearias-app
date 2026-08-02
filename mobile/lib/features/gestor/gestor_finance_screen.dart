@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
@@ -98,19 +98,19 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const FieldLabel('Tipo'),
-              CortixChoiceRow(
+              RukzChoiceRow(
                 value: type,
                 options: const [('EXPENSE', 'Despesa'), ('INCOME', 'Receita')],
                 onChanged: (v) => setSheetState(() => type = v),
               ),
               const FieldLabel('Categoria'),
-              CortixField(controller: categoryCtrl, hint: 'Ex: Aluguel, Produtos, Marketing'),
+              RukzField(controller: categoryCtrl, hint: 'Ex: Aluguel, Produtos, Marketing'),
               const FieldLabel('Descrição'),
-              CortixField(controller: descriptionCtrl, hint: 'Ex: Aluguel do espaço'),
+              RukzField(controller: descriptionCtrl, hint: 'Ex: Aluguel do espaço'),
               const FieldLabel('Valor (R\$)'),
-              CortixField(controller: amountCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+              RukzField(controller: amountCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
               const FieldLabel('Forma de pagamento'),
-              CortixField(controller: paymentCtrl, hint: 'PIX, Cartão, Dinheiro...'),
+              RukzField(controller: paymentCtrl, hint: 'PIX, Cartão, Dinheiro...'),
             ],
           ),
         ),

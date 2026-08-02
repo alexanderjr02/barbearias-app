@@ -179,7 +179,7 @@ class _PaymentConnectCardState extends State<PaymentConnectCard> {
                   }).toList(),
                 ),
                 const SizedBox(height: 12),
-                CortixField(controller: _keyCtrl, obscureText: true, hint: _providers[_selected]!.$2),
+                RukzField(controller: _keyCtrl, obscureText: true, hint: _providers[_selected]!.$2),
                 const SizedBox(height: 6),
                 Text('Guardamos com segurança e nunca exibimos de volta.', style: TextStyle(color: palette.textFaint, fontSize: 10.5)),
                 const SizedBox(height: 12),

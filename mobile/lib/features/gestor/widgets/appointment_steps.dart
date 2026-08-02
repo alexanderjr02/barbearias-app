@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/cortix_theme.dart';
+import '../../../core/theme/rukz_theme.dart';
 import '../gestor_repository.dart';
 
 const dayNamesShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];

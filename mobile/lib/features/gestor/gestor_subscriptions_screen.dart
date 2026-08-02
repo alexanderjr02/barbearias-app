@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/cortix_theme.dart';
+import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
@@ -153,19 +153,19 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
       },
       children: [
         const FieldLabel('Nome do plano'),
-        CortixField(controller: nameCtrl, hint: 'Ex: Ilimitado Premium'),
+        RukzField(controller: nameCtrl, hint: 'Ex: Ilimitado Premium'),
         const FieldLabel('Descrição'),
-        CortixField(controller: descCtrl, hint: 'Ex: Cortes ilimitados todo mês'),
+        RukzField(controller: descCtrl, hint: 'Ex: Cortes ilimitados todo mês'),
         const FieldLabel('Preço (R\$)'),
-        CortixField(controller: priceCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+        RukzField(controller: priceCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
         const FieldLabel('Cobrança'),
-        CortixChoiceRow(
+        RukzChoiceRow(
           value: cycle,
           options: const [('MONTHLY', 'Mensal'), ('QUARTERLY', 'Trimestral'), ('ANNUAL', 'Anual')],
           onChanged: (v) => cycle = v,
         ),
         const FieldLabel('Benefícios (um por linha)'),
-        CortixField(controller: benefitsCtrl, maxLines: 4, hint: 'Cortes ilimitados\nPrioridade no agendamento'),
+        RukzField(controller: benefitsCtrl, maxLines: 4, hint: 'Cortes ilimitados\nPrioridade no agendamento'),
         const FieldLabel('Cor'),
         StatefulBuilder(
           builder: (context, setSheetState) => Wrap(

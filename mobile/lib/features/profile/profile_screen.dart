@@ -5,7 +5,7 @@ import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../core/widgets/app_toast.dart';
-import '../../core/widgets/cortix_date_picker.dart';
+import '../../core/widgets/rukz_date_picker.dart';
 import '../auth/session_provider.dart';
 import '../barbeiro/barbeiro_copilot_screen.dart';
 import 'profile_repository.dart';
@@ -51,7 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _pickBirthDate() async {
     final now = DateTime.now();
     final current = _birthDate != null ? DateTime.tryParse(_birthDate!) : null;
-    final picked = await showCortixDatePicker(
+    final picked = await showRukzDatePicker(
       context: context,
       initialDate: current ?? DateTime(now.year - 25),
       firstDate: DateTime(now.year - 100),
