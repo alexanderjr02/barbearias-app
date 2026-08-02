@@ -155,6 +155,13 @@ class GestorStaff {
   final bool hasLogin;
   final double? avgRating;
   final int reviewCount;
+  // Recorte do MES (e assim que comissao fecha), ritmo da semana e quanto
+  // da agenda ja esta preenchido — os mesmos numeros que o painel web usa.
+  final int monthAppointments;
+  final double monthRevenue;
+  final List<int> last7;
+  final int occupancy;
+  final int clientsCount;
 
   GestorStaff({
     required this.id,
@@ -169,6 +176,11 @@ class GestorStaff {
     required this.hasLogin,
     required this.avgRating,
     required this.reviewCount,
+    required this.monthAppointments,
+    required this.monthRevenue,
+    required this.last7,
+    required this.occupancy,
+    required this.clientsCount,
   });
 
   factory GestorStaff.fromJson(Map<String, dynamic> json) => GestorStaff(
@@ -184,6 +196,11 @@ class GestorStaff {
         hasLogin: json['hasLogin'] == true,
         avgRating: json['avgRating'] != null ? (json['avgRating'] as num).toDouble() : null,
         reviewCount: json['reviewCount'] as int,
+        monthAppointments: (json['monthAppointments'] as num?)?.toInt() ?? 0,
+        monthRevenue: (json['monthRevenue'] as num?)?.toDouble() ?? 0,
+        last7: ((json['last7'] as List?) ?? const []).map((e) => (e as num).toInt()).toList(),
+        occupancy: (json['occupancy'] as num?)?.toInt() ?? 0,
+        clientsCount: (json['clientsCount'] as num?)?.toInt() ?? 0,
       );
 }
 

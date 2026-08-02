@@ -140,116 +140,209 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
                 Center(child: Text('Erro: ${snapshot.error}', style: const TextStyle(color: Colors.redAccent))),
               ]);
             }
-            final staff = [...(snapshot.data ?? [])]..sort((a, b) => b.revenue.compareTo(a.revenue));
-            final totalRevenue = staff.fold<double>(0, (a, s) => a + s.revenue);
+            final staff = [...(snapshot.data ?? [])]..sort((a, b) => b.monthRevenue.compareTo(a.monthRevenue));
+
+            // Mesma leitura do painel web: o mes primeiro (e assim que comissao
+            // fecha), depois barbeiro por barbeiro.
+            final ativos = staff.where((s) => s.isActive).toList();
+            final receitaMes = ativos.fold<double>(0, (a, s) => a + s.monthRevenue);
+            final cortesMes = ativos.fold<int>(0, (a, s) => a + s.monthAppointments);
+            final comissoes = ativos.fold<double>(0, (a, s) => a + s.monthRevenue * s.commissionRate);
+            final ocupacao = ativos.isEmpty ? 0 : (ativos.fold<int>(0, (a, s) => a + s.occupancy) / ativos.length).round();
+            final hojeDia = DateTime.now().weekday % 7;
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _MiniStat(label: 'barbeiros', value: '${staff.length}', icon: Icons.badge_outlined, palette: palette),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _MiniStat(label: 'receita/mês', value: 'R\$${totalRevenue.toStringAsFixed(0)}', icon: Icons.payments_outlined, palette: palette, iconColor: palette.textSecondary),
-                    ),
-                  ],
+                // Indicadores do mes
+                Container(
+                  decoration: BoxDecoration(
+                    color: palette.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: palette.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(children: [
+                        Expanded(child: _KpiEquipe(rotulo: 'Receita da equipe', valor: _money(receitaMes), nota: '$cortesMes corte${cortesMes == 1 ? '' : 's'} no mês', palette: palette)),
+                        Container(width: 1, height: 52, color: palette.border),
+                        Expanded(child: _KpiEquipe(rotulo: 'Comissões a pagar', valor: _money(comissoes), nota: 'sobre o concluído', palette: palette)),
+                      ]),
+                      Divider(height: 1, color: palette.border),
+                      Row(children: [
+                        Expanded(child: _KpiEquipe(rotulo: 'Cortes no mês', valor: '$cortesMes', nota: ativos.isEmpty ? 'sem barbeiro ativo' : 'média de ${(cortesMes / ativos.length).toStringAsFixed(1).replaceAll('.', ',')} por barbeiro', palette: palette)),
+                        Container(width: 1, height: 52, color: palette.border),
+                        Expanded(child: _KpiEquipe(rotulo: 'Ocupação média', valor: '$ocupacao%', nota: '${100 - ocupacao}% ainda livre', palette: palette)),
+                      ]),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
+
                 if (staff.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 40),
                     child: Center(child: Text('Nenhum barbeiro cadastrado ainda.', style: TextStyle(color: palette.textFaint))),
                   ),
+
                 ...staff.asMap().entries.map((entry) {
                   final i = entry.key;
                   final member = entry.value;
                   final avatarUrl = resolveAssetUrl(member.avatar);
-                  final isTop = i == 0 && member.revenue > 0;
+                  final isTop = i == 0 && member.monthRevenue > 0 && member.isActive;
+                  final pico = member.last7.isEmpty ? 1 : member.last7.reduce((a, b) => a > b ? a : b).clamp(1, 999);
                   return RiseIn(
                     delay: Duration(milliseconds: 30 * i),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: palette.surface,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: palette.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                    child: GestureDetector(
+                      onTap: () => _openForm(editing: member),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: palette.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: member.isActive ? palette.border : palette.border.withValues(alpha: 0.5)),
+                        ),
+                        child: Opacity(
+                          opacity: member.isActive ? 1 : 0.55,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundColor: palette.surfaceAlt,
-                                backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                                child: avatarUrl == null ? Text(_initials(member.name), style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold, fontSize: 15)) : null,
+                              // Identificacao
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 46,
+                                    height: 46,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: accent,
+                                      borderRadius: BorderRadius.circular(14),
+                                      image: avatarUrl != null ? DecorationImage(image: NetworkImage(avatarUrl), fit: BoxFit.cover) : null,
+                                    ),
+                                    child: avatarUrl != null
+                                        ? null
+                                        : Text(_initials(member.name),
+                                            style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.w900, fontSize: 15)),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(children: [
+                                          Flexible(
+                                            child: Text(member.name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15)),
+                                          ),
+                                          if (isTop) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: accent.withValues(alpha: 0.14),
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(color: accent.withValues(alpha: 0.4)),
+                                              ),
+                                              child: Text('TOP', style: TextStyle(color: accent, fontSize: 9.5, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                                            ),
+                                          ],
+                                        ]),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${_rotuloCargo(member.role)} · ${member.hasLogin ? 'App ativo' : 'Sem app'}${member.isActive ? '' : ' · Inativo'}',
+                                          style: TextStyle(
+                                            color: member.hasLogin ? const Color(0xFF34D399) : palette.textFaint,
+                                            fontSize: 11.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(Icons.chevron_right_rounded, size: 20, color: palette.textFaint),
+                                ],
                               ),
-                              const SizedBox(width: 13),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Flexible(child: Text(member.name, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 15, letterSpacing: -0.2), overflow: TextOverflow.ellipsis)),
-                                        if (isTop) ...[
-                                          const SizedBox(width: 7),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                            decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
-                                            child: Text('Top do mês', style: TextStyle(color: accent, fontSize: 9.5, fontWeight: FontWeight.w700)),
-                                          ),
-                                        ],
-                                        if (!member.isActive) ...[
-                                          const SizedBox(width: 7),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                            decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(6)),
-                                            child: Text('Inativo', style: TextStyle(color: palette.textFaint, fontSize: 9.5, fontWeight: FontWeight.w600)),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Row(
-                                      children: [
-                                        Flexible(child: Text(member.role, style: TextStyle(color: palette.textSecondary, fontSize: 12.5), overflow: TextOverflow.ellipsis)),
-                                        if (member.avgRating != null) ...[
-                                          const SizedBox(width: 8),
-                                          Icon(Icons.star_rounded, size: 13, color: palette.textFaint),
-                                          Text(' ${member.avgRating!.toStringAsFixed(1)}', style: TextStyle(color: palette.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-                                        ],
-                                      ],
-                                    ),
-                                  ],
+
+                              // Numeros do mes
+                              const SizedBox(height: 12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: palette.bg,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: palette.border),
+                                ),
+                                child: Row(children: [
+                                  Expanded(child: _CelulaMes(rotulo: 'Cortes', valor: '${member.monthAppointments}', palette: palette)),
+                                  Container(width: 1, height: 38, color: palette.border),
+                                  Expanded(child: _CelulaMes(rotulo: 'Receita', valor: _money(member.monthRevenue), palette: palette)),
+                                  Container(width: 1, height: 38, color: palette.border),
+                                  Expanded(child: _CelulaMes(rotulo: 'Comissão ${(member.commissionRate * 100).round()}%', valor: _money(member.monthRevenue * member.commissionRate), palette: palette, destaque: accent)),
+                                ]),
+                              ),
+
+                              // Ocupacao
+                              const SizedBox(height: 12),
+                              Row(children: [
+                                Text('Ocupação da agenda', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                                const Spacer(),
+                                Text('${member.occupancy}%', style: TextStyle(color: palette.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                              ]),
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: LinearProgressIndicator(
+                                  value: (member.occupancy / 100).clamp(0.0, 1.0),
+                                  minHeight: 5,
+                                  backgroundColor: palette.surfaceAlt,
+                                  valueColor: AlwaysStoppedAnimation(accent),
                                 ),
                               ),
-                              IconButton(
-                                onPressed: () => _openForm(editing: member),
-                                icon: Icon(Icons.tune_rounded, size: 18, color: palette.textFaint),
-                                tooltip: 'Editar',
-                                visualDensity: VisualDensity.compact,
-                              ),
+
+                              // Ritmo da semana
+                              if (member.last7.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Row(children: [
+                                  Text('Últimos 7 dias', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                                  const Spacer(),
+                                  if (member.avgRating != null)
+                                    Text('${member.avgRating!.toStringAsFixed(1).replaceAll('.', ',')} · ',
+                                        style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                                  Text('${member.clientsCount} cliente${member.clientsCount == 1 ? '' : 's'}',
+                                      style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                                ]),
+                                const SizedBox(height: 7),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: List.generate(member.last7.length, (d) {
+                                    final qtd = member.last7[d];
+                                    return Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 2.5),
+                                        child: Column(
+                                          children: [
+                                            Container(
+                                              height: qtd > 0 ? 12 + (qtd / pico) * 22 : 12,
+                                              decoration: BoxDecoration(
+                                                color: qtd > 0 ? accent : palette.surfaceAlt,
+                                                borderRadius: BorderRadius.circular(5),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(_diasCurtos[(hojeDia - 6 + d + 7) % 7],
+                                                style: TextStyle(color: palette.textFaint, fontSize: 9.5)),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ],
                             ],
                           ),
-                          const SizedBox(height: 14),
-                          Container(height: 1, color: palette.border),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(child: _StatCell(label: 'CORTES', value: '${member.appointmentsCount}', palette: palette)),
-                              Container(width: 1, height: 26, color: palette.border),
-                              Expanded(child: _StatCell(label: 'RECEITA', value: _money(member.revenue), palette: palette)),
-                              Container(width: 1, height: 26, color: palette.border),
-                              Expanded(child: _StatCell(label: 'COMISSÃO', value: '${(member.commissionRate * 100).toStringAsFixed(0)}%', palette: palette)),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   );
@@ -274,47 +367,61 @@ String _money(double v) {
 
 // Célula de estatística: valor em destaque, rótulo discreto embaixo. Sem caixa
 // colorida nem ícone — três delas numa linha, separadas por um fio fino.
-class _StatCell extends StatelessWidget {
-  final String label;
-  final String value;
+
+const _cargos = {'BARBER': 'Barbeiro', 'MANAGER': 'Gerente', 'OWNER': 'Dono', 'ASSISTANT': 'Auxiliar'};
+String _rotuloCargo(String c) => _cargos[c.toUpperCase()] ?? c;
+
+// Iniciais dos dias por getDay() (domingo = 0).
+const _diasCurtos = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+/// Indicador do mês na faixa do topo: rótulo, valor grande e uma nota curta
+/// dizendo o que o número significa.
+class _KpiEquipe extends StatelessWidget {
+  final String rotulo;
+  final String valor;
+  final String nota;
   final AppPalette palette;
 
-  const _StatCell({required this.label, required this.value, required this.palette});
+  const _KpiEquipe({required this.rotulo, required this.valor, required this.nota, required this.palette});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(value, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 15.5, letterSpacing: -0.3)),
-        const SizedBox(height: 3),
-        Text(label, style: TextStyle(color: palette.textFaint, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.4)),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(rotulo, style: TextStyle(color: palette.textFaint, fontSize: 11)),
+          const SizedBox(height: 3),
+          Text(valor, style: TextStyle(color: palette.textPrimary, fontSize: 19, fontWeight: FontWeight.w900, letterSpacing: -0.4)),
+          const SizedBox(height: 2),
+          Text(nota, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: palette.textFaint, fontSize: 10)),
+        ],
+      ),
     );
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
+/// Uma das três células de número do mês dentro do cartão do barbeiro.
+class _CelulaMes extends StatelessWidget {
+  final String rotulo;
+  final String valor;
   final AppPalette palette;
-  final Color? iconColor;
+  final Color? destaque;
 
-  const _MiniStat({required this.label, required this.value, required this.icon, required this.palette, this.iconColor});
+  const _CelulaMes({required this.rotulo, required this.valor, required this.palette, this.destaque});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(12)),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: iconColor ?? palette.textSecondary),
-          const SizedBox(width: 8),
-          Text(value, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(color: palette.textFaint, fontSize: 11)),
+          Text(rotulo, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: palette.textFaint, fontSize: 10)),
+          const SizedBox(height: 2),
+          Text(valor, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: destaque ?? palette.textPrimary, fontSize: 14.5, fontWeight: FontWeight.w900)),
         ],
       ),
     );
