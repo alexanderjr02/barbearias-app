@@ -4,6 +4,8 @@ import { requireBarbershopSession } from "@/lib/apiAuth";
 import { planHasAI } from "@/lib/billing";
 import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
 import { churnedClients, tomorrowAppointments, emptySlotsToday } from "@/lib/copilot/insights";
+import { fugaAntecipada } from "@/lib/copilot/oportunidades";
+import { logAutopilot } from "@/lib/copilot/autopilot";
 
 // POST /api/copilot/action { action }, executes one of the briefing's one-tap
 // actions. Each is a real, safe operation scoped to the caller's barbershop.
@@ -28,6 +30,37 @@ export async function POST(request: NextRequest) {
       }
     }
     return NextResponse.json({ ok: true, count: toConfirm.length, message: `${toConfirm.length} ${toConfirm.length === 1 ? "agendamento confirmado" : "agendamentos confirmados"}.` });
+  }
+
+  // Resgate ANTECIPADO: quem passou do próprio ritmo mas ainda não virou
+  // sumido. Aqui a mensagem soa como cuidado; duas semanas depois já soa como
+  // cobrança, e aí custa desconto.
+  if (action === "rescue_early") {
+    const emFuga = await fugaAntecipada(barbershopId);
+    const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
+    let enviados = 0;
+    for (const c of emFuga) {
+      const ok = await notifyClientMarketing(
+        barbershopId,
+        c.clientId,
+        "APPOINTMENT_CONFIRMED",
+        "Tá na hora, não tá?",
+        `Oi! Já passou do seu tempo de corte na ${shop?.name ?? "barbearia"}. Quer garantir seu horário essa semana?`,
+        "/appointments",
+      );
+      if (ok) {
+        await logAutopilot(barbershopId, "winback", `Chamei ${c.nome} antes de sumir (${c.atraso} dias além do ritmo dele).`, null, c.clientId);
+        enviados++;
+      }
+    }
+    return NextResponse.json({
+      ok: true,
+      count: enviados,
+      message:
+        enviados === 0
+          ? "Ninguém está atrasado no próprio ritmo agora. Isso é bom."
+          : `${enviados} ${enviados === 1 ? "cliente avisado" : "clientes avisados"} antes de sumir.`,
+    });
   }
 
   if (action === "winback_churned") {

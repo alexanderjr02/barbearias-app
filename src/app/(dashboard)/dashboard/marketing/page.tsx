@@ -18,6 +18,23 @@ interface Opportunities {
   actionsThisMonth: number;
   avgTicket: number;
   feed: { action: string; detail: string; createdAt: string }[];
+  /** Leituras que exigem julgamento: escala, preço por barbeiro, horário morto. */
+  gestao: { tipo: string; titulo: string; detalhe: string; valorMes: number }[];
+  /** Quem passou do PRÓPRIO ritmo e ainda não virou sumido. */
+  fugindo: { nome: string; ritmo: number; atraso: number; ticket: number }[];
+  fugindoValor: number;
+}
+
+interface Vitrine {
+  temPost: boolean;
+  motivo?: string;
+  porIA?: boolean;
+  antes?: string | null;
+  depois?: string | null;
+  cliente?: string;
+  servico?: string;
+  nota?: number | null;
+  legenda?: string;
 }
 
 const LEVELS = [
@@ -43,6 +60,17 @@ export default function MarketingPage() {
       refresh();
       if (res.ok) toast.success(res.message);
       else toast.error(res.message);
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui enviar"),
+  });
+
+  const { data: vitrine } = useQuery({ queryKey: ["vitrine"], queryFn: () => apiGet<Vitrine>("/api/marketing/vitrine") });
+
+  const resgate = useMutation({
+    mutationFn: () => apiPost<{ message: string }>("/api/copilot/action", { action: "rescue_early" }),
+    onSuccess: (res) => {
+      refresh();
+      toast.success(res.message);
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Não consegui enviar"),
   });
@@ -139,6 +167,23 @@ export default function MarketingPage() {
                 auto={level === "auto"}
               />
               <OpportunityCard
+                title="Indo embora agora"
+                value={data?.fugindo.length ?? 0}
+                unit={(data?.fugindo.length ?? 0) === 1 ? "cliente atrasado" : "clientes atrasados"}
+                money={
+                  (data?.fugindoValor ?? 0) > 0
+                    ? `${formatCurrency(data?.fugindoValor ?? 0)} por rodada de corte`
+                    : "Ninguém fora do próprio ritmo agora"
+                }
+                desc="Passaram do ritmo DELES, mas ainda não sumiram. Resgatar morno custa uma mensagem; frio custa desconto."
+                actionLabel="Chamar antes de sumir"
+                pending={resgate.isPending}
+                disabled={isLoading || (data?.fugindo.length ?? 0) === 0}
+                onAction={() => resgate.mutate()}
+                highlight={(data?.fugindo.length ?? 0) > 0}
+                auto={false}
+              />
+              <OpportunityCard
                 title="Trazer os sumidos"
                 value={churned}
                 unit={churned === 1 ? "cliente sumido" : "clientes sumidos"}
@@ -156,6 +201,70 @@ export default function MarketingPage() {
               Aniversariantes do dia o Copiloto parabeniza sozinho no automático. Tudo só vai para quem deu consentimento (LGPD).
             </p>
           </div>
+
+          {/* O que exige DECISÃO do dono, não disparo de mensagem. Relatório
+              diz "segunda faturou R$ 400"; isto diz o que fazer a respeito. */}
+          {data && data.gestao.length > 0 && (
+            <div>
+              <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">Decisões que estão na mesa</p>
+              <div className="space-y-3">
+                {data.gestao.map((g) => (
+                  <div key={g.tipo} className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <p className="text-sm font-semibold text-white">{g.titulo}</p>
+                      <span className="shrink-0 text-sm font-black text-amber-400">
+                        {formatCurrency(g.valorMes)}<span className="ml-1 text-[11px] font-medium text-zinc-500">por mês</span>
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xs leading-relaxed text-zinc-400">{g.detalhe}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 px-0.5 text-[11px] text-zinc-600">
+                Contas feitas com os números da sua loja nas últimas 8 semanas. Nada aqui muda sozinho: a decisão é sua.
+              </p>
+            </div>
+          )}
+
+          {/* O post da semana. Postar é a tarefa que ninguém faz. */}
+          {vitrine?.temPost && (
+            <div>
+              <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">Post da semana, pronto</p>
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-5">
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex gap-2">
+                    {vitrine.antes && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={vitrine.antes} alt="Antes" className="h-28 w-24 rounded-xl object-cover" />
+                    )}
+                    {vitrine.depois && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={vitrine.depois} alt="Depois" className="h-28 w-24 rounded-xl object-cover" />
+                    )}
+                  </div>
+                  <div className="min-w-[240px] flex-1">
+                    <p className="text-xs text-zinc-500">
+                      {vitrine.servico} no {vitrine.cliente}
+                      {vitrine.nota ? ` · ${vitrine.nota} de 5` : ""}
+                    </p>
+                    <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-zinc-200">{vitrine.legenda}</p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(vitrine.legenda ?? "");
+                        toast.success("Legenda copiada");
+                      }}
+                      className="mt-3 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-amber-500/40 hover:text-amber-400"
+                    >
+                      Copiar legenda
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-3 text-[11px] text-zinc-600">
+                  Escolhido entre os atendimentos da semana com foto, nota do cliente primeiro. Só entra quem autorizou uso de imagem.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* A prova: o que a autonomia devolveu em dinheiro. */}
           <div className="grid grid-cols-3 gap-3">
