@@ -36,6 +36,8 @@ interface BarbershopMe {
   email: string | null;
   instagram: string | null;
   pixKey: string | null;
+  finishProducts: string | null;
+  drinks: string | null;
   faqText: string | null;
   city: string | null;
   description: string | null;
@@ -146,6 +148,8 @@ export default function SettingsPage() {
         email: form.get("email"),
         instagram: form.get("instagram"),
         pixKey: form.get("pixKey"),
+        finishProducts: form.get("finishProducts"),
+        drinks: form.get("drinks"),
         faqText: form.get("faqText"),
         city: form.get("city"),
         description: form.get("description"),
@@ -254,6 +258,28 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Chave PIX (gorjetas)</label>
                   <input name="pixKey" type="text" defaultValue={barbershop?.pixKey ?? ""} placeholder="CPF, e-mail, telefone ou chave aleatória" className={inputCls} />
                   <p className="mt-1 text-xs text-zinc-500">Usada para o cliente enviar gorjeta ao barbeiro pelo app.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Produtos de finalização</label>
+                  <textarea
+                    name="finishProducts"
+                    rows={4}
+                    defaultValue={barbershop?.finishProducts ?? ""}
+                    placeholder={"Um por linha. Ex.: Sem produto, Pomada matte, Cera, Gel"}
+                    className={inputCls}
+                  />
+                  <p className="mt-1 text-xs text-zinc-500">O cliente escolhe entre estes ao agendar. Em branco, usamos uma lista padrão.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Bebidas oferecidas</label>
+                  <textarea
+                    name="drinks"
+                    rows={3}
+                    defaultValue={barbershop?.drinks ?? ""}
+                    placeholder={"Uma por linha. Ex.: Água, Café, Refrigerante"}
+                    className={inputCls}
+                  />
+                  <p className="mt-1 text-xs text-zinc-500">Aparece nas preferências do cliente no agendamento.</p>
                 </div>
               </div>
               <div>
