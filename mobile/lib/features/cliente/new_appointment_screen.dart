@@ -53,11 +53,21 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   String? _reference;
   final _clientRepo = ClientRepository();
 
+  // Preferencias do cliente, opcionais, no proprio agendamento. Antes so
+  // existiam numa aba separada que a maioria nunca abria — e o barbeiro
+  // recebia o cliente sem saber maquina, produto ou alergia.
+  final _prefMachine = TextEditingController();
+  final _prefProducts = TextEditingController();
+  final _prefAllergies = TextEditingController();
+  bool _prefsAbertas = false;
+  bool _prefsCarregadas = false;
+
   @override
   void initState() {
     super.initState();
     _reference = widget.referencePhoto;
     _loadBarbershops();
+    _carregarPreferencias();
     _phoneFocus.addListener(() {
       if (!_phoneFocus.hasFocus && !_phoneTouched) setState(() => _phoneTouched = true);
     });
@@ -78,6 +88,9 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   void dispose() {
     _phoneController.dispose();
     _phoneFocus.dispose();
+    _prefMachine.dispose();
+    _prefProducts.dispose();
+    _prefAllergies.dispose();
     super.dispose();
   }
 
@@ -276,6 +289,23 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
     if (picked != null && mounted) setState(() => _reference = picked);
   }
 
+  /// Traz o que o cliente ja tinha salvo, pra ele so conferir em vez de
+  /// digitar de novo. Falha aqui nao atrapalha o agendamento: e opcional.
+  Future<void> _carregarPreferencias() async {
+    try {
+      final p = await _clientRepo.preferences();
+      if (!mounted) return;
+      setState(() {
+        _prefMachine.text = p.machine ?? '';
+        _prefProducts.text = p.products ?? '';
+        _prefAllergies.text = p.allergies ?? '';
+        _prefsCarregadas = true;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _prefsCarregadas = true);
+    }
+  }
+
   Future<void> _submit() async {
     final sessionProvider = context.read<SessionProvider>();
     final session = sessionProvider.session;
@@ -298,6 +328,13 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
         totalPrice: _selectedService!.price,
         referencePhoto: _reference,
       );
+      // Preferencias vao junto, mas nunca seguram o agendamento: se falhar, o
+      // horario ja esta marcado e o cliente pode ajustar na aba Preferencias.
+      unawaited(_clientRepo.savePreferences({
+        'machine': _prefMachine.text.trim(),
+        'products': _prefProducts.text.trim(),
+        'allergies': _prefAllergies.text.trim(),
+      }).catchError((_) {}));
       // Remember the number for next time — only when it's new or changed,
       // and never lets a save failure block the booking that already went
       // through.
@@ -673,6 +710,46 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                           const SizedBox(width: 10),
                           Expanded(child: OutlinedButton.icon(onPressed: _pickFromWallet, icon: const Icon(Icons.content_cut_rounded, size: 18), label: const Text('Da Carteira'), style: OutlinedButton.styleFrom(foregroundColor: accent, side: BorderSide(color: palette.border)))),
                         ]),
+
+                      // Preferencias — opcionais. Recolhidas por padrao pra nao
+                      // alongar o agendamento de quem so quer marcar e sair.
+                      const SizedBox(height: 18),
+                      GestureDetector(
+                        onTap: () => setState(() => _prefsAbertas = !_prefsAbertas),
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(children: [
+                          Icon(Icons.tune_rounded, size: 15, color: accent),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text('Suas preferências (opcional)',
+                                style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 13.5)),
+                          ),
+                          Icon(_prefsAbertas ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                              size: 20, color: palette.textFaint),
+                        ]),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _prefsAbertas
+                            ? 'O barbeiro vê isso antes de te atender. Fica salvo pras próximas.'
+                            : 'Máquina, produto e alergia — o barbeiro já chega sabendo.',
+                        style: TextStyle(color: palette.textFaint, fontSize: 11.5),
+                      ),
+                      if (_prefsAbertas) ...[
+                        const SizedBox(height: 12),
+                        if (!_prefsCarregadas)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)),
+                          )
+                        else ...[
+                          _CampoPreferencia(controller: _prefMachine, rotulo: 'Máquina / altura', dica: 'Ex: máquina 2 nas laterais', palette: palette, accent: accent),
+                          const SizedBox(height: 10),
+                          _CampoPreferencia(controller: _prefProducts, rotulo: 'Produto', dica: 'Ex: pomada matte, sem gel', palette: palette, accent: accent),
+                          const SizedBox(height: 10),
+                          _CampoPreferencia(controller: _prefAllergies, rotulo: 'Alergia', dica: 'Ex: alérgico a tintura', palette: palette, accent: accent),
+                        ],
+                      ],
                       if (_error != null) ...[
                         const SizedBox(height: 12),
                         Text(_error!, style: const TextStyle(color: Colors.redAccent)),
@@ -1024,6 +1101,50 @@ class _ServiceCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Campo curto de preferência dentro do agendamento. Rótulo em cima, sem
+/// moldura pesada — o agendamento já é um formulário longo.
+class _CampoPreferencia extends StatelessWidget {
+  final TextEditingController controller;
+  final String rotulo;
+  final String dica;
+  final AppPalette palette;
+  final Color accent;
+
+  const _CampoPreferencia({
+    required this.controller,
+    required this.rotulo,
+    required this.dica,
+    required this.palette,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(rotulo, style: TextStyle(color: palette.textSecondary, fontSize: 11.5, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          style: TextStyle(color: palette.textPrimary, fontSize: 13.5),
+          decoration: InputDecoration(
+            hintText: dica,
+            hintStyle: TextStyle(color: palette.textFaint, fontSize: 12.5),
+            filled: true,
+            fillColor: palette.surface,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: palette.border)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accent, width: 1.4)),
+          ),
+        ),
+      ],
     );
   }
 }
