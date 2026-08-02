@@ -10,7 +10,6 @@ interface TagListInputProps {
   placeholder?: string;
   /** Atalhos do ramo: um clique adiciona, sem digitar. */
   suggestions?: string[];
-  emptyHint?: string;
 }
 
 const separa = (texto: string) =>
@@ -28,7 +27,7 @@ const separa = (texto: string) =>
  * tela do cliente. Aqui cada item vira uma etiqueta assim que ele confirma —
  * o que ele vê é exatamente o que o cliente vai ver.
  */
-export function TagListInput({ name, defaultValue, placeholder, suggestions = [], emptyHint }: TagListInputProps) {
+export function TagListInput({ name, defaultValue, placeholder, suggestions = [] }: TagListInputProps) {
   const [itens, setItens] = useState<string[]>(() => separa(defaultValue ?? ""));
   const [rascunho, setRascunho] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -116,7 +115,6 @@ export function TagListInput({ name, defaultValue, placeholder, suggestions = []
         </div>
       )}
 
-      {itens.length === 0 && emptyHint && <p className="mt-2 text-xs text-zinc-500">{emptyHint}</p>}
     </div>
   );
 }

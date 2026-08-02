@@ -255,10 +255,24 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Cidade</label>
                   <input name="city" type="text" defaultValue={barbershop?.city ?? ""} placeholder="São Paulo, SP" className={inputCls} />
                 </div>
-                <div>
+                {/* Sozinha na última linha da grade, ocupando as duas colunas:
+                    a chave aleatória é longa e cabe melhor assim do que espremida
+                    ao lado de um espaço vazio. */}
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Chave PIX (gorjetas)</label>
                   <input name="pixKey" type="text" defaultValue={barbershop?.pixKey ?? ""} placeholder="CPF, e-mail, telefone ou chave aleatória" className={inputCls} />
                   <p className="mt-1 text-xs text-zinc-500">Usada para o cliente enviar gorjeta ao barbeiro pelo app.</p>
+                </div>
+              </div>
+
+              {/* Fora da grade de duas colunas: as etiquetas fazem estes campos
+                  crescerem em altura, e ao lado de um input de uma linha isso
+                  abria um vão vazio na coluna vizinha. Largura cheia ainda deixa
+                  as sugestões numa linha só, em vez de quebrar em três. */}
+              <div className="space-y-5 rounded-xl border border-zinc-800 bg-zinc-950/40 p-5">
+                <div>
+                  <h3 className="text-sm font-bold text-white">O que o cliente escolhe ao agendar</h3>
+                  <p className="mt-1 text-xs text-zinc-500">Estas listas aparecem nas preferências, na hora de marcar o horário.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Produtos de finalização</label>
@@ -267,9 +281,8 @@ export default function SettingsPage() {
                     defaultValue={barbershop?.finishProducts}
                     placeholder="Digite e aperte Enter"
                     suggestions={["Sem produto", "Pomada matte", "Pomada brilho", "Cera", "Gel", "Bálsamo", "Talco"]}
-                    emptyHint="Sem nada aqui, o cliente vê nossa lista padrão."
                   />
-                  <p className="mt-2 text-xs text-zinc-500">O cliente escolhe entre estes ao agendar.</p>
+                  <p className="mt-2 text-xs text-zinc-500">Em branco, o cliente vê nossa lista padrão.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Bebidas oferecidas</label>
@@ -278,9 +291,8 @@ export default function SettingsPage() {
                     defaultValue={barbershop?.drinks}
                     placeholder="Digite e aperte Enter"
                     suggestions={["Água", "Café", "Refrigerante", "Cerveja", "Energético", "Whisky", "Suco"]}
-                    emptyHint="Sem nada aqui, a pergunta de bebida não aparece pro cliente."
                   />
-                  <p className="mt-2 text-xs text-zinc-500">Aparece nas preferências do cliente no agendamento.</p>
+                  <p className="mt-2 text-xs text-zinc-500">Em branco, a pergunta de bebida não aparece pro cliente.</p>
                 </div>
               </div>
               <div>
