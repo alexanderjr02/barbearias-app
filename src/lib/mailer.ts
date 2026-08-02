@@ -83,15 +83,15 @@ export function passwordResetEmail(name: string, resetUrl: string): { subject: s
   const html = `<!-- password reset -->
 <div style="background:#09090b;padding:32px 0;font-family:Inter,system-ui,Arial,sans-serif;">
   <div style="max-width:480px;margin:0 auto;background:#18181b;border:1px solid #27272a;border-radius:20px;overflow:hidden;">
-    <div style="background:linear-gradient(135deg,#fbbf24,#d97706);padding:24px 28px;">
-      <span style="font-size:22px;font-weight:900;color:#18181b;letter-spacing:1px;">CORT<span style="color:#7c2d12;">IX</span></span>
+    <div style="background:#000000;padding:22px 28px;border-bottom:1px solid #27272a;">
+      <span style="font-size:24px;font-weight:800;color:#FFC300;letter-spacing:-0.5px;">rukz</span>
     </div>
     <div style="padding:28px;">
       <h1 style="margin:0 0 8px;font-size:20px;color:#fafafa;">${greeting}</h1>
       <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#a1a1aa;">
-        Recebemos um pedido para redefinir a senha da sua conta. Clique no botão abaixo para criar uma nova senha. O link expira em <strong style="color:#fbbf24;">1 hora</strong>.
+        Recebemos um pedido para redefinir a senha da sua conta. Clique no botão abaixo para criar uma nova senha. O link expira em <strong style="color:#FFC300;">1 hora</strong>.
       </p>
-      <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#18181b;font-weight:700;font-size:14px;text-decoration:none;padding:12px 24px;border-radius:14px;">
+      <a href="${resetUrl}" style="display:inline-block;background:#FFC300;color:#000000;font-weight:700;font-size:14px;text-decoration:none;padding:12px 24px;border-radius:14px;">
         Redefinir minha senha
       </a>
       <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#71717a;">
@@ -140,8 +140,8 @@ export function platformAlertEmail(
   const html = `<!-- platform alert -->
 <div style="background:#09090b;padding:32px 0;font-family:Inter,system-ui,Arial,sans-serif;">
   <div style="max-width:480px;margin:0 auto;background:#18181b;border:1px solid #27272a;border-radius:20px;overflow:hidden;">
-    <div style="background:linear-gradient(135deg,#fbbf24,#d97706);padding:24px 28px;">
-      <span style="font-size:22px;font-weight:900;color:#18181b;letter-spacing:1px;">CORT<span style="color:#7c2d12;">IX</span></span>
+    <div style="background:#000000;padding:22px 28px;border-bottom:1px solid #27272a;">
+      <span style="font-size:24px;font-weight:800;color:#FFC300;letter-spacing:-0.5px;">rukz</span>
     </div>
     <div style="padding:28px;">
       <h1 style="margin:0 0 12px;font-size:18px;color:#fafafa;">${escapeHtml(subject)}</h1>
