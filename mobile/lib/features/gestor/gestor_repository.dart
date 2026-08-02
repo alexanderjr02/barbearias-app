@@ -1586,6 +1586,35 @@ class GestorRepository {
     });
   }
 
+  Future<void> updateProduct(
+    String id, {
+    required String name,
+    String? image,
+    String? brand,
+    String? sku,
+    String? category,
+    required double price,
+    double? costPrice,
+    required int quantity,
+    required int minQuantity,
+  }) async {
+    await ApiClient.instance.patch('/products/$id', data: {
+      'name': name,
+      'image': image,
+      'brand': brand,
+      'sku': sku,
+      'category': category,
+      'price': price,
+      'costPrice': costPrice,
+      'quantity': quantity,
+      'minQuantity': minQuantity,
+    });
+  }
+
+  Future<void> deleteProduct(String id) async {
+    await ApiClient.instance.delete('/products/$id');
+  }
+
   Future<BarbershopProfile> barbershop() async {
     final data = await ApiClient.instance.get('/barbershop');
     return BarbershopProfile.fromJson(data as Map<String, dynamic>);

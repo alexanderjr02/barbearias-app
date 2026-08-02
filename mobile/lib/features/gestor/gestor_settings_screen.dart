@@ -13,7 +13,6 @@ import 'brand_controller.dart';
 import 'gestor_repository.dart';
 
 const _weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const _swatches = [0xFFFFC300, 0xFFFFC300, 0xFFEF4444, 0xFF3B82F6, 0xFF10B981, 0xFF8B5CF6, 0xFFEC4899, 0xFF000000];
 
 const _planInfo = {
   'FREE': ('Essencial', 'R\$ 50/mês', Color(0xFF9CA3AF), 'Agendamentos ilimitados · até 3 barbeiros'),
@@ -68,7 +67,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   final _faqCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-  Color _color = const Color(0xFFFFC300);
   List<WorkingHour> _hours = [];
   String _plan = 'FREE';
   String? _logo;
@@ -76,8 +74,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
 
   bool _savingProfile = false;
   bool _savedProfile = false;
-  bool _savingColor = false;
-  bool _savedColor = false;
   bool _savingHours = false;
   bool _savedHours = false;
   bool _savingPlan = false;
@@ -105,7 +101,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 6, vsync: this);
+    _tab = TabController(length: 5, vsync: this);
     _load();
     _loadChatbot();
   }
@@ -126,13 +122,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
 
   Future<XFile?> _pickImage() => ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1600, imageQuality: 85);
 
-  Color _parseHex(String hex) {
-    final cleaned = hex.replaceAll('#', '');
-    return Color(0xFF000000 | (int.tryParse(cleaned, radix: 16) ?? 0xFFC300));
-  }
-
-  String _toHex(Color c) => '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
-
   Future<void> _load() async {
     try {
       final p = await _repository.barbershop();
@@ -144,7 +133,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
       _faqCtrl.text = p.faqText ?? '';
       _cityCtrl.text = p.city ?? '';
       _descCtrl.text = p.description ?? '';
-      _color = _parseHex(p.primaryColor);
       _plan = p.plan;
       _logo = p.logo;
       _coverImage = p.coverImage;
@@ -223,24 +211,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     }
   }
 
-  Future<void> _saveColor() async {
-    setState(() => _savingColor = true);
-    try {
-      await _repository.updateBarbershopColor(_toHex(_color));
-      if (mounted) {
-        context.read<BrandController>().refresh();
-        setState(() => _savedColor = true);
-        Future.delayed(const Duration(milliseconds: 1600), () {
-          if (mounted) setState(() => _savedColor = false);
-        });
-      }
-    } catch (_) {
-      if (mounted) AppToast.error(context, 'Não foi possível salvar.');
-    } finally {
-      if (mounted) setState(() => _savingColor = false);
-    }
-  }
-
   Future<void> _saveHours() async {
     setState(() => _savingHours = true);
     try {
@@ -292,7 +262,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
           indicatorColor: palette.textPrimary,
           tabs: const [
             Tab(text: 'Barbearia'),
-            Tab(text: 'Aparência'),
             Tab(text: 'Horários'),
             Tab(text: 'Notificações'),
             Tab(text: 'Chatbot'),
@@ -308,7 +277,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
                   controller: _tab,
                   children: [
                     _profileTab(palette, accent),
-                    _appearanceTab(palette, accent),
                     _hoursTab(palette, accent),
                     _notificationsTab(palette, accent),
                     _chatbotTab(palette, accent),
@@ -420,48 +388,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     );
   }
 
-  Widget _appearanceTab(AppPalette palette, Color accent) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text('Cor principal', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: _swatches.map((hex) {
-            final c = Color(hex);
-            final selected = c.toARGB32() == _color.toARGB32();
-            return GestureDetector(
-              onTap: () => setState(() => _color = c),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: c,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: selected ? palette.textPrimary : Colors.transparent, width: 2.5),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 24),
-        Text('Como o cliente vê o seu app', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-        const SizedBox(height: 4),
-        Text('Esta é a tela de entrada que o cliente abre pelo seu link. Sua cor e sua logo aparecem aqui.',
-            style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
-        const SizedBox(height: 14),
-        // Prévia REAL: espelha a tela de entrada do app (auth/login_screen.dart)
-        // — a única em que a marca da barbearia aparece para o cliente. Antes
-        // aqui havia uma "página de agendamento" que não existe assim, o mesmo
-        // erro de prévia que enganava na web.
-        _AppEntryPreview(color: _color, logoUrl: resolveAssetUrl(_logo), shopName: _nameCtrl.text, palette: palette),
-        const SizedBox(height: 20),
-        _saveButton(onPressed: _saveColor, busy: _savingColor, saved: _savedColor, label: 'Salvar aparência', accent: accent),
-      ],
-    );
-  }
 
   Widget _hoursTab(AppPalette palette, Color accent) {
     return ListView(
@@ -552,7 +478,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
                 Text('Ative o plano Pro para editar nome, mensagem de boas-vindas, FAQ e integração com WhatsApp.', style: TextStyle(color: palette.textSecondary, fontSize: 12.5)),
                 const SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: () => _tab.animateTo(5),
+                  onPressed: () => _tab.animateTo(4),
                   style: ElevatedButton.styleFrom(backgroundColor: accent),
                   child: Text('Ver planos', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
                 ),
@@ -843,87 +769,3 @@ class _InlineTextFieldState extends State<_InlineTextField> {
 /// Prévia da tela de entrada do app do cliente — a mesma de
 /// auth/login_screen.dart, a única em que a marca da barbearia aparece para
 /// ele. Reage à cor e à logo escolhidas na aba de aparência, ao vivo.
-class _AppEntryPreview extends StatelessWidget {
-  final Color color;
-  final String? logoUrl;
-  final String shopName;
-  final AppPalette palette;
-
-  const _AppEntryPreview({required this.color, required this.logoUrl, required this.shopName, required this.palette});
-
-  @override
-  Widget build(BuildContext context) {
-    final nome = shopName.trim().isEmpty ? 'Sua Barbearia' : shopName.trim();
-    final onColor = contrastingTextColor(color);
-
-    return Center(
-      // Moldura de aparelho, para deixar claro que é o APP, não a tela atual.
-      child: Container(
-        width: 220,
-        padding: const EdgeInsets.all(7),
-        decoration: BoxDecoration(
-          color: const Color(0xFF18181B),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: const Color(0xFF27272A), width: 2),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(23),
-          child: Container(
-            color: const Color(0xFF0B0A0F),
-            padding: const EdgeInsets.fromLTRB(20, 26, 20, 22),
-            child: Column(
-              children: [
-                Container(width: 36, height: 4, decoration: BoxDecoration(color: const Color(0xFF27272A), borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 22),
-                // Logo: a imagem da barbearia, ou um quadrado na cor da marca
-                // com a tesoura enquanto não há logo — igual ao app.
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(15),
-                    image: logoUrl != null ? DecorationImage(image: NetworkImage(logoUrl!), fit: BoxFit.cover) : null,
-                  ),
-                  child: logoUrl == null ? Icon(Icons.content_cut_rounded, color: onColor, size: 24) : null,
-                ),
-                const SizedBox(height: 14),
-                const Text('Bem-vindo de volta', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 3),
-                Text('Entre na sua conta $nome',
-                    maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 11)),
-                const SizedBox(height: 18),
-                _fakeField('E-mail'),
-                const SizedBox(height: 8),
-                _fakeField('Senha'),
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  height: 34,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(11)),
-                  child: Text('Entrar', style: TextStyle(color: onColor, fontSize: 12.5, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _fakeField(String label) {
-    return Container(
-      width: double.infinity,
-      height: 34,
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(11),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Text(label, style: const TextStyle(color: Colors.white38, fontSize: 11)),
-    );
-  }
-}

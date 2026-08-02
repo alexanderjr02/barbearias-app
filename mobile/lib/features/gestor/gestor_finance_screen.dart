@@ -7,6 +7,27 @@ import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
 import 'widgets/finance_cards.dart';
 
+// Atalhos do lançamento. Digitar categoria à mão toda vez, além de lento, gera
+// "Aluguel", "aluguel" e "ALUGUEL" como três categorias diferentes no relatório
+// — o toque padroniza a escrita sem tirar a liberdade de digitar outra.
+const _categoriasDespesa = [
+  'Aluguel', 'Produtos', 'Salários', 'Comissões', 'Energia', 'Água',
+  'Internet', 'Telefone', 'Marketing', 'Manutenção', 'Equipamentos',
+  'Limpeza', 'Impostos', 'Contador', 'Outros',
+];
+
+const _categoriasReceita = [
+  'Serviços', 'Produtos', 'Gorjetas', 'Assinaturas', 'Pacotes', 'Outros',
+];
+
+// Estas strings batem com as do gráfico por forma de pagamento
+// (_methodColor em widgets/finance_cards.dart). Escrever "PIX" em vez de "Pix"
+// jogaria o lançamento na cor genérica.
+const _formasPagamento = [
+  'Pix', 'Dinheiro', 'Cartão de crédito', 'Cartão de débito',
+  'Transferência', 'Boleto',
+];
+
 const _categoryPalette = [
   Color(0xFFFFC300),
   Color(0xFF3B82F6),
@@ -104,13 +125,26 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                 onChanged: (v) => setSheetState(() => type = v),
               ),
               const FieldLabel('Categoria'),
-              RukzField(controller: categoryCtrl, hint: 'Ex: Aluguel, Produtos, Marketing'),
+              // Toque preenche; o campo continua livre pra quem quiser uma
+              // categoria própria. A lista muda conforme despesa ou receita —
+              // "Aluguel" não faz sentido em receita e vice-versa.
+              _Sugestoes(
+                opcoes: type == 'EXPENSE' ? _categoriasDespesa : _categoriasReceita,
+                selecionada: categoryCtrl.text.trim(),
+                onTap: (v) => setSheetState(() => categoryCtrl.text = v),
+              ),
+              RukzField(controller: categoryCtrl, hint: 'ou digite outra'),
               const FieldLabel('Descrição'),
               RukzField(controller: descriptionCtrl, hint: 'Ex: Aluguel do espaço'),
               const FieldLabel('Valor (R\$)'),
               RukzField(controller: amountCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
               const FieldLabel('Forma de pagamento'),
-              RukzField(controller: paymentCtrl, hint: 'PIX, Cartão, Dinheiro...'),
+              _Sugestoes(
+                opcoes: _formasPagamento,
+                selecionada: paymentCtrl.text.trim(),
+                onTap: (v) => setSheetState(() => paymentCtrl.text = v),
+              ),
+              RukzField(controller: paymentCtrl, hint: 'ou digite outra'),
             ],
           ),
         ),
@@ -391,6 +425,52 @@ class _Card extends StatelessWidget {
           Text(value, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
           Text(label, style: TextStyle(color: palette.textFaint, fontSize: 11)),
         ],
+      ),
+    );
+  }
+}
+
+/// Linha de atalhos do formulário de lançamento: toque preenche o campo de
+/// texto logo abaixo. O campo continua editável — isto acelera o caso comum
+/// sem fechar a porta para uma categoria própria.
+class _Sugestoes extends StatelessWidget {
+  final List<String> opcoes;
+  final String selecionada;
+  final ValueChanged<String> onTap;
+
+  const _Sugestoes({required this.opcoes, required this.selecionada, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final accent = Theme.of(context).colorScheme.primary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: opcoes.map((o) {
+          final ativa = o.toLowerCase() == selecionada.toLowerCase();
+          return GestureDetector(
+            onTap: () => onTap(o),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              decoration: BoxDecoration(
+                color: ativa ? accent.withValues(alpha: 0.18) : palette.surfaceAlt,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: ativa ? accent : palette.border),
+              ),
+              child: Text(
+                o,
+                style: TextStyle(
+                  color: ativa ? accent : palette.textSecondary,
+                  fontSize: 12,
+                  fontWeight: ativa ? FontWeight.w800 : FontWeight.w500,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

@@ -145,7 +145,26 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
+        // Rótulo explícito: sem ele o cartão do topo parecia o cartão REAL de
+        // um cliente, e a quantidade de selos da simulação (3, por padrão)
+        // passava por "o sistema fixou em 3".
+        Row(
+          children: [
+            Icon(Icons.visibility_outlined, size: 15, color: palette.textFaint),
+            const SizedBox(width: 6),
+            Text('PRÉVIA · É ASSIM QUE O CLIENTE VÊ',
+                style: TextStyle(color: palette.textFaint, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.8)),
+          ],
+        ),
+        const SizedBox(height: 8),
         _WalletPreview(cfg: cfg, stamps: _previewStamps, palette: palette, accent: accent),
+        const SizedBox(height: 6),
+        Text(
+          cfg.stampEnabled
+              ? 'Os selos acima são só demonstração. Quem manda no cartão é "Cortes para fechar", logo abaixo.'
+              : 'O cartão de selos está DESLIGADO — o cliente não vê nada disso. Ligue no botão abaixo para configurar.',
+          style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.35),
+        ),
         const SizedBox(height: 22),
 
         _SectionCard(
@@ -161,7 +180,7 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
               label: 'Cortes para fechar',
               value: cfg.stampGoal,
               min: 2,
-              max: 30,
+              max: 50,
               suffix: 'cortes',
               palette: palette,
               accent: accent,
@@ -177,9 +196,11 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
               onCommit: (v) => _save({'stampRewardLabel': v}),
             ),
             const SizedBox(height: 14),
+            // Só mexe no cartão de demonstração lá de cima — não salva nada e
+            // não altera o cartão de nenhum cliente. O rótulo diz isso.
+            Text('Simular a prévia', style: TextStyle(color: palette.textFaint, fontSize: 11.5, fontWeight: FontWeight.w700)),
             Row(
               children: [
-                Text('Prévia com', style: TextStyle(color: palette.textFaint, fontSize: 12)),
                 Expanded(
                   child: Slider(
                     value: _previewStamps.clamp(0, cfg.stampGoal).toDouble(),
@@ -190,10 +211,12 @@ class _GestorLoyaltyScreenState extends State<GestorLoyaltyScreen> {
                     onChanged: (v) => setState(() => _previewStamps = v.round()),
                   ),
                 ),
-                Text('${_previewStamps.clamp(0, cfg.stampGoal)} selos',
+                Text('${_previewStamps.clamp(0, cfg.stampGoal)} de ${cfg.stampGoal}',
                     style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w700)),
               ],
             ),
+            Text('Arrastar aqui só muda a demonstração acima.',
+                style: TextStyle(color: palette.textFaint, fontSize: 11)),
           ],
         ),
         const SizedBox(height: 12),

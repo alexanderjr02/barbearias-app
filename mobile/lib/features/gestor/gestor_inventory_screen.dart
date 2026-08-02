@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/rukz_theme.dart';
+import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/photo_picker_tile.dart';
 import 'gestor_repository.dart';
@@ -26,24 +27,29 @@ class _GestorInventoryScreenState extends State<GestorInventoryScreen> {
 
   void _refresh() => setState(() => _future = _repository.products());
 
-  Future<void> _openCreate() async {
-    final nameCtrl = TextEditingController();
-    final brandCtrl = TextEditingController();
-    final skuCtrl = TextEditingController();
-    final categoryCtrl = TextEditingController();
-    final priceCtrl = TextEditingController();
-    final costCtrl = TextEditingController();
-    final qtyCtrl = TextEditingController(text: '0');
-    final minQtyCtrl = TextEditingController(text: '5');
-    String? image;
+  Future<void> _openCreate() => _openForm();
+
+  /// Mesmo formulário para criar e editar. Com [produto] preenchido, os campos
+  /// já vêm com o que está salvo e o envio vira uma edição.
+  Future<void> _openForm({GestorProduct? produto}) async {
+    final editando = produto != null;
+    final nameCtrl = TextEditingController(text: produto?.name ?? '');
+    final brandCtrl = TextEditingController(text: produto?.brand ?? '');
+    final skuCtrl = TextEditingController(text: produto?.sku ?? '');
+    final categoryCtrl = TextEditingController(text: produto?.category ?? '');
+    final priceCtrl = TextEditingController(text: produto != null ? produto.price.toStringAsFixed(2) : '');
+    final costCtrl = TextEditingController(text: produto?.costPrice != null ? produto!.costPrice!.toStringAsFixed(2) : '');
+    final qtyCtrl = TextEditingController(text: '${produto?.quantity ?? 0}');
+    final minQtyCtrl = TextEditingController(text: '${produto?.minQuantity ?? 5}');
+    String? image = produto?.image;
 
     final saved = await FormSheet.show(
       context,
-      title: 'Novo produto',
-      submitLabel: 'Criar produto',
+      title: editando ? 'Editar produto' : 'Novo produto',
+      submitLabel: editando ? 'Salvar' : 'Criar produto',
       onSubmit: () async {
         if (nameCtrl.text.trim().isEmpty) throw Exception('Informe o nome do produto.');
-        await _repository.createProduct(
+        final campos = (
           name: nameCtrl.text.trim(),
           image: image,
           brand: brandCtrl.text.trim().isEmpty ? null : brandCtrl.text.trim(),
@@ -54,6 +60,32 @@ class _GestorInventoryScreenState extends State<GestorInventoryScreen> {
           quantity: int.tryParse(qtyCtrl.text) ?? 0,
           minQuantity: int.tryParse(minQtyCtrl.text) ?? 5,
         );
+        if (editando) {
+          await _repository.updateProduct(
+            produto.id,
+            name: campos.name,
+            image: campos.image,
+            brand: campos.brand,
+            sku: campos.sku,
+            category: campos.category,
+            price: campos.price,
+            costPrice: campos.costPrice,
+            quantity: campos.quantity,
+            minQuantity: campos.minQuantity,
+          );
+        } else {
+          await _repository.createProduct(
+            name: campos.name,
+            image: campos.image,
+            brand: campos.brand,
+            sku: campos.sku,
+            category: campos.category,
+            price: campos.price,
+            costPrice: campos.costPrice,
+            quantity: campos.quantity,
+            minQuantity: campos.minQuantity,
+          );
+        }
       },
       children: [
         StatefulBuilder(
@@ -84,6 +116,81 @@ class _GestorInventoryScreenState extends State<GestorInventoryScreen> {
       ],
     );
     if (saved == true) _refresh();
+  }
+
+  /// Ações do produto (editar / excluir). Antes o card não respondia a toque
+  /// nenhum: produto cadastrado errado ficava na lista pra sempre.
+  Future<void> _openActions(GestorProduct produto) async {
+    final palette = AppPalette.of(context);
+    final acao = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: palette.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(produto.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 16)),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.edit_outlined, color: palette.textSecondary),
+              title: Text('Editar produto', style: TextStyle(color: palette.textPrimary)),
+              onTap: () => Navigator.of(sheet).pop('editar'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+              title: const Text('Excluir produto', style: TextStyle(color: Colors.redAccent)),
+              onTap: () => Navigator.of(sheet).pop('excluir'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || acao == null) return;
+    if (acao == 'editar') {
+      await _openForm(produto: produto);
+      return;
+    }
+    // Excluir pede confirmação: é irreversível e o toque fica ao lado de editar.
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        backgroundColor: palette.surface,
+        title: Text('Excluir produto', style: TextStyle(color: palette.textPrimary)),
+        content: Text(
+          'Remover "${produto.name}" do estoque? As vendas já registradas continuam no financeiro.',
+          style: TextStyle(color: palette.textSecondary),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialog).pop(false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: const Text('Excluir', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true || !mounted) return;
+    try {
+      await _repository.deleteProduct(produto.id);
+      if (!mounted) return;
+      AppToast.success(context, 'Produto excluído.');
+      _refresh();
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'Não foi possível excluir agora.');
+    }
   }
 
   @override
@@ -183,7 +290,10 @@ class _GestorInventoryScreenState extends State<GestorInventoryScreen> {
                   final isLow = p.quantity <= p.minQuantity;
                   final img = resolveAssetUrl(p.image);
                   return RiseIn(
-                    child: Container(
+                    child: GestureDetector(
+                      onTap: () => _openActions(p),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -224,8 +334,11 @@ class _GestorInventoryScreenState extends State<GestorInventoryScreen> {
                               ),
                             ],
                           ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.more_vert_rounded, size: 18, color: palette.textFaint),
                         ],
                       ),
+                    ),
                     ),
                   );
                 }),
