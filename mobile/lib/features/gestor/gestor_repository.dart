@@ -455,6 +455,10 @@ class BarbershopProfile {
   final String? instagram;
   final String? pixKey;
   final String? faqText;
+  // Mesmos campos que a web salva (Barbershop.chatbotName/Welcome). Antes o app
+  // guardava a config do chatbot so no aparelho, e ela nunca chegava ao servidor.
+  final String? chatbotName;
+  final String? chatbotWelcome;
   final String? city;
   final String? description;
   final String? logo;
@@ -476,6 +480,8 @@ class BarbershopProfile {
     required this.instagram,
     this.pixKey,
     this.faqText,
+    this.chatbotName,
+    this.chatbotWelcome,
     required this.city,
     required this.description,
     required this.logo,
@@ -498,6 +504,8 @@ class BarbershopProfile {
         instagram: json['instagram'],
         pixKey: json['pixKey'],
         faqText: json['faqText'],
+        chatbotName: json['chatbotName'],
+        chatbotWelcome: json['chatbotWelcome'],
         city: json['city'],
         description: json['description'],
         logo: json['logo'],
@@ -1639,6 +1647,8 @@ class GestorRepository {
     String? instagram,
     String? pixKey,
     String? faqText,
+    String? chatbotName,
+    String? chatbotWelcome,
     String? city,
     String? description,
     String? logo,
@@ -1653,6 +1663,8 @@ class GestorRepository {
       'instagram': instagram,
       if (pixKey != null) 'pixKey': pixKey,
       if (faqText != null) 'faqText': faqText,
+      if (chatbotName != null) 'chatbotName': chatbotName,
+      if (chatbotWelcome != null) 'chatbotWelcome': chatbotWelcome,
       'city': city,
       'description': description,
     });

@@ -1,9 +1,7 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_toast.dart';
@@ -86,16 +84,12 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     ('Relatório diário', 'Resumo do dia no final do expediente', true),
   ].map((e) => _NotificationSetting(e.$1, e.$2, e.$3)).toList();
 
-  Map<String, dynamic> _chatbot = {
-    'enabled': true,
-    'name': 'Assistente',
-    'welcomeMessage': 'Olá! Como posso te ajudar hoje?',
-    'address': '',
-    'hours': '',
-    'whatsapp': {'enabled': false, 'phone': '', 'autoFrom': '09:00', 'autoTo': '18:00', 'token': ''},
-    'faqItems': <Map<String, String>>[],
-  };
-  bool _chatbotLoaded = false;
+  // Espelha os campos do servidor (os mesmos da web). O JSON local que vivia
+  // aqui configurava um chatbot que nao existia: ele roda no servidor.
+  String _chatbotName = '';
+  String _chatbotWelcome = '';
+  String _chatbotFaq = '';
+  bool _savingChatbot = false;
   bool _chatbotSaved = false;
 
   @override
@@ -103,7 +97,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     super.initState();
     _tab = TabController(length: 5, vsync: this);
     _load();
-    _loadChatbot();
   }
 
   @override
@@ -131,6 +124,8 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
       _instaCtrl.text = p.instagram ?? '';
       _pixCtrl.text = p.pixKey ?? '';
       _faqCtrl.text = p.faqText ?? '';
+      _chatbotName = p.chatbotName ?? '';
+      _chatbotWelcome = p.chatbotWelcome ?? '';
       _cityCtrl.text = p.city ?? '';
       _descCtrl.text = p.description ?? '';
       _plan = p.plan;
@@ -152,33 +147,27 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     }
   }
 
-  Future<void> _loadChatbot() async {
-    try {
-      final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 5));
-      final stored = prefs.getString('rukz_chatbot_config') ?? prefs.getString('cortix_chatbot_config');
-      if (stored != null) {
-        final parsed = jsonDecode(stored) as Map<String, dynamic>;
-        _chatbot = {..._chatbot, ...parsed};
-      }
-    } catch (_) {
-      // keep defaults — persistence across reloads is best-effort, same as
-      // the web version's localStorage-only config
-    }
-    if (mounted) setState(() => _chatbotLoaded = true);
-  }
-
   Future<void> _saveChatbot() async {
+    setState(() => _savingChatbot = true);
     try {
-      final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 5));
-      await prefs.setString('rukz_chatbot_config', jsonEncode(_chatbot));
-    } catch (_) {
-      // ignore — config still applies for the rest of this session
-    }
-    if (mounted) {
-      setState(() => _chatbotSaved = true);
+      await _repository.updateBarbershopProfile(
+        name: _nameCtrl.text.trim(),
+        chatbotName: _chatbotName.trim(),
+        chatbotWelcome: _chatbotWelcome.trim(),
+        faqText: _chatbotFaq.trim(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _savingChatbot = false;
+        _chatbotSaved = true;
+      });
       Future.delayed(const Duration(milliseconds: 1600), () {
         if (mounted) setState(() => _chatbotSaved = false);
       });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _savingChatbot = false);
+      AppToast.error(context, 'Não consegui salvar o assistente. Tente de novo.');
     }
   }
 
@@ -376,8 +365,6 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         RukzField(controller: _instaCtrl, hint: '@suabarbearia'),
         const FieldLabel('Chave PIX (gorjetas)'),
         RukzField(controller: _pixCtrl, hint: 'CPF, e-mail, telefone ou chave aleatória'),
-        const FieldLabel('Perguntas frequentes (o chatbot responde com isso)'),
-        RukzField(controller: _faqCtrl, maxLines: 4, hint: 'Ex: Aceita PIX e cartão. Tem estacionamento. Atende criança a partir de 3 anos.'),
         const FieldLabel('Cidade'),
         RukzField(controller: _cityCtrl),
         const FieldLabel('Descrição'),
@@ -460,8 +447,12 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     );
   }
 
+  // Chatbot: os MESMOS tres campos que a web salva no servidor
+  // (Barbershop.chatbotName / chatbotWelcome / faqText). Antes esta aba
+  // guardava um JSON so no aparelho — nome, endereco, horario, WhatsApp e uma
+  // lista de FAQ que o chatbot de verdade nunca leu, porque ele roda no
+  // servidor. Configurar aqui nao mudava nada pro cliente; agora muda.
   Widget _chatbotTab(AppPalette palette, Color accent) {
-    if (!_chatbotLoaded) return const Center(child: CircularProgressIndicator());
     final canCustomize = _plan != 'FREE';
     if (!canCustomize) {
       return ListView(
@@ -475,7 +466,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
               children: [
                 const Row(children: [Icon(Icons.lock_outline_rounded, color: Colors.amber, size: 18), SizedBox(width: 8), Text('Disponível no plano Pro', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold))]),
                 const SizedBox(height: 8),
-                Text('Ative o plano Pro para editar nome, mensagem de boas-vindas, FAQ e integração com WhatsApp.', style: TextStyle(color: palette.textSecondary, fontSize: 12.5)),
+                Text('Ative o plano Pro para personalizar o nome do assistente, a mensagem de boas-vindas e o FAQ que ele usa pra responder.', style: TextStyle(color: palette.textSecondary, fontSize: 12.5)),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => _tab.animateTo(4),
@@ -489,140 +480,51 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
       );
     }
 
-    final faqItems = (_chatbot['faqItems'] as List).cast<Map<String, dynamic>>();
-    final whatsapp = (_chatbot['whatsapp'] as Map).cast<String, dynamic>();
-    final canWhatsapp = _featuresByPlan[_plan]!.contains('Lembrete no WhatsApp');
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text('Assistente do cliente', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+        const SizedBox(height: 4),
+        Text(
+          'Vale para o chat do app e para a página pública de agendamento. O que você salvar aqui aparece nos dois na hora.',
+          style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.35),
+        ),
+        const SizedBox(height: 18),
 
-    return StatefulBuilder(
-      builder: (context, setTabState) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text('Ativar chatbot', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600))),
-              Switch(value: _chatbot['enabled'] == true, activeThumbColor: accent, onChanged: (v) => setTabState(() => _chatbot['enabled'] = v)),
-            ],
+        const FieldLabel('Nome do assistente'),
+        _InlineTextField(initial: _chatbotName, hint: 'Ex.: Léo, da Barbearia', onChanged: (v) => _chatbotName = v),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text('Como ele se apresenta ao cliente.', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+        ),
+        const SizedBox(height: 14),
+
+        const FieldLabel('Mensagem de boas-vindas'),
+        _InlineTextField(initial: _chatbotWelcome, hint: 'Olá! Como posso te ajudar hoje?', onChanged: (v) => _chatbotWelcome = v),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text('Primeira mensagem quando o cliente abre o chat.', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+        ),
+        const SizedBox(height: 14),
+
+        const FieldLabel('FAQ da barbearia'),
+        _InlineTextField(
+          initial: _chatbotFaq,
+          hint: 'Aceitamos Pix, cartão e dinheiro.\nTem estacionamento na rua de trás.\nTolerância de 10 min de atraso.',
+          maxLines: 6,
+          onChanged: (v) => _chatbotFaq = v,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            'Uma informação por linha. O assistente responde com base nisso — quanto mais completo, menos pergunta chega pra você.',
+            style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.35),
           ),
-          const FieldLabel('Nome do assistente'),
-          _InlineTextField(initial: _chatbot['name'], onChanged: (v) => _chatbot['name'] = v),
-          const FieldLabel('Mensagem de boas-vindas'),
-          _InlineTextField(initial: _chatbot['welcomeMessage'], onChanged: (v) => _chatbot['welcomeMessage'] = v),
-          const FieldLabel('Endereço'),
-          _InlineTextField(initial: _chatbot['address'], onChanged: (v) => _chatbot['address'] = v),
-          const FieldLabel('Horário'),
-          _InlineTextField(initial: _chatbot['hours'], onChanged: (v) => _chatbot['hours'] = v),
-          if (canWhatsapp) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(14)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF34D399), size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Integração WhatsApp', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                            Text('Ative o atendimento direto pelo WhatsApp.', style: TextStyle(color: palette.textFaint, fontSize: 11)),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: whatsapp['enabled'] == true,
-                        activeThumbColor: accent,
-                        onChanged: (v) => setTabState(() => whatsapp['enabled'] = v),
-                      ),
-                    ],
-                  ),
-                  if (whatsapp['enabled'] == true) ...[
-                    const FieldLabel('Telefone'),
-                    _InlineTextField(initial: whatsapp['phone'] ?? '', hint: '(11) 99999-9999', onChanged: (v) => whatsapp['phone'] = v),
-                    const FieldLabel('Token de acesso (Meta/WhatsApp Business API)'),
-                    _InlineTextField(initial: whatsapp['token'] ?? '', hint: 'Token do provedor', onChanged: (v) => whatsapp['token'] = v),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const FieldLabel('Automático de'),
-                              _TimeField(value: whatsapp['autoFrom'] ?? '09:00', onChanged: (v) => setTabState(() => whatsapp['autoFrom'] = v)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const FieldLabel('Automático até'),
-                              _TimeField(value: whatsapp['autoTo'] ?? '18:00', onChanged: (v) => setTabState(() => whatsapp['autoTo'] = v)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('FAQ do assistente', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-              TextButton.icon(
-                onPressed: () => setTabState(() => faqItems.add({'question': '', 'answer': ''})),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Adicionar'),
-              ),
-            ],
-          ),
-          ...faqItems.asMap().entries.map((e) {
-            final i = e.key;
-            final item = e.value;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Pergunta ${i + 1}', style: TextStyle(color: palette.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w600)),
-                      GestureDetector(onTap: () => setTabState(() => faqItems.removeAt(i)), child: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent)),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  _InlineTextField(initial: item['question'] ?? '', hint: 'Ex.: Como agendar?', onChanged: (v) => item['question'] = v),
-                  const SizedBox(height: 6),
-                  _InlineTextField(initial: item['answer'] ?? '', hint: 'Resposta do chatbot...', maxLines: 2, onChanged: (v) => item['answer'] = v),
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () async {
-                _chatbot['faqItems'] = faqItems;
-                await _saveChatbot();
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: accent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: Text(_chatbotSaved ? 'Salvou!' : 'Salvar chatbot', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
-      ),
+        ),
+
+        const SizedBox(height: 20),
+        _saveButton(onPressed: _saveChatbot, busy: _savingChatbot, saved: _chatbotSaved, label: 'Salvar assistente', accent: accent),
+      ],
     );
   }
 
