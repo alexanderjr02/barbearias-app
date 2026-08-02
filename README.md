@@ -200,6 +200,28 @@ Cada barbearia tem um `slug` único (ex.: `barbearia-do-joao`) que vira a URL p�
 
 ---
 
+## Onde está no ar
+
+| Ambiente | URL | O que é |
+|---|---|---|
+| **Painel web** | **https://rukz.vercel.app** | Dashboard do gestor, painel admin, API `/api/v1` e as páginas públicas de agendamento (`/booking/[slug]`) |
+| **App (PWA)** | **https://rukz-app.vercel.app** | App Flutter dos três papéis (gestor, barbeiro, cliente). Instalável na tela de início |
+
+Os projetos na Vercel se chamam `rukz` e `rukz-app`.
+
+> **As URLs antigas continuam respondendo.** `cortix-pied.vercel.app` e
+> `cortix-app-mu.vercel.app` seguem no ar servindo exatamente o mesmo conteúdo:
+> renomear um projeto na Vercel **não** desanexa o domínio `.vercel.app` que ele
+> ganhou ao ser criado — ele continua recebendo os deploys de produção. Isso é
+> proposital por ora (link já compartilhado e app já instalado não quebram).
+> Para aposentá-las de vez: `vercel alias rm cortix-pied.vercel.app` (e o
+> equivalente do app), ou apontar um domínio próprio.
+
+O endereço da API que o app usa é **compilado no build** (`--dart-define=API_BASE_URL`),
+não lido em tempo de execução — ver "Deploy em produção".
+
+---
+
 ## Como rodar localmente
 
 ### Painel web (Next.js)
@@ -289,7 +311,54 @@ Pro **app Flutter**, o mesmo Client ID precisa ser passado via `--dart-define=GO
 
 ## Deploy em produção
 
-O jeito recomendado é via Docker — já testado de ponta a ponta (build, migrations automáticas, persistência de dados):
+### Como está no ar hoje: Vercel + Turso
+
+Produção roda em dois projetos Vercel (`rukz` e `rukz-app`) com o banco no Turso
+(libSQL). São **dois deploys separados**, e o do app tem um passo de montagem
+antes.
+
+**Painel web** — da raiz do repositório:
+
+```bash
+npx vercel --prod --yes
+```
+
+**App (Flutter)** — o endereço da API é compilado no bundle, então o
+`--dart-define` é obrigatório; sem ele o app aponta pro padrão e não fala com a
+API certa:
+
+```bash
+cd mobile
+flutter build web --release --dart-define=API_BASE_URL=https://rukz.vercel.app/api/v1
+cd ..
+node mobile/scripts/build-web-deploy.js          # monta mobile/web-deploy a partir do build
+npx vercel deploy --prod --yes --cwd mobile/web-deploy
+```
+
+> Nunca publique `mobile/build/web` direto: os marcadores `%%RUKZ_*%%` do
+> `index.html` só são preenchidos pela função em `mobile/web-deploy-src/api/`,
+> que é o que dá a marca de cada barbearia. O `build-web-deploy.js` é quem
+> junta as duas coisas.
+
+Depois de publicar, aponte o alias curto para o deploy novo (a URL de produção
+gerada muda a cada deploy):
+
+```bash
+npx vercel alias set https://<deploy-gerado>.vercel.app rukz.vercel.app
+npx vercel alias set https://<deploy-gerado>.vercel.app rukz-app.vercel.app
+```
+
+Variáveis de ambiente vivem no painel da Vercel (`npx vercel env ls production`).
+**Trocar uma variável exige um novo deploy** para valer — foi o que aconteceu com
+o `EMAIL_FROM`, que continuava mandando e-mail com o nome antigo mesmo depois do
+rebrand no código.
+
+Migrations não rodam no build da Vercel (o adapter libSQL não recebe a
+`DATABASE_URL` nesse contexto): aplique pela rota administrativa de migração.
+
+### Alternativa: Docker (autossuficiente)
+
+O jeito recomendado quando se quer rodar em servidor próprio — já testado de ponta a ponta (build, migrations automáticas, persistência de dados):
 
 ```bash
 docker compose up -d --build

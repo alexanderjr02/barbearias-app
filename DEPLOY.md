@@ -1,8 +1,15 @@
-# 🚀 Colocar o rukz no ar (e começar a vender)
+# Colocar o rukz no ar (e começar a vender)
 
 Guia direto pra publicar o sistema **com HTTPS**, sem depender ainda do seu
 domínio próprio (você adiciona por último). HTTPS é obrigatório: sem ele o
 login por cookie, o Google e o webhook do Mercado Pago não funcionam.
+
+> **O que já está no ar hoje é outra coisa.** A produção atual roda na
+> **Vercel** com banco no **Turso**:
+> painel em **https://rukz.vercel.app**, app em **https://rukz-app.vercel.app**.
+> O passo a passo desse deploy está no README, em "Deploy em produção".
+> Este arquivo descreve **alternativas** (Render / VPS) para quem quiser sair
+> da Vercel ou hospedar em servidor próprio.
 
 ---
 
