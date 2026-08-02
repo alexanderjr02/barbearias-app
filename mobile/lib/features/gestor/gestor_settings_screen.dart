@@ -10,7 +10,7 @@ import '../../core/widgets/photo_picker_tile.dart';
 import 'brand_controller.dart';
 import 'gestor_repository.dart';
 
-const _weekdaysLongos = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+const _weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 const _planInfo = {
   'FREE': ('Essencial', 'R\$ 50/mês', Color(0xFF9CA3AF), 'Agendamentos ilimitados · até 3 barbeiros'),
@@ -394,165 +394,43 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   }
 
 
-  /// Horários: um cartão por dia, com o estado visível de longe (aberto ganha
-  /// a cor da marca, fechado apaga) e os horários como pastilhas de toque.
-  /// Antes era uma linha crua por dia — interruptor colado no nome e dois
-  /// campinhos cinzentos, sem hierarquia nenhuma.
   Widget _hoursTab(AppPalette palette, Color accent) {
-    final abertos = _hours.where((h) => h.isOpen).length;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      padding: const EdgeInsets.all(16),
       children: [
-        // Resumo: responde "como está minha semana" antes de ler dia a dia.
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: palette.border),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      abertos == 0
-                          ? 'Nenhum dia aberto'
-                          : abertos == 7
-                              ? 'Aberto todos os dias'
-                              : 'Aberto em $abertos dias',
-                      style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 14.5),
-                    ),
-                    const SizedBox(height: 2),
-                    Text('É o que define os horários que o cliente consegue marcar.',
-                        style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
-                  ],
-                ),
-              ),
-              if (abertos > 0)
-                GestureDetector(
-                  onTap: _aplicarHorarioATodos,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: accent.withValues(alpha: 0.35)),
-                    ),
-                    child: Text('Igualar dias',
-                        style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w800)),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-
         ..._hours.asMap().entries.map((entry) {
           final i = entry.key;
           final h = entry.value;
-          final aberto = h.isOpen;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-            decoration: BoxDecoration(
-              color: palette.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: aberto ? accent.withValues(alpha: 0.35) : palette.border),
-            ),
-            child: Column(
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    // Marcador de estado: some a necessidade de ler o texto.
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: aberto ? accent : palette.textFaint.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _weekdaysLongos[i],
-                        style: TextStyle(
-                          color: aberto ? palette.textPrimary : palette.textFaint,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    if (!aberto)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: Text('Fechado', style: TextStyle(color: palette.textFaint, fontSize: 12)),
-                      ),
-                    Transform.scale(
-                      scale: 0.85,
-                      child: Switch(
-                        value: aberto,
-                        activeThumbColor: accent,
-                        onChanged: (v) => setState(() => _hours[i] = WorkingHour(dayOfWeek: i, isOpen: v, openTime: h.openTime, closeTime: h.closeTime)),
-                      ),
-                    ),
-                  ],
+                SizedBox(width: 36, child: Text(_weekdays[i], style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.w600, fontSize: 13))),
+                Switch(
+                  value: h.isOpen,
+                  activeThumbColor: accent,
+                  onChanged: (v) => setState(() => _hours[i] = WorkingHour(dayOfWeek: i, isOpen: v, openTime: h.openTime, closeTime: h.closeTime)),
                 ),
-                if (aberto) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _HoraPill(
-                          rotulo: 'Abre',
-                          valor: h.openTime,
-                          accent: accent,
-                          palette: palette,
-                          onChanged: (v) => setState(() => _hours[i] = WorkingHour(dayOfWeek: i, isOpen: true, openTime: v, closeTime: h.closeTime)),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Container(width: 10, height: 1.5, color: palette.textFaint.withValues(alpha: 0.35)),
-                      ),
-                      Expanded(
-                        child: _HoraPill(
-                          rotulo: 'Fecha',
-                          valor: h.closeTime,
-                          accent: accent,
-                          palette: palette,
-                          onChanged: (v) => setState(() => _hours[i] = WorkingHour(dayOfWeek: i, isOpen: true, openTime: h.openTime, closeTime: v)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                if (h.isOpen)
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(child: _TimeField(value: h.openTime, onChanged: (v) => setState(() => _hours[i] = WorkingHour(dayOfWeek: i, isOpen: true, openTime: v, closeTime: h.closeTime)))),
+                        Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: Text('até', style: TextStyle(color: palette.textFaint, fontSize: 11))),
+                        Expanded(child: _TimeField(value: h.closeTime, onChanged: (v) => setState(() => _hours[i] = WorkingHour(dayOfWeek: i, isOpen: true, openTime: h.openTime, closeTime: v)))),
+                      ],
+                    ),
+                  )
+                else
+                  Expanded(child: Padding(padding: const EdgeInsets.only(left: 8), child: Text('Fechado', style: TextStyle(color: palette.textFaint, fontSize: 12)))),
               ],
             ),
           );
         }),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _saveButton(onPressed: _saveHours, busy: _savingHours, saved: _savedHours, label: 'Salvar horários', accent: accent),
       ],
     );
-  }
-
-  /// Copia o horário do primeiro dia aberto para todos os outros que também
-  /// estão abertos. Barbearia costuma abrir no mesmo horário a semana toda, e
-  /// repetir isso sete vezes no celular é o tipo de trabalho que ninguém faz.
-  void _aplicarHorarioATodos() {
-    final base = _hours.where((h) => h.isOpen).cast<WorkingHour?>().firstWhere((_) => true, orElse: () => null);
-    if (base == null) return;
-    setState(() {
-      for (var i = 0; i < _hours.length; i++) {
-        if (!_hours[i].isOpen) continue;
-        _hours[i] = WorkingHour(dayOfWeek: i, isOpen: true, openTime: base.openTime, closeTime: base.closeTime);
-      }
-    });
-    AppToast.success(context, 'Todos os dias abertos agora usam ${base.openTime} às ${base.closeTime}.');
   }
 
   Widget _notificationsTab(AppPalette palette, Color accent) {
@@ -753,6 +631,34 @@ class _NotificationSetting {
   _NotificationSetting(this.label, this.desc, this.enabled);
 }
 
+class _TimeField extends StatelessWidget {
+  final String value;
+  final ValueChanged<String> onChanged;
+  const _TimeField({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return GestureDetector(
+      onTap: () async {
+        final parts = value.split(':');
+        final initial = TimeOfDay(hour: int.tryParse(parts[0]) ?? 9, minute: int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0);
+        final picked = await showTimePicker(context: context, initialTime: initial);
+        if (picked != null) onChanged('${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(8)),
+        alignment: Alignment.center,
+        child: Text(value, style: TextStyle(color: palette.textPrimary, fontSize: 12.5)),
+      ),
+    );
+  }
+}
+
+/// Uncontrolled text field that reports changes without forcing a rebuild
+/// of the whole tab on every keystroke (the chatbot config map is mutated
+/// directly, matching the web version's plain local-state form).
 class _InlineTextField extends StatefulWidget {
   final String initial;
   final String? hint;
@@ -783,52 +689,3 @@ class _InlineTextFieldState extends State<_InlineTextField> {
 /// Prévia da tela de entrada do app do cliente — a mesma de
 /// auth/login_screen.dart, a única em que a marca da barbearia aparece para
 /// ele. Reage à cor e à logo escolhidas na aba de aparência, ao vivo.
-/// Horário como pastilha: rótulo pequeno em cima do valor grande, tocável.
-/// Substitui o campinho cinza que não parecia clicável.
-class _HoraPill extends StatelessWidget {
-  final String rotulo;
-  final String valor;
-  final Color accent;
-  final AppPalette palette;
-  final ValueChanged<String> onChanged;
-
-  const _HoraPill({
-    required this.rotulo,
-    required this.valor,
-    required this.accent,
-    required this.palette,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        final parts = valor.split(':');
-        final inicial = TimeOfDay(
-          hour: int.tryParse(parts[0]) ?? 9,
-          minute: int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0,
-        );
-        final escolhido = await showTimePicker(context: context, initialTime: inicial);
-        if (escolhido != null) {
-          onChanged('${escolhido.hour.toString().padLeft(2, '0')}:${escolhido.minute.toString().padLeft(2, '0')}');
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
-        decoration: BoxDecoration(
-          color: palette.bg,
-          borderRadius: BorderRadius.circular(11),
-          border: Border.all(color: palette.border),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('$rotulo ', style: TextStyle(color: palette.textFaint, fontSize: 10.5, fontWeight: FontWeight.w700)),
-            Text(valor, style: TextStyle(color: palette.textPrimary, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -51,6 +51,23 @@ export function RukzSimbolo({ className = "", tom = "marca" }: { className?: str
 }
 
 /** Só a palavra. Serve onde o símbolo já apareceu e repetir seria gagueira. */
+/**
+ * Só o "r", recortado justo. Para espaços pequenos e redondos onde o bigode
+ * não caberia — o avatar do Copiloto, por exemplo. Herda `currentColor`, então
+ * dentro de um círculo amarelo ele sai preto sem precisar de variante.
+ */
+const VB_LETRA = "470.45 364.16 211.6 271.9";
+
+export function RukzLetraR({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox={VB_LETRA} fill="none" aria-hidden="true" className={className}>
+      <g transform="translate(440.8,636.1) scale(2.1934)">
+        <path d={LETRA_R} fill="currentColor" />
+      </g>
+    </svg>
+  );
+}
+
 export function RukzPalavra({ className = "" }: { className?: string }) {
   return (
     <svg viewBox={VB_PALAVRA} fill="none" aria-hidden="true" className={className}>

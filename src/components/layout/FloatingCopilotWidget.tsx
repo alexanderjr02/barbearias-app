@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles, X, Send, TrendingUp, UserX, CalendarCheck, CheckCircle2, Package, Loader2, Mic, SquarePen, History, Volume2, VolumeX, Undo2 } from "lucide-react";
+import { RukzLetraR } from "@/components/brand/RukzLogo";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import { cn } from "@/lib/utils";
 
@@ -276,7 +277,7 @@ export function FloatingCopilotWidget() {
         <div className="flex h-[600px] max-h-[82vh] flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl shadow-black/60">
           <div className="flex items-center gap-2.5 border-b border-white/5 px-4 py-3">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-black">
-              <Sparkles className="h-4 w-4" />
+              <RukzLetraR className="h-3.5 w-3.5" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold leading-tight text-white">Copiloto</p>
@@ -348,7 +349,7 @@ export function FloatingCopilotWidget() {
                   <>
                     <div className="mb-6 mt-6 flex flex-col items-center text-center">
                       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500 text-black ">
-                        <Sparkles className="h-7 w-7" />
+                        <RukzLetraR className="h-6 w-6" />
                       </div>
                       <p className="text-lg font-semibold text-white">Como posso ajudar?</p>
                     </div>
@@ -409,7 +410,7 @@ export function FloatingCopilotWidget() {
               ) : (
                 <div key={i} className="flex gap-3 px-4 py-2.5">
                   <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 text-black">
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <RukzLetraR className="h-3 w-3" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-100">{m.content}</div>
@@ -446,7 +447,7 @@ export function FloatingCopilotWidget() {
             {sending && (
               <div className="flex gap-3 px-4 py-2.5">
                 <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 text-black">
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <RukzLetraR className="h-3 w-3" />
                 </div>
                 <div className="flex items-center gap-1 py-2">
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.3s]" />
@@ -504,7 +505,7 @@ export function FloatingCopilotWidget() {
         )}
         aria-label="Copiloto"
       >
-        {open ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5 transition-transform group-hover:rotate-12" />}
+        {open ? <X className="h-5 w-5" /> : <RukzLetraR className="h-6 w-6" />}
       </button>
     </>
   );

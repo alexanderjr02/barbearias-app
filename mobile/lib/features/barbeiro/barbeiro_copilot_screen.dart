@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import '../../core/brand/rukz_symbol.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/typewriter_text.dart';
 import '../../core/widgets/voice_input_button.dart';
@@ -180,7 +181,7 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
-                    child: Icon(Icons.auto_awesome_rounded, color: accent, size: 30),
+                    child: RukzR(size: 34, color: accent),
                   ),
                   const SizedBox(height: 14),
                   Text('Seu copiloto pessoal', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
