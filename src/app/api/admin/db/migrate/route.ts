@@ -41,6 +41,15 @@ async function columnExists(table: string, column: string): Promise<boolean> {
 
 const STEPS: Step[] = [
   {
+    // Formas de cobrança aceitas por plano de assinatura. Sem a coluna, a
+    // listagem de planos quebra com 500 (o cliente Prisma já pede o campo).
+    name: "SubscriptionPlan.paymentMethods",
+    applied: () => columnExists("SubscriptionPlan", "paymentMethods"),
+    sql: [
+      `ALTER TABLE "SubscriptionPlan" ADD COLUMN "paymentMethods" TEXT NOT NULL DEFAULT 'PIX,CREDIT_CARD'`,
+    ],
+  },
+  {
     name: "Barbershop.planExpiresAt",
     applied: () => columnExists("Barbershop", "planExpiresAt"),
     sql: [`ALTER TABLE "Barbershop" ADD COLUMN "planExpiresAt" DATETIME`],
