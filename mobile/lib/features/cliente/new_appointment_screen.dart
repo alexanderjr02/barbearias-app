@@ -13,6 +13,16 @@ import '../auth/session_provider.dart';
 import 'booking_repository.dart';
 import 'client_repository.dart';
 
+
+// Opcoes de preferencia oferecidas no agendamento. O texto guardado e o proprio
+// rotulo, entao o barbeiro le "Maquina 2" e nao um codigo.
+const _opcoesMaquina = ['Sem maquina', 'Maquina 0', 'Maquina 1', 'Maquina 2', 'Maquina 3', 'Maquina 4', 'So tesoura'];
+const _opcoesFinalizacao = ['Sem produto', 'Pomada matte', 'Pomada brilho', 'Cera', 'Gel', 'Oleo de barba'];
+const _opcoesBebida = ['Nada', 'Agua', 'Cafe', 'Refrigerante', 'Cerveja'];
+// Aqui o valor guardado e um codigo (o mesmo que a tela antiga usava), pra nao
+// invalidar o que ja esta salvo no servidor.
+const _opcoesConversa = [('conversar', 'Boa conversa'), ('tanto_faz', 'Tanto faz'), ('silencio', 'Prefiro silencio')];
+
 class NewAppointmentScreen extends StatefulWidget {
   const NewAppointmentScreen({super.key, this.referencePhoto});
 
@@ -56,9 +66,15 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   // Preferencias do cliente, opcionais, no proprio agendamento. Antes so
   // existiam numa aba separada que a maioria nunca abria — e o barbeiro
   // recebia o cliente sem saber maquina, produto ou alergia.
-  final _prefMachine = TextEditingController();
-  final _prefProducts = TextEditingController();
-  final _prefAllergies = TextEditingController();
+  // Toque em vez de digitacao: no celular, escrever "maquina 2 nas laterais"
+  // durante um agendamento e atrito o bastante pra ninguem preencher. Cada
+  // escolha e opcional e desmarcavel.
+  String? _prefMaquina;
+  String? _prefFinalizacao;
+  String? _prefConversa;
+  String? _prefBebida;
+  final _prefAlergia = TextEditingController();
+  bool _temAlergia = false;
   bool _prefsAbertas = false;
   bool _prefsCarregadas = false;
 
@@ -88,9 +104,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
   void dispose() {
     _phoneController.dispose();
     _phoneFocus.dispose();
-    _prefMachine.dispose();
-    _prefProducts.dispose();
-    _prefAllergies.dispose();
+    _prefAlergia.dispose();
     super.dispose();
   }
 
@@ -296,9 +310,14 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
       final p = await _clientRepo.preferences();
       if (!mounted) return;
       setState(() {
-        _prefMachine.text = p.machine ?? '';
-        _prefProducts.text = p.products ?? '';
-        _prefAllergies.text = p.allergies ?? '';
+        // So repovoa a escolha quando o texto salvo bate com uma das opcoes;
+        // preferencia antiga escrita a mao continua no servidor sem ser perdida.
+        _prefMaquina = _opcoesMaquina.contains(p.machine) ? p.machine : null;
+        _prefFinalizacao = _opcoesFinalizacao.contains(p.products) ? p.products : null;
+        _prefConversa = _opcoesConversa.any((o) => o.$1 == p.chat) ? p.chat : null;
+        _prefBebida = _opcoesBebida.contains(p.drink) ? p.drink : null;
+        _prefAlergia.text = p.allergies ?? '';
+        _temAlergia = (p.allergies ?? '').trim().isNotEmpty;
         _prefsCarregadas = true;
       });
     } catch (_) {
@@ -331,9 +350,11 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
       // Preferencias vao junto, mas nunca seguram o agendamento: se falhar, o
       // horario ja esta marcado e o cliente pode ajustar na aba Preferencias.
       unawaited(_clientRepo.savePreferences({
-        'machine': _prefMachine.text.trim(),
-        'products': _prefProducts.text.trim(),
-        'allergies': _prefAllergies.text.trim(),
+        'machine': _prefMaquina ?? '',
+        'products': _prefFinalizacao ?? '',
+        'chat': _prefConversa ?? '',
+        'drink': _prefBebida ?? '',
+        'allergies': _temAlergia ? _prefAlergia.text.trim() : '',
       }).catchError((_) {}));
       // Remember the number for next time — only when it's new or changed,
       // and never lets a save failure block the booking that already went
@@ -732,22 +753,87 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                       Text(
                         _prefsAbertas
                             ? 'O barbeiro vê isso antes de te atender. Fica salvo pras próximas.'
-                            : 'Máquina, produto e alergia — o barbeiro já chega sabendo.',
+                            : 'Toque pra escolher — o barbeiro já chega sabendo do seu jeito.',
                         style: TextStyle(color: palette.textFaint, fontSize: 11.5),
                       ),
                       if (_prefsAbertas) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         if (!_prefsCarregadas)
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)),
                           )
                         else ...[
-                          _CampoPreferencia(controller: _prefMachine, rotulo: 'Máquina / altura', dica: 'Ex: máquina 2 nas laterais', palette: palette, accent: accent),
-                          const SizedBox(height: 10),
-                          _CampoPreferencia(controller: _prefProducts, rotulo: 'Produto', dica: 'Ex: pomada matte, sem gel', palette: palette, accent: accent),
-                          const SizedBox(height: 10),
-                          _CampoPreferencia(controller: _prefAllergies, rotulo: 'Alergia', dica: 'Ex: alérgico a tintura', palette: palette, accent: accent),
+                          _GrupoPreferencia(
+                            icone: Icons.content_cut_rounded,
+                            titulo: 'Laterais',
+                            opcoes: _opcoesMaquina,
+                            selecionada: _prefMaquina,
+                            onSelect: (v) => setState(() => _prefMaquina = v),
+                            palette: palette,
+                            accent: accent,
+                          ),
+                          _GrupoPreferencia(
+                            icone: Icons.auto_fix_high_rounded,
+                            titulo: 'Finalização',
+                            opcoes: _opcoesFinalizacao,
+                            selecionada: _prefFinalizacao,
+                            onSelect: (v) => setState(() => _prefFinalizacao = v),
+                            palette: palette,
+                            accent: accent,
+                          ),
+                          _GrupoPreferencia(
+                            icone: Icons.forum_rounded,
+                            titulo: 'Durante o corte',
+                            opcoes: _opcoesConversa.map((o) => o.$2).toList(),
+                            selecionada: _opcoesConversa.where((o) => o.$1 == _prefConversa).map((o) => o.$2).firstOrNull,
+                            onSelect: (v) => setState(() {
+                              _prefConversa = v == null ? null : _opcoesConversa.firstWhere((o) => o.$2 == v).$1;
+                            }),
+                            palette: palette,
+                            accent: accent,
+                          ),
+                          _GrupoPreferencia(
+                            icone: Icons.local_cafe_rounded,
+                            titulo: 'Bebida',
+                            opcoes: _opcoesBebida,
+                            selecionada: _prefBebida,
+                            onSelect: (v) => setState(() => _prefBebida = v),
+                            palette: palette,
+                            accent: accent,
+                          ),
+                          // Alergia é o único campo aberto: não dá pra listar
+                          // todas, e é a informação que mais importa pro barbeiro.
+                          const SizedBox(height: 4),
+                          GestureDetector(
+                            onTap: () => setState(() => _temAlergia = !_temAlergia),
+                            behavior: HitTestBehavior.opaque,
+                            child: Row(children: [
+                              Icon(_temAlergia ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                                  size: 19, color: _temAlergia ? accent : palette.textFaint),
+                              const SizedBox(width: 8),
+                              Text('Tenho alergia a algum produto',
+                                  style: TextStyle(color: palette.textSecondary, fontSize: 12.5)),
+                            ]),
+                          ),
+                          if (_temAlergia) ...[
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _prefAlergia,
+                              style: TextStyle(color: palette.textPrimary, fontSize: 13.5),
+                              decoration: InputDecoration(
+                                hintText: 'Ex: alérgico a tintura, talco',
+                                hintStyle: TextStyle(color: palette.textFaint, fontSize: 12.5),
+                                filled: true,
+                                fillColor: palette.surface,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: palette.border)),
+                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accent, width: 1.4)),
+                              ),
+                            ),
+                          ],
                         ],
                       ],
                       if (_error != null) ...[
@@ -1107,44 +1193,70 @@ class _ServiceCard extends StatelessWidget {
 
 /// Campo curto de preferência dentro do agendamento. Rótulo em cima, sem
 /// moldura pesada — o agendamento já é um formulário longo.
-class _CampoPreferencia extends StatelessWidget {
-  final TextEditingController controller;
-  final String rotulo;
-  final String dica;
+/// Grupo de preferência: título curto e opções em chips. Tocar na opção já
+/// marcada desmarca — nada aqui é obrigatório, e sem isso não haveria como
+/// voltar atrás depois de escolher.
+class _GrupoPreferencia extends StatelessWidget {
+  final IconData icone;
+  final String titulo;
+  final List<String> opcoes;
+  final String? selecionada;
+  final ValueChanged<String?> onSelect;
   final AppPalette palette;
   final Color accent;
 
-  const _CampoPreferencia({
-    required this.controller,
-    required this.rotulo,
-    required this.dica,
+  const _GrupoPreferencia({
+    required this.icone,
+    required this.titulo,
+    required this.opcoes,
+    required this.selecionada,
+    required this.onSelect,
     required this.palette,
     required this.accent,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(rotulo, style: TextStyle(color: palette.textSecondary, fontSize: 11.5, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          style: TextStyle(color: palette.textPrimary, fontSize: 13.5),
-          decoration: InputDecoration(
-            hintText: dica,
-            hintStyle: TextStyle(color: palette.textFaint, fontSize: 12.5),
-            filled: true,
-            fillColor: palette.surface,
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: palette.border)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accent, width: 1.4)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(icone, size: 14, color: palette.textFaint),
+            const SizedBox(width: 6),
+            Text(titulo, style: TextStyle(color: palette.textSecondary, fontSize: 11.5, fontWeight: FontWeight.w800, letterSpacing: 0.2)),
+          ]),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: opcoes.map((o) {
+              final ativa = o == selecionada;
+              return GestureDetector(
+                onTap: () => onSelect(ativa ? null : o),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 140),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: ativa ? accent : palette.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: ativa ? accent : palette.border),
+                  ),
+                  child: Text(
+                    o,
+                    style: TextStyle(
+                      color: ativa ? contrastingTextColor(accent) : palette.textSecondary,
+                      fontSize: 12.5,
+                      fontWeight: ativa ? FontWeight.w800 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

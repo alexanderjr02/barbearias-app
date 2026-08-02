@@ -3,7 +3,6 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/rukz_bottom_nav.dart';
 import '../../core/widgets/floating_copilot_button.dart';
 import '../profile/profile_screen.dart';
-import 'client_preferences_screen.dart';
 import 'cliente_copilot_screen.dart';
 import 'cliente_home_screen.dart';
 import 'cliente_subscriptions_screen.dart';
@@ -28,7 +27,6 @@ class _ClienteShellState extends State<ClienteShell> {
     CutWalletScreen(),
     LoyaltyTabScreen(),
     ClientSubscriptionsScreen(),
-    ClientPreferencesScreen(),
     ProfileScreen(),
   ];
 
@@ -48,7 +46,6 @@ class _ClienteShellState extends State<ClienteShell> {
               RukzNavItem(Icons.content_cut_rounded, 'Cortes'),
               RukzNavItem(Icons.card_giftcard_rounded, 'Fidelidade'),
               RukzNavItem(Icons.workspace_premium_rounded, 'Clube'),
-              RukzNavItem(Icons.tune_rounded, 'Preferências'),
               RukzNavItem(Icons.person_rounded, 'Perfil'),
             ],
           ),
