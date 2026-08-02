@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
+import '../../core/brand/rukz_symbol.dart';
 
 /// Copiloto de Marketing, espelha a página web 1:1 e com dado REAL: onde tem
 /// dinheiro parado agora (horário vago da semana, cliente sumido), quanto vale
@@ -219,7 +220,7 @@ class _GestorMarketingScreenState extends State<GestorMarketingScreen> {
                           ),
                           child: Column(
                             children: [
-                              Icon(Icons.auto_awesome_rounded, size: 22, color: palette.textFaint),
+                              RukzR(size: 22, color: palette.textFaint),
                               const SizedBox(height: 10),
                               Text('Ainda sem campanhas', style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.w600, fontSize: 13.5)),
                               const SizedBox(height: 4),
@@ -295,7 +296,7 @@ class _GestorMarketingScreenState extends State<GestorMarketingScreen> {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(color: accent.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(13)),
-                    child: Icon(Icons.auto_awesome_rounded, color: accent, size: 20),
+                    child: RukzR(size: 20, color: accent),
                   ),
                   if (_level != 'off')
                     Positioned(

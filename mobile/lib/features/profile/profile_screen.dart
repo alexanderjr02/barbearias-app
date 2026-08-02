@@ -10,6 +10,7 @@ import '../auth/session_provider.dart';
 import '../barbeiro/barbeiro_copilot_screen.dart';
 import 'profile_repository.dart';
 import 'push_notification_card.dart';
+import '../../core/brand/rukz_symbol.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -420,7 +421,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _Card(
               palette: palette,
               child: _ActionRow(
-                icon: Icons.auto_awesome_rounded,
+                iconWidget: RukzR(size: 18, color: accent),
                 label: 'Meu Copiloto',
                 sub: 'Seu assistente de atendimento',
                 palette: palette,
@@ -642,7 +643,9 @@ class _TapRow extends StatelessWidget {
 }
 
 class _ActionRow extends StatelessWidget {
-  final IconData icon;
+  // Nulo quando a linha usa a marca no lugar do icone (o Copiloto).
+  final IconData? icon;
+  final Widget? iconWidget;
   final String label;
   final String? sub;
   final VoidCallback onTap;
@@ -651,7 +654,8 @@ class _ActionRow extends StatelessWidget {
   final bool danger;
 
   const _ActionRow({
-    required this.icon,
+    this.icon,
+    this.iconWidget,
     required this.label,
     required this.onTap,
     required this.palette,
@@ -678,7 +682,7 @@ class _ActionRow extends StatelessWidget {
                   color: accent.withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(11),
                 ),
-                child: Icon(icon, size: 18, color: accent),
+                child: iconWidget ?? Icon(icon, size: 18, color: accent),
               ),
               const SizedBox(width: 12),
               Expanded(

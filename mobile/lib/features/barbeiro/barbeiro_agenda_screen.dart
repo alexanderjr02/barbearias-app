@@ -12,6 +12,7 @@ import 'barbeiro_new_appointment_screen.dart';
 import 'barbeiro_schedule_screen.dart';
 import 'finalize_appointment_screen.dart';
 import '../../core/utils/moeda.dart';
+import '../../core/brand/rukz_symbol.dart';
 
 const _statusLabels = {
   'SCHEDULED': 'Agendado',
@@ -221,7 +222,9 @@ class _BarbeiroAgendaScreenState extends State<BarbeiroAgendaScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(apt.resultPhoto != null ? Icons.compare_rounded : Icons.auto_awesome_rounded, size: 15, color: accent),
+                  apt.resultPhoto != null
+                      ? Icon(Icons.compare_rounded, size: 15, color: accent)
+                      : RukzR(size: 15, color: accent),
                   const SizedBox(width: 6),
                   Text(apt.resultPhoto != null ? 'Antes e depois' : 'Referência do cliente', style: TextStyle(color: palette.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w700)),
                 ],
@@ -264,7 +267,7 @@ class _BarbeiroAgendaScreenState extends State<BarbeiroAgendaScreen> {
                             },
                       icon: aiLoading
                           ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: accent))
-                          : Icon(Icons.auto_awesome_rounded, size: 16, color: accent),
+                          : RukzR(size: 16, color: accent),
                       label: Text(aiLoading ? 'Analisando…' : 'Analisar com IA', style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 12.5)),
                       style: OutlinedButton.styleFrom(side: BorderSide(color: accent.withValues(alpha: 0.5)), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                     ),
@@ -277,7 +280,7 @@ class _BarbeiroAgendaScreenState extends State<BarbeiroAgendaScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(children: [Icon(Icons.auto_awesome_rounded, size: 14, color: accent), const SizedBox(width: 6), Text('Leitura da IA', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w800))]),
+                        Row(children: [RukzR(size: 14, color: accent), const SizedBox(width: 6), Text('Leitura da IA', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w800))]),
                         const SizedBox(height: 6),
                         Text(aiResult!, style: TextStyle(color: palette.textPrimary, fontSize: 12.5, height: 1.5)),
                       ],

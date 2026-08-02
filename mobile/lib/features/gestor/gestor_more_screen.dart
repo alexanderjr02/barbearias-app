@@ -14,6 +14,7 @@ import 'gestor_subscriptions_screen.dart';
 import 'gestor_reviews_screen.dart';
 import 'gestor_support_screen.dart';
 import 'gestor_waitlist_screen.dart';
+import '../../core/brand/rukz_symbol.dart';
 
 class GestorMoreScreen extends StatelessWidget {
   const GestorMoreScreen({super.key});
@@ -30,7 +31,7 @@ class GestorMoreScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _MenuTile(
-            icon: Icons.auto_awesome_rounded,
+            iconWidget: RukzR(size: 20, color: palette.textPrimary),
             label: 'Auto-piloto',
             sub: 'Automações que rodam sozinhas (confirmar, aniversário, win-back)',
             palette: palette,
@@ -161,14 +162,16 @@ class GestorMoreScreen extends StatelessWidget {
 }
 
 class _MenuTile extends StatelessWidget {
-  final IconData icon;
+  // Nulo quando a linha usa a marca no lugar do icone (o Copiloto).
+  final IconData? icon;
+  final Widget? iconWidget;
   final String label;
   final String sub;
   final AppPalette palette;
   final Color accent;
   final VoidCallback onTap;
 
-  const _MenuTile({required this.icon, required this.label, required this.sub, required this.palette, required this.accent, required this.onTap});
+  const _MenuTile({this.icon, this.iconWidget, required this.label, required this.sub, required this.palette, required this.accent, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +189,7 @@ class _MenuTile extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(color: accent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon, color: palette.textPrimary, size: 20),
+                child: iconWidget ?? Icon(icon, color: palette.textPrimary, size: 20),
               ),
               const SizedBox(width: 14),
               Expanded(

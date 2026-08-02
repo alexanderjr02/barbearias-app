@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
+import '../../core/brand/rukz_symbol.dart';
 
 /// Painel da rede no celular: o consolidado no topo, a leitura do Copiloto e
 /// as unidades comparadas lado a lado, o mesmo conteúdo do web, adaptado.
@@ -209,7 +210,7 @@ class _GestorUnitsScreenState extends State<GestorUnitsScreen> {
                             border: Border.all(color: accent.withValues(alpha: 0.3)),
                           ),
                           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Icon(Icons.auto_awesome_rounded, color: accent, size: 18),
+                            RukzR(size: 18, color: accent),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

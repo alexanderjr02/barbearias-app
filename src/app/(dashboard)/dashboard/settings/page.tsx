@@ -11,17 +11,7 @@ import {
   MessageSquareText,
   CheckCircle,
   Lock,
-  Sparkles,
-  Eye,
-  Lightbulb,
-  Zap,
-  CalendarCheck,
-  Gift,
-  RotateCcw,
-  TrendingUp,
-  Activity,
   ArrowRight,
-  type LucideIcon,
 } from "lucide-react";
 import { usePlan, PLAN_INFO, FEATURES_BY_PLAN, type Feature } from "@/context/PlanContext";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
@@ -476,7 +466,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <button onClick={() => setUpgradeOpen(true)} className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-black font-semibold text-sm">
-                    <Sparkles className="w-4 h-4" /> Ver planos
+                    Ver planos
                   </button>
                 </div>
               ) : (
@@ -560,76 +550,84 @@ export default function SettingsPage() {
 
           {activeTab === "autopilot" && (() => {
             const level = barbershop?.autopilotLevel ?? "suggest";
+            // O que cada nivel significa vive DENTRO do proprio cartao. Antes a
+            // explicacao do nivel escolhido se repetia num bloco abaixo, o que
+            // fazia o gestor ler a mesma frase duas vezes.
             const levels = [
-              { val: "off", label: "Desligado", Icon: Eye, tag: "Pausado", blurb: "O Copiloto observa, mas não envia nada nem age por conta própria." },
-              { val: "suggest", label: "Sugerir", Icon: Lightbulb, tag: "Você aprova", blurb: "Ele encontra as oportunidades e te avisa. Nada sai sem o seu toque." },
-              { val: "auto", label: "Agir sozinho", Icon: Zap, tag: "Autônomo", blurb: "Ele resolve na hora, sem te interromper, e depois te conta o que fez." },
+              { val: "off", label: "Desligado", tag: "Pausado", blurb: "Ele observa, mas não envia nada nem age por conta própria." },
+              { val: "suggest", label: "Sugerir", tag: "Você aprova", blurb: "Ele acha as oportunidades e te avisa. Nada sai sem o seu toque." },
+              { val: "auto", label: "Agir sozinho", tag: "Autônomo", blurb: "Ele resolve na hora e depois te conta o que fez." },
             ] as const;
-            const current = levels.find((l) => l.val === level) ?? levels[1];
-            const active = level !== "off";
             const recovered = autopilotFeed?.recoveredTotal ?? 0;
             const actions = autopilotFeed?.actionsThisMonth ?? 0;
             return (
               <div className="space-y-5">
                 <div>
                   <h2 className="text-lg font-bold text-white">Auto-piloto</h2>
-                  <p className="text-sm text-zinc-500 mt-1">
+                  <p className="mt-1 text-sm text-zinc-500">
                     Seu Copiloto cuidando da agenda e dos clientes 24 horas, no nível de autonomia que você escolher.
                   </p>
                 </div>
 
-                {/* Interruptor-mestre: o nível de autonomia. */}
-                <div className="grid grid-cols-3 gap-2">
-                  {levels.map(({ val, label, Icon, tag }) => {
-                    const on = level === val;
-                    return (
-                      <button
-                        key={val}
-                        onClick={() => updateBarbershop.mutate({ autopilotLevel: val })}
-                        className={cn(
-                          "rounded-2xl border p-3 text-center transition",
-                          on ? "border-amber-500/60 bg-amber-500/10" : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
-                        )}
-                      >
-                        <Icon className={cn("mx-auto h-5 w-5", on ? "text-amber-400" : "text-zinc-500")} />
-                        <p className={cn("mt-2 text-xs font-bold", on ? "text-amber-400" : "text-white")}>{label}</p>
-                        <p className="mt-0.5 text-[10px] text-zinc-500">{tag}</p>
-                      </button>
-                    );
-                  })}
+                {/* O que a autonomia devolveu em dinheiro vem primeiro: e a
+                    resposta pra pergunta "isso vale a pena?". */}
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+                  <p className="text-xs text-zinc-500">Receita recuperada este mês</p>
+                  <p className="mt-1.5 text-3xl font-black tracking-tight text-white">
+                    R$ {recovered.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    {actions === 0 ? "nenhuma ação ainda" : `${actions} ${actions === 1 ? "ação executada" : "ações executadas"} pelo Auto-piloto`}
+                  </p>
                 </div>
 
-                {/* O que o nível escolhido significa, agora. */}
-                <div className={cn("flex items-start gap-3 rounded-xl border p-4", active ? "border-amber-500/25 bg-amber-500/[0.06]" : "border-zinc-800 bg-zinc-900/40")}>
-                  <current.Icon className={cn("h-5 w-5 shrink-0 mt-0.5", active ? "text-amber-400" : "text-zinc-500")} />
-                  <div>
-                    <p className="text-sm font-semibold text-white">{current.label}</p>
-                    <p className="mt-0.5 text-xs text-zinc-400 leading-relaxed">{current.blurb}</p>
+                <div>
+                  <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">Quanta autonomia ele tem</p>
+                  <div className="space-y-2">
+                    {levels.map(({ val, label, tag, blurb }) => {
+                      const on = level === val;
+                      return (
+                        <button
+                          key={val}
+                          onClick={() => updateBarbershop.mutate({ autopilotLevel: val })}
+                          className={cn(
+                            "flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors",
+                            on ? "border-amber-500 bg-amber-500/[0.06]" : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                          )}
+                        >
+                          <span className={cn("mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2", on ? "border-amber-400 bg-amber-400" : "border-zinc-600")} />
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center gap-2">
+                              <span className={cn("text-sm font-bold", on ? "text-amber-400" : "text-white")}>{label}</span>
+                              <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold text-zinc-400">{tag}</span>
+                            </span>
+                            <span className="mt-1 block text-xs leading-relaxed text-zinc-500">{blurb}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* O que ele faz por você, as capacidades, explicadas. */}
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">O que ele faz por você</p>
-                  <div className="space-y-2">
+                  <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">O que ele faz por você</p>
+                  <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
                     {[
-                      { Icon: Zap, title: "Preenche horários vagos na hora", desc: "Cliente cancelou? Ele chama quem está na fila de espera na mesma hora, 24h por dia." },
-                      { Icon: CalendarCheck, title: "Confirma os agendamentos", desc: "Na véspera, confirma os horários do dia seguinte e reduz as faltas." },
-                      { Icon: Gift, title: "Parabeniza aniversariantes", desc: "Manda os parabéns no dia e convida para um corte." },
-                      { Icon: RotateCcw, title: "Reativa clientes sumidos", desc: "Chama de volta quem passou do tempo sem aparecer." },
-                    ].map((cap) => (
-                      <div key={cap.title} className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-                          <cap.Icon className="h-4 w-4 text-amber-400" />
-                        </div>
+                      { title: "Preenche horários vagos na hora", desc: "Cliente cancelou? Ele chama quem está na fila de espera na mesma hora, 24h por dia." },
+                      { title: "Confirma os agendamentos", desc: "Na véspera, confirma os horários do dia seguinte e reduz as faltas." },
+                      { title: "Parabeniza aniversariantes", desc: "Manda os parabéns no dia e convida para um corte." },
+                      { title: "Reativa clientes sumidos", desc: "Chama de volta quem passou do tempo sem aparecer." },
+                    ].map((cap, i) => (
+                      <div key={cap.title} className={cn("flex items-start gap-3 p-3.5", i > 0 && "border-t border-zinc-800")}>
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
                         <div>
                           <p className="text-sm font-medium text-white">{cap.title}</p>
-                          <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">{cap.desc}</p>
+                          <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">{cap.desc}</p>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-2 text-[11px] text-zinc-600">
+                  <p className="mt-2 px-0.5 text-[11px] text-zinc-600">
                     Escolha quais mensagens enviar em{" "}
                     <button onClick={() => setActiveTab("notifications")} className="text-amber-400/80 underline underline-offset-2 hover:text-amber-400">
                       Notificações
@@ -638,50 +636,29 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                {/* Prova de valor, receita recuperada real (AutopilotLog). */}
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    <TrendingUp className="h-4 w-4 text-amber-400" />
-                    <p className="text-xs font-medium">Receita recuperada este mês</p>
-                  </div>
-                  <p className="mt-2 text-3xl font-black text-white">
-                    R$ {recovered.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    {actions} {actions === 1 ? "ação executada" : "ações executadas"} pelo Auto-piloto
-                  </p>
-                </div>
-
-                {/* Histórico real do que ele fez. */}
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Atividade recente</p>
+                  <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">Atividade recente</p>
                   {autopilotFeed && autopilotFeed.feed.length > 0 ? (
-                    <div className="space-y-2">
-                      {autopilotFeed.feed.map((f, i) => {
-                        const Icon = actionIcon(f.action);
-                        return (
-                          <div key={i} className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
-                              <Icon className="h-4 w-4 text-amber-400" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-xs text-zinc-300">{f.detail}</p>
-                              <p className="text-[10px] text-zinc-600">{relativeTime(f.createdAt)}</p>
-                            </div>
-                            {f.recoveredValue ? (
-                              <span className="shrink-0 rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-400">
-                                +R$ {f.recoveredValue.toFixed(0)}
-                              </span>
-                            ) : null}
+                    <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+                      {autopilotFeed.feed.map((f, i) => (
+                        <div key={i} className={cn("flex items-center gap-3 p-3.5", i > 0 && "border-t border-zinc-800")}>
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs text-zinc-300">{f.detail}</p>
+                            <p className="text-[10px] text-zinc-600">{relativeTime(f.createdAt)}</p>
                           </div>
-                        );
-                      })}
+                          {f.recoveredValue ? (
+                            <span className="shrink-0 rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-400">
+                              +R$ {f.recoveredValue.toFixed(0)}
+                            </span>
+                          ) : null}
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 p-6 text-center">
-                      <Activity className="mx-auto h-6 w-6 text-zinc-600" />
-                      <p className="mt-2 text-sm text-zinc-400">Ainda sem ações este mês</p>
-                      <p className="mt-0.5 text-xs text-zinc-600">
+                    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center">
+                      <p className="text-sm text-zinc-400">Ainda sem ações este mês</p>
+                      <p className="mt-1 text-xs text-zinc-600">
                         Quando o Auto-piloto agir, preencher um horário, confirmar, reativar um cliente, aparece aqui.
                       </p>
                     </div>
@@ -703,7 +680,7 @@ export default function SettingsPage() {
                   <p className="text-sm text-zinc-500 mt-1">Compare os planos e veja exatamente o que cada um desbloqueia.</p>
                 </div>
                 <button onClick={() => setUpgradeOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-sm font-semibold whitespace-nowrap">
-                  <Sparkles className="w-4 h-4" /> Assinar um plano
+                  Assinar um plano
                 </button>
               </div>
 
@@ -771,21 +748,6 @@ export default function SettingsPage() {
 
 // Ícone por tipo de ação do Auto-piloto, batendo com os action do AutopilotLog
 // (slot_filled / confirmed / birthday / winback).
-function actionIcon(action: string): LucideIcon {
-  switch (action) {
-    case "slot_filled":
-      return Zap;
-    case "confirmed":
-      return CalendarCheck;
-    case "birthday":
-      return Gift;
-    case "winback":
-      return RotateCcw;
-    default:
-      return Activity;
-  }
-}
-
 // Tempo relativo curto ("há 2h", "ontem") para o histórico, mais legível que
 // uma data crua num feed de atividade.
 function relativeTime(input: string | Date): string {
