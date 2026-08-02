@@ -146,7 +146,7 @@ export default function AppearancePage() {
   const [logo, setLogo] = useState<string | null>(null);
   const [cover, setCover] = useState<string | null>(null);
   const [suggested, setSuggested] = useState<string[]>([]);
-  const [tab, setTab] = useState<"home" | "login">("home");
+  const [tab, setTab] = useState<"login" | "home">("login");
   const [busy, setBusy] = useState<"logo" | "cover" | null>(null);
   const [bgType, setBgType] = useState<"solid" | "gradient" | "image" | "video">("gradient");
   const [bgVideo, setBgVideo] = useState("");
@@ -472,9 +472,9 @@ export default function AppearancePage() {
         {/* Prévia ao vivo */}
         <div className="lg:sticky lg:top-6">
           <div className="mx-auto mb-4 flex w-fit items-center justify-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 p-1">
-            {(["home", "login"] as const).map((t) => (
+            {(["login", "home"] as const).map((t) => (
               <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${tab === t ? "bg-white text-black" : "text-zinc-400"}`}>
-                {t === "home" ? "Início" : "Login"}
+                {t === "login" ? "Login" : "Início"}
               </button>
             ))}
           </div>
