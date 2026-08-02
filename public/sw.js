@@ -1,7 +1,7 @@
 // rukz Service Worker v1
 // Provides offline support and caching for the PWA
 
-const CACHE_VERSION = 'cortix-v1';
+const CACHE_VERSION = 'rukz-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

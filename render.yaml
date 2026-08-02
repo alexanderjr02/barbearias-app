@@ -7,18 +7,18 @@
 #   2. Em https://dashboard.render.com → New → Blueprint → conecte o repo.
 #   3. Render lê este arquivo, cria o serviço e pede as variáveis marcadas
 #      "sync: false" (cole os valores do seu .env).
-#   4. Deploy. Ao final você recebe uma URL https://cortix-xxxx.onrender.com.
+#   4. Deploy. Ao final você recebe uma URL https://rukz-xxxx.onrender.com.
 #   5. Defina APP_URL com essa URL (Settings → Environment) e faça redeploy.
 #   6. No Mercado Pago, cadastre o webhook: <APP_URL>/api/billing/webhook
 services:
   - type: web
-    name: cortix
+    name: rukz
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: starter # tem custo; o "free" do Render hiberna e não aceita disco
     healthCheckPath: /api/health
     disk:
-      name: cortix-data
+      name: rukz-data
       mountPath: /app/data # DATABASE_URL aponta para cá (SQLite persistente)
       sizeGB: 1
     envVars:
@@ -58,7 +58,7 @@ services:
   # Relatório semanal automático: dispara /api/cron/weekly-report toda
   # segunda 8h (BRT ≈ 11h UTC). Cole o mesmo CRON_SECRET do serviço web.
   - type: cron
-    name: cortix-weekly-report
+    name: rukz-weekly-report
     runtime: docker
     dockerfilePath: ./Dockerfile
     schedule: "0 11 * * 1"
@@ -73,7 +73,7 @@ services:
   # Copiloto proativo: todo dia 8h (BRT ≈ 11h UTC) checa cada barbearia Pro+ e
   # notifica o gestor se houver algo pra resolver (sumidos, agenda vazia...).
   - type: cron
-    name: cortix-daily-briefing
+    name: rukz-daily-briefing
     runtime: docker
     dockerfilePath: ./Dockerfile
     schedule: "0 11 * * *"
@@ -88,7 +88,7 @@ services:
   # Auto-piloto: todo dia 9h (BRT ≈ 12h UTC) roda as automações que cada
   # barbearia ligou (confirmar amanhã, aniversário, win-back de sumidos).
   - type: cron
-    name: cortix-automations
+    name: rukz-automations
     runtime: docker
     dockerfilePath: ./Dockerfile
     schedule: "0 12 * * *"

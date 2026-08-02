@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken, ACCESS_COOKIE } from "@/lib/auth";
+import { verifyAccessToken, ACCESS_COOKIE, LEGACY_ACCESS_COOKIE, readCookieWithLegacy } from "@/lib/auth";
 
 export const config = {
   matcher: ["/dashboard/:path*", "/admin/:path*", "/api/v1/:path*", "/uploads/:path*"],
@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  const token = request.cookies.get(ACCESS_COOKIE)?.value;
+  const token = readCookieWithLegacy(request.cookies, ACCESS_COOKIE, LEGACY_ACCESS_COOKIE);
   const session = token ? await verifyAccessToken(token) : null;
 
   if (!session) {

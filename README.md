@@ -218,7 +218,7 @@ npm run dev
 
 Acesse **http://localhost:3000**. Com o seed rodado, use:
 ```
-E-mail: demo@cortix.app
+E-mail: demo@rukz.app
 Senha:  demo123456
 ```
 

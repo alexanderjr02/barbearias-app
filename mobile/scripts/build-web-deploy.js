@@ -90,7 +90,7 @@ function main() {
   fs.mkdirSync(path.join(OUT, "api"), { recursive: true });
   fs.writeFileSync(path.join(OUT, "api", "_template.js"), templateModule);
 
-  // 4. Mantém o deploy ligado ao MESMO projeto Vercel (cortix-app) já em
+  // 4. Mantém o deploy ligado ao MESMO projeto Vercel (rukz-app) já em
   // uso — sem isso o CLI acha que é um projeto novo e gera outro domínio,
   // invalidando todo QR/link já compartilhado com barbearias.
   const vercelLink = path.join(BUILD_WEB, ".vercel", "project.json");
@@ -100,7 +100,7 @@ function main() {
   } else {
     console.warn(
       "Aviso: build/web/.vercel/project.json não encontrado — o deploy vai pedir pra linkar " +
-        'o projeto (escolha o existente "cortix-app", NUNCA crie um novo).'
+        'o projeto (escolha o existente "rukz-app", NUNCA crie um novo).'
     );
   }
 

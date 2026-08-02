@@ -23,7 +23,7 @@ interface MeBody {
 
 describe("POST /api/auth/register", () => {
   it("creates an owner account and a barbershop", async () => {
-    const email = `${unique("register")}@cortix.test`;
+    const email = `${unique("register")}@rukz.test`;
     const { status, body } = await postJson<RegisterBody>("/api/auth/register", {
       name: "Novo Dono",
       email,
@@ -44,7 +44,7 @@ describe("POST /api/auth/register", () => {
   });
 
   it("rejects a duplicate email with 409", async () => {
-    const email = `${unique("dup")}@cortix.test`;
+    const email = `${unique("dup")}@rukz.test`;
     const payload = {
       name: "Dono",
       email,
@@ -73,7 +73,7 @@ describe("POST /api/auth/register", () => {
   it("rejects a password shorter than 8 characters", async () => {
     const { status, body } = await postJson<RegisterBody>("/api/auth/register", {
       name: "Dono Fraco",
-      email: `${unique("weakpw")}@cortix.test`,
+      email: `${unique("weakpw")}@rukz.test`,
       password: "1234567",
     });
     expect(status).toBe(400);
@@ -81,14 +81,14 @@ describe("POST /api/auth/register", () => {
   });
 
   it("rejects a request missing required fields", async () => {
-    const { status } = await postJson<RegisterBody>("/api/auth/register", { email: "no-name@cortix.test" });
+    const { status } = await postJson<RegisterBody>("/api/auth/register", { email: "no-name@rukz.test" });
     expect(status).toBe(400);
   });
 
   it("rejects registration without barbershop info (no more ownerless accounts)", async () => {
     const { status, body } = await postJson<RegisterBody>("/api/auth/register", {
       name: "Sem Barbearia",
-      email: `${unique("noshop")}@cortix.test`,
+      email: `${unique("noshop")}@rukz.test`,
       password: "senha12345",
     });
     expect(status).toBe(400);
@@ -98,7 +98,7 @@ describe("POST /api/auth/register", () => {
   it("rejects an invalid barbershop slug (uppercase/spaces)", async () => {
     const { status } = await postJson<RegisterBody>("/api/auth/register", {
       name: "Slug Ruim",
-      email: `${unique("badslug")}@cortix.test`,
+      email: `${unique("badslug")}@rukz.test`,
       password: "senha12345",
       phone: "11999999999",
       cnpj: uniqueCnpj(),
@@ -113,7 +113,7 @@ describe("POST /api/auth/register", () => {
     const slug = unique("taken-slug");
     const first = await postJson<RegisterBody>("/api/auth/register", {
       name: "Primeiro",
-      email: `${unique("slugowner1")}@cortix.test`,
+      email: `${unique("slugowner1")}@rukz.test`,
       password: "senha12345",
       phone: "11999999999",
       cnpj: uniqueCnpj(),
@@ -123,7 +123,7 @@ describe("POST /api/auth/register", () => {
     });
     expect(first.status).toBe(201);
 
-    const clashEmail = `${unique("slugowner2")}@cortix.test`;
+    const clashEmail = `${unique("slugowner2")}@rukz.test`;
     const second = await postJson<RegisterBody>("/api/auth/register", {
       name: "Segundo",
       email: clashEmail,
@@ -156,7 +156,7 @@ describe("POST /api/auth/register", () => {
   it("rejeita cadastro sem CNPJ", async () => {
     const { status, body } = await postJson<RegisterBody>("/api/auth/register", {
       name: "Sem Documento",
-      email: `${unique("nocnpj")}@cortix.test`,
+      email: `${unique("nocnpj")}@rukz.test`,
       password: "senha12345",
       phone: "11999999999",
       barbershopName: "Barbearia Fantasma",
@@ -171,7 +171,7 @@ describe("POST /api/auth/register", () => {
     for (const cnpj of ["00000000000000", "11111111111111", "11222333000182"]) {
       const { status } = await postJson<RegisterBody>("/api/auth/register", {
         name: "Documento Falso",
-        email: `${unique("badcnpj")}@cortix.test`,
+        email: `${unique("badcnpj")}@rukz.test`,
         password: "senha12345",
         phone: "11999999999",
         cnpj,
@@ -194,7 +194,7 @@ describe("POST /api/auth/register", () => {
     const first = await postJson<RegisterBody>("/api/auth/register", {
       ...base,
       name: "Dono Original",
-      email: `${unique("cnpj1")}@cortix.test`,
+      email: `${unique("cnpj1")}@rukz.test`,
       barbershopName: "Barbearia Original",
       barbershopSlug: unique("original"),
     });
@@ -205,7 +205,7 @@ describe("POST /api/auth/register", () => {
     const second = await postJson<RegisterBody>("/api/auth/register", {
       ...base,
       name: "Dono Clone",
-      email: `${unique("cnpj2")}@cortix.test`,
+      email: `${unique("cnpj2")}@rukz.test`,
       barbershopName: "Barbearia Clone",
       barbershopSlug: unique("clone"),
     });
@@ -216,7 +216,7 @@ describe("POST /api/auth/register", () => {
   it("rejeita cadastro sem telefone (conta de dono sem ninguém atrás)", async () => {
     const { status } = await postJson<RegisterBody>("/api/auth/register", {
       name: "Sem Telefone",
-      email: `${unique("nophone")}@cortix.test`,
+      email: `${unique("nophone")}@rukz.test`,
       password: "senha12345",
       cnpj: uniqueCnpj(),
       barbershopName: "Barbearia Muda",
@@ -229,7 +229,7 @@ describe("POST /api/auth/register", () => {
 
 describe("POST /api/auth/register/client", () => {
   it("creates a client account with no barbershop attached", async () => {
-    const email = `${unique("client")}@cortix.test`;
+    const email = `${unique("client")}@rukz.test`;
     const { status, body } = await postJson<RegisterBody>("/api/auth/register/client", {
       name: "Cliente Novo",
       email,
@@ -246,7 +246,7 @@ describe("POST /api/auth/register/client", () => {
   it("rejects someone under 13", async () => {
     const { status, body } = await postJson<RegisterBody>("/api/auth/register/client", {
       name: "Muito Novo",
-      email: `${unique("kid")}@cortix.test`,
+      email: `${unique("kid")}@rukz.test`,
       password: "senha12345",
       phone: "11999990000",
       dateOfBirth: new Date().toISOString().slice(0, 10),
@@ -258,7 +258,7 @@ describe("POST /api/auth/register/client", () => {
   it("rejects a missing date of birth", async () => {
     const { status } = await postJson<RegisterBody>("/api/auth/register/client", {
       name: "Sem Data",
-      email: `${unique("nodob")}@cortix.test`,
+      email: `${unique("nodob")}@rukz.test`,
       password: "senha12345",
       phone: "11999990000",
     });
@@ -266,7 +266,7 @@ describe("POST /api/auth/register/client", () => {
   });
 
   it("rejects a duplicate email", async () => {
-    const email = `${unique("clientdup")}@cortix.test`;
+    const email = `${unique("clientdup")}@rukz.test`;
     const payload = {
       name: "Cliente Dup",
       email,
@@ -299,7 +299,7 @@ describe("POST /api/auth/google", () => {
 
 describe("POST /api/auth/login", () => {
   it("logs in with the correct credentials", async () => {
-    const email = `${unique("login")}@cortix.test`;
+    const email = `${unique("login")}@rukz.test`;
     const password = "senha12345";
     await postJson<RegisterBody>("/api/auth/register", {
       name: "Login Test",
@@ -320,7 +320,7 @@ describe("POST /api/auth/login", () => {
   });
 
   it("rejects the wrong password with 401", async () => {
-    const email = `${unique("wrongpw")}@cortix.test`;
+    const email = `${unique("wrongpw")}@rukz.test`;
     await postJson<RegisterBody>("/api/auth/register", {
       name: "Wrong Password Test",
       email,
@@ -340,7 +340,7 @@ describe("POST /api/auth/login", () => {
 
   it("rejects an email that doesn't exist with 401", async () => {
     const { status } = await postJson<LoginBody>("/api/auth/login", {
-      email: "never-registered@cortix.test",
+      email: "never-registered@rukz.test",
       password: "senha12345",
     });
     expect(status).toBe(401);
@@ -356,7 +356,7 @@ describe("POST /api/auth/login", () => {
   // (src/lib/requestIp.ts isSecureRequest) must produce a non-Secure cookie
   // here regardless of NODE_ENV.
   it("does not mark the session cookie Secure when the request itself is plain HTTP", async () => {
-    const email = `${unique("cookiesecure")}@cortix.test`;
+    const email = `${unique("cookiesecure")}@rukz.test`;
     const password = "senha12345";
     await postJson<RegisterBody>("/api/auth/register", {
       name: "Cookie Secure Test",
@@ -379,7 +379,7 @@ describe("POST /api/auth/login", () => {
     // Two Set-Cookie headers (access + refresh) — headers.get() would join
     // them with a comma and corrupt the syntax, so use getSetCookie().
     const cookies = res.headers.getSetCookie();
-    const accessCookie = cookies.find((c) => c.startsWith("cortix_access"));
+    const accessCookie = cookies.find((c) => c.startsWith("rukz_access"));
     expect(accessCookie).toBeTruthy();
     expect(accessCookie!.toLowerCase()).not.toContain("secure");
   });
@@ -387,7 +387,7 @@ describe("POST /api/auth/login", () => {
 
 describe("GET /api/auth/me", () => {
   it("returns the session user when a valid bearer token is sent", async () => {
-    const email = `${unique("me")}@cortix.test`;
+    const email = `${unique("me")}@rukz.test`;
     const register = await postJson<RegisterBody>("/api/auth/register", {
       name: "Me Test",
       email,

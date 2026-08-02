@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import '../storage/token_storage.dart';
 import 'api_exception.dart';
 
-/// Base URL for the Cortix API v1. Override at build/run time with
+/// Base URL for the rukz API v1. Override at build/run time with
 /// `--dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1` (Android emulator)
 /// or your machine's LAN IP for a physical device. Defaults to localhost,
 /// which works when running as Flutter Web against a local `npm run dev`.

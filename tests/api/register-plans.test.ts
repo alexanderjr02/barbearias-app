@@ -23,7 +23,7 @@ interface ShopBody {
 function payload(label: string, extra: Record<string, unknown> = {}) {
   return {
     name: "Dono Teste",
-    email: `${unique(label)}@cortix.test`,
+    email: `${unique(label)}@rukz.test`,
     password: "senha12345",
     phone: "11999999999",
     cnpj: uniqueCnpj(),

@@ -27,7 +27,10 @@ const DEFAULT_THEME_COLOR = '#000000';
 // app (cores, logo nas telas) continua valendo pra todo mundo: ela é o
 // multi-inquilino normal, não o white-label.
 const WHITE_LABEL_PLAN = 'ENTERPRISE';
-const COOKIE_NAME = 'cortix_shop';
+const COOKIE_NAME = 'rukz_shop';
+// Cookie da marca antiga: lido como reserva pra quem ja tinha a barbearia
+// lembrada nao cair na marca padrao depois do rebrand.
+const LEGACY_COOKIE_NAME = 'cortix_shop';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 ano — mesmo raciocínio do
 // localStorage que isto substitui: guarda a barbearia pra quem volta sem
 // ?shop= na URL (ex.: digitou o domínio de cabeça). Diferente do
@@ -64,7 +67,7 @@ function rememberShop(slug, shop) {
 
 module.exports = async (req, res) => {
   const queryShop = typeof req.query.shop === "string" ? req.query.shop.trim() : "";
-  const slug = queryShop || (req.cookies && req.cookies[COOKIE_NAME]) || "";
+  const slug = queryShop || (req.cookies && (req.cookies[COOKIE_NAME] || req.cookies[LEGACY_COOKIE_NAME])) || "";
 
   const appOrigin = `https://${req.headers.host}`;
   let shop = null;

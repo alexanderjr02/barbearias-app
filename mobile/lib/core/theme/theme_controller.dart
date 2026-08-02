@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _prefsKey = 'cortix_theme_mode';
+const _prefsKey = 'rukz_theme_mode';
+// Chave da marca antiga: lida como reserva pra quem ja tinha escolhido o tema
+// nao voltar pro padrao depois do rebrand.
+const _legacyPrefsKey = 'cortix_theme_mode';
 
 /// Preferência de tema, persistida. Só Claro ou Escuro — a opção "Sistema"
 /// saiu (dava mais confusão que ajuda). O padrão é Escuro, a identidade do
@@ -13,7 +16,12 @@ class ThemeController extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     // Só 'light' vira claro. Qualquer outra coisa — inclusive o 'system'
     // gravado por versões antigas — cai no escuro padrão.
-    mode = prefs.getString(_prefsKey) == 'light' ? ThemeMode.light : ThemeMode.dark;
+    final salvo = prefs.getString(_prefsKey) ?? prefs.getString(_legacyPrefsKey);
+    mode = salvo == 'light' ? ThemeMode.light : ThemeMode.dark;
+    if (prefs.getString(_prefsKey) == null && salvo != null) {
+      await prefs.setString(_prefsKey, salvo);
+      await prefs.remove(_legacyPrefsKey);
+    }
     notifyListeners();
   }
 

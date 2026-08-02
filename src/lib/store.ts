@@ -138,11 +138,11 @@ function isClient() {
 
 function initStore() {
   if (!isClient()) return;
-  if (!localStorage.getItem("cortix_barbershops")) {
-    localStorage.setItem("cortix_barbershops", JSON.stringify(SEED_SHOPS));
+  if (!localStorage.getItem("rukz_barbershops")) {
+    localStorage.setItem("rukz_barbershops", JSON.stringify(SEED_SHOPS));
   }
-  if (!localStorage.getItem("cortix_users")) {
-    localStorage.setItem("cortix_users", JSON.stringify(SEED_USERS));
+  if (!localStorage.getItem("rukz_users")) {
+    localStorage.setItem("rukz_users", JSON.stringify(SEED_USERS));
   }
 }
 
@@ -152,7 +152,7 @@ export const store = {
     if (!isClient()) return SEED_SHOPS;
     initStore();
     try {
-      const data = localStorage.getItem("cortix_barbershops");
+      const data = localStorage.getItem("rukz_barbershops");
       return data ? JSON.parse(data) : SEED_SHOPS;
     } catch {
       return SEED_SHOPS;
@@ -173,13 +173,13 @@ export const store = {
     const idx = shops.findIndex(s => s.id === shop.id);
     if (idx >= 0) shops[idx] = shop;
     else shops.push(shop);
-    localStorage.setItem("cortix_barbershops", JSON.stringify(shops));
+    localStorage.setItem("rukz_barbershops", JSON.stringify(shops));
   },
 
   deleteBarbershop(id: string): void {
     if (!isClient()) return;
     const shops = this.getBarbershops().filter(s => s.id !== id);
-    localStorage.setItem("cortix_barbershops", JSON.stringify(shops));
+    localStorage.setItem("rukz_barbershops", JSON.stringify(shops));
   },
 
   // ── Users ────────────────────────────────────────────────────────────────────
@@ -187,7 +187,7 @@ export const store = {
     if (!isClient()) return SEED_USERS;
     initStore();
     try {
-      const data = localStorage.getItem("cortix_users");
+      const data = localStorage.getItem("rukz_users");
       return data ? JSON.parse(data) : SEED_USERS;
     } catch {
       return SEED_USERS;
@@ -204,17 +204,17 @@ export const store = {
     const idx = users.findIndex(u => u.id === user.id);
     if (idx >= 0) users[idx] = user;
     else users.push(user);
-    localStorage.setItem("cortix_users", JSON.stringify(users));
+    localStorage.setItem("rukz_users", JSON.stringify(users));
   },
 
   // ── Session ──────────────────────────────────────────────────────────────────
   getSession(): { userId: string; barbershopId: string } | null {
     if (!isClient()) return null;
     try {
-      const data = sessionStorage.getItem("cortix_session");
+      const data = sessionStorage.getItem("rukz_session");
       if (data) return JSON.parse(data);
       // Fall back to last used barbershop
-      const current = localStorage.getItem("cortix_current_shop");
+      const current = localStorage.getItem("rukz_current_shop");
       if (current) return { userId: "demo", barbershopId: current };
       return { userId: "seed-user-1", barbershopId: "seed-1" };
     } catch {
@@ -224,14 +224,14 @@ export const store = {
 
   setSession(userId: string, barbershopId: string): void {
     if (!isClient()) return;
-    sessionStorage.setItem("cortix_session", JSON.stringify({ userId, barbershopId }));
-    localStorage.setItem("cortix_current_shop", barbershopId);
+    sessionStorage.setItem("rukz_session", JSON.stringify({ userId, barbershopId }));
+    localStorage.setItem("rukz_current_shop", barbershopId);
   },
 
   clearSession(): void {
     if (!isClient()) return;
-    sessionStorage.removeItem("cortix_session");
-    localStorage.removeItem("cortix_current_shop");
+    sessionStorage.removeItem("rukz_session");
+    localStorage.removeItem("rukz_current_shop");
   },
 
   getCurrentShop(): Barbershop | null {
@@ -279,15 +279,15 @@ export const store = {
       { id: `${shopId}-a7`, client: "Thiago Carvalho", phone: "(11) 99999-0008", service: "Corte + Barba", barber: "Carlos Souza", date: today, time: "16:00", status: "SCHEDULED", value: 55 },
     ];
 
-    localStorage.setItem(`cortix_demo_${shopId}`, JSON.stringify({ staff, clients, appointments, seeded: true }));
+    localStorage.setItem(`rukz_demo_${shopId}`, JSON.stringify({ staff, clients, appointments, seeded: true }));
   },
 
   getDemoData(shopId: string) {
     if (!isClient()) return null;
-    const data = localStorage.getItem(`cortix_demo_${shopId}`);
+    const data = localStorage.getItem(`rukz_demo_${shopId}`);
     if (data) return JSON.parse(data);
     // Return for seed-1 as well
-    const fallback = localStorage.getItem("cortix_demo_seed-1");
+    const fallback = localStorage.getItem("rukz_demo_seed-1");
     return fallback ? JSON.parse(fallback) : null;
   },
 };

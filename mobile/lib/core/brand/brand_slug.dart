@@ -13,7 +13,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///   2. o último slug usado neste aparelho, porque depois de instalado na
 ///      tela de início não há query string;
 ///   3. o dart-define BRAND_SLUG, para builds dedicados a uma barbearia.
-const _slugKey = 'cortix_brand_slug';
+const _slugKey = 'rukz_brand_slug';
+// Chave da marca antiga, lida como reserva: sem isso o app instalado perderia
+// a barbearia lembrada e abriria na marca padrao depois do rebrand.
+const _legacySlugKey = 'cortix_brand_slug';
 
 Future<String?> resolveBrandSlug() async {
   final fromUrl = Uri.base.queryParameters['shop']?.trim();

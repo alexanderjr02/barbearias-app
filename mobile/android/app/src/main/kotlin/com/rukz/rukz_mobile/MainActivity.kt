@@ -1,4 +1,4 @@
-package com.cortix.cortix_mobile
+package com.rukz.rukz_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

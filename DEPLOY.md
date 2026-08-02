@@ -8,7 +8,7 @@ login por cookie, o Google e o webhook do Mercado Pago não funcionam.
 
 ## Opção A — Render (recomendada: HTTPS grátis, mais simples)
 
-Você recebe uma URL `https://cortix-xxxx.onrender.com` na hora — perfeita pra
+Você recebe uma URL `https://rukz-xxxx.onrender.com` na hora — perfeita pra
 já usar e vender enquanto o domínio não chega.
 
 1. **Suba o repositório no GitHub** (se ainda não estiver).
@@ -33,7 +33,7 @@ ainda **não tem domínio**, comece pela Opção A.
 
 ```bash
 # no servidor, com Docker instalado:
-git clone <seu-repo> cortix && cd cortix
+git clone <seu-repo> rukz && cd rukz
 cp .env.example .env      # preencha os valores (tabela abaixo)
 docker compose up -d --build
 ```

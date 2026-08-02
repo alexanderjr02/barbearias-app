@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Shared visual language for the Cortix app: dark, glassy, with a soft
+/// Shared visual language for the rukz app: dark, glassy, with a soft
 /// glow around the brand accent. Every screen pulls from here instead of
 /// hand-rolling colors, so the "futuristic" look stays consistent.
-class CortixColors {
+class rukzColors {
   static const void_ = Color(0xFF060608);
   static const surface = Color(0xFF121216);
   static const surfaceAlt = Color(0xFF18181F);
@@ -13,7 +13,7 @@ class CortixColors {
 /// Background gradient used behind auth/onboarding surfaces — a slow drift
 /// of deep violet/blue behind the brand accent, evoking a "premium tech"
 /// feel rather than a flat single color.
-List<Color> cortixBackdropColors(Color accent) => [
+List<Color> rukzBackdropColors(Color accent) => [
       const Color(0xFF0B0713),
       Color.lerp(const Color(0xFF0B0713), accent, 0.12)!,
       const Color(0xFF06060A),

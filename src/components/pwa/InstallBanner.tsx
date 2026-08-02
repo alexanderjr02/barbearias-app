@@ -25,7 +25,7 @@ export function InstallBanner() {
       (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
     if (isStandalone) return;
-    if (localStorage.getItem("cortix-pwa-dismissed")) return;
+    if (localStorage.getItem("rukz-pwa-dismissed")) return;
 
     const ua = navigator.userAgent.toLowerCase();
     const isIOS = /iphone|ipad|ipod/.test(ua) && !(window as Window & { MSStream?: unknown }).MSStream;
@@ -63,7 +63,7 @@ export function InstallBanner() {
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem("cortix-pwa-dismissed", "1");
+    localStorage.setItem("rukz-pwa-dismissed", "1");
     setShow(false);
   };
 

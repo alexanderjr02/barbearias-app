@@ -1,4 +1,4 @@
-# cortix_mobile
+# rukz_mobile
 
 A new Flutter project.
 

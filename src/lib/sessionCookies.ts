@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ACCESS_COOKIE, REFRESH_COOKIE, ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from "./auth";
+import { ACCESS_COOKIE, REFRESH_COOKIE, LEGACY_ACCESS_COOKIE, LEGACY_REFRESH_COOKIE, ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from "./auth";
 
 export function setSessionCookies(response: NextResponse, accessToken: string, refreshToken: string, secure: boolean) {
   response.cookies.set(ACCESS_COOKIE, accessToken, {
@@ -40,4 +40,8 @@ export function setAccessCookie(response: NextResponse, accessToken: string, sec
 export function clearSessionCookies(response: NextResponse) {
   response.cookies.delete(ACCESS_COOKIE);
   response.cookies.delete(REFRESH_COOKIE);
+  // Some também o par da marca antiga — senão ele sobrevive ao logout e a
+  // leitura com reserva ressuscitaria a sessão na requisição seguinte.
+  response.cookies.delete(LEGACY_ACCESS_COOKIE);
+  response.cookies.delete(LEGACY_REFRESH_COOKIE);
 }

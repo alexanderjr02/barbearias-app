@@ -25,11 +25,11 @@ async function main() {
   const hashedPassword = await bcrypt.hash("demo123456", 10);
 
   const user = await prisma.user.upsert({
-    where: { email: "demo@cortix.app" },
+    where: { email: "demo@rukz.app" },
     update: {},
     create: {
       name: "João Silva",
-      email: "demo@cortix.app",
+      email: "demo@rukz.app",
       password: hashedPassword,
       role: "OWNER",
       phone: "(11) 99999-9999",
@@ -140,9 +140,9 @@ async function main() {
   // --- Extra demo accounts, one per plan tier, so the Starter/Pro/White Label
   // experiences (and their gating) can each be logged into and shown directly. ---
   const starterUser = await prisma.user.upsert({
-    where: { email: "demo.starter@cortix.app" },
+    where: { email: "demo.starter@rukz.app" },
     update: {},
-    create: { name: "Ana Ferreira", email: "demo.starter@cortix.app", password: hashedPassword, role: "OWNER", phone: "(21) 98888-1111" },
+    create: { name: "Ana Ferreira", email: "demo.starter@rukz.app", password: hashedPassword, role: "OWNER", phone: "(21) 98888-1111" },
   });
   const starterShop = await prisma.barbershop.upsert({
     where: { slug: "barbearia-ana" },
@@ -175,9 +175,9 @@ async function main() {
   }
 
   const enterpriseUser = await prisma.user.upsert({
-    where: { email: "demo.enterprise@cortix.app" },
+    where: { email: "demo.enterprise@rukz.app" },
     update: {},
-    create: { name: "Marcos Andrade", email: "demo.enterprise@cortix.app", password: hashedPassword, role: "OWNER", phone: "(31) 97777-2222" },
+    create: { name: "Marcos Andrade", email: "demo.enterprise@rukz.app", password: hashedPassword, role: "OWNER", phone: "(31) 97777-2222" },
   });
   const enterpriseShop = await prisma.barbershop.upsert({
     where: { slug: "rede-andrade" },
@@ -215,9 +215,9 @@ async function main() {
   // page's "Ver demonstração" button opens, so it must always look polished:
   // a full menu of services, several barbers and a real cover photo. ---
   const demoOwner = await prisma.user.upsert({
-    where: { email: "demo.publico@cortix.app" },
+    where: { email: "demo.publico@rukz.app" },
     update: {},
-    create: { name: "Rafael Demo", email: "demo.publico@cortix.app", password: hashedPassword, role: "OWNER", phone: "(11) 98888-0000" },
+    create: { name: "Rafael Demo", email: "demo.publico@rukz.app", password: hashedPassword, role: "OWNER", phone: "(11) 98888-0000" },
   });
   const demoShop = await prisma.barbershop.upsert({
     where: { slug: "demo" },
@@ -342,9 +342,9 @@ async function main() {
   }
 
   console.log("✅ Seed concluído com sucesso!");
-  console.log(`\n🔑 Login demo Pro (gestor):\n   E-mail: demo@cortix.app\n   Senha: demo123456`);
-  console.log(`\n🔑 Login demo Starter (gestor):\n   E-mail: demo.starter@cortix.app\n   Senha: demo123456`);
-  console.log(`\n🔑 Login demo White Label (gestor):\n   E-mail: demo.enterprise@cortix.app\n   Senha: demo123456`);
+  console.log(`\n🔑 Login demo Pro (gestor):\n   E-mail: demo@rukz.app\n   Senha: demo123456`);
+  console.log(`\n🔑 Login demo Starter (gestor):\n   E-mail: demo.starter@rukz.app\n   Senha: demo123456`);
+  console.log(`\n🔑 Login demo White Label (gestor):\n   E-mail: demo.enterprise@rukz.app\n   Senha: demo123456`);
   if (ownerGeneratedPassword) {
     console.log(`\n🔑 Login super admin (dono):\n   E-mail: alexanderjunior044@gmail.com\n   Senha: ${ownerGeneratedPassword}\n   (troque essa senha depois de entrar)`);
   } else {

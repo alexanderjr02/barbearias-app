@@ -80,7 +80,7 @@ interface RegisterResult {
 // working hours (closed Sunday) so appointment-booking tests have a
 // predictable, always-open window to book into.
 export async function registerBarbershop(label: string) {
-  const email = `${unique(label)}@cortix.test`;
+  const email = `${unique(label)}@rukz.test`;
   const slug = unique(label);
   const { status, body } = await postJson<RegisterResult>("/api/auth/register", {
     name: "Dono de Teste",

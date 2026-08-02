@@ -1,4 +1,4 @@
-# Flutter Web build for CORTIX — served as a static site (nginx) next to the
+# Flutter Web build for rukz — served as a static site (nginx) next to the
 # Next.js API in docker-compose. Not used for Android/iOS builds — those still
 # go through `flutter build apk`/`flutter build ios` on a real toolchain.
 FROM ghcr.io/cirruslabs/flutter:stable AS build

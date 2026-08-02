@@ -19,7 +19,7 @@ self.addEventListener('push', function (event) {
     data = { body: event.data ? event.data.text() : '' };
   }
 
-  const title = data.title || 'Cortix';
+  const title = data.title || 'rukz';
   const options = {
     body: data.body || '',
     // Ícone do balão. Um caminho relativo resolve contra o escopo do SW (a

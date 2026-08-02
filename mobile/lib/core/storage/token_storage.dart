@@ -23,8 +23,14 @@ class TokenStorage {
 
   final _secureStorage = const FlutterSecureStorage();
 
-  static const _accessKey = 'cortix_access_token';
-  static const _refreshKey = 'cortix_refresh_token';
+  static const _accessKey = 'rukz_access_token';
+  static const _refreshKey = 'rukz_refresh_token';
+
+  // Chaves da marca antiga. Lidas UMA vez na hidratação e regravadas nas novas,
+  // pra quem já estava logado continuar logado depois do rebrand — sem isso, a
+  // troca de nome de chave deslogaria todo mundo silenciosamente.
+  static const _legacyAccessKey = 'cortix_access_token';
+  static const _legacyRefreshKey = 'cortix_refresh_token';
 
   bool _hydrated = false;
   String? _cachedAccess;
@@ -42,9 +48,26 @@ class TokenStorage {
         final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 5));
         _cachedAccess = prefs.getString(_accessKey);
         _cachedRefresh = prefs.getString(_refreshKey);
+        // Migração da marca antiga: só entra quando a chave nova está vazia.
+        if (_cachedAccess == null && _cachedRefresh == null) {
+          _cachedAccess = prefs.getString(_legacyAccessKey);
+          _cachedRefresh = prefs.getString(_legacyRefreshKey);
+          if (_cachedAccess != null) await prefs.setString(_accessKey, _cachedAccess!);
+          if (_cachedRefresh != null) await prefs.setString(_refreshKey, _cachedRefresh!);
+          await prefs.remove(_legacyAccessKey);
+          await prefs.remove(_legacyRefreshKey);
+        }
       } else {
         _cachedAccess = await _secureStorage.read(key: _accessKey);
         _cachedRefresh = await _secureStorage.read(key: _refreshKey);
+        if (_cachedAccess == null && _cachedRefresh == null) {
+          _cachedAccess = await _secureStorage.read(key: _legacyAccessKey);
+          _cachedRefresh = await _secureStorage.read(key: _legacyRefreshKey);
+          if (_cachedAccess != null) await _secureStorage.write(key: _accessKey, value: _cachedAccess);
+          if (_cachedRefresh != null) await _secureStorage.write(key: _refreshKey, value: _cachedRefresh);
+          await _secureStorage.delete(key: _legacyAccessKey);
+          await _secureStorage.delete(key: _legacyRefreshKey);
+        }
       }
     } catch (_) {
       _cachedAccess = null;

@@ -112,7 +112,7 @@ export function ClientChatbot({ barbershopName = "Barbearia", primaryColor = "#D
   const [open, setOpen] = useState(false);
   const [storedOverrides] = useState<Partial<ChatbotConfig> | null>(() => {
     if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("cortix_chatbot_config");
+    const stored = localStorage.getItem("rukz_chatbot_config") ?? localStorage.getItem("cortix_chatbot_config");
     if (!stored) return null;
     try {
       return JSON.parse(stored) as Partial<ChatbotConfig>;

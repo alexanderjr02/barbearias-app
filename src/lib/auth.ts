@@ -2,11 +2,24 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies, headers } from "next/headers";
 import type { Role } from "./roles";
 
-// O nome do cookie fica com a marca antiga de propósito: ele não aparece
-// para ninguém, e trocar a chave invalidaria a sessão de toda pessoa que
-// estiver logada no dia do deploy.
-export const ACCESS_COOKIE = "cortix_access";
-export const REFRESH_COOKIE = "cortix_refresh";
+export const ACCESS_COOKIE = "rukz_access";
+export const REFRESH_COOKIE = "rukz_refresh";
+
+// Cookies da marca antiga. Trocar o nome, sozinho, invalidaria a sessão de
+// todo mundo que estivesse logado no dia do deploy — então a leitura aceita o
+// nome antigo como reserva, e a gravação seguinte já sai com o nome novo. Os
+// legados são apagados no logout (ver clearSessionCookies).
+export const LEGACY_ACCESS_COOKIE = "cortix_access";
+export const LEGACY_REFRESH_COOKIE = "cortix_refresh";
+
+/** Lê um cookie aceitando o nome novo e, como reserva, o antigo. */
+export function readCookieWithLegacy(
+  store: { get(name: string): { value: string } | undefined },
+  name: string,
+  legacyName: string,
+): string | undefined {
+  return store.get(name)?.value ?? store.get(legacyName)?.value;
+}
 
 export const ACCESS_TOKEN_TTL = 15 * 60; // seconds
 export const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60; // seconds
@@ -86,7 +99,7 @@ export async function verifyPendingTwoFactorToken(token: string): Promise<string
 // header (used by the Flutter app, which has no cookie jar of its own).
 export async function getSession(): Promise<SessionPayload | null> {
   const store = await cookies();
-  const cookieToken = store.get(ACCESS_COOKIE)?.value;
+  const cookieToken = readCookieWithLegacy(store, ACCESS_COOKIE, LEGACY_ACCESS_COOKIE);
   if (cookieToken) return verifyAccessToken(cookieToken);
 
   const headerList = await headers();

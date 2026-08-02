@@ -167,7 +167,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   Future<void> _loadChatbot() async {
     try {
       final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 5));
-      final stored = prefs.getString('cortix_chatbot_config');
+      final stored = prefs.getString('rukz_chatbot_config') ?? prefs.getString('cortix_chatbot_config');
       if (stored != null) {
         final parsed = jsonDecode(stored) as Map<String, dynamic>;
         _chatbot = {..._chatbot, ...parsed};
@@ -182,7 +182,7 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   Future<void> _saveChatbot() async {
     try {
       final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 5));
-      await prefs.setString('cortix_chatbot_config', jsonEncode(_chatbot));
+      await prefs.setString('rukz_chatbot_config', jsonEncode(_chatbot));
     } catch (_) {
       // ignore — config still applies for the rest of this session
     }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { signAccessToken, REFRESH_COOKIE } from "@/lib/auth";
+import { signAccessToken, REFRESH_COOKIE, LEGACY_REFRESH_COOKIE, readCookieWithLegacy } from "@/lib/auth";
 import { generateRefreshToken, hashToken } from "@/lib/refreshToken";
 import { isRole } from "@/lib/roles";
 import { setSessionCookies, clearSessionCookies } from "@/lib/sessionCookies";
@@ -10,7 +10,7 @@ import { resolveActiveBarbershopId } from "@/lib/units";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => null);
-    const incomingToken: string | undefined = body?.refreshToken ?? request.cookies.get(REFRESH_COOKIE)?.value;
+    const incomingToken: string | undefined = body?.refreshToken ?? readCookieWithLegacy(request.cookies, REFRESH_COOKIE, LEGACY_REFRESH_COOKIE);
 
     if (!incomingToken) {
       return NextResponse.json({ error: "Refresh token ausente" }, { status: 401 });
