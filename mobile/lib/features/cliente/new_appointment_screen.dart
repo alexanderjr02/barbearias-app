@@ -14,14 +14,29 @@ import 'booking_repository.dart';
 import 'client_repository.dart';
 
 
-// Opcoes de preferencia oferecidas no agendamento. O texto guardado e o proprio
+// Opcoes de preferencia oferecidas no agendamento. Produto e bebida vem do
+// que a barbearia cadastrou (o gestor sabe o que tem na prateleira); estas
+// listas so entram como padrao enquanto ele nao configurou nada. O texto guardado e o proprio
 // rotulo, entao o barbeiro le "Maquina 2" e nao um codigo.
 const _opcoesMaquina = ['Sem maquina', 'Maquina 0', 'Maquina 1', 'Maquina 2', 'Maquina 3', 'Maquina 4', 'So tesoura'];
-const _opcoesFinalizacao = ['Sem produto', 'Pomada matte', 'Pomada brilho', 'Cera', 'Gel', 'Oleo de barba'];
-const _opcoesBebida = ['Nada', 'Agua', 'Cafe', 'Refrigerante', 'Cerveja'];
+const _padraoFinalizacao = ['Sem produto', 'Pomada matte', 'Pomada brilho', 'Cera', 'Gel', 'Oleo de barba'];
+const _padraoBebida = ['Nada', 'Agua', 'Cafe', 'Refrigerante', 'Cerveja'];
 // Aqui o valor guardado e um codigo (o mesmo que a tela antiga usava), pra nao
 // invalidar o que ja esta salvo no servidor.
 const _opcoesConversa = [('conversar', 'Boa conversa'), ('tanto_faz', 'Tanto faz'), ('silencio', 'Prefiro silencio')];
+
+
+/// Le uma lista configurada pela barbearia ("um por linha"). Volta pro padrao
+/// quando o gestor ainda nao preencheu — melhor uma lista sensata do que
+/// nenhuma opcao.
+List<String> _listaDaBarbearia(String? bruto, List<String> padrao) {
+  final itens = (bruto ?? '')
+      .split(RegExp('[\n,;]'))
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+  return itens.isEmpty ? padrao : itens;
+}
 
 class NewAppointmentScreen extends StatefulWidget {
   const NewAppointmentScreen({super.key, this.referencePhoto});
@@ -313,9 +328,9 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
         // So repovoa a escolha quando o texto salvo bate com uma das opcoes;
         // preferencia antiga escrita a mao continua no servidor sem ser perdida.
         _prefMaquina = _opcoesMaquina.contains(p.machine) ? p.machine : null;
-        _prefFinalizacao = _opcoesFinalizacao.contains(p.products) ? p.products : null;
+        _prefFinalizacao = (p.products ?? '').trim().isEmpty ? null : p.products;
         _prefConversa = _opcoesConversa.any((o) => o.$1 == p.chat) ? p.chat : null;
-        _prefBebida = _opcoesBebida.contains(p.drink) ? p.drink : null;
+        _prefBebida = (p.drink ?? '').trim().isEmpty ? null : p.drink;
         _prefAlergia.text = p.allergies ?? '';
         _temAlergia = (p.allergies ?? '').trim().isNotEmpty;
         _prefsCarregadas = true;
@@ -705,11 +720,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                         ],
                       ],
                       const SizedBox(height: 18),
-                      Row(children: [
-                        Icon(Icons.auto_awesome_rounded, size: 15, color: accent),
-                        const SizedBox(width: 6),
-                        Text('Foto de referência (opcional)', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 13.5)),
-                      ]),
+                      Text('Foto de referência (opcional)', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w700, fontSize: 13.5)),
                       const SizedBox(height: 4),
                       Text('Mostre ao barbeiro o corte que você quer.', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
                       const SizedBox(height: 10),
@@ -776,7 +787,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                           _GrupoPreferencia(
                             icone: Icons.water_drop_rounded,
                             titulo: 'Finalização',
-                            opcoes: _opcoesFinalizacao,
+                            opcoes: _listaDaBarbearia(_detail?.finishProducts, _padraoFinalizacao),
                             selecionada: _prefFinalizacao,
                             onSelect: (v) => setState(() => _prefFinalizacao = v),
                             palette: palette,
@@ -796,7 +807,7 @@ class _NewAppointmentScreenState extends State<NewAppointmentScreen> {
                           _GrupoPreferencia(
                             icone: Icons.local_cafe_rounded,
                             titulo: 'Bebida',
-                            opcoes: _opcoesBebida,
+                            opcoes: _listaDaBarbearia(_detail?.drinks, _padraoBebida),
                             selecionada: _prefBebida,
                             onSelect: (v) => setState(() => _prefBebida = v),
                             palette: palette,

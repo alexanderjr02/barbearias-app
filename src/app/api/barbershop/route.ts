@@ -73,6 +73,8 @@ const PROFILE_FIELDS = [
   "faqText",
   "chatbotName",
   "chatbotWelcome",
+  "finishProducts",
+  "drinks",
 ] as const;
 
 // PATCH /api/barbershop — updates the caller's own barbershop profile/branding/hours,

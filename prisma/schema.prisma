@@ -158,6 +158,12 @@ model Barbershop {
   chatbotEnabled  Boolean  @default(true)
   chatbotName     String?
   chatbotWelcome  String?
+  // O que ESTA barbearia oferece, um por linha. Alimenta as preferências que o
+  // cliente escolhe ao agendar. Estava fixo no código do app — o cliente via
+  // "Cerveja" numa barbearia que não serve, e a pomada da casa não aparecia.
+  // Quem sabe o que tem na prateleira é o gestor.
+  finishProducts  String?
+  drinks          String?
   isActive        Boolean  @default(true)
   plan            String   @default("FREE")
   // Ate quando o plano vale. null = sem prazo (o normal de quem paga

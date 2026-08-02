@@ -459,6 +459,9 @@ class BarbershopProfile {
   // guardava a config do chatbot so no aparelho, e ela nunca chegava ao servidor.
   final String? chatbotName;
   final String? chatbotWelcome;
+  // Produtos de finalizacao e bebidas oferecidos, um por linha.
+  final String? finishProducts;
+  final String? drinks;
   final String? city;
   final String? description;
   final String? logo;
@@ -482,6 +485,8 @@ class BarbershopProfile {
     this.faqText,
     this.chatbotName,
     this.chatbotWelcome,
+    this.finishProducts,
+    this.drinks,
     required this.city,
     required this.description,
     required this.logo,
@@ -506,6 +511,8 @@ class BarbershopProfile {
         faqText: json['faqText'],
         chatbotName: json['chatbotName'],
         chatbotWelcome: json['chatbotWelcome'],
+        finishProducts: json['finishProducts'],
+        drinks: json['drinks'],
         city: json['city'],
         description: json['description'],
         logo: json['logo'],
@@ -1653,6 +1660,8 @@ class GestorRepository {
     String? faqText,
     String? chatbotName,
     String? chatbotWelcome,
+    String? finishProducts,
+    String? drinks,
     String? city,
     String? description,
     String? logo,
@@ -1669,6 +1678,8 @@ class GestorRepository {
       if (faqText != null) 'faqText': faqText,
       if (chatbotName != null) 'chatbotName': chatbotName,
       if (chatbotWelcome != null) 'chatbotWelcome': chatbotWelcome,
+      if (finishProducts != null) 'finishProducts': finishProducts,
+      if (drinks != null) 'drinks': drinks,
       'city': city,
       'description': description,
     });

@@ -77,6 +77,9 @@ class BarbershopDetail {
   final String primaryColor;
   final List<ServiceOption> services;
   final List<StaffOption> staff;
+  // O que a barbearia oferece (um por linha), definido pelo gestor.
+  final String? finishProducts;
+  final String? drinks;
   final List<WorkingHourEntry> workingHours;
 
   BarbershopDetail({
@@ -88,6 +91,8 @@ class BarbershopDetail {
     required this.primaryColor,
     required this.services,
     required this.staff,
+    this.finishProducts,
+    this.drinks,
     required this.workingHours,
   });
 
@@ -101,6 +106,8 @@ class BarbershopDetail {
         services: (json['services'] as List).map((e) => ServiceOption.fromJson(e)).toList(),
         staff: (json['staff'] as List).map((e) => StaffOption.fromJson(e)).toList(),
         workingHours: (json['workingHours'] as List).map((e) => WorkingHourEntry.fromJson(e)).toList(),
+        finishProducts: json['finishProducts'] as String?,
+        drinks: json['drinks'] as String?,
       );
 }
 

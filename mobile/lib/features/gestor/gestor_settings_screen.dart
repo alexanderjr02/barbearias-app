@@ -62,6 +62,10 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
   final _emailCtrl = TextEditingController();
   final _instaCtrl = TextEditingController();
   final _pixCtrl = TextEditingController();
+  // O que a barbearia oferece — vira as opcoes que o cliente escolhe ao
+  // agendar. Antes essas listas eram fixas no app.
+  final _produtosCtrl = TextEditingController();
+  final _bebidasCtrl = TextEditingController();
   final _faqCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
@@ -107,6 +111,8 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
     _emailCtrl.dispose();
     _instaCtrl.dispose();
     _pixCtrl.dispose();
+    _produtosCtrl.dispose();
+    _bebidasCtrl.dispose();
     _faqCtrl.dispose();
     _cityCtrl.dispose();
     _descCtrl.dispose();
@@ -123,6 +129,8 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
       _emailCtrl.text = p.email ?? '';
       _instaCtrl.text = p.instagram ?? '';
       _pixCtrl.text = p.pixKey ?? '';
+      _produtosCtrl.text = p.finishProducts ?? '';
+      _bebidasCtrl.text = p.drinks ?? '';
       _faqCtrl.text = p.faqText ?? '';
       _chatbotName = p.chatbotName ?? '';
       _chatbotWelcome = p.chatbotWelcome ?? '';
@@ -180,6 +188,8 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         email: _emailCtrl.text.trim(),
         instagram: _instaCtrl.text.trim(),
         pixKey: _pixCtrl.text.trim(),
+        finishProducts: _produtosCtrl.text.trim(),
+        drinks: _bebidasCtrl.text.trim(),
         faqText: _faqCtrl.text.trim(),
         city: _cityCtrl.text.trim(),
         description: _descCtrl.text.trim(),
@@ -365,6 +375,14 @@ class _GestorSettingsScreenState extends State<GestorSettingsScreen> with Single
         RukzField(controller: _instaCtrl, hint: '@suabarbearia'),
         const FieldLabel('Chave PIX (gorjetas)'),
         RukzField(controller: _pixCtrl, hint: 'CPF, e-mail, telefone ou chave aleatória'),
+        const FieldLabel('Produtos de finalização (um por linha)'),
+        RukzField(controller: _produtosCtrl, maxLines: 4, hint: 'Sem produto, Pomada matte, Cera, Gel'),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 4),
+          child: Text('O cliente escolhe entre estes ao agendar. Em branco, usamos uma lista padrão.', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+        ),
+        const FieldLabel('Bebidas oferecidas (uma por linha)'),
+        RukzField(controller: _bebidasCtrl, maxLines: 3, hint: 'Água, Café, Refrigerante'),
         const FieldLabel('Cidade'),
         RukzField(controller: _cityCtrl),
         const FieldLabel('Descrição'),
