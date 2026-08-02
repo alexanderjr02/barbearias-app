@@ -93,7 +93,27 @@ class AppPalette {
 /// pins [ColorScheme.primary] to the exact seed instead of letting
 /// [ColorScheme.fromSeed] tonal-map it. Material 3's dark-mode tone curve
 /// desaturates warm ambers into a washed-out pink, which read as a bug.
-ThemeData buildRukzTheme({required Color seed, required Brightness brightness}) {
+/// A tipografia que o gestor escolheu em "Aparencia do app".
+///
+/// Lista fechada de propósito: fonte é decisão de identidade, e campo livre
+/// aqui deixaria o app com uma letra que não existe (ou ilegível). Qualquer
+/// valor desconhecido cai na fonte da marca.
+TextTheme _tipografia(String? font, TextTheme base) {
+  switch (font) {
+    case 'inter':
+      return GoogleFonts.interTextTheme(base);
+    case 'poppins':
+      return GoogleFonts.poppinsTextTheme(base);
+    case 'playfair':
+      return GoogleFonts.playfairDisplayTextTheme(base);
+    case 'oswald':
+      return GoogleFonts.oswaldTextTheme(base);
+    default:
+      return GoogleFonts.outfitTextTheme(base);
+  }
+}
+
+ThemeData buildRukzTheme({required Color seed, required Brightness brightness, String? font}) {
   final isDark = brightness == Brightness.dark;
   final palette = isDark ? AppPalette.dark : AppPalette.light;
   final base = ColorScheme.fromSeed(seedColor: seed, brightness: brightness).copyWith(
@@ -110,9 +130,10 @@ ThemeData buildRukzTheme({required Color seed, required Brightness brightness}) 
     appBarTheme: AppBarTheme(backgroundColor: palette.bg, foregroundColor: palette.textPrimary, elevation: 0),
     cardColor: palette.surface,
     dividerColor: palette.border,
-    // Outfit, a fonte oficial da marca rukz, sobre toda a tipografia do app —
-    // o mesmo traço geométrico da logo, do cartaz ao relatório.
-    textTheme: GoogleFonts.outfitTextTheme((isDark ? ThemeData.dark() : ThemeData.light()).textTheme).apply(
+    // Outfit e a fonte oficial da marca rukz e continua sendo o padrao. O
+    // gestor pode trocar em "Aparencia do app" quando a barbearia tem uma
+    // identidade propria.
+    textTheme: _tipografia(font, (isDark ? ThemeData.dark() : ThemeData.light()).textTheme).apply(
           bodyColor: palette.textPrimary,
           displayColor: palette.textPrimary,
         ),

@@ -23,6 +23,10 @@ class SessionProvider extends ChangeNotifier {
   /// callers should fall back to the default brand color.
   Color? brandColor;
 
+  /// A tipografia escolhida pelo gestor em "Aparencia do app". Nula usa a
+  /// fonte da marca (Outfit).
+  String? brandFont;
+
   /// The barbershop's cover image (absolute URL), shown as the home banner.
   /// Only set when the brand uses an image background.
   String? brandCover;
@@ -119,6 +123,7 @@ class SessionProvider extends ChangeNotifier {
     await _repository.logout();
     session = null;
     brandColor = null;
+    brandFont = null;
     status = SessionStatus.unauthenticated;
     notifyListeners();
   }
@@ -149,6 +154,7 @@ class SessionProvider extends ChangeNotifier {
       final hex = data?['primaryColor'] as String?;
       final parsed = hex == null ? null : _parseHexColor(hex);
       if (parsed != null) brandColor = parsed;
+      brandFont = data?['appFont'] as String?;
       final bgType = data?['bgType'] as String?;
       final cover = data?['coverImage'] as String?;
       brandCover = (bgType == 'image' && cover != null && cover.isNotEmpty) ? _absUrl(cover) : null;
@@ -178,10 +184,9 @@ class SessionProvider extends ChangeNotifier {
       }
       final hex = data?['primaryColor'] as String?;
       final parsed = hex == null ? null : _parseHexColor(hex);
-      if (parsed != null) {
-        brandColor = parsed;
-        notifyListeners();
-      }
+      brandFont = data?['appFont'] as String?;
+      if (parsed != null) brandColor = parsed;
+      notifyListeners();
     } catch (_) {
       // keep the default brand color on failure
     }

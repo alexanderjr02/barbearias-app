@@ -127,7 +127,8 @@ model Barbershop {
   themePreset     String?  // "midnight" | "graphite" | "neon" | "classic"
   themeMode       String?  // "dark" | "light"
   appTagline      String?  // subtitle shown on the app login
-  bgType          String?  // login background: "gradient" | "image" | "video"
+  bgType          String?  // login background: "solid" | "gradient" | "image" | "video"
+  appFont         String?  // tipografia do app: "outfit" | "inter" | "poppins" | "playfair" | "oswald"
   bgVideo         String?  // background video URL (mp4)
   bgDim           Int?     // background overlay darkness 0-80
   bgBlur          Int?     // background blur in px 0-16

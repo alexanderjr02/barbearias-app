@@ -53,6 +53,13 @@ const STEPS: Step[] = [
     sql: [`ALTER TABLE "Barbershop" ADD COLUMN "drinks" TEXT`],
   },
   {
+    // Tipografia escolhida pelo gestor em "Aparência do app". Nula significa a
+    // fonte da marca (Outfit), que e o que todo mundo ja tem hoje.
+    name: "Barbershop.appFont",
+    applied: () => columnExists("Barbershop", "appFont"),
+    sql: [`ALTER TABLE "Barbershop" ADD COLUMN "appFont" TEXT`],
+  },
+  {
     // Formas de cobrança aceitas por plano de assinatura. Sem a coluna, a
     // listagem de planos quebra com 500 (o cliente Prisma já pede o campo).
     name: "SubscriptionPlan.paymentMethods",

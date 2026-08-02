@@ -46,8 +46,8 @@ class RukzApp extends StatelessWidget {
             // ao toque no celular.
             scrollBehavior: const _AppScrollBehavior(),
             themeMode: themeController.mode,
-            theme: buildRukzTheme(seed: seed, brightness: Brightness.light),
-            darkTheme: buildRukzTheme(seed: seed, brightness: Brightness.dark),
+            theme: buildRukzTheme(seed: seed, brightness: Brightness.light, font: sessionProvider.brandFont),
+            darkTheme: buildRukzTheme(seed: seed, brightness: Brightness.dark, font: sessionProvider.brandFont),
             locale: const Locale('pt', 'BR'),
             supportedLocales: const [Locale('pt', 'BR')],
             localizationsDelegates: const [

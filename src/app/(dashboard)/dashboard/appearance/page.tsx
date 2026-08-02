@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Palette, Upload, Sparkles, Check, Wand2, Loader2, ImageIcon, Bell, Scissors, Film, Blend, ZoomIn, Activity, Ban, Plus, Mail, Lock, RotateCcw, AlertTriangle, Bot, Home, Gift, Award, SlidersHorizontal, User } from "lucide-react";
+import { Palette, Upload, Check, Loader2, Bell, Scissors, Bot, Plus, Mail, Lock, RotateCcw, AlertTriangle, Home, Gift, Award, SlidersHorizontal, User, Trash2 } from "lucide-react";
 import { apiGet, apiPatch, apiUpload } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -13,6 +13,7 @@ interface Shop {
   themePreset?: string | null;
   themeMode?: string | null;
   appTagline?: string | null;
+  appFont?: string | null;
   logo?: string | null;
   coverImage?: string | null;
   bgType?: string | null;
@@ -30,10 +31,29 @@ const PRESETS = [
   { id: "classic", name: "Clássico", mode: "light", accent: "#B08D57" },
 ];
 const SWATCHES = ["#F59E0B", "#EF4444", "#EC4899", "#8B5CF6", "#3B82F6", "#06B6D4", "#22D3AA", "#84CC16", "#F97316", "#14B8A6"];
+
+// A prévia usa a fonte de verdade, carregada do Google Fonts, senão escolher
+// tipografia seria escolher no escuro. O app aplica a mesma família.
+const FONTS = [
+  { id: "outfit", name: "Outfit", css: "'Outfit', sans-serif", note: "A fonte da marca rukz" },
+  { id: "inter", name: "Inter", css: "'Inter', sans-serif", note: "Neutra, some e deixa o conteúdo falar" },
+  { id: "poppins", name: "Poppins", css: "'Poppins', sans-serif", note: "Redonda e amigável" },
+  { id: "playfair", name: "Playfair Display", css: "'Playfair Display', serif", note: "Serifada, ar de barbearia clássica" },
+  { id: "oswald", name: "Oswald", css: "'Oswald', sans-serif", note: "Condensada, pega firme nos títulos" },
+] as const;
+type FontId = (typeof FONTS)[number]["id"];
+
 const EFFECTS = [
-  { id: "none", label: "Nenhum", icon: Ban },
-  { id: "zoom", label: "Zoom lento", icon: ZoomIn },
-  { id: "pulse", label: "Brilho pulsante", icon: Activity },
+  { id: "none", label: "Nenhuma" },
+  { id: "zoom", label: "Zoom lento" },
+  { id: "pulse", label: "Brilho pulsante" },
+] as const;
+
+const BGS = [
+  { id: "solid", label: "Cor sólida", note: "Só o fundo do tema, sem brilho nenhum" },
+  { id: "gradient", label: "Brilho da marca", note: "Um halo suave na sua cor de destaque" },
+  { id: "image", label: "Foto", note: "Uma foto da sua barbearia atrás do login" },
+  { id: "video", label: "Vídeo", note: "Um clipe curto em loop" },
 ] as const;
 
 function hexToRgb(hex: string) {
@@ -102,6 +122,17 @@ function extractPalette(url: string): Promise<string[]> {
   });
 }
 
+/** Bloco de edição: título, explicação curta e o controle. */
+function Bloco({ titulo, descricao, children }: { titulo: string; descricao?: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+      <h3 className="text-sm font-bold text-white">{titulo}</h3>
+      {descricao && <p className="mt-1 text-xs leading-relaxed text-zinc-500">{descricao}</p>}
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
 export default function AppearancePage() {
   const queryClient = useQueryClient();
   const { data: shop } = useQuery({ queryKey: ["barbershop"], queryFn: () => apiGet<Shop>("/api/barbershop") });
@@ -111,37 +142,49 @@ export default function AppearancePage() {
   const [accent, setAccent] = useState("#F59E0B");
   const [mode, setMode] = useState<"dark" | "light">("dark");
   const [preset, setPreset] = useState("midnight");
+  const [font, setFont] = useState<FontId>("outfit");
   const [logo, setLogo] = useState<string | null>(null);
   const [cover, setCover] = useState<string | null>(null);
   const [suggested, setSuggested] = useState<string[]>([]);
-  const [tab, setTab] = useState<"login" | "home">("login");
+  const [tab, setTab] = useState<"home" | "login">("home");
   const [busy, setBusy] = useState<"logo" | "cover" | null>(null);
-  const [bgType, setBgType] = useState<"gradient" | "image" | "video">("gradient");
+  const [bgType, setBgType] = useState<"solid" | "gradient" | "image" | "video">("gradient");
   const [bgVideo, setBgVideo] = useState("");
   const [bgDim, setBgDim] = useState(35);
   const [bgBlur, setBgBlur] = useState(0);
   const [bgGradient, setBgGradient] = useState(true);
   const [bgEffect, setBgEffect] = useState<"none" | "zoom" | "pulse">("none");
+  // Guarda o que veio do servidor pra saber se há algo por salvar. Sem isto o
+  // gestor sai da tela sem perceber que mexeu e não salvou.
+  const [salvo, setSalvo] = useState("");
 
   const logoInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
 
+  const atual = JSON.stringify({ name, tagline, accent, mode, preset, font, logo, cover, bgType, bgVideo, bgDim, bgBlur, bgGradient, bgEffect });
+  const sujo = salvo !== "" && atual !== salvo;
+
   const [seeded, setSeeded] = useState(false);
   if (shop && !seeded) {
     setSeeded(true);
-    if (shop.name) setName(shop.name);
-    if (shop.appTagline) setTagline(shop.appTagline);
-    if (shop.primaryColor) setAccent(shop.primaryColor);
-    if (shop.themeMode === "light" || shop.themeMode === "dark") setMode(shop.themeMode);
-    if (shop.themePreset) setPreset(shop.themePreset);
-    if (shop.logo) setLogo(shop.logo);
-    if (shop.coverImage) setCover(shop.coverImage);
-    if (shop.bgType === "gradient" || shop.bgType === "image" || shop.bgType === "video") setBgType(shop.bgType);
-    if (shop.bgVideo) setBgVideo(shop.bgVideo);
-    if (typeof shop.bgDim === "number") setBgDim(shop.bgDim);
-    if (typeof shop.bgBlur === "number") setBgBlur(shop.bgBlur);
-    if (typeof shop.bgGradient === "boolean") setBgGradient(shop.bgGradient);
-    if (shop.bgEffect === "zoom" || shop.bgEffect === "pulse" || shop.bgEffect === "none") setBgEffect(shop.bgEffect);
+    const n = shop.name ?? "Minha Barbearia";
+    const tg = shop.appTagline ?? "Sua barbearia, no estilo certo.";
+    const ac = shop.primaryColor ?? "#F59E0B";
+    const md = shop.themeMode === "light" ? "light" : "dark";
+    const pr = shop.themePreset ?? "midnight";
+    const ft = (FONTS.find((f) => f.id === shop.appFont)?.id ?? "outfit") as FontId;
+    const lg = shop.logo ?? null;
+    const cv = shop.coverImage ?? null;
+    const bt = (["solid", "gradient", "image", "video"].includes(shop.bgType ?? "") ? shop.bgType : "gradient") as typeof bgType;
+    const bv = shop.bgVideo ?? "";
+    const bd = typeof shop.bgDim === "number" ? shop.bgDim : 35;
+    const bb = typeof shop.bgBlur === "number" ? shop.bgBlur : 0;
+    const bg = typeof shop.bgGradient === "boolean" ? shop.bgGradient : true;
+    const be = (shop.bgEffect === "zoom" || shop.bgEffect === "pulse" ? shop.bgEffect : "none") as typeof bgEffect;
+    setName(n); setTagline(tg); setAccent(ac); setMode(md); setPreset(pr); setFont(ft);
+    setLogo(lg); setCover(cv); setBgType(bt); setBgVideo(bv); setBgDim(bd); setBgBlur(bb);
+    setBgGradient(bg); setBgEffect(be);
+    setSalvo(JSON.stringify({ name: n, tagline: tg, accent: ac, mode: md, preset: pr, font: ft, logo: lg, cover: cv, bgType: bt, bgVideo: bv, bgDim: bd, bgBlur: bb, bgGradient: bg, bgEffect: be }));
   }
 
   async function upload(kind: "logo" | "cover", file: File) {
@@ -154,7 +197,7 @@ export default function AppearancePage() {
         if (pal.length) {
           setSuggested(pal);
           setAccent(pal[0]);
-          toast.success("Cores extraídas da sua logo!");
+          toast.success("Cores extraídas da sua logo");
         }
       } else {
         setCover(url);
@@ -170,7 +213,7 @@ export default function AppearancePage() {
   const save = useMutation({
     mutationFn: () =>
       apiPatch("/api/barbershop", {
-        name, appTagline: tagline, primaryColor: accent, themeMode: mode, themePreset: preset,
+        name, appTagline: tagline, primaryColor: accent, themeMode: mode, themePreset: preset, appFont: font,
         bgType, bgVideo, bgDim, bgBlur, bgGradient, bgEffect,
         // String vazia (não ausência) para o servidor conseguir LIMPAR: quando
         // o gestor remove a logo/capa no reset, precisa apagar de verdade, não
@@ -180,7 +223,8 @@ export default function AppearancePage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["barbershop"] });
-      toast.success("Aparência salva! O app já reflete sua marca.");
+      setSalvo(atual);
+      toast.success("Aparência salva. O app já reflete sua marca.");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -196,6 +240,7 @@ export default function AppearancePage() {
   const loginField = hasMedia ? "rgba(255,255,255,0.12)" : p.field;
   const rangeStyle = { accentColor: accent } as React.CSSProperties;
   const mediaAnim = bgEffect === "zoom" ? "anim-zoom" : "scale-110";
+  const fontCss = FONTS.find((f) => f.id === font)?.css ?? FONTS[0].css;
   // Aviso de legibilidade: a cor da marca também vira TEXTO (link "Esqueceu a
   // senha?", "Criar conta", número de pontos). Se ela some no fundo, avisa.
   const lowContrast = contrastRatio(accent, p.bg) < 3;
@@ -204,6 +249,7 @@ export default function AppearancePage() {
     setAccent("#D4AF37");
     setMode("dark");
     setPreset("midnight");
+    setFont("outfit");
     setBgType("gradient");
     setBgVideo("");
     setBgDim(35);
@@ -221,7 +267,8 @@ export default function AppearancePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;700;900&family=Poppins:wght@400;700;900&family=Playfair+Display:wght@400;700;900&family=Oswald:wght@400;700&display=swap" />
       <style>{`
         @keyframes rukz-kb { 0%{transform:scale(1.06)} 100%{transform:scale(1.22)} }
         @keyframes rukz-pg { 0%,100%{opacity:.4} 50%{opacity:.95} }
@@ -229,300 +276,362 @@ export default function AppearancePage() {
         .anim-pulse { animation: rukz-pg 3.5s ease-in-out infinite; }
       `}</style>
 
-      <PageHeader icon={Palette} title="Aparência do app" subtitle="Personalize com a sua marca, sem deixar feio nunca" />
+      <PageHeader title="Aparência do app" subtitle="Personalize com a sua marca, sem deixar feio nunca" />
 
-      <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
-        {/* Controls */}
-        <div className="space-y-6">
-          {/* Presets */}
-          <section>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Estilo base</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid items-start gap-8 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-4">
+          <Bloco titulo="Estilo base" descricao="O ponto de partida. Ajuste o resto depois de escolher.">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {PRESETS.map((ps) => {
                 const active = preset === ps.id;
                 return (
-                  <button key={ps.id} onClick={() => { setPreset(ps.id); setMode(ps.mode as "dark" | "light"); setAccent(ps.accent); }}
-                    className={`relative rounded-2xl p-3 border text-left transition-all ${active ? "border-white/40 ring-2 ring-white/20" : "border-zinc-800 hover:border-zinc-700"}`}
-                    style={{ background: ps.mode === "light" ? "#F5F3EF" : "#111016" }}>
-                    <div className="flex gap-1 mb-6">
-                      <span className="w-4 h-4 rounded-full" style={{ background: ps.accent }} />
-                      <span className="w-4 h-4 rounded-full" style={{ background: ps.mode === "light" ? "#fff" : "#2A2730" }} />
+                  <button
+                    key={ps.id}
+                    onClick={() => { setPreset(ps.id); setMode(ps.mode as "dark" | "light"); setAccent(ps.accent); }}
+                    className={`relative rounded-xl border p-3 text-left transition-colors ${active ? "border-amber-500" : "border-zinc-800 hover:border-zinc-700"}`}
+                    style={{ background: ps.mode === "light" ? "#F5F3EF" : "#111016" }}
+                  >
+                    <div className="mb-6 flex gap-1">
+                      <span className="h-4 w-4 rounded-full" style={{ background: ps.accent }} />
+                      <span className="h-4 w-4 rounded-full" style={{ background: ps.mode === "light" ? "#fff" : "#2A2730" }} />
                     </div>
                     <span className="text-xs font-semibold" style={{ color: ps.mode === "light" ? "#1A1A1A" : "#fff" }}>{ps.name}</span>
-                    {active && <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white flex items-center justify-center"><Check className="w-3 h-3 text-black" /></span>}
+                    {active && <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500"><Check className="h-3 w-3 text-black" /></span>}
                   </button>
                 );
               })}
             </div>
-          </section>
+          </Bloco>
 
-          {/* Logo + auto palette */}
-          <section>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1.5"><Wand2 className="w-3.5 h-3.5" /> Logo (extrai as cores automaticamente)</h3>
+          <Bloco titulo="Logo" descricao="Sem logo, o app usa o símbolo do rukz na sua cor. Ao enviar, sugerimos as cores tiradas dela.">
             <div className="flex items-center gap-4">
-              <button onClick={() => logoInput.current?.click()} className="w-20 h-20 rounded-2xl border border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-900 flex items-center justify-center overflow-hidden bg-cover bg-center transition-colors" style={logo ? { backgroundImage: `url(${logo})` } : undefined}>
-                {busy === "logo" ? <Loader2 className="w-5 h-5 text-zinc-500 animate-spin" /> : !logo && <Upload className="w-5 h-5 text-zinc-600" />}
+              <button
+                onClick={() => logoInput.current?.click()}
+                className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 bg-cover bg-center transition-colors hover:border-zinc-500"
+                style={logo ? { backgroundImage: `url(${logo})` } : undefined}
+              >
+                {busy === "logo" ? <Loader2 className="h-5 w-5 animate-spin text-zinc-500" /> : !logo && <Upload className="h-5 w-5 text-zinc-600" />}
               </button>
-              <div className="flex-1">
-                <p className="text-sm text-zinc-300">Envie a logo da barbearia</p>
-                <p className="text-xs text-zinc-500 mt-0.5">PNG/JPG. A cor de destaque é sugerida a partir dela. Sem logo, o app usa o símbolo do rukz na sua cor.</p>
-                <div className="flex items-center gap-3 mt-2">
-                  {suggested.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-zinc-500">da logo:</span>
-                      {suggested.map((c) => (
-                        <button key={c} onClick={() => setAccent(c)} className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${accent.toLowerCase() === c.toLowerCase() ? "border-white" : "border-transparent"}`} style={{ background: c }} title={c} />
-                      ))}
-                    </div>
-                  )}
-                  {logo && (
-                    <button onClick={() => { setLogo(null); setSuggested([]); }} className="text-[11px] font-medium text-zinc-500 hover:text-red-400 transition-colors">
-                      Remover logo
-                    </button>
-                  )}
-                </div>
+              <div className="min-w-0 flex-1">
+                <button onClick={() => logoInput.current?.click()} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white">
+                  {logo ? "Trocar logo" : "Enviar logo"}
+                </button>
+                {logo && (
+                  <button onClick={() => { setLogo(null); setSuggested([]); }} className="ml-2 inline-flex items-center gap-1 rounded-lg border border-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-500 transition-colors hover:border-red-500/40 hover:text-red-400">
+                    <Trash2 className="h-3 w-3" /> Remover
+                  </button>
+                )}
+                {suggested.length > 0 && (
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <span className="text-[11px] text-zinc-600">Da sua logo:</span>
+                    {suggested.map((c) => (
+                      <button key={c} onClick={() => setAccent(c)} className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${accent.toLowerCase() === c.toLowerCase() ? "border-white" : "border-transparent"}`} style={{ background: c }} title={c} />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <input ref={logoInput} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload("logo", e.target.files[0])} />
-          </section>
+          </Bloco>
 
-          {/* Accent */}
-          <section>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3">Cor de destaque</h3>
-            <div className="flex items-center gap-2 flex-wrap">
+          <Bloco titulo="Cor de destaque" descricao="Ela pinta os botões, os destaques e os números que importam.">
+            <div className="flex flex-wrap items-center gap-2">
               {SWATCHES.map((c) => (
-                <button key={c} onClick={() => setAccent(c)} className={`w-9 h-9 rounded-full border-2 transition-transform hover:scale-110 ${accent.toLowerCase() === c.toLowerCase() ? "border-white scale-110" : "border-transparent"}`} style={{ background: c }} />
+                <button key={c} onClick={() => setAccent(c)} className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-110 ${accent.toLowerCase() === c.toLowerCase() ? "scale-110 border-white" : "border-transparent"}`} style={{ background: c }} />
               ))}
-              <label className="w-9 h-9 rounded-full border border-zinc-700 flex items-center justify-center cursor-pointer relative overflow-hidden" style={{ background: accent }}>
-                <input type="color" value={accent} onChange={(e) => setAccent(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
-                <Palette className="w-4 h-4" style={{ color: contrastText(accent) }} />
+              <label className="relative flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-zinc-700" style={{ background: accent }}>
+                <input type="color" value={accent} onChange={(e) => setAccent(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" />
+                <Palette className="h-4 w-4" style={{ color: contrastText(accent) }} />
               </label>
-              <span className="text-xs text-zinc-500 ml-1 font-mono">{accent.toUpperCase()}</span>
+              <span className="ml-1 font-mono text-xs text-zinc-500">{accent.toUpperCase()}</span>
             </div>
             {lowContrast && (
               <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.07] p-2.5">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                 <p className="text-[11px] leading-relaxed text-amber-200/90">
-                  Essa cor tem pouco contraste com o fundo {mode === "light" ? "claro" : "escuro"}, links e textos na cor da marca podem ficar difíceis de ler. Um tom mais {mode === "light" ? "escuro" : "claro"} lê melhor.
+                  Essa cor tem pouco contraste com o fundo {mode === "light" ? "claro" : "escuro"}. Links e textos na cor da marca podem ficar difíceis de ler. Um tom mais {mode === "light" ? "escuro" : "claro"} lê melhor.
                 </p>
               </div>
             )}
-          </section>
+          </Bloco>
 
-          {/* Background & effects */}
-          <section>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1.5"><Blend className="w-3.5 h-3.5" /> Fundo do login &amp; efeitos</h3>
-            <div className="flex gap-2 mb-4">
-              {([["gradient", "Gradiente", Sparkles], ["image", "Imagem", ImageIcon], ["video", "Vídeo", Film]] as const).map(([id, label, Icon]) => (
-                <button key={id} onClick={() => setBgType(id)} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-medium border transition-all ${bgType === id ? "border-white/40 bg-white/5 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-700"}`}>
-                  <Icon className="w-4 h-4" /> {label}
-                </button>
-              ))}
+          {/* Cada opção é escrita na própria fonte: escolher tipografia lendo
+              o nome dela em outra letra não diz nada. */}
+          <Bloco titulo="Tipografia" descricao="A letra do app inteiro. Cada opção aparece escrita nela mesma.">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {FONTS.map((f) => {
+                const active = font === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => setFont(f.id)}
+                    className={`rounded-xl border p-3.5 text-left transition-colors ${active ? "border-amber-500 bg-amber-500/[0.06]" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-lg font-bold text-white" style={{ fontFamily: f.css }}>{name || "Barbearia"}</span>
+                      {active && <Check className="h-4 w-4 shrink-0 text-amber-400" />}
+                    </div>
+                    <p className="mt-1 text-[11px] text-zinc-500">
+                      <span className="font-semibold text-zinc-400">{f.name}</span>. {f.note}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </Bloco>
+
+          <Bloco titulo="Fundo do login" descricao="O que aparece atrás da tela de entrada do seu app.">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {BGS.map((b) => {
+                const active = bgType === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => setBgType(b.id)}
+                    className={`rounded-xl border p-3.5 text-left transition-colors ${active ? "border-amber-500 bg-amber-500/[0.06]" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-white">{b.label}</span>
+                      {active && <Check className="h-4 w-4 shrink-0 text-amber-400" />}
+                    </div>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">{b.note}</p>
+                  </button>
+                );
+              })}
             </div>
 
-            {bgType === "gradient" && <p className="text-xs text-zinc-500 mb-4">Um gradiente elegante gerado a partir da sua cor de destaque.</p>}
             {bgType === "image" && (
-              <button onClick={() => coverInput.current?.click()} className="w-full h-24 rounded-2xl border border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-900 flex items-center justify-center overflow-hidden bg-cover bg-center transition-colors mb-4" style={cover ? { backgroundImage: `url(${cover})` } : undefined}>
-                {busy === "cover" ? <Loader2 className="w-5 h-5 text-zinc-500 animate-spin" /> : !cover && <span className="text-xs text-zinc-500 flex items-center gap-1.5"><Upload className="w-4 h-4" /> Enviar imagem de fundo</span>}
+              <button
+                onClick={() => coverInput.current?.click()}
+                className="mt-4 flex h-24 w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 bg-cover bg-center transition-colors hover:border-zinc-500"
+                style={cover ? { backgroundImage: `url(${cover})` } : undefined}
+              >
+                {busy === "cover" ? <Loader2 className="h-5 w-5 animate-spin text-zinc-500" /> : !cover && <span className="flex items-center gap-1.5 text-xs text-zinc-500"><Upload className="h-4 w-4" /> Enviar foto de fundo</span>}
               </button>
             )}
             {bgType === "video" && (
-              <div className="mb-4">
-                <input value={bgVideo} onChange={(e) => setBgVideo(e.target.value)} placeholder="Cole o link de um vídeo .mp4" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-zinc-600" />
-                <p className="text-xs text-zinc-500 mt-1.5">Um vídeo curto em loop (ex: barbearia em movimento). Dica: mantenha leve.</p>
+              <div className="mt-4">
+                <input value={bgVideo} onChange={(e) => setBgVideo(e.target.value)} placeholder="Cole o link de um vídeo .mp4" className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-white focus:border-zinc-600 focus:outline-none" />
+                <p className="mt-1.5 text-xs text-zinc-500">Um clipe curto em loop, por exemplo a barbearia em movimento. Mantenha o arquivo leve.</p>
               </div>
             )}
 
-            {bgType !== "gradient" && (
-              <div className="space-y-3">
+            {hasMedia && (
+              <div className="mt-4 space-y-3 border-t border-zinc-800 pt-4">
                 <div>
-                  <div className="flex justify-between text-xs text-zinc-400 mb-1"><span>Escurecer</span><span>{bgDim}%</span></div>
+                  <div className="mb-1 flex justify-between text-xs text-zinc-400"><span>Escurecer</span><span>{bgDim}%</span></div>
                   <input type="range" min="0" max="80" value={bgDim} onChange={(e) => setBgDim(Number(e.target.value))} style={rangeStyle} className="w-full" />
                 </div>
                 <div>
-                  <div className="flex justify-between text-xs text-zinc-400 mb-1"><span>Desfoque</span><span>{bgBlur}px</span></div>
+                  <div className="mb-1 flex justify-between text-xs text-zinc-400"><span>Desfoque</span><span>{bgBlur}px</span></div>
                   <input type="range" min="0" max="16" value={bgBlur} onChange={(e) => setBgBlur(Number(e.target.value))} style={rangeStyle} className="w-full" />
                 </div>
-                <button onClick={() => setBgGradient(!bgGradient)} className="flex items-center justify-between w-full pt-1">
-                  <span className="text-sm text-zinc-300">Sombra gradiente <span className="text-zinc-500 text-xs">(legibilidade)</span></span>
-                  <span className={`w-11 h-6 rounded-full p-0.5 transition-colors ${bgGradient ? "bg-emerald-500/80" : "bg-zinc-700"}`}>
-                    <span className={`block w-5 h-5 rounded-full bg-white transition-transform ${bgGradient ? "translate-x-5" : ""}`} />
+                <button onClick={() => setBgGradient(!bgGradient)} className="flex w-full items-center justify-between pt-1">
+                  <span className="text-sm text-zinc-300">Sombra no rodapé <span className="text-xs text-zinc-500">(deixa o texto legível)</span></span>
+                  <span className={`h-6 w-11 rounded-full p-0.5 transition-colors ${bgGradient ? "bg-emerald-500/80" : "bg-zinc-700"}`}>
+                    <span className={`block h-5 w-5 rounded-full bg-white transition-transform ${bgGradient ? "translate-x-5" : ""}`} />
                   </span>
                 </button>
+                <div>
+                  <p className="mb-2 text-xs text-zinc-400">Animação</p>
+                  <div className="flex gap-2">
+                    {EFFECTS.map((ef) => (
+                      <button
+                        key={ef.id}
+                        onClick={() => setBgEffect(ef.id)}
+                        className={`flex-1 rounded-xl border py-2 text-[11px] font-medium transition-colors ${bgEffect === ef.id ? "border-amber-500 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-700"}`}
+                      >
+                        {ef.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
+            <input ref={coverInput} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload("cover", e.target.files[0])} />
+          </Bloco>
 
-            {/* Effect / animation */}
-            <div className="mt-4">
-              <p className="text-xs text-zinc-400 mb-2">Animação</p>
-              <div className="flex gap-2">
-                {EFFECTS.map((ef) => {
-                  const Icon = ef.icon;
-                  const active = bgEffect === ef.id;
-                  return (
-                    <button key={ef.id} onClick={() => setBgEffect(ef.id)} className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border text-[11px] font-medium transition-all ${active ? "border-white/40 bg-white/5 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-700"}`}>
-                      <Icon className="w-4 h-4" /> {ef.label}
-                    </button>
-                  );
-                })}
+          <Bloco titulo="Textos" descricao="O nome que aparece no app e a frase abaixo dele no login.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-zinc-400">Nome</label>
+                <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-white focus:border-zinc-600 focus:outline-none" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-zinc-400">Frase do login</label>
+                <input value={tagline} onChange={(e) => setTagline(e.target.value)} className="mt-1.5 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-white focus:border-zinc-600 focus:outline-none" />
               </div>
             </div>
-            <input ref={coverInput} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload("cover", e.target.files[0])} />
-          </section>
+          </Bloco>
 
-          {/* Texts */}
-          <section className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Nome</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} className="w-full mt-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-zinc-600" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Frase do login</label>
-              <input value={tagline} onChange={(e) => setTagline(e.target.value)} className="w-full mt-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-zinc-600" />
-            </div>
-          </section>
-
-          <div className="flex items-center gap-3">
-            <button onClick={() => save.mutate()} disabled={save.isPending} className="flex items-center gap-2 px-6 py-3 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-colors disabled:opacity-50">
-              {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              Salvar aparência
-            </button>
-            <button onClick={resetDefaults} className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-zinc-400 rounded-xl border border-zinc-800 hover:border-zinc-700 hover:text-white transition-colors">
-              <RotateCcw className="w-4 h-4" /> Restaurar padrão
-            </button>
-          </div>
+          <button onClick={resetDefaults} className="flex items-center gap-2 rounded-xl border border-zinc-800 px-4 py-3 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-700 hover:text-white">
+            <RotateCcw className="h-4 w-4" /> Restaurar padrão rukz
+          </button>
         </div>
 
-        {/* Live phone preview */}
+        {/* Prévia ao vivo */}
         <div className="lg:sticky lg:top-6">
-          <div className="flex items-center justify-center gap-1 mb-4 bg-zinc-900 border border-zinc-800 rounded-full p-1 w-fit mx-auto">
-            {(["login", "home"] as const).map((t) => (
-              <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${tab === t ? "bg-white text-black" : "text-zinc-400"}`}>
-                {t === "login" ? "Login" : "Início"}
+          <div className="mx-auto mb-4 flex w-fit items-center justify-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 p-1">
+            {(["home", "login"] as const).map((t) => (
+              <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${tab === t ? "bg-white text-black" : "text-zinc-400"}`}>
+                {t === "home" ? "Início" : "Login"}
               </button>
             ))}
           </div>
 
-          <div className="mx-auto w-[280px] h-[580px] rounded-[2.6rem] border-[6px] border-zinc-800 bg-black shadow-2xl shadow-black/50 overflow-hidden relative">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-zinc-800 rounded-b-2xl z-20" />
+          <div className="relative mx-auto h-[580px] w-[280px] overflow-hidden rounded-[2.6rem] border-[6px] border-zinc-800 bg-black shadow-2xl shadow-black/50" style={{ fontFamily: fontCss }}>
+            <div className="absolute left-1/2 top-0 z-20 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-zinc-800" />
 
             {tab === "login" ? (
-              <div className="w-full h-full relative overflow-hidden" style={{ background: p.bg, color: loginText }}>
+              <div className="relative h-full w-full overflow-hidden" style={{ background: p.bg, color: loginText }}>
                 <div className="absolute inset-0">
                   {bgType === "video" && bgVideo ? (
-                    <video key={bgVideo} src={bgVideo} autoPlay muted loop playsInline className={`absolute inset-0 w-full h-full object-cover ${mediaAnim}`} style={{ filter: `blur(${bgBlur}px)` }} />
+                    <video key={bgVideo} src={bgVideo} autoPlay muted loop playsInline className={`absolute inset-0 h-full w-full object-cover ${mediaAnim}`} style={{ filter: `blur(${bgBlur}px)` }} />
                   ) : bgType === "image" && cover ? (
                     <div className={`absolute inset-0 bg-cover bg-center ${mediaAnim}`} style={{ backgroundImage: `url(${cover})`, filter: `blur(${bgBlur}px)` }} />
-                  ) : (
+                  ) : bgType === "gradient" ? (
                     <div className="absolute inset-0" style={{ background: `radial-gradient(120% 80% at 50% 0%, ${accent}44, transparent 60%), ${p.bg}` }} />
+                  ) : (
+                    <div className="absolute inset-0" style={{ background: p.bg }} />
                   )}
                   {hasMedia && <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${bgDim / 100})` }} />}
-                  {bgGradient && <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${p.bg} 2%, transparent 45%)` }} />}
-                  <div className={`absolute -top-10 left-1/2 -translate-x-1/2 w-52 h-52 rounded-full ${bgEffect === "pulse" ? "anim-pulse" : ""}`} style={{ background: `radial-gradient(circle, ${accent}55, transparent 70%)` }} />
-                  <div className="absolute inset-0" style={{ boxShadow: "inset 0 -60px 60px rgba(0,0,0,0.35)" }} />
+                  {hasMedia && bgGradient && <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${p.bg} 2%, transparent 45%)` }} />}
+                  {bgType === "gradient" && (
+                    <div className={`absolute -top-10 left-1/2 h-52 w-52 -translate-x-1/2 rounded-full ${bgEffect === "pulse" ? "anim-pulse" : ""}`} style={{ background: `radial-gradient(circle, ${accent}55, transparent 70%)` }} />
+                  )}
                 </div>
 
-                <div className="relative z-10 h-full flex flex-col items-center justify-center px-6">
-                  <div className="w-14 h-14 rounded-2xl bg-cover bg-center flex items-center justify-center text-base font-black" style={{ background: logo ? undefined : accent, backgroundImage: logo ? `url(${logo})` : undefined, color: onAccent, boxShadow: `0 10px 30px ${accent}66` }}>
+                <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cover bg-center text-base font-black" style={{ background: logo ? undefined : accent, backgroundImage: logo ? `url(${logo})` : undefined, color: onAccent }}>
                     {!logo && brandInitials}
                   </div>
-                  <p className="mt-4 text-lg font-black leading-tight text-center">Bem-vindo de volta</p>
-                  <p className="text-[11px] mt-1 text-center" style={{ color: loginMuted }}>{tagline}</p>
-                  <div className="w-full mt-5 space-y-2">
-                    <div className="h-8 rounded-xl flex items-center justify-center gap-2 text-[11px] font-medium" style={{ background: "#fff", color: "#111" }}>
+                  <p className="mt-4 text-center text-lg font-black leading-tight">Bem-vindo de volta</p>
+                  <p className="mt-1 text-center text-[11px]" style={{ color: loginMuted }}>{tagline}</p>
+                  <div className="mt-5 w-full space-y-2">
+                    <div className="flex h-8 items-center justify-center gap-2 rounded-xl text-[11px] font-medium" style={{ background: "#fff", color: "#111" }}>
                       <span className="text-[12px] font-bold" style={{ color: "#4285F4" }}>G</span> Continuar com Google
                     </div>
-                    <div className="h-8 rounded-xl flex items-center justify-center text-[11px] font-medium" style={{ background: hasMedia ? "rgba(255,255,255,0.12)" : p.surface, color: loginText, border: `1px solid ${hasMedia ? "rgba(255,255,255,0.15)" : p.border}` }}>
+                    <div className="flex h-8 items-center justify-center rounded-xl text-[11px] font-medium" style={{ background: hasMedia ? "rgba(255,255,255,0.12)" : p.surface, color: loginText, border: `1px solid ${hasMedia ? "rgba(255,255,255,0.15)" : p.border}` }}>
                       Continuar com Apple
                     </div>
                     <div className="flex items-center gap-2 py-0.5">
-                      <span className="flex-1 h-px" style={{ background: hasMedia ? "rgba(255,255,255,0.2)" : p.border }} />
+                      <span className="h-px flex-1" style={{ background: hasMedia ? "rgba(255,255,255,0.2)" : p.border }} />
                       <span className="text-[10px]" style={{ color: loginMuted }}>ou</span>
-                      <span className="flex-1 h-px" style={{ background: hasMedia ? "rgba(255,255,255,0.2)" : p.border }} />
+                      <span className="h-px flex-1" style={{ background: hasMedia ? "rgba(255,255,255,0.2)" : p.border }} />
                     </div>
-                    <div className="h-8 rounded-xl flex items-center gap-2 px-3 text-[11px]" style={{ background: loginField, color: loginMuted }}><Mail className="w-3 h-3" /> E-mail</div>
-                    <div className="h-8 rounded-xl flex items-center gap-2 px-3 text-[11px]" style={{ background: loginField, color: loginMuted }}><Lock className="w-3 h-3" /> Senha</div>
+                    <div className="flex h-8 items-center gap-2 rounded-xl px-3 text-[11px]" style={{ background: loginField, color: loginMuted }}><Mail className="h-3 w-3" /> E-mail</div>
+                    <div className="flex h-8 items-center gap-2 rounded-xl px-3 text-[11px]" style={{ background: loginField, color: loginMuted }}><Lock className="h-3 w-3" /> Senha</div>
                     <div className="text-right"><span className="text-[10px] font-medium" style={{ color: hasMedia ? "#fff" : accent }}>Esqueceu a senha?</span></div>
-                    <div className="h-9 rounded-xl flex items-center justify-center text-xs font-bold" style={{ background: accent, color: onAccent, boxShadow: `0 8px 22px ${accent}55` }}>Entrar</div>
+                    <div className="flex h-9 items-center justify-center rounded-xl text-xs font-bold" style={{ background: accent, color: onAccent }}>Entrar</div>
                   </div>
-                  <p className="text-[10px] mt-3" style={{ color: loginMuted }}>Novo por aqui? <span style={{ color: hasMedia ? "#fff" : accent, fontWeight: 700 }}>Criar conta</span></p>
+                  <p className="mt-3 text-[10px]" style={{ color: loginMuted }}>Novo por aqui? <span style={{ color: hasMedia ? "#fff" : accent, fontWeight: 700 }}>Criar conta</span></p>
                 </div>
               </div>
             ) : (
-              /* Início, fiel ao app do cliente (cliente_home_screen.dart): um
-                 banner de capa com a saudação por cima, depois os cards. A
-                 capa só aparece com fundo "Imagem" (é assim no app real:
-                 brandCover exige bgType image). */
-              <div className="w-full h-full flex flex-col relative" style={{ background: p.bg, color: p.text }}>
-                {/* Banner de capa + saudação */}
-                <div className="relative h-[132px] shrink-0">
+              /* Início, na mesma ordem do app do cliente
+                 (cliente_home_screen.dart): capa com a saudação, o lembrete de
+                 corte, o próximo agendamento, o cartão de pontos e a lista de
+                 próximos. A capa só aparece com fundo "Foto", como no app. */
+              <div className="relative flex h-full w-full flex-col" style={{ background: p.bg, color: p.text }}>
+                <div className="relative h-[110px] shrink-0">
                   {bgType === "image" && cover ? (
                     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${cover})` }} />
                   ) : (
-                    <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${accent}2e, ${p.bg})` }} />
+                    <div className="absolute inset-0" style={{ background: p.bg }} />
                   )}
-                  {/* Escurece o pé do banner pra saudação ficar legível, igual ao app */}
                   <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${p.bg}, transparent 70%)` }} />
-                  <div className="relative z-10 h-full flex items-end px-4 pb-3 pt-9">
-                    <div className="flex-1 min-w-0">
+                  <div className="relative z-10 flex h-full items-end px-4 pb-3 pt-9">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[11px]" style={{ color: p.muted }}>Boa tarde,</p>
-                      <p className="text-xl font-black leading-tight truncate">Lucas</p>
+                      <p className="truncate text-xl font-black leading-tight">Lucas</p>
                     </div>
-                    <Bell className="w-4 h-4 mb-1 mr-2" style={{ color: p.text }} />
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: p.field, color: p.muted }}>L</div>
+                    <Bell className="mb-1 mr-2 h-4 w-4" style={{ color: p.text }} />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold" style={{ background: p.field, color: p.muted }}>L</div>
                   </div>
                 </div>
 
-                <div className="px-4 -mt-1 flex-1 overflow-hidden">
-                  {/* Próximo agendamento, sem gradiente, cor da marca cheia */}
-                  <div className="rounded-2xl p-3.5" style={{ background: accent }}>
+                <div className="flex-1 overflow-hidden px-4">
+                  {/* Hora do corte, o lembrete que o app monta do histórico */}
+                  <div className="flex items-center gap-2.5 rounded-2xl p-2.5" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${accent}33` }}>
+                      <Scissors className="h-4 w-4" style={{ color: accent }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold leading-tight">Hora do corte?</p>
+                      <p className="text-[10px] leading-tight" style={{ color: p.muted }}>Você costuma cortar a cada 3 semanas, já faz 24 dias.</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5 rounded-2xl p-3" style={{ background: accent }}>
                     <p className="text-[9px] font-black tracking-wide" style={{ color: onAccent, opacity: 0.8 }}>PRÓXIMO · EM 2H</p>
-                    <p className="text-sm font-black mt-0.5" style={{ color: onAccent }}>Corte + Barba</p>
+                    <p className="mt-0.5 text-sm font-black" style={{ color: onAccent }}>Corte + Barba</p>
                     <p className="text-[10px]" style={{ color: onAccent, opacity: 0.85 }}>com Rafael · Hoje 15:30</p>
-                    <div className="flex gap-2 mt-2.5">
-                      <span className="flex-1 text-center text-[10px] font-semibold py-1.5 rounded-lg" style={{ background: onAccent === "#000000" ? "#00000018" : "#ffffff22", color: onAccent }}>Cancelar</span>
-                      <span className="flex-1 text-center text-[10px] font-semibold py-1.5 rounded-lg" style={{ background: onAccent === "#000000" ? "#00000030" : "#ffffff33", color: onAccent }}>Remarcar</span>
+                    <div className="mt-2.5 flex gap-2">
+                      <span className="flex-1 rounded-lg py-1.5 text-center text-[10px] font-semibold" style={{ background: onAccent === "#000000" ? "#00000018" : "#ffffff22", color: onAccent }}>Cancelar</span>
+                      <span className="flex-1 rounded-lg py-1.5 text-center text-[10px] font-semibold" style={{ background: onAccent === "#000000" ? "#00000030" : "#ffffff33", color: onAccent }}>Remarcar</span>
                     </div>
                   </div>
 
-                  {/* Fidelidade */}
-                  <p className="mt-4 text-xs font-semibold" style={{ color: p.muted }}>Minha fidelidade</p>
-                  <div className="mt-2 rounded-2xl p-3.5 flex items-center justify-between" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                    <div>
-                      <p className="text-[10px]" style={{ color: p.muted }}>Meus pontos · Ouro</p>
-                      <p className="text-lg font-black leading-tight" style={{ color: accent }}>240</p>
+                  {/* Cartão de pontos: o número domina e a barra mostra quanto
+                      falta pra próxima faixa, igual ao app. */}
+                  <p className="mt-3 text-xs font-semibold" style={{ color: p.muted }}>Minha fidelidade</p>
+                  <div className="mt-2 rounded-2xl p-3" style={{ background: `${accent}21`, border: `1px solid ${accent}47` }}>
+                    <div className="flex items-center justify-between">
+                      <span className="truncate text-[11px] font-semibold" style={{ color: p.muted }}>{name}</span>
+                      <span className="rounded-full px-2 py-0.5 text-[9px] font-black" style={{ background: accent, color: onAccent }}>OURO</span>
                     </div>
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: `${accent}22` }}>
-                      <Scissors className="w-4 h-4" style={{ color: accent }} />
+                    <div className="mt-2 flex items-baseline gap-1.5">
+                      <span className="text-3xl font-black leading-none" style={{ color: accent }}>240</span>
+                      <span className="text-[10px]" style={{ color: p.muted }}>pontos</span>
                     </div>
+                    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full" style={{ background: `${accent}2e` }}>
+                      <div className="h-full rounded-full" style={{ width: "62%", background: accent }} />
+                    </div>
+                    <p className="mt-1.5 text-[10px]" style={{ color: p.muted }}>faltam 150 pts para Diamante</p>
                   </div>
                 </div>
 
-                {/* Dois FABs, como no app real: o assistente à esquerda e o
-                    Agendar à direita. */}
-                <div className="absolute bottom-[74px] left-4 h-11 w-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: accent, color: onAccent }}>
-                  <Bot className="w-5 h-5" />
+                {/* O assistente à esquerda e o Agendar à direita, na mesma linha */}
+                <div className="absolute bottom-[74px] left-4 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: accent, color: onAccent }}>
+                  <Bot className="h-5 w-5" />
                 </div>
-                <div className="absolute bottom-[74px] right-4 h-11 px-4 rounded-full flex items-center gap-1.5 text-sm font-bold shadow-lg" style={{ background: accent, color: onAccent }}>
-                  <Plus className="w-4 h-4" /> Agendar
+                <div className="absolute bottom-[74px] right-4 flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-bold" style={{ background: accent, color: onAccent }}>
+                  <Plus className="h-4 w-4" /> Agendar
                 </div>
-                {/* Barra flutuante com 6 itens, igual ao app. */}
                 <div className="absolute inset-x-3 bottom-3">
-                  <div className="rounded-2xl flex items-center justify-around px-3 py-2.5 shadow-lg" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                    <div className="flex items-center gap-1 rounded-lg px-2 py-1" style={{ background: `${accent}1f` }}><Home className="w-[18px] h-[18px]" style={{ color: accent }} /></div>
-                    <Scissors className="w-[18px] h-[18px]" style={{ color: p.muted }} />
-                    <Gift className="w-[18px] h-[18px]" style={{ color: p.muted }} />
-                    <Award className="w-[18px] h-[18px]" style={{ color: p.muted }} />
-                    <SlidersHorizontal className="w-[18px] h-[18px]" style={{ color: p.muted }} />
-                    <User className="w-[18px] h-[18px]" style={{ color: p.muted }} />
+                  <div className="flex items-center justify-around rounded-2xl px-3 py-2.5" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div className="flex items-center gap-1 rounded-lg px-2 py-1" style={{ background: `${accent}1f` }}><Home className="h-[18px] w-[18px]" style={{ color: accent }} /></div>
+                    <Scissors className="h-[18px] w-[18px]" style={{ color: p.muted }} />
+                    <Gift className="h-[18px] w-[18px]" style={{ color: p.muted }} />
+                    <Award className="h-[18px] w-[18px]" style={{ color: p.muted }} />
+                    <SlidersHorizontal className="h-[18px] w-[18px]" style={{ color: p.muted }} />
+                    <User className="h-[18px] w-[18px]" style={{ color: p.muted }} />
                   </div>
                 </div>
               </div>
             )}
           </div>
-          <p className="text-center text-xs text-zinc-600 mt-4">Prévia em tempo real, igual ao app do cliente</p>
+          <p className="mt-4 text-center text-xs text-zinc-600">Prévia ao vivo, na mesma ordem do app do cliente</p>
         </div>
       </div>
+
+      {/* Barra de salvar: aparece quando há mudança pendente, então o gestor
+          nunca sai da tela achando que salvou. */}
+      {sujo && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800 bg-zinc-950/95 backdrop-blur lg:left-64">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-3.5">
+            <p className="text-sm text-zinc-400">Você tem alterações não salvas.</p>
+            <button
+              onClick={() => save.mutate()}
+              disabled={save.isPending}
+              className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-sm font-bold text-zinc-950 transition-colors hover:bg-amber-400 disabled:opacity-50"
+            >
+              {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              Salvar aparência
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

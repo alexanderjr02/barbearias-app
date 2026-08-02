@@ -67,6 +67,7 @@ const PROFILE_FIELDS = [
   "bgType",
   "bgVideo",
   "bgEffect",
+  "appFont",
   "instagram",
   "whatsapp",
   "pixKey",
@@ -113,7 +114,10 @@ export async function PATCH(request: NextRequest) {
     const c = body.secondaryColor.trim();
     if (!(/^#[0-9a-fA-F]{3}$/.test(c) || /^#[0-9a-fA-F]{6}$/.test(c))) delete data.secondaryColor;
   }
-  if ("bgType" in body && !["gradient", "image", "video"].includes(body.bgType)) delete data.bgType;
+  if ("bgType" in body && !["solid", "gradient", "image", "video"].includes(body.bgType)) delete data.bgType;
+  // Lista fechada: a fonte vira nome de familia no app, texto livre aqui
+  // deixaria o app sem tipografia nenhuma.
+  if ("appFont" in body && !["outfit", "inter", "poppins", "playfair", "oswald"].includes(body.appFont)) delete data.appFont;
   if ("bgEffect" in body && !["none", "zoom", "pulse"].includes(body.bgEffect)) delete data.bgEffect;
   if ("themeMode" in body && !["light", "dark"].includes(body.themeMode)) delete data.themeMode;
   // Nome nunca pode ficar vazio (o app mostraria uma barra em branco); teto
