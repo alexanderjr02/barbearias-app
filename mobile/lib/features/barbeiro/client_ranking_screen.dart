@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'barber_repository.dart';
+import '../../core/utils/moeda.dart';
 
 Color _colorFromHex(String hex, [Color fallback = const Color(0xFFFFC300)]) {
   final cleaned = hex.replaceAll('#', '');
@@ -344,7 +345,7 @@ class _RankRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(entry.visits == 0 ? 'Sem visitas' : '${entry.visits} visitas', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 12.5)),
-              if (entry.visits > 0) Text('R\$ ${entry.totalSpent.toStringAsFixed(2)}', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+              if (entry.visits > 0) Text('${reais(entry.totalSpent)}', style: TextStyle(color: palette.textFaint, fontSize: 11)),
             ],
           ),
         ],

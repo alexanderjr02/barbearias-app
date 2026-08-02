@@ -11,6 +11,7 @@ import '../gestor/brand_controller.dart';
 import 'barber_repository.dart';
 import 'client_ranking_screen.dart';
 import 'finalize_appointment_screen.dart';
+import '../../core/utils/moeda.dart';
 
 const _upcomingStatuses = {'SCHEDULED', 'CONFIRMED'};
 
@@ -179,7 +180,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
                 Text(history.clientName, style: TextStyle(color: palette.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
                 Text(
-                  '${history.totalVisits} ${history.totalVisits == 1 ? 'visita concluída' : 'visitas concluídas'} · R\$ ${history.totalSpent.toStringAsFixed(2)} gastos',
+                  '${history.totalVisits} ${history.totalVisits == 1 ? 'visita concluída' : 'visitas concluídas'} · ${reais(history.totalSpent)} gastos',
                   style: TextStyle(color: accent, fontSize: 13, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 18),
@@ -205,7 +206,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('R\$ ${v.totalPrice.toStringAsFixed(2)}', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text('${reais(v.totalPrice)}', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
                             Text(v.status, style: TextStyle(color: _statusColor(v.status), fontSize: 10, fontWeight: FontWeight.w600)),
                           ],
                         ),
@@ -322,7 +323,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       if (stats != null) ...[
@@ -338,7 +339,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('Sua comissão este mês', style: TextStyle(color: onAccent.withValues(alpha: 0.75), fontWeight: FontWeight.w600, fontSize: 13)),
-                                    Text('R\$ ${stats.commission.toStringAsFixed(2)}', style: TextStyle(color: onAccent, fontWeight: FontWeight.w900, fontSize: 22)),
+                                    Text('${reais(stats.commission)}', style: TextStyle(color: onAccent, fontWeight: FontWeight.w900, fontSize: 22)),
                                   ],
                                 ),
                                 Container(
@@ -596,7 +597,7 @@ class _AgendaCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text('${apt.serviceName} · ${apt.startTime}', style: TextStyle(color: palette.textSecondary, fontSize: 13)),
-                      Text('R\$ ${apt.totalPrice.toStringAsFixed(2)}', style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+                      Text('${reais(apt.totalPrice)}', style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
                       if (canAct) ...[
                         const SizedBox(height: 10),
                         Row(

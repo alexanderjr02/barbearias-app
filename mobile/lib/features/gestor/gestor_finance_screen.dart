@@ -6,6 +6,7 @@ import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import 'gestor_repository.dart';
 import 'widgets/finance_cards.dart';
+import '../../core/utils/moeda.dart';
 
 // Atalhos do lançamento. Digitar categoria à mão toda vez, além de lento, gera
 // "Aluguel", "aluguel" e "ALUGUEL" como três categorias diferentes no relatório
@@ -69,7 +70,7 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
         backgroundColor: palette.surface,
         title: Text('Excluir lançamento?', style: TextStyle(color: palette.textPrimary, fontSize: 16)),
         content: Text(
-          '"${t.description}" ($sign R\$ ${t.amount.toStringAsFixed(2)}) será removido do financeiro. Isso não pode ser desfeito.',
+          '"${t.description}" ($sign ${reais(t.amount)}) será removido do financeiro. Isso não pode ser desfeito.',
           style: TextStyle(color: palette.textSecondary, fontSize: 13.5),
         ),
         actions: [
@@ -223,7 +224,7 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                           icon: Icons.arrow_upward_rounded,
                           iconColor: Colors.green,
                           label: 'Receitas',
-                          value: 'R\$ ${f.income.toStringAsFixed(2)}',
+                          value: '${reais(f.income)}',
                           palette: palette,
                         ),
                       ),
@@ -233,7 +234,7 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                           icon: Icons.arrow_downward_rounded,
                           iconColor: Colors.redAccent,
                           label: 'Despesas',
-                          value: 'R\$ ${f.expenses.toStringAsFixed(2)}',
+                          value: '${reais(f.expenses)}',
                           palette: palette,
                         ),
                       ),
@@ -258,7 +259,7 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Lucro líquido', style: TextStyle(color: palette.textSecondary, fontSize: 12)),
-                            Text('R\$ ${f.profit.toStringAsFixed(2)}', style: TextStyle(color: f.profit >= 0 ? accent : Colors.redAccent, fontSize: 22, fontWeight: FontWeight.w900)),
+                            Text('${reais(f.profit)}', style: TextStyle(color: f.profit >= 0 ? accent : Colors.redAccent, fontSize: 22, fontWeight: FontWeight.w900)),
                           ],
                         ),
                         Container(
@@ -274,7 +275,7 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    'Receita: R\$ ${f.serviceRevenue.toStringAsFixed(2)} de serviços · R\$ ${f.manualIncome.toStringAsFixed(2)} manual',
+                    'Receita: ${reais(f.serviceRevenue)} de serviços · ${reais(f.manualIncome)} manual',
                     style: TextStyle(color: palette.textFaint, fontSize: 11.5),
                   ),
                 ),
@@ -384,7 +385,7 @@ class _GestorFinanceScreenState extends State<GestorFinanceScreen> {
                             ),
                           ),
                           Text(
-                            '${t.type == 'INCOME' ? '+' : '-'}R\$ ${t.amount.toStringAsFixed(2)}',
+                            '${t.type == 'INCOME' ? '+' : '-'}${reais(t.amount)}',
                             style: TextStyle(color: t.type == 'INCOME' ? Colors.green : Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12.5),
                           ),
                         ],

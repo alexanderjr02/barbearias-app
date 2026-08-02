@@ -11,6 +11,7 @@ import 'barber_repository.dart';
 import 'barbeiro_new_appointment_screen.dart';
 import 'barbeiro_schedule_screen.dart';
 import 'finalize_appointment_screen.dart';
+import '../../core/utils/moeda.dart';
 
 const _statusLabels = {
   'SCHEDULED': 'Agendado',
@@ -214,7 +215,7 @@ class _BarbeiroAgendaScreenState extends State<BarbeiroAgendaScreen> {
             _DetailRow(label: 'Serviço', value: apt.serviceName, palette: palette),
             _DetailRow(label: 'Horário', value: '${apt.startTime} – ${apt.endTime}', palette: palette),
             _DetailRow(label: 'Status', value: _statusLabels[apt.status] ?? apt.status, palette: palette, valueColor: appointmentStatusColor(apt.status, palette)),
-            _DetailRow(label: 'Valor', value: 'R\$ ${apt.totalPrice.toStringAsFixed(2)}', palette: palette, valueColor: accent),
+            _DetailRow(label: 'Valor', value: '${reais(apt.totalPrice)}', palette: palette, valueColor: accent),
             // ---- Antes / Depois ----
             if ((apt.referencePhoto != null && apt.referencePhoto!.isNotEmpty) || (apt.resultPhoto != null && apt.resultPhoto!.isNotEmpty)) ...[
               const SizedBox(height: 16),

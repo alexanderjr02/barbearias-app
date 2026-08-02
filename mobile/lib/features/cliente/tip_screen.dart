@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import 'client_repository.dart';
+import '../../core/utils/moeda.dart';
 
 /// Gorjeta digital via PIX — the client picks an amount, copies the shop's PIX
 /// key to pay directly, and the tip is logged so the barber sees it in Ganhos.
@@ -141,7 +142,7 @@ class _TipScreenState extends State<TipScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text('Faça o PIX de R\$ ${_amount.toStringAsFixed(2)} pela chave acima e confirme abaixo.', style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.4)),
+                Text('Faça o PIX de ${reais(_amount)} pela chave acima e confirme abaixo.', style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.4)),
               ] else
                 Container(
                   padding: const EdgeInsets.all(14),
@@ -154,7 +155,7 @@ class _TipScreenState extends State<TipScreen> {
                 color: accent,
                 child: _sending
                     ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: onAccent))
-                    : Text('Confirmar gorjeta de R\$ ${_amount.toStringAsFixed(2)}', style: TextStyle(color: onAccent, fontWeight: FontWeight.bold, fontSize: 15)),
+                    : Text('Confirmar gorjeta de ${reais(_amount)}', style: TextStyle(color: onAccent, fontWeight: FontWeight.bold, fontSize: 15)),
               ),
             ],
           );
@@ -216,7 +217,7 @@ class _ThankYou extends StatelessWidget {
             const SizedBox(height: 18),
             Text('Obrigado!', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 22)),
             const SizedBox(height: 8),
-            Text('Sua gorjeta de R\$ ${amount.toStringAsFixed(2)} pra $barberName foi registrada.', textAlign: TextAlign.center, style: TextStyle(color: palette.textFaint, fontSize: 14, height: 1.5)),
+            Text('Sua gorjeta de ${reais(amount)} pra $barberName foi registrada.', textAlign: TextAlign.center, style: TextStyle(color: palette.textFaint, fontSize: 14, height: 1.5)),
             const SizedBox(height: 24),
             TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text('Voltar', style: TextStyle(color: accent, fontWeight: FontWeight.w700))),
           ],

@@ -5,6 +5,7 @@ import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/photo_picker_tile.dart';
 import 'gestor_repository.dart';
+import '../../core/utils/moeda.dart';
 
 const _categoryLabels = {'HAIRCUT': 'Corte', 'BEARD': 'Barba', 'COMBO': 'Combo', 'TREATMENT': 'Tratamento'};
 const _categoryDots = {
@@ -231,7 +232,7 @@ class _GestorServicesScreenState extends State<GestorServicesScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(s.name, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600, fontSize: 13.5), overflow: TextOverflow.ellipsis),
-                                              Text('${s.duration}min · R\$ ${s.price.toStringAsFixed(2)}', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                                              Text('${s.duration}min · ${reais(s.price)}', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
                                             ],
                                           ),
                                         ),

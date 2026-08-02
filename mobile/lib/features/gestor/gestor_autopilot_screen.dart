@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
+import '../../core/utils/moeda.dart';
 
 /// Auto-piloto — the automations that run by themselves (via the daily cron):
 /// auto-confirm tomorrow's appointments, birthday messages, and win-back of
@@ -166,7 +167,7 @@ class _GestorAutopilotScreenState extends State<GestorAutopilotScreen> {
                     children: [
                       Text('Receita recuperada este mês', style: TextStyle(color: contrastingTextColor(accent).withValues(alpha: 0.8), fontWeight: FontWeight.w600, fontSize: 12.5)),
                       const SizedBox(height: 4),
-                      Text('R\$ ${_recovered.toStringAsFixed(2)}', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.w900, fontSize: 28)),
+                      Text('${reais(_recovered)}', style: TextStyle(color: contrastingTextColor(accent), fontWeight: FontWeight.w900, fontSize: 28)),
                       const SizedBox(height: 2),
                       Text('$_actions ${_actions == 1 ? 'ação' : 'ações'} do Copiloto por você', style: TextStyle(color: contrastingTextColor(accent).withValues(alpha: 0.7), fontSize: 12)),
                     ],

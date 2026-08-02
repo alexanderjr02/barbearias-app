@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/rukz_theme.dart';
 import 'barber_repository.dart';
+import '../../core/utils/moeda.dart';
 
 class GanhosScreen extends StatefulWidget {
   const GanhosScreen({super.key});
@@ -79,9 +80,9 @@ class _GanhosScreenState extends State<GanhosScreen> {
                           ],
                         ),
                         const SizedBox(height: 6),
-                        Text('R\$ ${stats.commission.toStringAsFixed(2)}', style: TextStyle(color: onAccent, fontWeight: FontWeight.w900, fontSize: 30)),
+                        Text('${reais(stats.commission)}', style: TextStyle(color: onAccent, fontWeight: FontWeight.w900, fontSize: 30)),
                         const SizedBox(height: 4),
-                        Text('de R\$ ${stats.monthRevenue.toStringAsFixed(2)} em receita gerada', style: TextStyle(color: onAccent.withValues(alpha: 0.65), fontSize: 12)),
+                        Text('de ${reais(stats.monthRevenue)} em receita gerada', style: TextStyle(color: onAccent.withValues(alpha: 0.65), fontSize: 12)),
                       ],
                     ),
                   ),
@@ -93,7 +94,7 @@ class _GanhosScreenState extends State<GanhosScreen> {
                     children: [
                       Expanded(child: _StatCard(icon: Icons.content_cut_rounded, label: 'Atendimentos concluídos', value: '${stats.completedCount}', color: palette.textSecondary, palette: palette)),
                       const SizedBox(width: 12),
-                      Expanded(child: _StatCard(icon: Icons.confirmation_number_outlined, label: 'Ticket médio', value: 'R\$ ${stats.avgTicket.toStringAsFixed(2)}', color: palette.textSecondary, palette: palette)),
+                      Expanded(child: _StatCard(icon: Icons.confirmation_number_outlined, label: 'Ticket médio', value: '${reais(stats.avgTicket)}', color: palette.textSecondary, palette: palette)),
                     ],
                   ),
                 ),
@@ -122,7 +123,7 @@ class _GanhosScreenState extends State<GanhosScreen> {
                             children: [
                               Text('Gorjetas este mês', style: TextStyle(color: palette.textFaint, fontSize: 12)),
                               const SizedBox(height: 2),
-                              Text('R\$ ${tips.total.toStringAsFixed(2)}', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 20)),
+                              Text('${reais(tips.total)}', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w900, fontSize: 20)),
                             ],
                           ),
                         ),

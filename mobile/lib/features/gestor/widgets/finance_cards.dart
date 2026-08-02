@@ -3,8 +3,9 @@ import '../../../core/api/api_client.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/form_sheet.dart';
 import '../gestor_repository.dart';
+import '../../../core/utils/moeda.dart';
 
-String _brl(double v) => 'R\$ ${v.toStringAsFixed(2)}';
+String _brl(double v) => '${reais(v)}';
 String _brl0(double v) => 'R\$ ${v.toStringAsFixed(0)}';
 
 Color _methodColor(String m) {

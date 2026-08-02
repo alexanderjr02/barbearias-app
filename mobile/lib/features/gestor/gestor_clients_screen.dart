@@ -7,6 +7,7 @@ import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/skeleton.dart';
 import 'gestor_repository.dart';
+import '../../core/utils/moeda.dart';
 
 const _tierLabels = {'BRONZE': 'Bronze', 'SILVER': 'Prata', 'GOLD': 'Ouro'};
 // Paleta metálica contida, igual à do web: ouro âmbar, prata ardósia, bronze
@@ -397,7 +398,7 @@ class _GestorClientsScreenState extends State<GestorClientsScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         Text('${c.visits} visitas', style: TextStyle(color: palette.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
-                                        Text('R\$ ${c.totalSpent.toStringAsFixed(2)}', style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.bold)),
+                                        Text('${reais(c.totalSpent)}', style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.bold)),
                                       ],
                                     ),
                                   ],

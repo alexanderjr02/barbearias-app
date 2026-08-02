@@ -3,6 +3,7 @@ import '../../../core/api/api_client.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/rukz_theme.dart';
 import '../gestor_repository.dart';
+import '../../../core/utils/moeda.dart';
 
 const dayNamesShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const monthNamesShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -53,7 +54,7 @@ class ServiceStep extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Text('R\$ ${s.price.toStringAsFixed(2)}', style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold, fontSize: 13.5)),
+                    Text('${reais(s.price)}', style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold, fontSize: 13.5)),
                   ],
                 ),
               ),
@@ -311,7 +312,7 @@ class ClientStep extends StatelessWidget {
               SummaryRow(label: 'Barbeiro', value: staff.name, palette: palette),
               SummaryRow(label: 'Data', value: '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')} às $time', palette: palette),
               Divider(color: palette.border, height: 18),
-              SummaryRow(label: 'Total', value: 'R\$ ${service.price.toStringAsFixed(2)}', palette: palette, emphasize: true, accent: accent),
+              SummaryRow(label: 'Total', value: '${reais(service.price)}', palette: palette, emphasize: true, accent: accent),
             ],
           ),
         ),

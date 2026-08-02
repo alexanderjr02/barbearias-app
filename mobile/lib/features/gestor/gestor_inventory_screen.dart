@@ -6,6 +6,7 @@ import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/photo_picker_tile.dart';
 import 'gestor_repository.dart';
+import '../../core/utils/moeda.dart';
 
 class GestorInventoryScreen extends StatefulWidget {
   const GestorInventoryScreen({super.key});
@@ -242,7 +243,7 @@ class _GestorInventoryScreenState extends State<GestorInventoryScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                _StatCard(icon: Icons.payments_outlined, iconColor: palette.textSecondary, value: 'R\$ ${totalValue.toStringAsFixed(2)}', label: 'Valor em estoque (custo)', palette: palette, wide: true),
+                _StatCard(icon: Icons.payments_outlined, iconColor: palette.textSecondary, value: '${reais(totalValue)}', label: 'Valor em estoque (custo)', palette: palette, wide: true),
                 if (lowStock.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Container(
@@ -322,7 +323,7 @@ class _GestorInventoryScreenState extends State<GestorInventoryScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text('R\$ ${p.price.toStringAsFixed(2)}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 12.5)),
+                              Text('${reais(p.price)}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 12.5)),
                               Container(
                                 margin: const EdgeInsets.only(top: 3),
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

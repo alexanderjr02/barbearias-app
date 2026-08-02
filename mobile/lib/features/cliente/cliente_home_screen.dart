@@ -13,6 +13,7 @@ import 'loyalty_wallet_screen.dart';
 import 'new_appointment_screen.dart';
 import 'tip_screen.dart';
 import 'widgets/client_notifications_sheet.dart';
+import '../../core/utils/moeda.dart';
 
 const _activeStatuses = {'SCHEDULED', 'CONFIRMED', 'ARRIVED', 'IN_PROGRESS'};
 
@@ -412,7 +413,7 @@ class _ClienteHomeScreenState extends State<ClienteHomeScreen> {
                     ),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         if (suggestion != null) ...[
@@ -1450,7 +1451,7 @@ class _HistoryTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('R\$ ${apt.totalPrice.toStringAsFixed(2)}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text('${reais(apt.totalPrice)}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 4),
               if (apt.status == 'COMPLETED' && !apt.hasReview)
                 GestureDetector(

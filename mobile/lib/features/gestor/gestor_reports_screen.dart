@@ -5,6 +5,7 @@ import '../../core/theme/rukz_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import 'gestor_repository.dart';
 import 'widgets/revenue_chart_card.dart';
+import '../../core/utils/moeda.dart';
 
 /// Mirrors the web "Relatórios" page: KPIs, receita-vs-despesas chart,
 /// services-distribution donut, staff performance list and a
@@ -91,7 +92,7 @@ class _GestorReportsScreenState extends State<GestorReportsScreen> {
                   children: [
                     _KpiCard(label: 'Receita', value: 'R\$ ${r.totalRevenue.toStringAsFixed(0)}', icon: Icons.attach_money_rounded, color: palette.textSecondary, palette: palette),
                     _KpiCard(label: 'Agendamentos', value: '${r.totalAppointments}', icon: Icons.event_available_rounded, color: palette.textSecondary, palette: palette),
-                    _KpiCard(label: 'Ticket médio', value: 'R\$ ${r.avgTicket.toStringAsFixed(2)}', icon: Icons.trending_up_rounded, color: palette.textSecondary, palette: palette),
+                    _KpiCard(label: 'Ticket médio', value: '${reais(r.avgTicket)}', icon: Icons.trending_up_rounded, color: palette.textSecondary, palette: palette),
                     _KpiCard(label: 'Margem', value: '$margin%', icon: Icons.pie_chart_rounded, color: r.profit >= 0 ? kSuccessColor : kDangerColor, palette: palette),
                   ],
                 ),
@@ -246,7 +247,7 @@ class _GestorReportsScreenState extends State<GestorReportsScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text('${s.appointments} cortes · comissão R\$ ${s.commission.toStringAsFixed(2)}', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+                            Text('${s.appointments} cortes · comissão ${reais(s.commission)}', style: TextStyle(color: palette.textFaint, fontSize: 11)),
                           ],
                         ),
                       ),
@@ -499,7 +500,7 @@ class _AttributionSectionState extends State<_AttributionSection> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Expanded(child: _MiniStat(label: 'Custo/cliente novo', value: a.perNewClient > 0 ? 'R\$ ${a.perNewClient.toStringAsFixed(2)}' : '—', palette: palette)),
+                    Expanded(child: _MiniStat(label: 'Custo/cliente novo', value: a.perNewClient > 0 ? '${reais(a.perNewClient)}' : '—', palette: palette)),
                     const SizedBox(width: 8),
                     Expanded(child: _MiniStat(label: 'Retorno (ROAS)', value: a.roas > 0 ? '${a.roas.toStringAsFixed(2)}x' : '—', sub: a.roasLtv > 0 ? '${a.roasLtv.toStringAsFixed(2)}x no LTV' : null, palette: palette)),
                   ],
@@ -539,7 +540,7 @@ class _AttributionSectionState extends State<_AttributionSection> {
                         ],
                       ),
                       if (a.spend > 0)
-                        Padding(padding: const EdgeInsets.only(top: 6), child: Text('Atual: R\$ ${a.spend.toStringAsFixed(2)}', style: TextStyle(color: palette.textFaint, fontSize: 11))),
+                        Padding(padding: const EdgeInsets.only(top: 6), child: Text('Atual: ${reais(a.spend)}', style: TextStyle(color: palette.textFaint, fontSize: 11))),
                     ],
                   ),
                 ),

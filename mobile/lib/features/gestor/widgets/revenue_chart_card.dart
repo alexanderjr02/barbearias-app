@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../gestor_repository.dart';
+import '../../../core/utils/moeda.dart';
 
 /// "Receita vs Despesas" area-style line chart with a week/month toggle —
 /// the mobile equivalent of the web's `RevenueChart` component, reused on
@@ -116,9 +117,22 @@ class _RevenueChartCardState extends State<RevenueChartCard> {
                                 sideTitles: SideTitles(
                                   showTitles: true,
                                   reservedSize: 22,
+                                  // Um rótulo por ponto. Sem isto o fl_chart escolhe
+                                  // o passo sozinho e cai em frações (0, 0,5, 1...);
+                                  // dois deles arredondavam pro mesmo índice e o
+                                  // eixo saía repetido: "Seg Seg Ter Ter".
+                                  interval: 1,
                                   getTitlesWidget: (value, meta) {
-                                    final i = value.toInt();
+                                    final i = value.round();
                                     if (i < 0 || i >= series.length) return const SizedBox.shrink();
+                                    // No mês são ~30 pontos: escrever todos vira
+                                    // borrão. Mostra no máximo 7, sempre incluindo
+                                    // o último — é o dia de hoje.
+                                    final passo = (series.length / 7).ceil();
+                                    final ultimo = series.length - 1;
+                                    if (passo > 1 && i != ultimo && (ultimo - i) % passo != 0) {
+                                      return const SizedBox.shrink();
+                                    }
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 6),
                                       child: Text(series[i].label, style: TextStyle(color: palette.textFaint, fontSize: 10)),
@@ -213,7 +227,7 @@ class _MiniTotal extends StatelessWidget {
         children: [
           Text(label, style: TextStyle(color: palette.textFaint, fontSize: 10.5)),
           const SizedBox(height: 2),
-          Text('R\$ ${value.toStringAsFixed(2)}', style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text('${reais(value)}', style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold)),
         ],
       ),
     );

@@ -10,6 +10,7 @@ import '../../core/widgets/app_toast.dart';
 import 'widgets/barber_colors.dart';
 import 'widgets/barber_day_timeline.dart';
 import 'widgets/team_day_timeline.dart';
+import '../../core/utils/moeda.dart';
 
 const _statusLabels = {
   'SCHEDULED': 'Agendado',
@@ -315,7 +316,7 @@ class _GestorAgendaScreenState extends State<GestorAgendaScreen> {
             _DetailRow(label: 'Barbeiro', value: apt.staffName, palette: palette),
             _DetailRow(label: 'Horário', value: '${apt.startTime} – ${apt.endTime}', palette: palette),
             _DetailRow(label: 'Status', value: _statusLabels[apt.status] ?? apt.status, palette: palette, valueColor: appointmentStatusColor(apt.status, palette)),
-            _DetailRow(label: 'Valor', value: 'R\$ ${apt.totalPrice.toStringAsFixed(2)}', palette: palette, valueColor: Theme.of(context).colorScheme.primary),
+            _DetailRow(label: 'Valor', value: '${reais(apt.totalPrice)}', palette: palette, valueColor: Theme.of(context).colorScheme.primary),
           ],
         ),
       ),

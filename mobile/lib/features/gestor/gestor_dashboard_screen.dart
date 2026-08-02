@@ -11,6 +11,7 @@ import 'gestor_repository.dart';
 import 'widgets/nps_prompt_sheet.dart';
 import 'widgets/onboarding_checklist_card.dart';
 import 'widgets/revenue_chart_card.dart';
+import '../../core/utils/moeda.dart';
 
 class GestorDashboardScreen extends StatefulWidget {
   const GestorDashboardScreen({super.key});
@@ -218,7 +219,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                 ),
                 const SliverToBoxAdapter(child: OnboardingChecklistCard()),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       // HOJE — a primeira pergunta de todo dono: como esta o dia?
@@ -234,7 +235,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                             Expanded(
                               child: _CardDia(
                                 rotulo: 'Já entrou hoje',
-                                valor: _reais(s.todayRevenue),
+                                valor: reais(s.todayRevenue),
                                 corValor: palette.textPrimary,
                                 nota: s.todayRevenue == 0 && s.yesterdayRevenue == 0
                                     ? 'sem movimento ainda'
@@ -249,7 +250,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                             Expanded(
                               child: _CardDia(
                                 rotulo: 'Ainda entra hoje',
-                                valor: _reais(s.todayExpected),
+                                valor: reais(s.todayExpected),
                                 corValor: accent,
                                 nota: '${s.todayCount} agendamento${s.todayCount == 1 ? '' : 's'}',
                                 corNota: palette.textFaint,
@@ -335,7 +336,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                                       children: [
                                         Text('Faturamento do mês', style: TextStyle(color: palette.textFaint, fontSize: 12)),
                                         const SizedBox(height: 5),
-                                        Text(_reais(s.monthRevenue),
+                                        Text(reais(s.monthRevenue),
                                             style: TextStyle(color: palette.textPrimary, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
                                         const SizedBox(height: 4),
                                         Text(
@@ -358,7 +359,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                                     children: [
                                       Text('Projeção', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
                                       const SizedBox(height: 4),
-                                      Text(_reais(s.projection),
+                                      Text(reais(s.projection),
                                           style: TextStyle(color: accent, fontSize: 17, fontWeight: FontWeight.w900)),
                                       Text('no ritmo de hoje', style: TextStyle(color: palette.textFaint, fontSize: 10)),
                                     ],
@@ -369,7 +370,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                                 const SizedBox(height: 16),
                                 Row(
                                   children: [
-                                    Text('Meta de ${_reais(s.monthlyGoal!)}', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                                    Text('Meta de ${reais(s.monthlyGoal!)}', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
                                     const Spacer(),
                                     Text('${((s.monthRevenue / s.monthlyGoal!) * 100).round()}%',
                                         style: TextStyle(color: palette.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w800)),
@@ -391,8 +392,8 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                                   s.monthRevenue >= s.monthlyGoal!
                                       ? 'Meta batida.'
                                       : s.projection >= s.monthlyGoal!
-                                          ? 'No ritmo de bater. Faltam ${_reais(s.monthlyGoal! - s.monthRevenue)}.'
-                                          : 'Fora do ritmo. Precisa de ${_reais(s.monthlyGoal! - s.projection)} acima da projeção.',
+                                          ? 'No ritmo de bater. Faltam ${reais(s.monthlyGoal! - s.monthRevenue)}.'
+                                          : 'Fora do ritmo. Precisa de ${reais(s.monthlyGoal! - s.projection)} acima da projeção.',
                                   style: TextStyle(color: palette.textSecondary, fontSize: 11.5),
                                 ),
                               ] else ...[
@@ -476,7 +477,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                               Expanded(
                                 child: _CelulaContexto(
                                   rotulo: 'Ticket médio',
-                                  valor: _reais(s.avgTicket),
+                                  valor: reais(s.avgTicket),
                                   nota: 'este mês',
                                   palette: palette,
                                 ),
@@ -584,7 +585,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(a.time, style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w600, fontSize: 12.5)),
-                                    Text('R\$ ${a.value.toStringAsFixed(2)}', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                    Text('${reais(a.value)}', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ],
@@ -600,19 +601,6 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
       ),
     );
   }
-}
-
-// Valor cheio em reais: o dono confere contra o caixa, entao nao arredondamos.
-String _reais(double v) {
-  final inteiro = v.floor();
-  final centavos = ((v - inteiro) * 100).round().toString().padLeft(2, '0');
-  final digitos = inteiro.toString();
-  final buffer = StringBuffer();
-  for (var i = 0; i < digitos.length; i++) {
-    if (i > 0 && (digitos.length - i) % 3 == 0) buffer.write('.');
-    buffer.write(digitos[i]);
-  }
-  return 'R\$ $buffer,$centavos';
 }
 
 // Cartao do dia: numero grande, rotulo e nota curta. Sem icone — o rotulo ja
