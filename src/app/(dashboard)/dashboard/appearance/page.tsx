@@ -2,10 +2,11 @@
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Palette, Upload, Check, Loader2, Bell, Scissors, Bot, Plus, Mail, Lock, RotateCcw, AlertTriangle, Home, Gift, Award, SlidersHorizontal, User, Trash2 } from "lucide-react";
+import { Palette, Upload, Check, Loader2, Bell, Scissors, Plus, Mail, Lock, RotateCcw, AlertTriangle, Home, Gift, Award, User, Trash2 } from "lucide-react";
 import { apiGet, apiPatch, apiUpload } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { RukzLetraR } from "@/components/brand/RukzLogo";
 
 interface Shop {
   name?: string;
@@ -528,84 +529,96 @@ export default function AppearancePage() {
                 </div>
               </div>
             ) : (
-              /* Início, na mesma ordem do app do cliente
-                 (cliente_home_screen.dart): capa com a saudação, o lembrete de
-                 corte, o próximo agendamento, o cartão de pontos e a lista de
-                 próximos. A capa só aparece com fundo "Foto", como no app. */
+              /* Início, o mais fiel possível ao cliente_home_screen.dart.
+                 O lembrete "Hora do corte?" e o próximo agendamento NUNCA
+                 aparecem juntos no app (o lembrete só existe quando não há
+                 horário marcado), então a prévia mostra o estado de quem tem
+                 agendamento, que é o mais comum. */
               <div className="relative flex h-full w-full flex-col" style={{ background: p.bg, color: p.text }}>
-                <div className="relative h-[110px] shrink-0">
-                  {bgType === "image" && cover ? (
-                    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${cover})` }} />
-                  ) : (
-                    <div className="absolute inset-0" style={{ background: p.bg }} />
-                  )}
-                  <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${p.bg}, transparent 70%)` }} />
-                  <div className="relative z-10 flex h-full items-end px-4 pb-3 pt-9">
+                {/* Cabeçalho: com foto vira a capa escurecida, sem foto é um
+                    bloco liso na cor da marca a 10%, como no app. */}
+                <div className="relative shrink-0">
+                  <div className="absolute inset-0">
+                    {bgType === "image" && cover ? (
+                      <>
+                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${cover})` }} />
+                        <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, rgba(0,0,0,0.38), ${p.bg})` }} />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0" style={{ background: `${accent}1a` }} />
+                    )}
+                  </div>
+                  <div className="relative z-10 flex items-center gap-2 px-5 pb-6 pt-9">
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px]" style={{ color: p.muted }}>Boa tarde,</p>
-                      <p className="truncate text-xl font-black leading-tight">Lucas</p>
+                      <p className="truncate text-[22px] font-black leading-tight tracking-tight">Lucas</p>
                     </div>
-                    <Bell className="mb-1 mr-2 h-4 w-4" style={{ color: p.text }} />
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold" style={{ background: p.field, color: p.muted }}>L</div>
+                    <Bell className="h-[18px] w-[18px]" style={{ color: p.text }} />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full text-sm" style={{ background: p.field, color: p.muted }}>L</div>
                   </div>
                 </div>
 
                 <div className="flex-1 overflow-hidden px-4">
-                  {/* Hora do corte, o lembrete que o app monta do histórico */}
-                  <div className="flex items-center gap-2.5 rounded-2xl p-2.5" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${accent}33` }}>
-                      <Scissors className="h-4 w-4" style={{ color: accent }} />
+                  {/* Próximo agendamento: bloco de calendário à esquerda, selo
+                      de estado, e as duas ações separadas por um fio. */}
+                  <div className="rounded-[22px] p-3.5" style={{ background: `${accent}14`, border: `1px solid ${accent}3d` }}>
+                    <div className="flex gap-3">
+                      <div className="flex w-[52px] shrink-0 flex-col items-center rounded-2xl py-2" style={{ background: `${accent}29`, border: `1px solid ${accent}52` }}>
+                        <span className="text-[22px] font-black leading-none tracking-tighter">14</span>
+                        <span className="mt-0.5 text-[9px] font-black tracking-widest" style={{ color: accent }}>AGO</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="inline-block rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: `${accent}26`, color: accent }}>EM 2H</span>
+                        <p className="mt-1 truncate text-[13px] font-black leading-tight">Corte + Barba</p>
+                        <p className="text-[10px]" style={{ color: p.muted }}>com Rafael · 15:30</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold leading-tight">Hora do corte?</p>
-                      <p className="text-[10px] leading-tight" style={{ color: p.muted }}>Você costuma cortar a cada 3 semanas, já faz 24 dias.</p>
+                    <div className="my-2.5 h-px" style={{ background: `${accent}29` }} />
+                    <div className="flex items-center gap-2">
+                      <span className="flex-1 text-center text-[11px] font-semibold" style={{ color: p.muted }}>Cancelar</span>
+                      <span className="flex-1 rounded-xl py-1.5 text-center text-[11px] font-bold" style={{ background: accent, color: onAccent }}>Remarcar</span>
                     </div>
                   </div>
 
-                  <div className="mt-2.5 rounded-2xl p-3" style={{ background: accent }}>
-                    <p className="text-[9px] font-black tracking-wide" style={{ color: onAccent, opacity: 0.8 }}>PRÓXIMO · EM 2H</p>
-                    <p className="mt-0.5 text-sm font-black" style={{ color: onAccent }}>Corte + Barba</p>
-                    <p className="text-[10px]" style={{ color: onAccent, opacity: 0.85 }}>com Rafael · Hoje 15:30</p>
-                    <div className="mt-2.5 flex gap-2">
-                      <span className="flex-1 rounded-lg py-1.5 text-center text-[10px] font-semibold" style={{ background: onAccent === "#000000" ? "#00000018" : "#ffffff22", color: onAccent }}>Cancelar</span>
-                      <span className="flex-1 rounded-lg py-1.5 text-center text-[10px] font-semibold" style={{ background: onAccent === "#000000" ? "#00000030" : "#ffffff33", color: onAccent }}>Remarcar</span>
-                    </div>
-                  </div>
-
-                  {/* Cartão de pontos: o número domina e a barra mostra quanto
-                      falta pra próxima faixa, igual ao app. */}
-                  <p className="mt-3 text-xs font-semibold" style={{ color: p.muted }}>Minha fidelidade</p>
-                  <div className="mt-2 rounded-2xl p-3" style={{ background: `${accent}21`, border: `1px solid ${accent}47` }}>
-                    <div className="flex items-center justify-between">
+                  {/* Fidelidade: a cor vem da FAIXA (bronze, prata, ouro), não
+                      da marca. Era esse o erro da prévia anterior. */}
+                  <p className="mt-4 text-sm font-extrabold tracking-tight">Minha fidelidade</p>
+                  <div className="mt-2 rounded-[22px] p-3.5" style={{ background: "#C7CDD621", border: "1px solid #C7CDD647" }}>
+                    <div className="flex items-center justify-between gap-2">
                       <span className="truncate text-[11px] font-semibold" style={{ color: p.muted }}>{name}</span>
-                      <span className="rounded-full px-2 py-0.5 text-[9px] font-black" style={{ background: accent, color: onAccent }}>OURO</span>
+                      <span className="rounded-full px-2 py-0.5 text-[9px] font-black" style={{ background: "#C7CDD6", color: "#1A1A1A" }}>PRATA</span>
                     </div>
-                    <div className="mt-2 flex items-baseline gap-1.5">
-                      <span className="text-3xl font-black leading-none" style={{ color: accent }}>240</span>
+                    <div className="mt-1.5 flex items-baseline gap-1.5">
+                      <span className="text-[28px] font-black leading-none" style={{ color: "#C7CDD6" }}>840</span>
                       <span className="text-[10px]" style={{ color: p.muted }}>pontos</span>
                     </div>
-                    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full" style={{ background: `${accent}2e` }}>
-                      <div className="h-full rounded-full" style={{ width: "62%", background: accent }} />
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full" style={{ background: "#C7CDD62e" }}>
+                      <div className="h-full rounded-full" style={{ width: "34%", background: "#C7CDD6" }} />
                     </div>
-                    <p className="mt-1.5 text-[10px]" style={{ color: p.muted }}>faltam 150 pts para Diamante</p>
+                    <p className="mt-1.5 text-[10px]" style={{ color: p.muted }}>faltam 660 pts para Ouro</p>
                   </div>
+
+                  <p className="mt-4 text-sm font-extrabold tracking-tight">Meus agendamentos</p>
                 </div>
 
-                {/* O assistente à esquerda e o Agendar à direita, na mesma linha */}
-                <div className="absolute bottom-[74px] left-4 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: accent, color: onAccent }}>
-                  <Bot className="h-5 w-5" />
+                {/* O copiloto à esquerda usa o "r" da marca, igual ao app. */}
+                <div className="absolute bottom-[70px] left-4 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: accent, color: onAccent }}>
+                  <RukzLetraR className="h-5 w-5" />
                 </div>
-                <div className="absolute bottom-[74px] right-4 flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-bold" style={{ background: accent, color: onAccent }}>
+                <div className="absolute bottom-[70px] right-4 flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-bold" style={{ background: accent, color: onAccent }}>
                   <Plus className="h-4 w-4" /> Agendar
                 </div>
+                {/* Cinco abas, como no cliente_shell.dart. */}
                 <div className="absolute inset-x-3 bottom-3">
-                  <div className="flex items-center justify-around rounded-2xl px-3 py-2.5" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                    <div className="flex items-center gap-1 rounded-lg px-2 py-1" style={{ background: `${accent}1f` }}><Home className="h-[18px] w-[18px]" style={{ color: accent }} /></div>
-                    <Scissors className="h-[18px] w-[18px]" style={{ color: p.muted }} />
-                    <Gift className="h-[18px] w-[18px]" style={{ color: p.muted }} />
-                    <Award className="h-[18px] w-[18px]" style={{ color: p.muted }} />
-                    <SlidersHorizontal className="h-[18px] w-[18px]" style={{ color: p.muted }} />
-                    <User className="h-[18px] w-[18px]" style={{ color: p.muted }} />
+                  <div className="flex items-center justify-around rounded-2xl px-2 py-2.5" style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div className="flex items-center gap-1.5 rounded-xl px-2.5 py-1" style={{ background: `${accent}1f` }}>
+                      <Home className="h-[17px] w-[17px]" style={{ color: accent }} />
+                      <span className="text-[10px] font-bold" style={{ color: accent }}>Início</span>
+                    </div>
+                    <Scissors className="h-[17px] w-[17px]" style={{ color: p.muted }} />
+                    <Gift className="h-[17px] w-[17px]" style={{ color: p.muted }} />
+                    <Award className="h-[17px] w-[17px]" style={{ color: p.muted }} />
+                    <User className="h-[17px] w-[17px]" style={{ color: p.muted }} />
                   </div>
                 </div>
               </div>
