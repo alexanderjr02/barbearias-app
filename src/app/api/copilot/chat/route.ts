@@ -59,7 +59,12 @@ export async function POST(request: NextRequest) {
     try {
       // Só o OWNER enxerga a rede, um MANAGER responde pela loja dele.
       const ownerId = session.role === "OWNER" ? session.sub : null;
-      const res = await runCopilot(role, session.barbershopId, staffId, history, ownerId, session.sub);
+      // Degrada antes de cortar: passados 70% do teto do dia, o turno vai no
+      // modelo barato. O gestor perde um pouco de profundidade e mantem o
+      // Copiloto de pe, em vez de bater no limite e cair no modo sem IA.
+      const perto = quota.cap > 0 && quota.used >= quota.cap * 0.7;
+      const modelo = perto ? (process.env.CHATBOT_MODEL_ECONOMICO || "claude-haiku-4-5") : undefined;
+      const res = await runCopilot(role, session.barbershopId, staffId, history, ownerId, session.sub, modelo);
       reply = res.reply;
       actions = res.actions;
       undo = res.undo;

@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { cronSecretFrom } from "@/lib/cronAuth";
 import { prisma } from "@/lib/db";
 import { churnedClients, tomorrowAppointments } from "@/lib/copilot/insights";
-import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
+import { notifyBarbershop, notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
 import { autopilotActive, logAutopilot, runWeekFillCampaign } from "@/lib/copilot/autopilot";
+import { acaoValeAPena } from "@/lib/copilot/conversion";
+import { clientesComRiscoDeFalta, diaFracoAFrente } from "@/lib/copilot/previsao";
 
 // GET /api/cron/automations?secret=CRON_SECRET, the AUTO-PILOTO. Runs the
 // automations each Pro+ shop turned on: auto-confirm tomorrow's appointments,
@@ -39,6 +41,8 @@ interface Counts {
   birthdays: number;
   winbacks: number;
   weekFills: number;
+  /** Avisos de dia fraco a frente: a parte que olha pra FRENTE. */
+  forecasts: number;
 }
 
 export async function GET(request: NextRequest) {
@@ -53,7 +57,7 @@ export async function GET(request: NextRequest) {
   const today = new Date();
   const tMonth = today.getUTCMonth() + 1;
   const tDay = today.getUTCDate();
-  const counts: Counts = { confirmed: 0, birthdays: 0, winbacks: 0, weekFills: 0 };
+  const counts: Counts = { confirmed: 0, birthdays: 0, winbacks: 0, weekFills: 0, forecasts: 0 };
   let shopsSeen = 0;
   let exhausted = false;
 
@@ -105,9 +109,25 @@ async function runForShop(shop: Shop, tMonth: number, tDay: number, counts: Coun
     if (shop.autoConfirm) {
       const { list } = await tomorrowAppointments(shop.id);
       let n = 0;
+      // Quem já faltou antes recebe um texto diferente, que pede resposta em
+      // vez de só avisar. O risco de falta já era calculado e ficava parado:
+      // só respondia se alguém perguntasse no chat.
+      const risco = await clientesComRiscoDeFalta(shop.id, list.map((x) => x.clientId).filter(Boolean) as string[]);
       for (const a of list.filter((x) => x.status === "SCHEDULED")) {
         await prisma.appointment.update({ where: { id: a.id }, data: { status: "CONFIRMED" } });
-        if (a.clientId) await notifyClient(shop.id, a.clientId, "APPOINTMENT_CONFIRMED", "Agendamento confirmado", `Confirmamos seu horário de amanhã às ${a.startTime}. Até lá!`, "/appointments");
+        if (a.clientId) {
+          const arriscado = risco.has(a.clientId);
+          await notifyClient(
+            shop.id,
+            a.clientId,
+            "APPOINTMENT_CONFIRMED",
+            arriscado ? "Confirma seu horário de amanhã?" : "Agendamento confirmado",
+            arriscado
+              ? `Seu horário é amanhã às ${a.startTime}. Se não puder vir, avise pelo app que liberamos pra outra pessoa.`
+              : `Confirmamos seu horário de amanhã às ${a.startTime}. Até lá!`,
+            "/appointments",
+          );
+        }
         counts.confirmed++;
         n++;
       }
@@ -125,37 +145,60 @@ async function runForShop(shop: Shop, tMonth: number, tDay: number, counts: Coun
       for (const a of apptClients as { clientId: string | null }[]) if (a.clientId) ids.add(a.clientId);
       if (ids.size) {
         const users = await prisma.user.findMany({ where: { id: { in: [...ids] }, dateOfBirth: { not: null } }, select: { id: true, name: true, dateOfBirth: true } });
-        let n = 0;
         for (const u of users as { id: string; name: string; dateOfBirth: Date | null }[]) {
           const d = u.dateOfBirth!;
           if (d.getUTCMonth() + 1 === tMonth && d.getUTCDate() === tDay) {
-            await notifyClientMarketing(shop.id, u.id, "APPOINTMENT_CONFIRMED", "Feliz aniversário!", `Parabéns, ${u.name.split(" ")[0]}! A ${shop.name} te deseja tudo de bom. Vem comemorar com um corte novo.`, "/appointments");
-            counts.birthdays++;
-            n++;
+            const entregue = await notifyClientMarketing(shop.id, u.id, "APPOINTMENT_CONFIRMED", "Feliz aniversário!", `Parabéns, ${u.name.split(" ")[0]}! A ${shop.name} te deseja tudo de bom. Vem comemorar com um corte novo.`, "/appointments");
+            if (entregue) {
+              // Uma linha POR PESSOA: é o que permite saber depois quem
+              // agendou por causa da mensagem.
+              await logAutopilot(shop.id, "birthday", `Parabenizei ${u.name.split(" ")[0]} no aniversário.`, null, u.id);
+              counts.birthdays++;
+            }
           }
         }
-        if (n > 0) await logAutopilot(shop.id, "birthday", `Parabenizei ${n} aniversariante(s) de hoje.`);
       }
     }
 
     // 3) Win-back de quem cruzou o limite hoje.
     if (shop.autoWinbackDays) {
-      const churned = await churnedClients(shop.id, shop.autoWinbackDays, 500);
-      let n = 0;
-      for (const c of churned) {
-        if (c.clientId && c.daysSince === shop.autoWinbackDays) {
-          await notifyClientMarketing(shop.id, c.clientId, "APPOINTMENT_CONFIRMED", "Saudades de você!", `Faz um tempo que você não aparece na ${shop.name}. Que tal marcar um horário? A gente separou um cuidado especial pra você.`, "/appointments");
-          counts.winbacks++;
-          n++;
+      // Só continua chamando se a campanha estiver trazendo alguém de volta.
+      // Antes ele repetia para sempre com a mesma confiança, funcionando ou não.
+      const valeChamar = await acaoValeAPena(shop.id, "winback");
+      if (valeChamar) {
+        const churned = await churnedClients(shop.id, shop.autoWinbackDays, 500);
+        for (const c of churned) {
+          if (c.clientId && c.daysSince === shop.autoWinbackDays) {
+            const entregue = await notifyClientMarketing(shop.id, c.clientId, "APPOINTMENT_CONFIRMED", "Saudades de você!", `Faz um tempo que você não aparece na ${shop.name}. Que tal marcar um horário? A gente separou um cuidado especial pra você.`, "/appointments");
+            if (entregue) {
+              await logAutopilot(shop.id, "winback", `Chamei ${c.name ?? "um cliente"} de volta (${c.daysSince} dias sem aparecer).`, null, c.clientId);
+              counts.winbacks++;
+            }
+          }
         }
       }
-      if (n > 0) await logAutopilot(shop.id, "winback", `Chamei ${n} ${n === 1 ? "cliente que estava sumindo" : "clientes que estavam sumindo"}.`);
     }
 
     // 4) Encher a semana, proativo, só no "Agir sozinho" (as travas de
     // frequência/consentimento/público estão dentro da função).
     const fill = await runWeekFillCampaign(shop.id, shop.name, shop.plan, shop.autopilotLevel);
     counts.weekFills += fill.sent;
+
+    // 5) Antecipar. Até aqui ele só REAGIA (vagou horário, chama a fila). Um
+    // dia que já nasceu fraco daqui a três dias não disparava nada, e no dia
+    // seguinte a cadeira vazia já era prejuízo consumado.
+    const aviso = await diaFracoAFrente(shop.id);
+    if (aviso) {
+      await notifyBarbershop(
+        shop.id,
+        "NEW_APPOINTMENT",
+        "Agenda fraca à frente",
+        `${aviso.rotulo} está com só ${aviso.ocupacao}% da agenda vendida. Ainda dá tempo de encher.`,
+        "/dashboard/marketing",
+      );
+      await logAutopilot(shop.id, "forecast", `Avisei que ${aviso.rotulo} está com ${aviso.ocupacao}% da agenda vendida.`);
+      counts.forecasts++;
+    }
   } catch (err) {
     console.error(`[automations] ${shop.id}`, err);
   }

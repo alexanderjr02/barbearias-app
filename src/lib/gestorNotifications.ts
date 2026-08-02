@@ -75,6 +75,15 @@ export async function notifyClientMarketing(
 
   await prisma.notification.create({ data: { barbershopId, clientId, type, title, body, link } });
   await sendClientWhatsApp(barbershopId, clientId, title, body);
+  // Push também, como no transacional. Sem isto o win-back criava um aviso
+  // DENTRO do app que o cliente não abre há 45 dias, que é exatamente o motivo
+  // de ele estar na lista de sumidos. A mensagem mais valiosa do auto-piloto
+  // era a única que não tocava o telefone de ninguém.
+  try {
+    await sendPushToUser(clientId, { title, body, url: link ?? "/", tag: type });
+  } catch (err) {
+    console.error("[notifyClientMarketing] push falhou", err);
+  }
   return true;
 }
 

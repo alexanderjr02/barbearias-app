@@ -487,6 +487,11 @@ model AutopilotLog {
   action         String     // slot_filled | confirmed | birthday | winback | no_show
   detail         String
   recoveredValue Float?     // R$ estimado recuperado/protegido por essa ação
+  // Quem recebeu a acao e se ela virou agendamento depois. Sem isto o
+  // auto-piloto repete pra sempre o que nao funciona: ele sabe o que fez,
+  // nao sabe se deu certo.
+  clientId       String?
+  convertedAt    DateTime?
   createdAt      DateTime   @default(now())
 
   @@index([barbershopId])

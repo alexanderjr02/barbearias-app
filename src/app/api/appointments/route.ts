@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { registrarConversao } from "@/lib/copilot/conversion";
 import { getSession } from "@/lib/auth";
 import { validateRequestedSlot } from "@/lib/scheduling";
 import { notifyBarbershop } from "@/lib/gestorNotifications";
@@ -142,6 +143,10 @@ export async function POST(request: NextRequest) {
         barbershop: { select: { name: true } },
       },
     });
+
+    // Fechou o ciclo do auto-piloto: se este cliente recebeu um chamado dele
+    // nas últimas 72h, aquela ação passa a contar como convertida.
+    await registrarConversao(barbershopId, selfBookingClientId ?? null);
 
     // Atribuição (Onda 1): o cliente agendou → avança o funil do lead. Se ele
     // nunca passou pelo WhatsApp (ex.: agendou na página pública), o lead nasce

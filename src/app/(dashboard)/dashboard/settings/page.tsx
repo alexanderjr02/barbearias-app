@@ -96,7 +96,7 @@ export default function SettingsPage() {
 
   const { data: autopilotFeed } = useQuery({
     queryKey: ["autopilot-feed"],
-    queryFn: () => apiGet<{ recoveredTotal: number; actionsThisMonth: number; feed: { action: string; detail: string; recoveredValue: number | null; createdAt: string }[] }>("/api/copilot/autopilot-feed"),
+    queryFn: () => apiGet<{ recoveredTotal: number; actionsThisMonth: number; feed: { action: string; detail: string; recoveredValue: number | null; createdAt: string; pessoas: number; converteram: number }[]; desempenho: { action: string; label: string; enviadas: number; converteram: number; taxa: number }[] }>("/api/copilot/autopilot-feed"),
     enabled: activeTab === "autopilot",
   });
 
@@ -635,6 +635,32 @@ export default function SettingsPage() {
                     .
                   </p>
                 </div>
+
+                {/* O que cada campanha DEVOLVE. Sem isto o auto-piloto repetia
+                    pra sempre o que nao funciona, porque ninguem sabia. */}
+                {autopilotFeed && autopilotFeed.desempenho.length > 0 && (
+                  <div>
+                    <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">O que está funcionando</p>
+                    <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+                      {autopilotFeed.desempenho.map((d, i) => (
+                        <div key={d.action} className={cn("flex items-center gap-3 p-3.5", i > 0 && "border-t border-zinc-800")}>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-white">{d.label}</p>
+                            <p className="mt-0.5 text-xs text-zinc-500">
+                              {d.converteram} de {d.enviadas} agendaram depois
+                            </p>
+                          </div>
+                          <span className={cn("shrink-0 text-lg font-black tabular-nums", d.taxa >= 0.15 ? "text-emerald-400" : d.taxa >= 0.05 ? "text-white" : "text-zinc-600")}>
+                            {Math.round(d.taxa * 100)}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-2 px-0.5 text-[11px] text-zinc-600">
+                      Conta quem agendou em até 72h depois de receber. Abaixo de 5% com amostra suficiente, o Auto-piloto para de mandar sozinho.
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">Atividade recente</p>

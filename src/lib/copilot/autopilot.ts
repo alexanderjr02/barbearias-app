@@ -11,8 +11,16 @@ export function autopilotActive(plan: string | null | undefined, level: string |
   return planHasAI(plan) && level !== "off";
 }
 
-export async function logAutopilot(barbershopId: string, action: string, detail: string, recoveredValue?: number | null): Promise<void> {
-  await prisma.autopilotLog.create({ data: { barbershopId, action, detail, recoveredValue: recoveredValue ?? null } });
+export async function logAutopilot(
+  barbershopId: string,
+  action: string,
+  detail: string,
+  recoveredValue?: number | null,
+  clientId?: string | null,
+): Promise<void> {
+  await prisma.autopilotLog.create({
+    data: { barbershopId, action, detail, recoveredValue: recoveredValue ?? null, clientId: clientId ?? null },
+  });
 }
 
 export interface WeekFillResult {
@@ -97,10 +105,11 @@ export async function runWeekFillCampaign(
       `Abriram horários na ${shopName} nos próximos dias. Bora garantir o seu antes que encham? É só tocar aqui.`,
       "/appointments",
     );
-    if (ok) sent++;
-  }
-  if (sent > 0) {
-    await logAutopilot(barbershopId, "fill_week", `Convidei ${sent} ${sent === 1 ? "cliente" : "clientes"} pra preencher ${week.totalFree === 1 ? "o horário vago" : `os ${week.totalFree} horários vagos`} da semana.`);
+    // Uma linha por convidado: e o que permite medir depois quem agendou.
+    if (ok) {
+      sent++;
+      await logAutopilot(barbershopId, "fill_week", "Convidei um cliente pra preencher a semana.", null, clientId);
+    }
   }
   return { sent, freeSlots: week.totalFree, audience: audience.length };
 }
@@ -121,6 +130,7 @@ export async function onSlotOpened(barbershopId: string, freed: { startTime?: st
     if (w.clientId) {
       await notifyClient(barbershopId, w.clientId, "APPOINTMENT_CONFIRMED", "Abriu um horário!", `Vagou um horário${whenTxt} na ${shopName}. Corra, é por ordem de chegada!`, "/appointments");
       reached++;
+      await logAutopilot(barbershopId, "slot_filled", `Chamei a fila de espera pro horário${whenTxt}.`, freed.price ?? null, w.clientId);
     }
   }
   if (waiting.length) await prisma.waitlistEntry.updateMany({ where: { id: { in: (waiting as { id: string }[]).map((w) => w.id) } }, data: { status: "DONE" } });
@@ -133,11 +143,11 @@ export async function onSlotOpened(barbershopId: string, freed: { startTime?: st
     const churned = (await churnedClients(barbershopId, 30, 10)).filter((c) => c.clientId).slice(0, 3);
     for (const c of churned) {
       const ok = await notifyClientMarketing(barbershopId, c.clientId!, "APPOINTMENT_CONFIRMED", "Abriu um horário", `Surgiu um horário${whenTxt} na ${shopName}. Que tal aproveitar pra dar aquele trato?`, "/appointments");
-      if (ok) reached++;
+      if (ok) {
+        reached++;
+        await logAutopilot(barbershopId, "slot_filled", `Ofereci o horário${whenTxt} a ${c.name ?? "um cliente"}.`, freed.price ?? null, c.clientId);
+      }
     }
   }
 
-  if (reached > 0) {
-    await logAutopilot(barbershopId, "slot_filled", `Horário${whenTxt} vagou, avisei ${reached} ${reached === 1 ? "cliente" : "clientes"} na hora.`, freed.price ?? null);
-  }
 }

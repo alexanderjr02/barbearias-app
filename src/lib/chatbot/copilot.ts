@@ -673,6 +673,9 @@ export async function runCopilot(
   history: ChatTurn[],
   ownerId: string | null = null,
   userId: string | null = null,
+  // Modelo do turno. Perto do teto diario o chamador manda o barato: e melhor
+  // responder mais simples do que parar de responder.
+  modelo: string = MODEL,
 ): Promise<{ reply: string; actions: CopilotAction[]; undo?: { id: string; label: string } }> {
   const client = getAnthropic();
   const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
@@ -757,7 +760,7 @@ DADOS E AÇÕES
   let cacheRead = 0;
 
   for (let i = 0; i < 6; i++) {
-    const response = await client.messages.create({ model: MODEL, max_tokens: 1024, system: systemBlocks, tools, messages });
+    const response = await client.messages.create({ model: modelo, max_tokens: 1024, system: systemBlocks, tools, messages });
     usedIn += response.usage?.input_tokens ?? 0;
     usedOut += response.usage?.output_tokens ?? 0;
     cacheWrite += response.usage?.cache_creation_input_tokens ?? 0;

@@ -53,6 +53,19 @@ const STEPS: Step[] = [
     sql: [`ALTER TABLE "Barbershop" ADD COLUMN "drinks" TEXT`],
   },
   {
+    // Quem recebeu a acao do auto-piloto e se ela virou agendamento. Sem estes
+    // dois campos o auto-piloto repete pra sempre o que nao funciona: ele sabe
+    // o que fez, nao sabe se deu certo.
+    name: "AutopilotLog.clientId",
+    applied: () => columnExists("AutopilotLog", "clientId"),
+    sql: [`ALTER TABLE "AutopilotLog" ADD COLUMN "clientId" TEXT`],
+  },
+  {
+    name: "AutopilotLog.convertedAt",
+    applied: () => columnExists("AutopilotLog", "convertedAt"),
+    sql: [`ALTER TABLE "AutopilotLog" ADD COLUMN "convertedAt" DATETIME`],
+  },
+  {
     // Tipografia escolhida pelo gestor em "Aparência do app". Nula significa a
     // fonte da marca (Outfit), que e o que todo mundo ja tem hoje.
     name: "Barbershop.appFont",
