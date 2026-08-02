@@ -28,6 +28,15 @@ interface ApiStaff {
   hasLogin: boolean;
   avgRating: number | null;
   reviewCount: number;
+  // Recortes do mês corrente — é assim que comissão fecha e que dá pra
+  // comparar um barbeiro com o outro sem o acumulado de sempre distorcer.
+  monthAppointments: number;
+  monthRevenue: number;
+  /** Um número por dia nos últimos 7, do mais antigo para hoje. */
+  last7: number[];
+  /** % do tempo aberto da barbearia que este barbeiro já tem preenchido no mês. */
+  occupancy: number;
+  clientsCount: number;
 }
 
 interface ApiAppointment {
@@ -39,6 +48,14 @@ interface ApiAppointment {
   totalPrice: number;
   service: { name: string };
 }
+
+// Iniciais dos dias, indexadas por getDay() (domingo = 0).
+// O banco guarda o cargo em caixa alta (BARBER). Mostrar isso cru na tela
+// e vazar detalhe de banco pro dono da barbearia.
+const CARGO_LABELS: Record<string, string> = { BARBER: "Barbeiro", MANAGER: "Gerente", OWNER: "Dono", ASSISTANT: "Auxiliar" };
+const rotuloCargo = (c: string) => CARGO_LABELS[c?.toUpperCase()] ?? c;
+
+const DIAS_CURTOS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 const STATUS_LABELS: Record<string, string> = {
   SCHEDULED: "Agendado",
@@ -66,6 +83,7 @@ function Avatar({ name, avatar, size = 64 }: { name: string; avatar: string | nu
 
 export default function StaffPage() {
   const [search, setSearch] = useState("");
+  const [filtroApp, setFiltroApp] = useState<"todos" | "com" | "sem">("todos");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ApiStaff | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
@@ -154,13 +172,24 @@ export default function StaffPage() {
     }
   };
 
-  const filtered = staff.filter(
-    (s) =>
+  const filtered = staff.filter((s) => {
+    const busca =
       s.name.toLowerCase().includes(search.toLowerCase()) ||
-      (s.specialties ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+      (s.specialties ?? "").toLowerCase().includes(search.toLowerCase());
+    const app = filtroApp === "todos" || (filtroApp === "com" ? s.hasLogin : !s.hasLogin);
+    return busca && app;
+  });
 
-  const totalRevenue = staff.reduce((acc, s) => acc + s.revenue, 0);
+  // Indicadores do MÊS, só de quem está ativo — barbeiro desligado não entra na
+  // média de ocupação nem puxa a comissão a pagar.
+  const equipeAtiva = staff.filter((s) => s.isActive);
+  const ativos = equipeAtiva.length;
+  const receitaMes = equipeAtiva.reduce((acc, s) => acc + s.monthRevenue, 0);
+  const cortesMes = equipeAtiva.reduce((acc, s) => acc + s.monthAppointments, 0);
+  const comissoesMes = equipeAtiva.reduce((acc, s) => acc + s.monthRevenue * s.commissionRate, 0);
+  const ocupacaoMedia = ativos > 0 ? Math.round(equipeAtiva.reduce((acc, s) => acc + s.occupancy, 0) / ativos) : 0;
+  // O gráfico dos 7 dias termina HOJE, então a última coluna é o dia de hoje.
+  const hojeDia = new Date().getDay();
 
   return (
     <div className="space-y-6">
@@ -295,133 +324,191 @@ export default function StaffPage() {
       )}
 
       <PageHeader
-        icon={UserCheck}
         title="Equipe"
-        subtitle={`${staff.filter((s) => s.isActive).length} barbeiros ativos · ${formatCurrency(totalRevenue)} receita/mês`}
+        subtitle={`${ativos} barbeiro${ativos === 1 ? "" : "s"} ativo${ativos === 1 ? "" : "s"} · ${formatCurrency(receitaMes)} de receita neste mês`}
         action={
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
-            <Plus className="w-4 h-4" />
+          <button onClick={openCreate} className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-black shadow-lg shadow-amber-500/10 transition-all hover:opacity-90">
+            <Plus className="h-4 w-4" />
             Adicionar barbeiro
           </button>
         }
       />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <UserCheck className="w-4 h-4 text-zinc-400 mb-2" />
-          <p className="text-2xl font-black text-white">{staff.length}</p>
-          <p className="text-xs text-zinc-500">Total de barbeiros</p>
+      {/* Faixa de indicadores: responde "como a equipe está indo" antes de
+          olhar barbeiro por barbeiro. Tudo do mês corrente. */}
+      <div className="grid grid-cols-2 divide-zinc-800 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60 lg:grid-cols-4 lg:divide-x">
+        {[
+          { rotulo: "Receita da equipe", valor: formatCurrency(receitaMes), nota: `${cortesMes} corte${cortesMes === 1 ? "" : "s"} concluído${cortesMes === 1 ? "" : "s"}` },
+          { rotulo: "Cortes no mês", valor: String(cortesMes), nota: ativos > 0 ? `média de ${(cortesMes / ativos).toFixed(1).replace(".", ",")} por barbeiro` : "sem barbeiro ativo" },
+          { rotulo: "Comissões a pagar", valor: formatCurrency(comissoesMes), nota: "sobre o que já foi concluído" },
+          { rotulo: "Ocupação média", valor: `${ocupacaoMedia}%`, nota: `${100 - ocupacaoMedia}% da agenda ainda livre` },
+        ].map((kpi) => (
+          <div key={kpi.rotulo} className="px-5 py-4">
+            <p className="text-xs text-zinc-500">{kpi.rotulo}</p>
+            <p className="mt-1.5 text-2xl font-black tracking-tight text-white">{kpi.valor}</p>
+            <p className="mt-1 text-[11px] text-zinc-600">{kpi.nota}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Busca + filtros */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative sm:max-w-xs sm:flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="text"
+            placeholder="Buscar barbeiro"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-2.5 pl-9 pr-4 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500/50 focus:outline-none"
+          />
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <TrendingUp className="w-4 h-4 text-amber-400 mb-2" />
-          <p className="text-2xl font-black text-white">{formatCurrency(totalRevenue)}</p>
-          <p className="text-xs text-zinc-500">Receita total/mês</p>
+        <div className="flex gap-2">
+          {([
+            ["todos", `Todos · ${staff.length}`],
+            ["com", "Com app"],
+            ["sem", "Sem app"],
+          ] as const).map(([chave, rotulo]) => (
+            <button
+              key={chave}
+              onClick={() => setFiltroApp(chave)}
+              className={cn(
+                "rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors",
+                filtroApp === chave
+                  ? "border-amber-500 bg-amber-500/10 text-amber-400"
+                  : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white"
+              )}
+            >
+              {rotulo}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-        <input
-          type="text"
-          placeholder="Buscar barbeiro..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
-        />
-      </div>
-
-      {/* Staff cards */}
       {filtered.length === 0 && (
-        <div className="text-center py-16 text-zinc-500 bg-zinc-900 border border-dashed border-zinc-800 rounded-2xl">
-          <UserCheck className="w-8 h-8 mx-auto mb-3 text-zinc-700" />
-          Nenhum barbeiro cadastrado ainda
+        <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-900 py-16 text-center text-zinc-500">
+          Nenhum barbeiro encontrado
         </div>
       )}
-      <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-        {[...filtered].sort((a, b) => b.revenue - a.revenue).map((member, index) => {
-          const isTop = index === 0 && member.revenue > 0 && member.isActive;
+
+      <div className="grid items-stretch gap-5 xl:grid-cols-2">
+        {[...filtered].sort((a, b) => b.monthRevenue - a.monthRevenue).map((member, index) => {
+          const isTop = index === 0 && member.monthRevenue > 0 && member.isActive;
+          const picoSemana = Math.max(1, ...member.last7);
           return (
             <div
               key={member.id}
               className={cn(
-                "relative flex flex-col h-full bg-zinc-900 border rounded-2xl p-5 transition-all",
-                member.isActive ? "border-zinc-800 hover:border-zinc-700 hover:shadow-xl hover:shadow-black/30" : "border-zinc-800/50 opacity-60"
+                "flex h-full flex-col rounded-2xl border bg-zinc-900 p-5 transition-all",
+                member.isActive ? "border-zinc-800 hover:border-zinc-700" : "border-zinc-800/50 opacity-60"
               )}
             >
-              {isTop && (
-                <span className="absolute -top-2.5 right-4 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black shadow-lg">
-                  <Crown className="w-3 h-3" /> TOP DO MÊS
-                </span>
-              )}
-
+              {/* Identificação */}
               <div className="flex items-start gap-3.5">
-                <Avatar name={member.name} avatar={member.avatar} size={56} />
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-white truncate">{member.name}</h3>
-                  <p className="text-xs text-zinc-500">{member.role}</p>
-                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                    {member.avgRating != null && (
-                      <span className="flex items-center gap-0.5 text-xs text-amber-400 font-semibold">
-                        <Star className="w-3 h-3 fill-amber-400" /> {member.avgRating.toFixed(1)}
-                        <span className="text-zinc-600 font-normal">({member.reviewCount})</span>
-                      </span>
-                    )}
-                    {member.hasLogin && (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                        App ativo
-                      </span>
-                    )}
-                    {!member.isActive && (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-zinc-700/40 border border-zinc-600 text-zinc-400">
-                        Inativo
+                <Avatar name={member.name} avatar={member.avatar} size={52} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="truncate text-base font-bold text-white">{member.name}</h3>
+                    {isTop && (
+                      <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-amber-400">
+                        TOP DO MÊS
                       </span>
                     )}
                   </div>
-                  {member.specialties && <p className="text-xs text-zinc-600 mt-1.5 truncate">{member.specialties}</p>}
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    {rotuloCargo(member.role)}
+                    {" · "}
+                    <span className={member.hasLogin ? "text-emerald-400" : "text-zinc-600"}>
+                      {member.hasLogin ? "App ativo" : "Sem app"}
+                    </span>
+                    {!member.isActive && " · Inativo"}
+                  </p>
                 </div>
-                <button onClick={() => openEdit(member)} title="Editar" className="text-zinc-600 hover:text-amber-400 transition-colors flex-shrink-0 p-1">
-                  <Pencil className="w-4 h-4" />
+                <button onClick={() => openEdit(member)} title="Editar" className="flex-shrink-0 p-1 text-zinc-600 transition-colors hover:text-amber-400">
+                  <Pencil className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 divide-x divide-zinc-800 mt-auto pt-4 border-t border-zinc-800/80">
-                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1 overflow-hidden">
-                  <Scissors className="w-3.5 h-3.5 text-zinc-400" />
-                  <span className="text-sm font-bold text-white truncate w-full text-center">{member.appointmentsCount}</span>
-                  <span className="text-[11px] text-zinc-500">cortes</span>
+              {/* Especialidades como etiquetas — texto corrido some no cartão */}
+              {member.specialties && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {member.specialties.split(/[,;]/).map((e) => e.trim()).filter(Boolean).slice(0, 5).map((esp) => (
+                    <span key={esp} className="rounded-lg border border-zinc-800 bg-zinc-950/60 px-2.5 py-1 text-[11px] text-zinc-400">
+                      {esp}
+                    </span>
+                  ))}
                 </div>
-                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1 overflow-hidden">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-sm font-bold text-amber-400 truncate w-full text-center">{formatCurrency(member.revenue)}</span>
-                  <span className="text-[11px] text-zinc-500">receita</span>
+              )}
+
+              {/* Números do mês */}
+              <div className="mt-4 grid grid-cols-3 divide-x divide-zinc-800 rounded-xl border border-zinc-800 bg-zinc-950/40">
+                <div className="px-4 py-3">
+                  <p className="text-[11px] text-zinc-500">Cortes no mês</p>
+                  <p className="mt-0.5 text-lg font-black text-white">{member.monthAppointments}</p>
                 </div>
-                <div className="flex flex-col items-center justify-center gap-0.5 min-w-0 px-1 overflow-hidden">
-                  <span className="text-sm font-bold text-white truncate w-full text-center">{Math.round(member.commissionRate * 100)}%</span>
-                  <span className="text-[11px] text-zinc-500">comissão</span>
+                <div className="px-4 py-3">
+                  <p className="text-[11px] text-zinc-500">Receita gerada</p>
+                  <p className="mt-0.5 text-lg font-black text-white">{formatCurrency(member.monthRevenue)}</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-[11px] text-zinc-500">Comissão ({Math.round(member.commissionRate * 100)}%)</p>
+                  <p className="mt-0.5 text-lg font-black text-amber-400">{formatCurrency(member.monthRevenue * member.commissionRate)}</p>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between gap-2 min-w-0">
-                <span className="text-xs text-zinc-500 truncate min-w-0 flex-1">
-                  Comissão: <span className="text-white font-semibold">{formatCurrency(member.revenue * member.commissionRate)}</span>
-                </span>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button
-                    onClick={() => setScheduleStaff(member)}
-                    title="Horário e folgas"
-                    className="flex items-center justify-center w-8 h-8 text-zinc-400 hover:text-amber-400 bg-zinc-800/60 hover:bg-amber-500/10 rounded-lg transition-colors"
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setAgendaStaff(member)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
-                  >
-                    <CalendarDays className="w-3.5 h-3.5" /> Agenda
-                  </button>
+              {/* Ocupação */}
+              <div className="mt-4">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xs text-zinc-500">Ocupação da agenda</span>
+                  <span className="text-sm font-bold text-white">{member.occupancy}%</span>
                 </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-800">
+                  <div className="h-full rounded-full bg-amber-500" style={{ width: `${Math.min(100, member.occupancy)}%` }} />
+                </div>
+              </div>
+
+              {/* Ritmo da semana */}
+              <div className="mt-4">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xs text-zinc-500">Últimos 7 dias</span>
+                  <span className="text-xs text-zinc-500">
+                    {member.avgRating != null && (
+                      <>
+                        <span className="font-semibold text-amber-400">{member.avgRating.toFixed(1).replace(".", ",")}</span>
+                        {" ★ · "}
+                      </>
+                    )}
+                    {member.clientsCount} cliente{member.clientsCount === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-end gap-1.5">
+                  {member.last7.map((qtd, i) => (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+                      <div
+                        title={`${qtd} corte${qtd === 1 ? "" : "s"}`}
+                        className={cn("w-full rounded-md", qtd > 0 ? "bg-amber-500" : "bg-zinc-800")}
+                        style={{ height: `${qtd > 0 ? 14 + (qtd / picoSemana) * 30 : 14}px` }}
+                      />
+                      <span className="text-[10px] text-zinc-600">{DIAS_CURTOS[(hojeDia - 6 + i + 7) % 7]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ações */}
+              <div className="mt-5 grid grid-cols-2 gap-2.5">
+                <button
+                  onClick={() => setScheduleStaff(member)}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800 py-2.5 text-sm font-semibold text-zinc-300 transition-colors hover:border-zinc-700 hover:text-white"
+                >
+                  <Clock className="h-4 w-4" /> Horários
+                </button>
+                <button
+                  onClick={() => setAgendaStaff(member)}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 py-2.5 text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20"
+                >
+                  <CalendarDays className="h-4 w-4" /> Ver agenda
+                </button>
               </div>
             </div>
           );

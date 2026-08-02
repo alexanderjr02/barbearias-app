@@ -1,36 +1,32 @@
 import { LucideIcon } from "lucide-react";
 
 interface PageHeaderProps {
-  icon: LucideIcon;
+  /**
+   * Não é mais desenhado. Continua aceito porque 32 páginas o passam, e um
+   * cabeçalho é lugar errado para uma migração em massa arriscar quebrar build.
+   * Páginas novas podem simplesmente omitir.
+   */
+  icon?: LucideIcon;
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
-  // "mono" e o /admin: preto e branco, sem cor de marca. O painel do gestor
-  // usa "amber" — a diferenca continua obvia a distancia, sem precisar de uma
-  // terceira cor so para anunciar "voce esta no admin".
+  /** Mantido pela mesma razão do `icon`: o selo colorido saiu. */
   accent?: "amber" | "mono";
 }
 
-const ACCENT_CLASSES = {
-  amber: { badge: "bg-amber-500/10 border-amber-500/20", icon: "text-amber-400" },
-  mono: { badge: "bg-white/10 border-white/15", icon: "text-white" },
-};
-
-// Consistent header treatment for every dashboard page: an icon badge to
-// anchor the eye, title + subtitle, and an optional primary action on the
-// right. Replaces the ad hoc flex-row headers each page used to hand-roll.
-export function PageHeader({ icon: Icon, title, subtitle, action, accent = "amber" }: PageHeaderProps) {
-  const colors = ACCENT_CLASSES[accent];
+// Cabeçalho de página: título, subtítulo e a ação principal à direita.
+//
+// O selo com ícone que ficava à esquerda saiu. Ele repetia em quadrado o que o
+// menu lateral já diz (você está em Equipe), e um quadrado colorido em cada
+// página empurrava o título para baixo na hierarquia — quem entra quer ler
+// "Equipe · 2 barbeiros ativos", não olhar um ícone. Sem ele o título ganha o
+// peso e a página começa na informação.
+export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3.5">
-        <div className={`w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 ${colors.badge}`}>
-          <Icon className={`w-5 h-5 ${colors.icon}`} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">{title}</h1>
-          {subtitle && <p className="text-zinc-500 text-sm mt-0.5">{subtitle}</p>}
-        </div>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="text-[28px] font-black leading-none tracking-tight text-white">{title}</h1>
+        {subtitle && <p className="mt-2 text-sm text-zinc-500">{subtitle}</p>}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
     </div>

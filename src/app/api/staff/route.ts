@@ -11,17 +11,42 @@ export async function GET() {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const staff = await prisma.staff.findMany({
-    where: { barbershopId: session.barbershopId },
-    include: {
-      appointments: {
-        where: { status: "COMPLETED" },
-        select: { totalPrice: true },
+  // A tela da equipe compara barbeiros no MÊS (é assim que comissão fecha), e
+  // mostra ritmo dos últimos 7 dias e ocupação da agenda. Por isso vem a data e
+  // os horários do atendimento, não só o preço.
+  const agora = new Date();
+  const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+  const seteDiasAtras = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - 6);
+
+  const [staff, horarios] = await Promise.all([
+    prisma.staff.findMany({
+      where: { barbershopId: session.barbershopId },
+      include: {
+        appointments: {
+          where: { status: "COMPLETED" },
+          select: { totalPrice: true, date: true, startTime: true, endTime: true, clientPhone: true },
+        },
+        reviews: { select: { rating: true } },
       },
-      reviews: { select: { rating: true } },
-    },
-    orderBy: { createdAt: "asc" },
-  });
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.workingHour.findMany({ where: { barbershopId: session.barbershopId } }),
+  ]);
+
+  const minutos = (hhmm: string) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  const mesmoDia = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+  // Minutos que a barbearia esteve ABERTA do dia 1 até hoje — o denominador da
+  // ocupação. Sem isto, "ocupação" seria um número solto sem referência.
+  let minutosAbertos = 0;
+  for (let d = new Date(inicioMes); d <= agora; d.setDate(d.getDate() + 1)) {
+    const h = horarios.find((x: (typeof horarios)[number]) => x.dayOfWeek === d.getDay());
+    if (h && h.isOpen) minutosAbertos += Math.max(0, minutos(h.closeTime) - minutos(h.openTime));
+  }
 
   type StaffRow = (typeof staff)[number];
   const result = staff.map((member: StaffRow) => {
@@ -30,6 +55,20 @@ export async function GET() {
       member.reviews.length > 0
         ? member.reviews.reduce((acc: number, r: StaffRow["reviews"][number]) => acc + r.rating, 0) / member.reviews.length
         : null;
+    const doMes = member.appointments.filter((a: StaffRow["appointments"][number]) => a.date >= inicioMes);
+    const receitaMes = doMes.reduce((acc: number, a: StaffRow["appointments"][number]) => acc + a.totalPrice, 0);
+    // Ritmo da semana: um número por dia, do mais antigo ao de hoje.
+    const ultimos7 = Array.from({ length: 7 }, (_, i) => {
+      const dia = new Date(seteDiasAtras.getFullYear(), seteDiasAtras.getMonth(), seteDiasAtras.getDate() + i);
+      return member.appointments.filter((a: StaffRow["appointments"][number]) => mesmoDia(a.date, dia)).length;
+    });
+    const minutosOcupados = doMes.reduce(
+      (acc: number, a: StaffRow["appointments"][number]) => acc + Math.max(0, minutos(a.endTime) - minutos(a.startTime)),
+      0,
+    );
+    const ocupacao = minutosAbertos > 0 ? Math.min(100, Math.round((minutosOcupados / minutosAbertos) * 100)) : 0;
+    const clientesUnicos = new Set(member.appointments.map((a: StaffRow["appointments"][number]) => a.clientPhone)).size;
+
     return {
       id: member.id,
       name: member.name,
@@ -47,6 +86,11 @@ export async function GET() {
       hasLogin: !!member.userId,
       avgRating,
       reviewCount: member.reviews.length,
+      monthAppointments: doMes.length,
+      monthRevenue: receitaMes,
+      last7: ultimos7,
+      occupancy: ocupacao,
+      clientsCount: clientesUnicos,
     };
   });
 
