@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, AlertTriangle, Package } from "lucide-react";
+import { Plus, Search, AlertTriangle, Package, Pencil, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { apiGet, apiPost } from "@/lib/apiClient";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { FormModal, fieldCls, labelCls } from "@/components/dashboard/FormModal";
 import { PhotoUpload } from "@/components/dashboard/PhotoUpload";
@@ -29,6 +29,10 @@ export default function InventoryPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [selling, setSelling] = useState<ApiProduct | null>(null);
+  // Produto em edicao: o mesmo formulario cria e edita, entao o gestor nao
+  // aprende duas telas pra mesma coisa.
+  const [editing, setEditing] = useState<ApiProduct | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ApiProduct | null>(null);
   const [sellQty, setSellQty] = useState(1);
   // Quantidades do form de novo produto — controladas, para o NumberStepper.
   const [newQty, setNewQty] = useState(0);
@@ -36,11 +40,22 @@ export default function InventoryPage() {
   const queryClient = useQueryClient();
 
   const openNewProduct = () => {
+    setEditing(null);
     setNewQty(0);
     setNewMinQty(5);
     setImage(null);
     setModalOpen(true);
   };
+
+  const openEditProduct = (product: ApiProduct) => {
+    setEditing(product);
+    setNewQty(product.quantity);
+    setNewMinQty(product.minQuantity);
+    setImage(product.image);
+    setModalOpen(true);
+  };
+
+  const fecharForm = () => { setModalOpen(false); setEditing(null); setImage(null); };
 
   const sellProduct = useMutation({
     mutationFn: ({ id, quantity, paymentMethod }: { id: string; quantity: number; paymentMethod: string }) =>
@@ -59,28 +74,44 @@ export default function InventoryPage() {
 
   const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: () => apiGet<ApiProduct[]>("/api/products") });
 
-  const createProduct = useMutation({
-    mutationFn: (data: Record<string, unknown>) => apiPost("/api/products", data),
+  const saveProduct = useMutation({
+    mutationFn: ({ id, data }: { id: string | null; data: Record<string, unknown> }) =>
+      id ? apiPatch(`/api/products/${id}`, data) : apiPost("/api/products", data),
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success(vars.id ? "Produto atualizado" : "Produto criado");
+      fecharForm();
+    },
+  });
+
+  const deleteProduct = useMutation({
+    mutationFn: (id: string) => apiDelete(`/api/products/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      setModalOpen(false);
-      setImage(null);
+      toast.success("Produto excluído");
+      setConfirmDelete(null);
+      fecharForm();
     },
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    createProduct.mutate({
-      name: form.get("name"),
-      image: image || undefined,
-      brand: form.get("brand") || undefined,
-      sku: form.get("sku") || undefined,
-      category: form.get("category") || undefined,
-      price: Number(form.get("price")),
-      costPrice: form.get("costPrice") ? Number(form.get("costPrice")) : undefined,
-      quantity: newQty,
-      minQuantity: newMinQty,
+    saveProduct.mutate({
+      id: editing?.id ?? null,
+      data: {
+        name: form.get("name"),
+        // Editando, mandamos null pra limpar de fato quando ele apaga a foto —
+        // undefined faria o servidor manter a antiga.
+        image: image || (editing ? null : undefined),
+        brand: form.get("brand") || null,
+        sku: form.get("sku") || null,
+        category: form.get("category") || null,
+        price: Number(form.get("price")),
+        costPrice: form.get("costPrice") ? Number(form.get("costPrice")) : null,
+        quantity: newQty,
+        minQuantity: newMinQty,
+      },
     });
   };
 
@@ -108,13 +139,26 @@ export default function InventoryPage() {
   return (
     <div className="space-y-6">
       <FormModal
+        key={editing?.id ?? "novo"}
         open={modalOpen}
-        onClose={() => { setModalOpen(false); setImage(null); }}
-        title="Novo produto"
+        onClose={fecharForm}
+        title={editing ? "Editar produto" : "Novo produto"}
         onSubmit={handleSubmit}
-        isPending={createProduct.isPending}
-        error={createProduct.error?.message}
-        submitLabel="Criar produto"
+        isPending={saveProduct.isPending}
+        error={saveProduct.error?.message}
+        submitLabel={editing ? "Salvar alterações" : "Criar produto"}
+        footerExtra={
+          editing ? (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(editing)}
+              className="flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-bold text-zinc-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir
+            </button>
+          ) : undefined
+        }
       >
         <div>
           <label className={labelCls}>Foto</label>
@@ -122,30 +166,30 @@ export default function InventoryPage() {
         </div>
         <div>
           <label className={labelCls}>Nome</label>
-          <input name="name" required className={fieldCls} placeholder="Ex: Pomada Cabelo Black" />
+          <input name="name" required defaultValue={editing?.name ?? ""} className={fieldCls} placeholder="Ex: Pomada Cabelo Black" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>Marca</label>
-            <input name="brand" className={fieldCls} />
+            <input name="brand" defaultValue={editing?.brand ?? ""} className={fieldCls} />
           </div>
           <div>
             <label className={labelCls}>SKU</label>
-            <input name="sku" className={fieldCls} />
+            <input name="sku" defaultValue={editing?.sku ?? ""} className={fieldCls} />
           </div>
         </div>
         <div>
           <label className={labelCls}>Categoria</label>
-          <input name="category" className={fieldCls} placeholder="Finalizadores" />
+          <input name="category" defaultValue={editing?.category ?? ""} className={fieldCls} placeholder="Finalizadores" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>Preço de venda (R$)</label>
-            <input name="price" type="number" min={0} step="0.01" required className={fieldCls} />
+            <input name="price" type="number" min={0} step="0.01" required defaultValue={editing?.price ?? ""} className={fieldCls} />
           </div>
           <div>
             <label className={labelCls}>Preço de custo (R$)</label>
-            <input name="costPrice" type="number" min={0} step="0.01" className={fieldCls} />
+            <input name="costPrice" type="number" min={0} step="0.01" defaultValue={editing?.costPrice ?? ""} className={fieldCls} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -202,6 +246,37 @@ export default function InventoryPage() {
             <p className="text-[11px] leading-relaxed text-zinc-600">
               Baixa o estoque e lança a receita no Financeiro na mesma ação.
             </p>
+          </>
+        )}
+      </FormModal>
+
+      <FormModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        title="Excluir produto"
+        onSubmit={(e) => { e.preventDefault(); if (confirmDelete) deleteProduct.mutate(confirmDelete.id); }}
+        isPending={deleteProduct.isPending}
+        error={deleteProduct.error?.message}
+        submitLabel="Excluir definitivamente"
+        submitTone="danger"
+      >
+        {confirmDelete && (
+          <>
+            <p className="text-sm text-zinc-300">
+              Excluir <span className="font-bold text-white">{confirmDelete.name}</span> do estoque?
+            </p>
+            <p className="text-xs leading-relaxed text-zinc-500">
+              As vendas já registradas continuam no Financeiro — o histórico não muda. Só o produto sai da lista.
+            </p>
+            {confirmDelete.quantity > 0 && (
+              <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3.5 py-3">
+                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
+                <p className="text-xs text-zinc-300">
+                  Ainda há <span className="font-bold text-white">{confirmDelete.quantity} em estoque</span>. Se for só uma pausa
+                  na venda, editar e zerar a quantidade preserva o produto.
+                </p>
+              </div>
+            )}
           </>
         )}
       </FormModal>
@@ -315,7 +390,8 @@ export default function InventoryPage() {
                     <td className="px-6 py-4 text-right hidden sm:table-cell">
                       <p className="text-sm font-medium text-white">{formatCurrency((product.costPrice ?? 0) * product.quantity)}</p>
                     </td>
-                    <td className="px-4 py-4 text-right">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => { setSellQty(1); setSelling(product); }}
                         disabled={product.quantity < 1}
@@ -323,6 +399,23 @@ export default function InventoryPage() {
                       >
                         Vender
                       </button>
+                      <button
+                        onClick={() => openEditProduct(product)}
+                        title="Editar produto"
+                        aria-label={`Editar ${product.name}`}
+                        className="rounded-lg border border-zinc-700 p-1.5 text-zinc-400 transition-colors hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-400"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(product)}
+                        title="Excluir produto"
+                        aria-label={`Excluir ${product.name}`}
+                        className="rounded-lg border border-zinc-700 p-1.5 text-zinc-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                      </div>
                     </td>
                   </tr>
                 );

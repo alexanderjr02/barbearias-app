@@ -16,6 +16,20 @@ class DashboardSummary {
   final double avgTicket;
   final List<TopBarber> topBarbers;
   final List<RecentAppointment> recentAppointments;
+  /// Marcado pra hoje e ainda nao concluido — o que ainda entra no caixa.
+  final double todayExpected;
+  /// % da capacidade de hoje (horario x barbeiros) ja vendida.
+  final int todayOccupancy;
+  /// Dia sem expediente: capacidade zero nao e agenda lotada.
+  final bool closedToday;
+  final int freeMinutesToday;
+  final double? monthlyGoal;
+  /// O ritmo de hoje mantido ate o fim do mes.
+  final double projection;
+  /// Mesmo intervalo do mes passado, ate o mesmo dia.
+  final double lastMonthRevenue;
+  final int noShowsToday;
+  final List<LowStockItem> lowStock;
 
   DashboardSummary({
     required this.todayRevenue,
@@ -27,6 +41,15 @@ class DashboardSummary {
     required this.avgTicket,
     required this.topBarbers,
     required this.recentAppointments,
+    this.todayExpected = 0,
+    this.todayOccupancy = 0,
+    this.closedToday = false,
+    this.freeMinutesToday = 0,
+    this.monthlyGoal,
+    this.projection = 0,
+    this.lastMonthRevenue = 0,
+    this.noShowsToday = 0,
+    this.lowStock = const [],
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) => DashboardSummary(
@@ -39,6 +62,31 @@ class DashboardSummary {
         avgTicket: (json['avgTicket'] as num).toDouble(),
         topBarbers: (json['topBarbers'] as List).map((e) => TopBarber.fromJson(e)).toList(),
         recentAppointments: (json['recentAppointments'] as List).map((e) => RecentAppointment.fromJson(e)).toList(),
+        // Campos novos com fallback: um app antigo contra a API nova (ou o
+        // contrario, enquanto o deploy nao propaga) mostra zero, nao quebra.
+        todayExpected: (json['todayExpected'] as num?)?.toDouble() ?? 0,
+        todayOccupancy: (json['todayOccupancy'] as num?)?.toInt() ?? 0,
+        closedToday: json['closedToday'] as bool? ?? false,
+        freeMinutesToday: (json['freeMinutesToday'] as num?)?.toInt() ?? 0,
+        monthlyGoal: (json['monthlyGoal'] as num?)?.toDouble(),
+        projection: (json['projection'] as num?)?.toDouble() ?? 0,
+        lastMonthRevenue: (json['lastMonthRevenue'] as num?)?.toDouble() ?? 0,
+        noShowsToday: (json['noShowsToday'] as num?)?.toInt() ?? 0,
+        lowStock: ((json['lowStock'] as List?) ?? const [])
+            .map((e) => LowStockItem.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+class LowStockItem {
+  final String name;
+  final int quantity;
+
+  LowStockItem({required this.name, required this.quantity});
+
+  factory LowStockItem.fromJson(Map<String, dynamic> json) => LowStockItem(
+        name: json['name'] as String,
+        quantity: (json['quantity'] as num).toInt(),
       );
 }
 

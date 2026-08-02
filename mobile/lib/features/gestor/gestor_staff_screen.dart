@@ -140,7 +140,9 @@ class _GestorStaffScreenState extends State<GestorStaffScreen> {
                 Center(child: Text('Erro: ${snapshot.error}', style: const TextStyle(color: Colors.redAccent))),
               ]);
             }
-            final staff = [...(snapshot.data ?? [])]..sort((a, b) => b.monthRevenue.compareTo(a.monthRevenue));
+            // Tipo explicito: sem ele a lista vira List<dynamic>, e somar campo
+            // dynamic devolve num — o analyze passa e o compilador do web quebra.
+            final staff = <GestorStaff>[...(snapshot.data ?? [])]..sort((a, b) => b.monthRevenue.compareTo(a.monthRevenue));
 
             // Mesma leitura do painel web: o mes primeiro (e assim que comissao
             // fecha), depois barbeiro por barbeiro.

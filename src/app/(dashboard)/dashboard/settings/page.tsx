@@ -27,6 +27,7 @@ import { usePlan, PLAN_INFO, FEATURES_BY_PLAN, type Feature } from "@/context/Pl
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { cn } from "@/lib/utils";
 import { apiGet, apiPatch } from "@/lib/apiClient";
+import { TagListInput } from "@/components/dashboard/TagListInput";
 
 interface BarbershopMe {
   id: string;
@@ -261,25 +262,25 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Produtos de finalização</label>
-                  <textarea
+                  <TagListInput
                     name="finishProducts"
-                    rows={4}
-                    defaultValue={barbershop?.finishProducts ?? ""}
-                    placeholder={"Um por linha. Ex.: Sem produto, Pomada matte, Cera, Gel"}
-                    className={inputCls}
+                    defaultValue={barbershop?.finishProducts}
+                    placeholder="Digite e aperte Enter"
+                    suggestions={["Sem produto", "Pomada matte", "Pomada brilho", "Cera", "Gel", "Bálsamo", "Talco"]}
+                    emptyHint="Sem nada aqui, o cliente vê nossa lista padrão."
                   />
-                  <p className="mt-1 text-xs text-zinc-500">O cliente escolhe entre estes ao agendar. Em branco, usamos uma lista padrão.</p>
+                  <p className="mt-2 text-xs text-zinc-500">O cliente escolhe entre estes ao agendar.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Bebidas oferecidas</label>
-                  <textarea
+                  <TagListInput
                     name="drinks"
-                    rows={3}
-                    defaultValue={barbershop?.drinks ?? ""}
-                    placeholder={"Uma por linha. Ex.: Água, Café, Refrigerante"}
-                    className={inputCls}
+                    defaultValue={barbershop?.drinks}
+                    placeholder="Digite e aperte Enter"
+                    suggestions={["Água", "Café", "Refrigerante", "Cerveja", "Energético", "Whisky", "Suco"]}
+                    emptyHint="Sem nada aqui, a pergunta de bebida não aparece pro cliente."
                   />
-                  <p className="mt-1 text-xs text-zinc-500">Aparece nas preferências do cliente no agendamento.</p>
+                  <p className="mt-2 text-xs text-zinc-500">Aparece nas preferências do cliente no agendamento.</p>
                 </div>
               </div>
               <div>

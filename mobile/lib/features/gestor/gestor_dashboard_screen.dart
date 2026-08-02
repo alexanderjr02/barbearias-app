@@ -102,12 +102,6 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
     return 'Boa noite';
   }
 
-  String _pctChange(double current, double previous) {
-    if (previous == 0) return current > 0 ? '+100%' : '0%';
-    final pct = ((current - previous) / previous * 100).round();
-    return '${pct >= 0 ? '+' : ''}$pct%';
-  }
-
   Color _statusColor(String status) {
     return appointmentStatusColor(status, AppPalette.of(context));
   }
@@ -157,7 +151,6 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
               ]);
             }
             final s = snapshot.data!;
-            final revenueUp = s.todayRevenue >= s.yesterdayRevenue;
 
             return CustomScrollView(
               slivers: [
@@ -165,7 +158,7 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [accent.withValues(alpha: 0.18), palette.bg]),
+                      color: palette.bg,
                       image: coverUrl != null
                           ? DecorationImage(
                               image: NetworkImage(coverUrl),
@@ -228,63 +221,275 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
+                      // HOJE — a primeira pergunta de todo dono: como esta o dia?
+                      // Ja entrou, ainda entra, e quanto da casa esta vendido.
                       RiseIn(
-                        child: GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 1.5,
+                        // IntrinsicHeight da altura da lista: sem ele, 'stretch'
+                        // num Row dentro de rolagem pede altura ilimitada e o
+                        // painel inteiro nao renderiza.
+                        child: IntrinsicHeight(
+                          child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _StatCard(
-                              icon: Icons.attach_money_rounded,
-                              iconColor: palette.textSecondary,
-                              label: 'Receita hoje',
-                              value: 'R\$ ${s.todayRevenue.toStringAsFixed(2)}',
-                              trend: _pctChange(s.todayRevenue, s.yesterdayRevenue),
-                              trendUp: revenueUp,
-                              palette: palette,
+                            Expanded(
+                              child: _CardDia(
+                                rotulo: 'Já entrou hoje',
+                                valor: _reais(s.todayRevenue),
+                                corValor: palette.textPrimary,
+                                nota: s.todayRevenue == 0 && s.yesterdayRevenue == 0
+                                    ? 'sem movimento ainda'
+                                    : '${s.todayRevenue >= s.yesterdayRevenue ? 'acima' : 'abaixo'} de ontem',
+                                corNota: s.todayRevenue == 0 && s.yesterdayRevenue == 0
+                                    ? palette.textFaint
+                                    : (s.todayRevenue >= s.yesterdayRevenue ? const Color(0xFF34D399) : palette.textSecondary),
+                                palette: palette,
+                              ),
                             ),
-                            _StatCard(
-                              icon: Icons.event_available_rounded,
-                              iconColor: palette.textSecondary,
-                              label: 'Agendamentos hoje',
-                              value: '${s.todayCount}',
-                              sub: '${s.unconfirmedToday} não confirmados',
-                              palette: palette,
-                            ),
-                            _StatCard(
-                              icon: Icons.groups_rounded,
-                              iconColor: palette.textSecondary,
-                              label: 'Clientes ativos',
-                              value: '${s.activeClients}',
-                              sub: 'últimos 90 dias',
-                              palette: palette,
-                            ),
-                            _StatCard(
-                              icon: Icons.trending_up_rounded,
-                              iconColor: palette.textSecondary,
-                              label: 'Ticket médio',
-                              value: 'R\$ ${s.avgTicket.toStringAsFixed(2)}',
-                              sub: 'este mês',
-                              palette: palette,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _CardDia(
+                                rotulo: 'Ainda entra hoje',
+                                valor: _reais(s.todayExpected),
+                                corValor: accent,
+                                nota: '${s.todayCount} agendamento${s.todayCount == 1 ? '' : 's'}',
+                                corNota: palette.textFaint,
+                                palette: palette,
+                              ),
                             ),
                           ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
+
+                      // Cadeira vazia e dinheiro que nao volta — por isso ocupacao
+                      // aparece junto do caixa, nao escondida num relatorio.
+                      RiseIn(
+                        delay: const Duration(milliseconds: 40),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: palette.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: palette.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text('Agenda de hoje', style: TextStyle(color: palette.textFaint, fontSize: 12)),
+                                  const Spacer(),
+                                  Text(
+                                    s.closedToday ? '—' : '${s.todayOccupancy}%',
+                                    style: TextStyle(color: palette.textPrimary, fontSize: 14, fontWeight: FontWeight.w900),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: LinearProgressIndicator(
+                                  value: s.closedToday ? 0 : (s.todayOccupancy / 100).clamp(0.0, 1.0),
+                                  minHeight: 6,
+                                  backgroundColor: palette.surfaceAlt,
+                                  valueColor: AlwaysStoppedAnimation(accent),
+                                ),
+                              ),
+                              const SizedBox(height: 9),
+                              Text(
+                                s.closedToday
+                                    ? 'Barbearia fechada hoje'
+                                    : s.freeMinutesToday > 0
+                                        ? '${(s.freeMinutesToday / 60).floor()}h${s.freeMinutesToday % 60 > 0 ? '${s.freeMinutesToday % 60}min' : ''} de cadeira livre'
+                                        : 'Agenda cheia',
+                                style: TextStyle(color: palette.textFaint, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // O MES — estou no caminho? Projecao pelo ritmo atual, e
+                      // comparacao com o MESMO DIA do mes passado: contra o mes
+                      // fechado, todo dia 5 diria "caiu 60%".
                       RiseIn(
                         delay: const Duration(milliseconds: 60),
                         child: Container(
-                          width: double.infinity,
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(16)),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          decoration: BoxDecoration(
+                            color: palette.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: palette.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Receita mensal', style: TextStyle(color: onAccent.withValues(alpha: 0.75), fontWeight: FontWeight.w600, fontSize: 13)),
-                              Text('R\$ ${s.monthRevenue.toStringAsFixed(2)}', style: TextStyle(color: onAccent, fontWeight: FontWeight.w900, fontSize: 20)),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Faturamento do mês', style: TextStyle(color: palette.textFaint, fontSize: 12)),
+                                        const SizedBox(height: 5),
+                                        Text(_reais(s.monthRevenue),
+                                            style: TextStyle(color: palette.textPrimary, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          s.lastMonthRevenue > 0
+                                              ? '${s.monthRevenue >= s.lastMonthRevenue ? '+' : ''}${(((s.monthRevenue - s.lastMonthRevenue) / s.lastMonthRevenue) * 100).round()}% vs. mesmo dia do mês passado'
+                                              : 'primeiro mês com movimento',
+                                          style: TextStyle(
+                                            color: s.lastMonthRevenue > 0
+                                                ? (s.monthRevenue >= s.lastMonthRevenue ? const Color(0xFF34D399) : const Color(0xFFF87171))
+                                                : palette.textFaint,
+                                            fontSize: 11.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text('Projeção', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                                      const SizedBox(height: 4),
+                                      Text(_reais(s.projection),
+                                          style: TextStyle(color: accent, fontSize: 17, fontWeight: FontWeight.w900)),
+                                      Text('no ritmo de hoje', style: TextStyle(color: palette.textFaint, fontSize: 10)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              if (s.monthlyGoal != null && s.monthlyGoal! > 0) ...[
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Text('Meta de ${_reais(s.monthlyGoal!)}', style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+                                    const Spacer(),
+                                    Text('${((s.monthRevenue / s.monthlyGoal!) * 100).round()}%',
+                                        style: TextStyle(color: palette.textPrimary, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: LinearProgressIndicator(
+                                    value: (s.monthRevenue / s.monthlyGoal!).clamp(0.0, 1.0),
+                                    minHeight: 7,
+                                    backgroundColor: palette.surfaceAlt,
+                                    valueColor: AlwaysStoppedAnimation(
+                                        s.monthRevenue >= s.monthlyGoal! ? const Color(0xFF34D399) : accent),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  s.monthRevenue >= s.monthlyGoal!
+                                      ? 'Meta batida.'
+                                      : s.projection >= s.monthlyGoal!
+                                          ? 'No ritmo de bater. Faltam ${_reais(s.monthlyGoal! - s.monthRevenue)}.'
+                                          : 'Fora do ritmo. Precisa de ${_reais(s.monthlyGoal! - s.projection)} acima da projeção.',
+                                  style: TextStyle(color: palette.textSecondary, fontSize: 11.5),
+                                ),
+                              ] else ...[
+                                const SizedBox(height: 14),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: palette.bg,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: palette.border),
+                                  ),
+                                  child: Text(
+                                    'Sem meta definida. Com uma meta, esta faixa mostra quanto falta e se o ritmo atual chega lá — defina em Financeiro.',
+                                    style: TextStyle(color: palette.textFaint, fontSize: 11.5, height: 1.4),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // PRECISA DE VOCE — o painel so serve se virar decisao. Some
+                      // inteiro quando nao ha pendencia: painel que sempre alerta
+                      // e painel que ninguem le.
+                      if (s.unconfirmedToday > 0 || s.noShowsToday > 0 || s.lowStock.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        RiseIn(
+                          delay: const Duration(milliseconds: 80),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: palette.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: palette.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Precisa de você',
+                                    style: TextStyle(color: palette.textPrimary, fontSize: 14, fontWeight: FontWeight.w800)),
+                                const SizedBox(height: 10),
+                                if (s.unconfirmedToday > 0)
+                                  _LinhaAtencao(
+                                    cor: accent,
+                                    texto: '${s.unconfirmedToday} agendamento${s.unconfirmedToday == 1 ? '' : 's'} de hoje sem confirmação',
+                                    palette: palette,
+                                  ),
+                                if (s.noShowsToday > 0)
+                                  _LinhaAtencao(
+                                    cor: const Color(0xFFF87171),
+                                    texto: '${s.noShowsToday} cliente${s.noShowsToday == 1 ? '' : 's'} não compareceu hoje',
+                                    palette: palette,
+                                  ),
+                                if (s.lowStock.isNotEmpty)
+                                  _LinhaAtencao(
+                                    cor: accent,
+                                    texto: 'Estoque baixo: ${s.lowStock.map((p) => p.name).join(', ')}',
+                                    palette: palette,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Contexto de fundo: ticket e base de clientes mudam devagar,
+                      // entao vem menores, depois do que exige acao hoje.
+                      const SizedBox(height: 12),
+                      RiseIn(
+                        delay: const Duration(milliseconds: 100),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: palette.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: palette.border),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _CelulaContexto(
+                                  rotulo: 'Ticket médio',
+                                  valor: _reais(s.avgTicket),
+                                  nota: 'este mês',
+                                  palette: palette,
+                                ),
+                              ),
+                              Container(width: 1, height: 46, color: palette.border),
+                              Expanded(
+                                child: _CelulaContexto(
+                                  rotulo: 'Clientes ativos',
+                                  valor: '${s.activeClients}',
+                                  nota: 'últimos 90 dias',
+                                  palette: palette,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -397,56 +602,117 @@ class _GestorDashboardScreenState extends State<GestorDashboardScreen> {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String value;
-  final String? trend;
-  final bool trendUp;
-  final String? sub;
+// Valor cheio em reais: o dono confere contra o caixa, entao nao arredondamos.
+String _reais(double v) {
+  final inteiro = v.floor();
+  final centavos = ((v - inteiro) * 100).round().toString().padLeft(2, '0');
+  final digitos = inteiro.toString();
+  final buffer = StringBuffer();
+  for (var i = 0; i < digitos.length; i++) {
+    if (i > 0 && (digitos.length - i) % 3 == 0) buffer.write('.');
+    buffer.write(digitos[i]);
+  }
+  return 'R\$ $buffer,$centavos';
+}
+
+// Cartao do dia: numero grande, rotulo e nota curta. Sem icone — o rotulo ja
+// diz o que e, e o icone so competia com o numero.
+class _CardDia extends StatelessWidget {
+  final String rotulo;
+  final String valor;
+  final Color corValor;
+  final String nota;
+  final Color corNota;
   final AppPalette palette;
 
-  const _StatCard({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
+  const _CardDia({
+    required this.rotulo,
+    required this.valor,
+    required this.corValor,
+    required this.nota,
+    required this.corNota,
     required this.palette,
-    this.trend,
-    this.trendUp = true,
-    this.sub,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: palette.border),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, color: iconColor, size: 20),
-              if (trend != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: (trendUp ? Colors.green : Colors.redAccent).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-                  child: Text(trend!, style: TextStyle(color: trendUp ? Colors.green : Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                ),
-            ],
+          Text(rotulo, style: TextStyle(color: palette.textFaint, fontSize: 12)),
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(valor, style: TextStyle(color: corValor, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: TextStyle(color: palette.textPrimary, fontSize: 16, fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
-              Text(label, style: TextStyle(color: palette.textFaint, fontSize: 11)),
-              if (sub != null) Text(sub!, style: TextStyle(color: palette.textFaint, fontSize: 9.5)),
-            ],
+          const SizedBox(height: 4),
+          Text(nota, style: TextStyle(color: corNota, fontSize: 11.5), maxLines: 2, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
+}
+
+// Pendencia: um ponto colorido e a frase. Sem caixa dentro de caixa.
+class _LinhaAtencao extends StatelessWidget {
+  final Color cor;
+  final String texto;
+  final AppPalette palette;
+
+  const _LinhaAtencao({required this.cor, required this.texto, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 5),
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
           ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(texto, style: TextStyle(color: palette.textSecondary, fontSize: 12.5, height: 1.35))),
+        ],
+      ),
+    );
+  }
+}
+
+class _CelulaContexto extends StatelessWidget {
+  final String rotulo;
+  final String valor;
+  final String nota;
+  final AppPalette palette;
+
+  const _CelulaContexto({required this.rotulo, required this.valor, required this.nota, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(rotulo, style: TextStyle(color: palette.textFaint, fontSize: 11.5)),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(valor, style: TextStyle(color: palette.textPrimary, fontSize: 18, fontWeight: FontWeight.w900)),
+          ),
+          Text(nota, style: TextStyle(color: palette.textFaint, fontSize: 10)),
         ],
       ),
     );

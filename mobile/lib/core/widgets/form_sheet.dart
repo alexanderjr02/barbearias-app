@@ -181,6 +181,177 @@ class RukzField extends StatelessWidget {
   }
 }
 
+/// Lista de itens curtos (bebidas, produtos de finalizacao) que o cliente ve
+/// ao agendar.
+///
+/// Era um campo de texto "um por linha": o gestor digitava as cegas, sem saber
+/// se o formato estava certo, e cada erro de digitacao virava uma opcao
+/// estranha na tela do cliente. Aqui cada item vira uma etiqueta assim que ele
+/// confirma — o que ele ve e exatamente o que o cliente vai ver.
+///
+/// Escreve de volta no mesmo [TextEditingController] (itens separados por
+/// quebra de linha), entao a tela que salva nao muda em nada.
+class TagListField extends StatefulWidget {
+  final TextEditingController controller;
+  final String? hint;
+
+  /// Atalhos do ramo: um toque adiciona, sem digitar.
+  final List<String> suggestions;
+
+  const TagListField({super.key, required this.controller, this.hint, this.suggestions = const []});
+
+  @override
+  State<TagListField> createState() => _TagListFieldState();
+}
+
+class _TagListFieldState extends State<TagListField> {
+  late List<String> _itens;
+  final _rascunhoCtrl = TextEditingController();
+  final _foco = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _itens = _separa(widget.controller.text);
+    // Sair do campo com texto pendente salva o item: ninguem deve perder o que
+    // digitou por ter tocado fora antes de confirmar.
+    _foco.addListener(() {
+      if (!_foco.hasFocus) _adiciona(_rascunhoCtrl.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _rascunhoCtrl.dispose();
+    _foco.dispose();
+    super.dispose();
+  }
+
+  static List<String> _separa(String texto) =>
+      texto.split(RegExp(r'[\n,;]')).map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+
+  bool _jaTem(String valor) => _itens.any((i) => i.toLowerCase() == valor.toLowerCase());
+
+  void _sincroniza() => widget.controller.text = _itens.join('\n');
+
+  void _adiciona(String texto) {
+    final novos = _separa(texto).where((t) => !_jaTem(t)).toList();
+    if (novos.isEmpty && _rascunhoCtrl.text.isEmpty) return;
+    setState(() {
+      _itens.addAll(novos);
+      _rascunhoCtrl.clear();
+    });
+    _sincroniza();
+  }
+
+  void _remove(int indice) {
+    setState(() => _itens.removeAt(indice));
+    _sincroniza();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final accent = Theme.of(context).colorScheme.primary;
+    final disponiveis = widget.suggestions.where((s) => !_jaTem(s)).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
+          decoration: BoxDecoration(color: palette.surfaceAlt, borderRadius: BorderRadius.circular(12)),
+          child: Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              ..._itens.asMap().entries.map((e) => Container(
+                    padding: const EdgeInsets.fromLTRB(11, 6, 6, 6),
+                    decoration: BoxDecoration(
+                      color: palette.surface,
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(color: palette.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(e.value, style: TextStyle(color: palette.textPrimary, fontSize: 13)),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () => _remove(e.key),
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.all(2),
+                            child: Icon(Icons.close_rounded, size: 14, color: palette.textFaint),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
+                child: TextField(
+                  controller: _rascunhoCtrl,
+                  focusNode: _foco,
+                  style: TextStyle(color: palette.textPrimary, fontSize: 13.5),
+                  textInputAction: TextInputAction.done,
+                  // O teclado confirma o item e continua aberto: o gestor
+                  // cadastra a lista inteira sem sair do campo.
+                  onSubmitted: (v) {
+                    _adiciona(v);
+                    _foco.requestFocus();
+                  },
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 7),
+                    hintText: _itens.isEmpty ? (widget.hint ?? 'Digite e confirme') : 'Adicionar...',
+                    hintStyle: TextStyle(color: palette.textFaint, fontSize: 13),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (disponiveis.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text('Sugestões:', style: TextStyle(color: palette.textFaint, fontSize: 11)),
+                ...disponiveis.map((s) => GestureDetector(
+                      onTap: () => _adiciona(s),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: palette.bg,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(color: palette.border),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add_rounded, size: 13, color: accent),
+                            const SizedBox(width: 3),
+                            Text(s, style: TextStyle(color: palette.textSecondary, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    )),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 /// Formats a date as the "YYYY-MM-DD" key the API expects (matching native
 /// `<input type="date">` on the web), or null when no date was chosen.
 String? formatDobKey(DateTime? date) {

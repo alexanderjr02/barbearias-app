@@ -13,9 +13,12 @@ interface Props {
   error?: string | null;
   children: React.ReactNode;
   footerExtra?: React.ReactNode;
+  /** "danger" pinta o botão de vermelho: confirmação de exclusão não pode ter
+   *  a mesma cor do salvar, senão o gestor apaga no automático. */
+  submitTone?: "primary" | "danger";
 }
 
-export function FormModal({ open, onClose, title, onSubmit, submitLabel = "Salvar", isPending, error, children, footerExtra }: Props) {
+export function FormModal({ open, onClose, title, onSubmit, submitLabel = "Salvar", isPending, error, children, footerExtra, submitTone = "primary" }: Props) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -51,9 +54,11 @@ export function FormModal({ open, onClose, title, onSubmit, submitLabel = "Salva
           <button
             type="submit"
             disabled={isPending}
-            className="flex-1 py-2.5 bg-amber-500 text-black text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50"
+            className={`flex-1 py-2.5 text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 ${
+              submitTone === "danger" ? "bg-red-600 text-white" : "bg-amber-500 text-black"
+            }`}
           >
-            {isPending ? "Salvando..." : submitLabel}
+            {isPending ? (submitTone === "danger" ? "Excluindo..." : "Salvando...") : submitLabel}
           </button>
         </div>
       </form>
