@@ -210,7 +210,7 @@ class _GestorUnitsScreenState extends State<GestorUnitsScreen> {
                             border: Border.all(color: accent.withValues(alpha: 0.3)),
                           ),
                           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            RukzR(size: 18, color: accent),
+                            CopilotMark(size: 18, bubble: accent, mustache: const Color(0xFF101014)),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

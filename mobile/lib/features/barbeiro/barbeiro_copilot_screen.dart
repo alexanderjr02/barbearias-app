@@ -181,7 +181,7 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
-                    child: RukzR(size: 34, color: accent),
+                    child: CopilotMark(size: 34, bubble: accent, mustache: const Color(0xFF101014)),
                   ),
                   const SizedBox(height: 14),
                   Text('Seu copiloto pessoal', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),

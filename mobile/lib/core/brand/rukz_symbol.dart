@@ -57,6 +57,88 @@ class RukzR extends StatelessWidget {
   }
 }
 
+/// A cara do Copiloto: o bigode oficial da marca dentro de um balão de conversa.
+/// Gêmeo do CopilotMark da web, mesmos traço e proporções. [bubble] pinta o
+/// balão e [mustache] pinta o bigode (o vazado). Num FAB de fundo âmbar, passe
+/// bubble = onAccent e mustache = accent; em fundo escuro, bubble = accent e
+/// mustache = um tom escuro.
+class CopilotMark extends StatelessWidget {
+  const CopilotMark({
+    super.key,
+    this.size = 28,
+    this.bubble = const Color(0xFFFFC300),
+    this.mustache = const Color(0xFF101014),
+  });
+
+  final double size;
+  final Color bubble;
+  final Color mustache;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(width: size, height: size, child: CustomPaint(painter: _CopilotMarkPainter(bubble, mustache)));
+  }
+}
+
+class _CopilotMarkPainter extends CustomPainter {
+  _CopilotMarkPainter(this.bubbleColor, this.mustacheColor);
+
+  final Color bubbleColor;
+  final Color mustacheColor;
+
+  static final Path _bigode = _parse(_bigodePath);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Desenhado num espaço 100x100, igual ao viewBox do CopilotMark da web.
+    canvas.scale(size.width / 100, size.height / 100);
+
+    final penBalao = Paint()
+      ..color = bubbleColor
+      ..isAntiAlias = true;
+    // Balão: retângulo arredondado + rabinho embaixo à esquerda, os dois na
+    // mesma cor pra virarem uma peça só.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(const Rect.fromLTWH(8, 10, 84, 56), const Radius.circular(18)),
+      penBalao,
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(32, 60)
+        ..lineTo(52, 60)
+        ..lineTo(27, 87)
+        ..close(),
+      penBalao,
+    );
+
+    // Bigode da marca, a MESMA cadeia de transformação do CopilotMark web, que
+    // encaixa a caixa do bigode na área interna do balão.
+    final penBigode = Paint()
+      ..color = mustacheColor
+      ..isAntiAlias = true;
+    canvas.save();
+    canvas.translate(1.6, -11.3);
+    canvas.scale(0.0945);
+    canvas.translate(440.8, 636.1);
+    canvas.scale(2.1934);
+    canvas.save();
+    canvas.translate(32.44, -24.80);
+    canvas.scale(-1.1307, 1.1307);
+    canvas.drawPath(_bigode, penBigode);
+    canvas.restore();
+    canvas.save();
+    canvas.translate(32.44, -24.80);
+    canvas.scale(1.1307, 1.1307);
+    canvas.drawPath(_bigode, penBigode);
+    canvas.restore();
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_CopilotMarkPainter old) =>
+      old.bubbleColor != bubbleColor || old.mustacheColor != mustacheColor;
+}
+
 class _RukzRPainter extends CustomPainter {
   _RukzRPainter(this.color);
 

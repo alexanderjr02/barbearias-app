@@ -220,7 +220,7 @@ class _GestorMarketingScreenState extends State<GestorMarketingScreen> {
                           ),
                           child: Column(
                             children: [
-                              RukzR(size: 22, color: palette.textFaint),
+                              CopilotMark(size: 22, bubble: palette.textFaint, mustache: palette.surface),
                               const SizedBox(height: 10),
                               Text('Ainda sem campanhas', style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.w600, fontSize: 13.5)),
                               const SizedBox(height: 4),
@@ -296,7 +296,7 @@ class _GestorMarketingScreenState extends State<GestorMarketingScreen> {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(color: accent.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(13)),
-                    child: RukzR(size: 20, color: accent),
+                    child: CopilotMark(size: 20, bubble: accent, mustache: const Color(0xFF101014)),
                   ),
                   if (_level != 'off')
                     Positioned(

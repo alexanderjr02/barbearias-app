@@ -90,6 +90,45 @@ class _ClienteCopilotScreenState extends State<ClienteCopilotScreen> {
     }
   }
 
+  Future<void> _clearChat() async {
+    final palette = AppPalette.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: palette.surface,
+        title: Text('Limpar conversa', style: TextStyle(color: palette.textPrimary)),
+        content: Text('Isso apaga o histórico do chat com o assistente. Não dá pra desfazer.',
+            style: TextStyle(color: palette.textSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Limpar', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final id = _barbershopId;
+    if (id == null) return;
+    try {
+      await _clientRepo.clearClientChat(id);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não consegui limpar agora. Tenta de novo.')));
+      }
+      return;
+    }
+    if (!mounted) return;
+    _tts.stop();
+    setState(() {
+      _messages.clear();
+      _greetingLoading = true;
+    });
+    // Recomeça do zero: sem histórico, cai na abertura proativa de novo.
+    await _loadConversation();
+  }
+
   @override
   void dispose() {
     _tts.stop();
@@ -235,6 +274,12 @@ class _ClienteCopilotScreenState extends State<ClienteCopilotScreen> {
               if (!_speak) _tts.stop();
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_rounded),
+            tooltip: 'Limpar conversa',
+            // Só faz sentido com algo pra limpar; some no chat vazio.
+            onPressed: _messages.isEmpty ? null : _clearChat,
+          ),
         ],
       ),
       body: Column(
@@ -249,7 +294,7 @@ class _ClienteCopilotScreenState extends State<ClienteCopilotScreen> {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
-                    child: RukzR(size: 34, color: accent),
+                    child: CopilotMark(size: 34, bubble: accent, mustache: const Color(0xFF101014)),
                   ),
                   const SizedBox(height: 14),
                   Text('Seu assistente pessoal', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),

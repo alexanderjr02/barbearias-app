@@ -97,3 +97,17 @@ export async function GET(request: NextRequest) {
   type Row = (typeof rows)[number];
   return NextResponse.json({ messages: rows.map((r: Row) => ({ role: r.role === "USER" ? "user" : "assistant", content: r.content })) });
 }
+
+// DELETE /api/client/chat?barbershopId=, limpa a conversa do cliente logado.
+// Escopo pela sessão: o sessionId é montado com o session.sub, então um cliente
+// nunca apaga a conversa de outro, mesmo passando outro barbershopId.
+export async function DELETE(request: NextRequest) {
+  const session = await getSession();
+  if (!session || session.role !== "CLIENT") return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  const barbershopId = request.nextUrl.searchParams.get("barbershopId");
+  if (!barbershopId) return NextResponse.json({ error: "barbershopId obrigatório" }, { status: 400 });
+  const { count } = await prisma.chatMessage.deleteMany({
+    where: { sessionId: `client:${session.sub}@${barbershopId}` },
+  });
+  return NextResponse.json({ ok: true, removed: count });
+}

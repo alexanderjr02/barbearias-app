@@ -224,7 +224,7 @@ class _BarbeiroAgendaScreenState extends State<BarbeiroAgendaScreen> {
                 children: [
                   apt.resultPhoto != null
                       ? Icon(Icons.compare_rounded, size: 15, color: accent)
-                      : RukzR(size: 15, color: accent),
+                      : CopilotMark(size: 16, bubble: accent, mustache: const Color(0xFF101014)),
                   const SizedBox(width: 6),
                   Text(apt.resultPhoto != null ? 'Antes e depois' : 'Referência do cliente', style: TextStyle(color: palette.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w700)),
                 ],
@@ -267,7 +267,7 @@ class _BarbeiroAgendaScreenState extends State<BarbeiroAgendaScreen> {
                             },
                       icon: aiLoading
                           ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: accent))
-                          : RukzR(size: 16, color: accent),
+                          : CopilotMark(size: 17, bubble: accent, mustache: const Color(0xFF101014)),
                       label: Text(aiLoading ? 'Analisando…' : 'Analisar com IA', style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 12.5)),
                       style: OutlinedButton.styleFrom(side: BorderSide(color: accent.withValues(alpha: 0.5)), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                     ),
@@ -280,7 +280,7 @@ class _BarbeiroAgendaScreenState extends State<BarbeiroAgendaScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(children: [RukzR(size: 14, color: accent), const SizedBox(width: 6), Text('Leitura da IA', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w800))]),
+                        Row(children: [CopilotMark(size: 15, bubble: accent, mustache: const Color(0xFF101014)), const SizedBox(width: 6), Text('Leitura da IA', style: TextStyle(color: accent, fontSize: 11.5, fontWeight: FontWeight.w800))]),
                         const SizedBox(height: 6),
                         Text(aiResult!, style: TextStyle(color: palette.textPrimary, fontSize: 12.5, height: 1.5)),
                       ],

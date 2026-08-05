@@ -338,6 +338,12 @@ class ClientRepository {
     }).toList();
   }
 
+  /// Limpa a conversa do cliente com o assistente daquela barbearia. O servidor
+  /// escopa pela sessão, então só apaga a conversa de quem está logado.
+  Future<void> clearClientChat(String barbershopId) async {
+    await ApiClient.instance.delete('/client/chat?barbershopId=${Uri.encodeQueryComponent(barbershopId)}');
+  }
+
   Future<void> markAllNotificationsRead() async {
     await ApiClient.instance.post('/client/notifications/read-all');
   }

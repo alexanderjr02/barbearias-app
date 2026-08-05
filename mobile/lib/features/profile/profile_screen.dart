@@ -421,7 +421,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _Card(
               palette: palette,
               child: _ActionRow(
-                iconWidget: RukzR(size: 18, color: accent),
+                iconWidget: CopilotMark(size: 18, bubble: accent, mustache: const Color(0xFF101014)),
                 label: 'Meu Copiloto',
                 sub: 'Seu assistente de atendimento',
                 palette: palette,

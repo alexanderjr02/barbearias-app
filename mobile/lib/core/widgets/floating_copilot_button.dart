@@ -37,7 +37,7 @@ class FloatingCopilotButton extends StatelessWidget {
                 // de antes (que virava um borrão de cor atrás do botão).
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.28), blurRadius: 12, offset: const Offset(0, 4))],
               ),
-              child: Center(child: RukzR(size: 30, color: onAccent)),
+              child: Center(child: CopilotMark(size: 30, bubble: onAccent, mustache: accent)),
             ),
           ),
         ),

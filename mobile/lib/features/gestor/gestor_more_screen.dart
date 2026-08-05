@@ -31,7 +31,7 @@ class GestorMoreScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _MenuTile(
-            iconWidget: RukzR(size: 20, color: palette.textPrimary),
+            iconWidget: CopilotMark(size: 20, bubble: palette.textPrimary, mustache: palette.surface),
             label: 'Auto-piloto',
             sub: 'Automações que rodam sozinhas (confirmar, aniversário, win-back)',
             palette: palette,
