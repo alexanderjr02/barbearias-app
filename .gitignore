@@ -63,3 +63,6 @@ mobile/build/
 # gerado por mobile/scripts/build-web-deploy.js a partir de mobile/build/web
 # + mobile/web-deploy-src/ — nunca editar aqui, é sobrescrito a cada build.
 mobile/web-deploy/
+
+# rastros do navegador de teste
+.playwright-mcp/
