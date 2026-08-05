@@ -6,7 +6,7 @@ import { Palette, Upload, Check, Loader2, Bell, Scissors, Plus, Mail, Lock, Rota
 import { apiGet, apiPatch, apiUpload } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { RukzLetraR } from "@/components/brand/RukzLogo";
+import { CopilotMark } from "@/components/brand/RukzLogo";
 
 interface Shop {
   name?: string;
@@ -603,7 +603,7 @@ export default function AppearancePage() {
 
                 {/* O copiloto à esquerda usa o "r" da marca, igual ao app. */}
                 <div className="absolute bottom-[70px] left-4 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: accent, color: onAccent }}>
-                  <RukzLetraR className="h-5 w-5" />
+                  <CopilotMark className="h-6 w-6" mustache={accent} />
                 </div>
                 <div className="absolute bottom-[70px] right-4 flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-bold" style={{ background: accent, color: onAccent }}>
                   <Plus className="h-4 w-4" /> Agendar

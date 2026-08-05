@@ -10,7 +10,7 @@ import { apiGet, apiPost } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { formatCurrency, cn } from "@/lib/utils";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { RukzLetraR } from "@/components/brand/RukzLogo";
+import { CopilotMark } from "@/components/brand/RukzLogo";
 
 interface Unit {
   id: string;
@@ -166,7 +166,7 @@ export default function UnitsPage() {
       {insight && (
         <div className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950">
-            <RukzLetraR className="h-4 w-4 text-amber-400" />
+            <CopilotMark className="h-5 w-5 text-amber-400" />
           </div>
           <div className="min-w-0">
             <p className="text-xs font-bold text-amber-400 uppercase tracking-wide">Leitura do Copiloto</p>

@@ -6,7 +6,7 @@ import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
 import { toast } from "@/lib/toast";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { RukzLetraR } from "@/components/brand/RukzLogo";
+import { CopilotMark } from "@/components/brand/RukzLogo";
 
 interface Opportunities {
   autopilotLevel: "off" | "suggest" | "auto";
@@ -112,7 +112,7 @@ export default function MarketingPage() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950">
-                  <RukzLetraR className="h-5 w-5 text-amber-400" />
+                  <CopilotMark className="h-6 w-6 text-amber-400" />
                   {level !== "off" && (
                     <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
@@ -289,7 +289,7 @@ export default function MarketingPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center">
-                <RukzLetraR className="mx-auto h-6 w-6 text-zinc-700" />
+                <CopilotMark className="mx-auto h-8 w-8 text-zinc-700" mustache="#18181b" />
                 <p className="mt-3 text-sm font-medium text-zinc-300">Ainda sem campanhas</p>
                 <p className="mt-1 text-xs text-zinc-500">Quando o Copiloto disparar uma campanha, ela aparece aqui com o resultado.</p>
               </div>

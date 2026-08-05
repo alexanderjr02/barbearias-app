@@ -68,6 +68,50 @@ export function RukzLetraR({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * A cara do Copiloto: o bigode oficial da marca dentro de um balão de conversa.
+ *
+ * Reaproveita o MESMO caminho do bigode (BIGODE) com as mesmas transformações
+ * do símbolo, então o traço é idêntico ao da logo, só que emoldurado. Não é um
+ * bigode novo desenhado à mão, é o de sempre, agora falando.
+ *
+ * Duas cores porque é uma marca de dois tons: `bubble` pinta o balão (herda
+ * currentColor por padrão, pra virar preto num círculo amarelo sem variante) e
+ * `mustache` pinta o bigode (o vazado do balão). Onde o fundo é escuro, o
+ * bigode acompanha o fundo; onde é claro, também.
+ */
+export function CopilotMark({
+  className = "",
+  bubble = "currentColor",
+  mustache = "#0B0A0F",
+}: {
+  className?: string;
+  bubble?: string;
+  mustache?: string;
+}) {
+  return (
+    <svg viewBox="0 0 100 100" fill="none" aria-hidden="true" className={className}>
+      {/* Balão: retângulo arredondado + rabinho embaixo, à esquerda, os dois na
+          mesma cor pra virarem uma peça só. */}
+      <rect x="8" y="10" width="84" height="56" rx="18" fill={bubble} />
+      <path d="M 32 60 L 52 60 L 27 87 Z" fill={bubble} />
+      {/* Bigode da marca, mapeado pra dentro do balão. A cadeia de transformação
+          é a do RukzSimbolo; o translate/scale externo encaixa a caixa do
+          bigode (194.5..829.4 no x, ~503..660 no y) na área interna do balão. */}
+      <g transform="translate(1.6,-11.3) scale(0.0945)">
+        <g transform="translate(440.8,636.1) scale(2.1934)">
+          <g transform="translate(32.44,-24.80) scale(-1.1307,1.1307)">
+            <path d={BIGODE} fill={mustache} />
+          </g>
+          <g transform="translate(32.44,-24.80) scale(1.1307)">
+            <path d={BIGODE} fill={mustache} />
+          </g>
+        </g>
+      </g>
+    </svg>
+  );
+}
+
 export function RukzPalavra({ className = "" }: { className?: string }) {
   return (
     <svg viewBox={VB_PALAVRA} fill="none" aria-hidden="true" className={className}>

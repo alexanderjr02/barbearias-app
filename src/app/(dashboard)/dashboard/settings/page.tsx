@@ -18,7 +18,7 @@ import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import { cn } from "@/lib/utils";
 import { apiGet, apiPatch } from "@/lib/apiClient";
 import { TagListInput } from "@/components/dashboard/TagListInput";
-import { RukzLetraR } from "@/components/brand/RukzLogo";
+import { CopilotMark } from "@/components/brand/RukzLogo";
 
 interface BarbershopMe {
   id: string;
@@ -49,7 +49,7 @@ const tabs = [
   { id: "hours", label: "Horários", icon: Clock },
   { id: "notifications", label: "Notificações", icon: Bell },
   { id: "chatbot", label: "Chatbot", icon: MessageSquareText },
-  { id: "autopilot", label: "Auto-piloto", icon: RukzLetraR },
+  { id: "autopilot", label: "Auto-piloto", icon: CopilotMark },
   { id: "billing", label: "Plano", icon: CreditCard },
 ];
 
