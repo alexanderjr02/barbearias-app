@@ -126,7 +126,12 @@ export async function clientProactiveOpener(barbershopId: string, clientId: stri
     fallback = `Oi${hi}! Sou seu assistente. Posso marcar seu horário, indicar um corte ou tirar dúvidas. Bora começar?`;
   }
 
-  if (!assistantEnabled()) return { greeting: fallback, proactive: !!suggestion, suggestion };
+  // Saudação de abertura NÃO usa modelo por padrão. Ela dispara a CADA abertura
+  // do chat, nas 3 telas, e o texto determinístico acima já é data-driven (sabe
+  // o ritmo do cliente e o horário sugerido). Chamar o modelo só pra reescrever
+  // isso queimava um turno pago por abertura, sem ganho real. AI_GREETING=1
+  // reativa a versão escrita pelo modelo, se um dia quiser.
+  if (process.env.AI_GREETING !== "1" || !assistantEnabled()) return { greeting: fallback, proactive: !!suggestion, suggestion };
 
   try {
     const client = getAnthropic();

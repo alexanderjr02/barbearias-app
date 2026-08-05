@@ -5,6 +5,7 @@ import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, sho
 import { appointmentLimitError } from "@/lib/planLimits";
 import { recordAiUsage } from "@/lib/ai/usage";
 import { advanceLead } from "@/lib/attribution";
+import { registrarConversao } from "@/lib/copilot/conversion";
 
 // The client-facing assistant is HIGH VOLUME and LOW STAKES (book/answer), so
 // it defaults to a cheaper model to protect margin. Override with ASSISTANT_MODEL,
@@ -95,6 +96,8 @@ const tools: Anthropic.Tool[] = [
 ];
 
 interface ServiceRow { id: string; name: string; duration: number; price: number }
+// Identidade do cliente LOGADO. Vem da sessão, nunca do que o modelo digita.
+interface LoggedClient { id: string; name: string; phone: string | null }
 interface StaffRow { id: string; name: string }
 
 async function resolveService(barbershopId: string, name: string): Promise<ServiceRow | null> {
@@ -110,7 +113,18 @@ async function resolveStaff(barbershopId: string, name?: string): Promise<StaffR
   return staff.find((s) => s.name.toLowerCase() === n) ?? staff.find((s) => s.name.toLowerCase().includes(n) || n.includes(s.name.toLowerCase())) ?? null;
 }
 
-async function runTool(barbershopId: string, name: string, input: Record<string, unknown>): Promise<string> {
+// Dono do agendamento: sem cliente logado (chat público/WhatsApp), não trava
+// nada — lá a posse é pelo próprio telefone da conversa. Logado, tem de bater
+// o clientId ou os últimos 8 dígitos do telefone.
+function ownsAppointment(loggedClient: LoggedClient | undefined, appt: { clientId: string | null; clientPhone: string | null }): boolean {
+  if (!loggedClient) return true;
+  if (appt.clientId && appt.clientId === loggedClient.id) return true;
+  const meu = (loggedClient.phone ?? "").replace(/\D/g, "").slice(-8);
+  const dele = (appt.clientPhone ?? "").replace(/\D/g, "").slice(-8);
+  return !!meu && meu === dele;
+}
+
+async function runTool(barbershopId: string, name: string, input: Record<string, unknown>, loggedClient?: LoggedClient): Promise<string> {
   if (name === "check_availability") {
     const service = await resolveService(barbershopId, String(input.serviceName ?? ""));
     if (!service) return "Serviço não encontrado. Liste os serviços disponíveis para o cliente.";
@@ -140,24 +154,33 @@ async function runTool(barbershopId: string, name: string, input: Record<string,
     if (slotError) return `Não foi possível agendar: ${slotError}`;
     const limitError = await appointmentLimitError(barbershopId);
     if (limitError) return `Não foi possível agendar: ${limitError}`;
+    // Cliente logado: nome, telefone e clientId vêm da SESSÃO, não do que o
+    // modelo digitou. Sem o clientId o agendamento nascia solto e não aparecia
+    // em "meus agendamentos" nem contava pontos de fidelidade.
+    const bookedName = loggedClient?.name || String(input.clientName ?? "").trim();
+    const bookedPhone = loggedClient?.phone || String(input.clientPhone ?? "").trim();
     const appt = await prisma.appointment.create({
       data: {
         barbershopId,
         staffId: staff.id,
         serviceId: service.id,
+        clientId: loggedClient?.id ?? null,
         date: new Date(dateKey),
         startTime: time,
         endTime,
-        clientName: String(input.clientName ?? "").trim(),
-        clientPhone: String(input.clientPhone ?? "").trim(),
+        clientName: bookedName,
+        clientPhone: bookedPhone,
         totalPrice: service.price,
         status: "SCHEDULED",
       },
     });
+    // Fecha o ciclo do auto-piloto: se este cliente recebeu um chamado nas
+    // últimas 72h, aquela ação passa a contar como convertida.
+    await registrarConversao(barbershopId, loggedClient?.id ?? null);
     // Atribuição (Onda 1): fecha o ciclo, o lead que chegou pelo WhatsApp
     // (possivelmente de um anúncio) agora agendou. Best-effort.
     try {
-      await advanceLead(barbershopId, String(input.clientPhone ?? ""), "SCHEDULED", { scheduledAt: new Date(dateKey) });
+      await advanceLead(barbershopId, bookedPhone, "SCHEDULED", { scheduledAt: new Date(dateKey) });
     } catch (e) {
       console.error("[assistant] advanceLead SCHEDULED", e);
     }
@@ -165,7 +188,9 @@ async function runTool(barbershopId: string, name: string, input: Record<string,
   }
 
   if (name === "find_appointments") {
-    const phone = String(input.clientPhone ?? "").replace(/\D/g, "");
+    // Logado: ignora o telefone que o modelo mandar e usa o da sessão. Sem
+    // isto dava pra listar (e pegar o id de) agendamento de qualquer telefone.
+    const phone = (loggedClient?.phone ?? String(input.clientPhone ?? "")).replace(/\D/g, "");
     if (phone.length < 8) return "Telefone inválido.";
     const now = shopNow();
     const appts = await prisma.appointment.findMany({
@@ -183,8 +208,9 @@ async function runTool(barbershopId: string, name: string, input: Record<string,
 
   if (name === "cancel_appointment") {
     const id = String(input.appointmentId ?? "");
-    const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, status: true } });
+    const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, status: true, clientId: true, clientPhone: true } });
     if (!appt || appt.barbershopId !== barbershopId) return "Agendamento não encontrado.";
+    if (!ownsAppointment(loggedClient, appt)) return "Esse agendamento não é seu, não posso mexer nele.";
     await prisma.appointment.update({ where: { id }, data: { status: "CANCELLED" } });
     return "Agendamento cancelado com sucesso.";
   }
@@ -199,8 +225,9 @@ async function runTool(barbershopId: string, name: string, input: Record<string,
 
   if (name === "reschedule_appointment") {
     const id = String(input.appointmentId ?? "");
-    const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, staffId: true, service: { select: { duration: true } } } });
+    const appt = await prisma.appointment.findUnique({ where: { id }, select: { barbershopId: true, staffId: true, clientId: true, clientPhone: true, service: { select: { duration: true } } } });
     if (!appt || appt.barbershopId !== barbershopId) return "Agendamento não encontrado.";
+    if (!ownsAppointment(loggedClient, appt)) return "Esse agendamento não é seu, não posso mexer nele.";
     const dateKey = String(input.dateKey ?? "");
     const time = String(input.time ?? "");
     const duration = appt.service?.duration ?? 30;
@@ -221,7 +248,7 @@ function textFrom(content: Anthropic.ContentBlock[]): string {
 /** Runs the agentic tool loop and returns the assistant's final reply text.
  * `clientContext`, when provided (logged-in client), personalizes the bot so it
  * greets by name, remembers past visits/preferences and pre-fills bookings. */
-export async function runAssistant(barbershopId: string, history: ChatTurn[], clientContext?: string, askOrigin = false): Promise<string> {
+export async function runAssistant(barbershopId: string, history: ChatTurn[], clientContext?: string, askOrigin = false, loggedClient?: LoggedClient): Promise<string> {
   const client = getAnthropic();
 
   const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true, faqText: true, chatbotName: true } });
@@ -250,9 +277,13 @@ ${staffList}
 ${shop?.faqText ? `\nInformações e regras desta barbearia (use para responder dúvidas específicas; se a resposta estiver aqui, siga à risca):\n${shop.faqText}\n` : ""}${clientContext ? `\nSOBRE O CLIENTE COM QUEM VOCÊ ESTÁ FALANDO (use pra personalizar, chame pelo primeiro nome, lembre do histórico e ofereça repetir o de sempre; ao agendar, use estes dados sem pedir de novo):\n${clientContext}\n` : ""}
 Regras:
 - Para oferecer horários, sempre use check_availability (não invente).
-- Antes de agendar, colete nome e telefone/WhatsApp do cliente e confirme serviço, barbeiro, data e horário.
+${loggedClient
+    ? "- Você JÁ tem o nome e o telefone deste cliente (acima). NUNCA peça esses dados. Para agendar, apenas confirme serviço, barbeiro, data e horário e chame book_appointment; nome e telefone entram automaticamente."
+    : "- Antes de agendar, colete nome e telefone/WhatsApp do cliente e confirme serviço, barbeiro, data e horário."}
 - Datas relativas ("amanhã", "sábado") converta para AAAA-MM-DD a partir de hoje (${now.dateKey}).
-- Para cancelar/reagendar, primeiro use find_appointments com o telefone do cliente para achar o id.
+${loggedClient
+    ? "- Para cancelar/reagendar, use find_appointments (já traz só os agendamentos deste cliente) para achar o id."
+    : "- Para cancelar/reagendar, primeiro use find_appointments com o telefone do cliente para achar o id."}
 - Quando NÃO houver horário no dia desejado, ofereça a fila de espera (join_waitlist) além de sugerir outro dia.
 - Faça upsell com naturalidade: se o cliente marcar só corte, ofereça o combo corte + barba quando existir; nunca force.
 - Se a resposta estiver nas informações da barbearia acima, use-a.
@@ -285,7 +316,7 @@ Regras:
       if (block.type === "tool_use") {
         let out: string;
         try {
-          out = await runTool(barbershopId, block.name, block.input as Record<string, unknown>);
+          out = await runTool(barbershopId, block.name, block.input as Record<string, unknown>, loggedClient);
         } catch (e) {
           out = `Erro ao executar: ${e instanceof Error ? e.message : String(e)}`;
         }

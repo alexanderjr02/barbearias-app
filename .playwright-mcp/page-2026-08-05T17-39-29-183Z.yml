@@ -1,0 +1,38 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "rukz" [ref=e5]
+        - paragraph [ref=e16]: Gestão para barbearia
+    - main [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - heading "Bem-vindo de volta" [level=1] [ref=e20]
+          - paragraph [ref=e21]:
+            - text: É dono de barbearia e não tem conta?
+            - link "Criar a minha conta" [ref=e22] [cursor=pointer]:
+              - /url: /register
+          - generic [ref=e23]:
+            - button "Continuar com Google" [ref=e24]
+            - button "Continuar com Apple" [ref=e30]
+          - generic [ref=e33]: ou entre com e-mail
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]: E-mail
+              - textbox "E-mail" [ref=e40]:
+                - /placeholder: seu@email.com
+                - text: demo@cortix.app
+            - generic [ref=e41]:
+              - generic [ref=e42]: Senha
+              - generic [ref=e43]:
+                - textbox "Senha" [ref=e44]:
+                  - /placeholder: ••••••••
+                  - text: iJoAd477ZDFW
+                - button "Mostrar senha" [ref=e45]
+              - link "Esqueceu a senha?" [ref=e50] [cursor=pointer]:
+                - /url: /forgot-password
+            - button "Entrar" [ref=e51]
+        - paragraph [ref=e52]: Conexão segura e dados protegidos conforme a LGPD
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e56]

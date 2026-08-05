@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
   const [shop, user, prefs, visits, priorRows] = await Promise.all([
     prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { plan: true, chatbotEnabled: true } }),
-    prisma.user.findUnique({ where: { id: clientId }, select: { name: true } }),
+    prisma.user.findUnique({ where: { id: clientId }, select: { name: true, phone: true } }),
     prisma.clientPreferences.findUnique({ where: { clientId } }),
     prisma.appointment.findMany({
       where: { clientId, barbershopId, status: "COMPLETED" },
@@ -62,7 +62,14 @@ export async function POST(request: NextRequest) {
     type Row = (typeof priorRows)[number];
     const history: ChatTurn[] = priorRows.map((r: Row) => ({ role: r.role === "USER" ? "user" : "assistant", content: r.content }));
     try {
-      reply = await runAssistant(barbershopId, history, context);
+      // Passa a identidade da SESSÃO. É o que faz o assistente agendar de
+      // verdade (vinculado à conta, sem pedir nome/telefone) e só mexer nos
+      // agendamentos do próprio cliente.
+      reply = await runAssistant(barbershopId, history, context, false, {
+        id: clientId,
+        name: user?.name ?? "cliente",
+        phone: user?.phone ?? null,
+      });
     } catch {
       reply = `Oi${user?.name ? `, ${user.name.split(" ")[0]}` : ""}! Tive um probleminha agora. Pode repetir?`;
     }

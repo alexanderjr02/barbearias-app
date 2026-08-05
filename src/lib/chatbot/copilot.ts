@@ -908,7 +908,10 @@ export async function copilotGreeting(
     fallback = bits.join(" ");
   }
 
-  if (!assistantEnabled()) return { greeting: fallback, aiPowered: false };
+  // Saudação determinística por padrão, sem token (ver nota em
+  // clientProactiveOpener). O fallback acima já resume faturamento, sumidos e
+  // pendências de dados reais. AI_GREETING=1 reativa a versão escrita pelo modelo.
+  if (process.env.AI_GREETING !== "1" || !assistantEnabled()) return { greeting: fallback, aiPowered: false };
 
   try {
     const client = getAnthropic();
