@@ -52,6 +52,10 @@ export async function sendMail({ to, subject, html, text }: SendMailInput): Prom
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
+    // Loga o remetente que foi de fato usado. É o que separa "from errado
+    // (EMAIL_FROM não pegou)" de "domínio ainda não verificado" quando a Resend
+    // recusa com 403 (a mensagem dela é a mesma nos dois casos). Nunca a chave.
+    console.error(`[mailer] FALHA de=${from} para=${to} status=${res.status}`);
     // Surface a clean error to the caller; never leak the API key.
     throw new Error(`Falha ao enviar e-mail (${res.status}): ${detail.slice(0, 300)}`);
   }
