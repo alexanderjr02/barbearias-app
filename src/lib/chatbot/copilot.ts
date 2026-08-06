@@ -130,8 +130,13 @@ function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
     },
     {
       name: "set_day_off",
-      description: "Marca uma folga (dia sem atender) para um barbeiro numa data.",
+      description: "Marca uma folga (dia INTEIRO sem atender) para um barbeiro numa data. Pra bloquear só uma faixa (almoço, intervalo), use block_time.",
       input_schema: { type: "object", properties: { staffName: { type: "string" }, dateKey: { type: "string", description: "AAAA-MM-DD" }, reason: { type: "string" } }, required: ["staffName", "dateKey"] },
+    },
+    {
+      name: "block_time",
+      description: "Bloqueia uma FAIXA de horário num dia (ex.: almoço das 12:00 às 14:00) para ninguém agendar ali. Se staffName vier vazio, bloqueia a faixa para TODOS os barbeiros de uma vez. Use quando pedirem pra reservar almoço, intervalo, pausa ou organizar a agenda com um horário livre no meio. Diferente de set_day_off, que fecha o dia inteiro.",
+      input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" }, startTime: { type: "string", description: "HH:MM, início do bloqueio" }, endTime: { type: "string", description: "HH:MM, fim do bloqueio" }, staffName: { type: "string", description: "Vazio = todos os barbeiros" }, reason: { type: "string", description: "Ex.: Almoço" } }, required: ["dateKey", "startTime", "endTime"] },
     },
     {
       name: "remember",
@@ -380,6 +385,38 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       });
       await rememberFact(barbershopId, `Folga de ${st.name} marcada para ${dateKey}${reason ? ` (${reason})` : ""}.`, "action");
       return `Folga de ${st.name} marcada para ${dateKey}.`;
+    }
+    case "block_time": {
+      const dateKey = String(input.dateKey ?? "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return "Data inválida (use AAAA-MM-DD).";
+      const startTime = String(input.startTime ?? "").trim();
+      const endTime = String(input.endTime ?? "").trim();
+      if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) return "Horário inválido (use HH:MM).";
+      if (endTime <= startTime) return "O fim do bloqueio precisa ser depois do início.";
+      const reason = input.reason ? String(input.reason).trim() : "Almoço";
+      // staffName vazio = todos os barbeiros ativos (o caso "reserva o almoço de
+      // todo mundo" do gestor).
+      let alvo: { id: string; name: string }[];
+      if (input.staffName && String(input.staffName).trim()) {
+        const st = await resolveShopStaff(barbershopId, String(input.staffName));
+        if (!st) return "Barbeiro não encontrado.";
+        alvo = [{ id: st.id, name: st.name }];
+      } else {
+        alvo = await prisma.staff.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true } });
+      }
+      if (alvo.length === 0) return "Nenhum barbeiro ativo pra bloquear.";
+      // O @@unique(staffId,date) permite um bloqueio por barbeiro por dia, que
+      // cobre o almoço. upsert deixa o comando idempotente (repetir não duplica).
+      for (const st of alvo) {
+        await prisma.staffTimeOff.upsert({
+          where: { staffId_date: { staffId: st.id, date: new Date(dateKey) } },
+          update: { startTime, endTime, reason },
+          create: { staffId: st.id, date: new Date(dateKey), startTime, endTime, reason },
+        });
+      }
+      const quem = input.staffName && String(input.staffName).trim() ? alvo[0].name : `todos os ${alvo.length} barbeiros`;
+      await rememberFact(barbershopId, `Bloqueio ${startTime}-${endTime} (${reason}) em ${dateKey} para ${quem}.`, "action");
+      return `Pronto: ${startTime} às ${endTime} bloqueado (${reason}) em ${dateKey} para ${quem}. Ninguém consegue agendar nessa faixa.`;
     }
     case "remember": {
       const note = String(input.note ?? "").trim();
@@ -695,7 +732,7 @@ export async function runCopilot(
     role === "GESTOR"
       ? `\n\nVOCÊ OPERA O SISTEMA POR CONVERSA (execute quando o gestor pedir, confirmando os dados numa frase curta antes de agir):
 - Agenda: AGENDAR (book_appointment, cheque antes com check_availability), CANCELAR (find_appointments → cancel_appointment), REMARCAR (find_appointments → reschedule_appointment), FECHAR a agenda de um dia (close_agenda, um barbeiro ou a equipe toda).
-- Cadastro: criar serviço (create_service), mudar preço (update_service_price), marcar folga (set_day_off).
+- Cadastro: criar serviço (create_service), mudar preço (update_service_price), marcar folga de dia inteiro (set_day_off), bloquear uma faixa como almoço/intervalo (block_time, com staffName vazio bloqueia todos os barbeiros de uma vez).
 - Financeiro: lançar receita ou despesa (add_transaction).
 - Estoque: repor/ajustar produto (restock_product).
 - Marketing: enviar promoção pros clientes (send_promo, todos ou os sumidos). Escreva um texto curto e chamativo você mesmo e confirme antes de disparar.

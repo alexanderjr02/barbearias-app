@@ -61,7 +61,10 @@ export async function getEffectiveSchedule(
   const timeOff = await prisma.staffTimeOff.findUnique({
     where: { staffId_date: { staffId, date: new Date(dateKey) } },
   });
-  if (timeOff) {
+  // Só a folga de DIA INTEIRO (sem faixa) fecha o dia. Um bloqueio parcial
+  // (almoço, intervalo) deixa o dia aberto e vira um buraco nas fatias, tratado
+  // em buildDaySlots/validateRequestedSlot.
+  if (timeOff && !timeOff.startTime) {
     return { isOpen: false, openTime: null, closeTime: null, source: "blocked" };
   }
 
@@ -143,7 +146,14 @@ export async function getRangeScheduleByStaff(params: {
     prisma.workingHour.findMany({ where: { barbershopId } }),
   ]);
 
-  const timeOffKeys = new Set(timeOffs.map((t: { staffId: string; date: Date }) => `${t.staffId}|${t.date.toISOString().slice(0, 10)}`));
+  // Só folga de dia inteiro fecha o dia neste indicador de faixa. Bloqueio
+  // parcial (almoço) não fecha o dia; ele aparece como fatia ocupada quando a
+  // agenda de fato é montada em buildDaySlots.
+  const timeOffKeys = new Set(
+    timeOffs
+      .filter((t: { startTime: string | null }) => !t.startTime)
+      .map((t: { staffId: string; date: Date }) => `${t.staffId}|${t.date.toISOString().slice(0, 10)}`),
+  );
   const availabilityByKey = new Map<string, { isAvailable: boolean; startTime: string; endTime: string }>(
     availabilities.map((a: { staffId: string; dayOfWeek: number; isAvailable: boolean; startTime: string; endTime: string }) => [`${a.staffId}|${a.dayOfWeek}`, a])
   );
@@ -193,14 +203,29 @@ export async function buildDaySlots(params: {
     return { schedule, slots: [] };
   }
 
-  const existing = await prisma.appointment.findMany({
-    where: {
-      staffId,
-      date: new Date(dateKey),
-      status: { in: [...OCCUPYING_STATUSES] },
-    },
-    select: { startTime: true, endTime: true },
-  });
+  const [existing, blocks] = await Promise.all([
+    prisma.appointment.findMany({
+      where: {
+        staffId,
+        date: new Date(dateKey),
+        status: { in: [...OCCUPYING_STATUSES] },
+      },
+      select: { startTime: true, endTime: true },
+    }),
+    // Bloqueios parciais (almoço, intervalo) ocupam fatias como um agendamento.
+    prisma.staffTimeOff.findMany({
+      where: { staffId, date: new Date(dateKey), startTime: { not: null } },
+      select: { startTime: true, endTime: true },
+    }),
+  ]);
+  // Junta agendamentos e bloqueios num só conjunto de intervalos ocupados.
+  const busy: { startTime: string; endTime: string }[] = [
+    ...existing,
+    ...blocks.map((b: { startTime: string | null; endTime: string | null }) => ({
+      startTime: b.startTime as string,
+      endTime: (b.endTime ?? b.startTime) as string,
+    })),
+  ];
 
   const now = shopNow();
   const isToday = dateKey === now.dateKey;
@@ -210,7 +235,7 @@ export async function buildDaySlots(params: {
   const slots: Slot[] = [];
   for (let start = openMin; start + durationMinutes <= closeMin; start += intervalMinutes) {
     const end = start + durationMinutes;
-    const overlapsExisting = existing.some((apt: { startTime: string; endTime: string }) => {
+    const overlapsExisting = busy.some((apt: { startTime: string; endTime: string }) => {
       const aStart = timeToMinutes(apt.startTime);
       const aEnd = timeToMinutes(apt.endTime || apt.startTime);
       return start < aEnd && end > aStart;
@@ -265,6 +290,19 @@ export async function validateRequestedSlot(params: {
   if (!ignorePast && (dateKey < now.dateKey || (dateKey === now.dateKey && startMin <= now.minutes))) {
     return "Esse horário já passou.";
   }
+
+  // Bloqueio parcial (almoço/intervalo) barra sempre, mesmo no "encaixar mesmo
+  // assim": é indisponibilidade do barbeiro, não choque de dois clientes.
+  const breaks = await prisma.staffTimeOff.findMany({
+    where: { staffId, date: new Date(dateKey), startTime: { not: null } },
+    select: { startTime: true, endTime: true, reason: true },
+  });
+  const hitBreak = breaks.find((b: { startTime: string | null; endTime: string | null }) => {
+    const bStart = timeToMinutes(b.startTime as string);
+    const bEnd = timeToMinutes((b.endTime ?? b.startTime) as string);
+    return startMin < bEnd && endMin > bStart;
+  });
+  if (hitBreak) return `Esse horário está bloqueado${hitBreak.reason ? ` (${hitBreak.reason})` : " (intervalo)"}.`;
 
   if (!allowOverlap) {
     const sameDay = await prisma.appointment.findMany({

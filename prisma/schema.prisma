@@ -628,6 +628,11 @@ model Availability {
 model StaffTimeOff {
   id            String   @id @default(cuid())
   date          DateTime
+  // Faixa de horario. Ambos nulos = dia inteiro (folga/ferias, como sempre).
+  // Preenchidos = bloqueio PARCIAL do dia (ex.: almoco 12:00-14:00), pra
+  // ninguem agendar so naquela faixa.
+  startTime     String?
+  endTime       String?
   reason        String?
   staffId       String
   staff         Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)

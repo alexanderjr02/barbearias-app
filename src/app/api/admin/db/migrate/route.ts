@@ -73,6 +73,19 @@ const STEPS: Step[] = [
     sql: [`ALTER TABLE "Barbershop" ADD COLUMN "appFont" TEXT`],
   },
   {
+    // Faixa de horario no bloqueio do barbeiro. Nulo = dia inteiro (a folga de
+    // sempre). Preenchido = bloqueio PARCIAL, tipo o almoco 12:00-14:00, que o
+    // copiloto nao conseguia fazer (so fechava o dia todo).
+    name: "StaffTimeOff.startTime",
+    applied: () => columnExists("StaffTimeOff", "startTime"),
+    sql: [`ALTER TABLE "StaffTimeOff" ADD COLUMN "startTime" TEXT`],
+  },
+  {
+    name: "StaffTimeOff.endTime",
+    applied: () => columnExists("StaffTimeOff", "endTime"),
+    sql: [`ALTER TABLE "StaffTimeOff" ADD COLUMN "endTime" TEXT`],
+  },
+  {
     // Formas de cobrança aceitas por plano de assinatura. Sem a coluna, a
     // listagem de planos quebra com 500 (o cliente Prisma já pede o campo).
     name: "SubscriptionPlan.paymentMethods",
