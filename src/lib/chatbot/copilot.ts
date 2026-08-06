@@ -139,6 +139,16 @@ function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
       input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" }, startTime: { type: "string", description: "HH:MM, início do bloqueio" }, endTime: { type: "string", description: "HH:MM, fim do bloqueio" }, staffName: { type: "string", description: "Vazio = todos os barbeiros" }, reason: { type: "string", description: "Ex.: Almoço" } }, required: ["dateKey", "startTime", "endTime"] },
     },
     {
+      name: "get_day_appointments",
+      description: "Lista quem estava/está agendado num DIA específico (nome, horário, serviço, barbeiro, status, se tem conta no app). Use quando perguntarem 'quem tinha agendado no dia X', 'esse dia tinha cliente?', ou antes de fechar a agenda de um dia pra checar se afeta alguém.",
+      input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" } }, required: ["dateKey"] },
+    },
+    {
+      name: "warn_day_clients",
+      description: "Avisa os clientes que tinham horário num dia que a agenda fechou ou mudou, pedindo pra remarcar. Use quando o gestor fechou/vai fechar a agenda de um dia que já tinha cliente. Quem tem conta no app recebe o aviso na hora (notificação e push); os sem conta ficam listados pra você chamar no WhatsApp. Confirme com o gestor antes de disparar.",
+      input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" }, reason: { type: "string", description: "Motivo curto, ex.: fechamento, imprevisto" } }, required: ["dateKey"] },
+    },
+    {
       name: "remember",
       description: "Guarda na memória de longo prazo um fato ou decisão importante do negócio (ex: 'o gestor quer focar nas terças', 'meta de faturamento é R$20mil/mês', 'não gosta de dar desconto'). Use quando o gestor tomar uma decisão, definir uma meta ou informar uma preferência que valha lembrar nas próximas conversas.",
       input_schema: { type: "object", properties: { note: { type: "string" } }, required: ["note"] },
@@ -384,7 +394,19 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
         create: { staffId: st.id, date: new Date(dateKey), reason },
       });
       await rememberFact(barbershopId, `Folga de ${st.name} marcada para ${dateKey}${reason ? ` (${reason})` : ""}.`, "action");
-      return `Folga de ${st.name} marcada para ${dateKey}.`;
+      // Avisa se o dia já tinha cliente com esse barbeiro: é o que o gestor
+      // precisa saber antes de sair fechando (senão o cliente aparece e não tem
+      // quem atenda).
+      const jaTinha = await prisma.appointment.findMany({
+        where: { barbershopId, staffId: st.id, date: new Date(dateKey), status: { notIn: ["CANCELLED", "NO_SHOW", "COMPLETED"] } },
+        select: { clientName: true, startTime: true },
+        orderBy: { startTime: "asc" },
+      });
+      let resposta = `Folga de ${st.name} marcada para ${dateKey}.`;
+      if (jaTinha.length > 0) {
+        resposta += ` ATENÇÃO: ${st.name} já tinha ${jaTinha.length} cliente(s) nesse dia (${jaTinha.map((a: { clientName: string; startTime: string }) => `${a.clientName} ${a.startTime}`).join(", ")}). Quer que eu avise eles pra remarcar?`;
+      }
+      return resposta;
     }
     case "block_time": {
       const dateKey = String(input.dateKey ?? "");
@@ -416,7 +438,76 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       }
       const quem = input.staffName && String(input.staffName).trim() ? alvo[0].name : `todos os ${alvo.length} barbeiros`;
       await rememberFact(barbershopId, `Bloqueio ${startTime}-${endTime} (${reason}) em ${dateKey} para ${quem}.`, "action");
-      return `Pronto: ${startTime} às ${endTime} bloqueado (${reason}) em ${dateKey} para ${quem}. Ninguém consegue agendar nessa faixa.`;
+      // Fecha o ciclo: se já havia cliente marcado DENTRO da faixa, avisa o
+      // gestor na resposta, pra ele decidir remarcar ou avisar (warn_day_clients).
+      const staffIds = alvo.map((s) => s.id);
+      const afetados = await prisma.appointment.findMany({
+        where: { barbershopId, staffId: { in: staffIds }, date: new Date(dateKey), status: { notIn: ["CANCELLED", "NO_SHOW", "COMPLETED"] } },
+        select: { clientName: true, startTime: true, endTime: true },
+      });
+      const naFaixa = afetados.filter((a: { startTime: string; endTime: string | null }) => a.startTime < endTime && (a.endTime ?? a.startTime) > startTime);
+      let aviso = `Pronto: ${startTime} às ${endTime} bloqueado (${reason}) em ${dateKey} para ${quem}. Ninguém consegue agendar nessa faixa.`;
+      if (naFaixa.length > 0) {
+        aviso += ` ATENÇÃO: já havia ${naFaixa.length} cliente(s) marcado(s) nessa faixa (${naFaixa.map((a: { clientName: string; startTime: string }) => `${a.clientName} ${a.startTime}`).join(", ")}). Quer que eu avise eles pra remarcar?`;
+      }
+      return aviso;
+    }
+    case "get_day_appointments": {
+      const dateKey = String(input.dateKey ?? "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return "Data inválida (use AAAA-MM-DD).";
+      const appts = await prisma.appointment.findMany({
+        where: { barbershopId, date: new Date(dateKey), status: { not: "CANCELLED" } },
+        orderBy: { startTime: "asc" },
+        select: { clientName: true, clientId: true, startTime: true, status: true, service: { select: { name: true } }, staff: { select: { name: true } } },
+      });
+      if (appts.length === 0) return `Ninguém agendado em ${dateKey}.`;
+      return JSON.stringify({
+        dateKey,
+        total: appts.length,
+        comConta: appts.filter((a: { clientId: string | null }) => a.clientId).length,
+        clientes: appts.map((a: { clientName: string; clientId: string | null; startTime: string; status: string; service: { name: string } | null; staff: { name: string } | null }) => ({
+          nome: a.clientName,
+          hora: a.startTime,
+          servico: a.service?.name ?? "serviço",
+          barbeiro: a.staff?.name ?? "",
+          status: a.status,
+          temConta: !!a.clientId,
+        })),
+      });
+    }
+    case "warn_day_clients": {
+      const dateKey = String(input.dateKey ?? "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return "Data inválida (use AAAA-MM-DD).";
+      const reason = input.reason ? String(input.reason).trim() : "";
+      const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
+      const appts = await prisma.appointment.findMany({
+        where: { barbershopId, date: new Date(dateKey), status: { notIn: ["CANCELLED", "NO_SHOW", "COMPLETED"] } },
+        select: { clientId: true, clientName: true, startTime: true },
+      });
+      if (appts.length === 0) return `Ninguém pra avisar em ${dateKey} (sem agendamento ativo).`;
+      let avisados = 0;
+      const semConta: string[] = [];
+      for (const a of appts as { clientId: string | null; clientName: string; startTime: string }[]) {
+        if (a.clientId) {
+          // Transacional (o horário DELE mudou), então notifyClient e não o de
+          // marketing: independe de consentimento e o tipo é o do fechamento.
+          await notifyClient(
+            barbershopId,
+            a.clientId,
+            "APPOINTMENT_CANCELLED_BY_SHOP",
+            "Precisamos remarcar seu horário",
+            `Oi! Houve uma mudança na agenda da ${shop?.name ?? "barbearia"}${reason ? ` (${reason})` : ""} e seu horário de ${dateKey}${a.startTime ? ` às ${a.startTime}` : ""} precisa ser remarcado. Toque para escolher outro horário.`,
+            "/appointments",
+          );
+          avisados++;
+        } else {
+          semConta.push(`${a.clientName}${a.startTime ? ` (${a.startTime})` : ""}`);
+        }
+      }
+      await rememberFact(barbershopId, `Avisei ${avisados} cliente(s) sobre mudança na agenda de ${dateKey}.`, "action");
+      let msg = `Avisei ${avisados} ${avisados === 1 ? "cliente" : "clientes"} que tinham horário em ${dateKey} (chegou no app e no push deles).`;
+      if (semConta.length) msg += ` ${semConta.length} sem conta no app, chame no WhatsApp: ${semConta.join(", ")}.`;
+      return msg;
     }
     case "remember": {
       const note = String(input.note ?? "").trim();
@@ -733,6 +824,7 @@ export async function runCopilot(
       ? `\n\nVOCÊ OPERA O SISTEMA POR CONVERSA (execute quando o gestor pedir, confirmando os dados numa frase curta antes de agir):
 - Agenda: AGENDAR (book_appointment, cheque antes com check_availability), CANCELAR (find_appointments → cancel_appointment), REMARCAR (find_appointments → reschedule_appointment), FECHAR a agenda de um dia (close_agenda, um barbeiro ou a equipe toda).
 - Cadastro: criar serviço (create_service), mudar preço (update_service_price), marcar folga de dia inteiro (set_day_off), bloquear uma faixa como almoço/intervalo (block_time, com staffName vazio bloqueia todos os barbeiros de uma vez).
+- Agenda de um dia: ver quem tinha marcado num dia (get_day_appointments) e avisar esses clientes pra remarcar quando o dia fecha (warn_day_clients). Ao fechar/bloquear um dia que já tinha cliente, sempre ofereça avisar.
 - Financeiro: lançar receita ou despesa (add_transaction).
 - Estoque: repor/ajustar produto (restock_product).
 - Marketing: enviar promoção pros clientes (send_promo, todos ou os sumidos). Escreva um texto curto e chamativo você mesmo e confirme antes de disparar.
