@@ -5,6 +5,7 @@ import '../../core/api/api_client.dart';
 import '../../core/brand/rukz_symbol.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/typewriter_text.dart';
+import '../../core/widgets/typing_dots.dart';
 import '../../core/widgets/voice_input_button.dart';
 import '../chatbot/chatbot_responses.dart';
 import 'booking_repository.dart';
@@ -24,6 +25,9 @@ class ClienteCopilotScreen extends StatefulWidget {
 }
 
 class _Msg {
+  static int _seq = 0;
+  // Id único e estável da mensagem, usado como chave da bolha.
+  final int id = _seq++;
   final String role; // 'user' | 'assistant'
   final String text;
   final String? imageUrl;
@@ -301,8 +305,8 @@ class _ClienteCopilotScreenState extends State<ClienteCopilotScreen> {
                   const SizedBox(height: 6),
                   Text('Marque um horário, veja seus pontos de fidelidade, guarde a foto do corte que você quer ou peça o "provador de corte" pra IA sugerir o que combina com você. Ative a voz pra ouvir as respostas.', style: TextStyle(color: palette.textFaint, fontSize: 13, height: 1.4)),
                 ],
-                ..._messages.asMap().entries.map((e) => _Bubble(msg: e.value, palette: palette, accent: accent, animate: e.value.role == 'assistant' && e.key == _messages.length - 1)),
-                if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
+                ..._messages.asMap().entries.map((e) => _Bubble(key: ValueKey(e.value.id), msg: e.value, palette: palette, accent: accent, animate: e.value.role == 'assistant' && e.key == _messages.length - 1)),
+                if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [TypingDots(color: accent), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
               ],
             ),
           ),
@@ -393,7 +397,7 @@ class _Bubble extends StatelessWidget {
   final AppPalette palette;
   final Color accent;
   final bool animate;
-  const _Bubble({required this.msg, required this.palette, required this.accent, this.animate = false});
+  const _Bubble({super.key, required this.msg, required this.palette, required this.accent, this.animate = false});
 
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_toast.dart';
 import '../../core/widgets/typewriter_text.dart';
+import '../../core/widgets/typing_dots.dart';
 import '../../core/widgets/voice_input_button.dart';
 import 'gestor_repository.dart';
 
@@ -19,6 +20,9 @@ class GestorCopilotScreen extends StatefulWidget {
 }
 
 class _Msg {
+  static int _seq = 0;
+  // Id único e estável da mensagem, usado como chave da bolha.
+  final int id = _seq++;
   final String role; // 'user' | 'assistant'
   final String text;
   final List<CopilotAction> actions;
@@ -344,6 +348,7 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
                 if (_messages.isEmpty && !_greetingLoading)
                   Text('Me pergunte qualquer coisa sobre o negócio, eu leio os dados reais e te digo o que fazer. Você também pode pedir pra cadastrar serviço, mudar preço ou dar folga.', style: TextStyle(color: palette.textFaint, fontSize: 12.5, height: 1.45)),
                 ..._messages.asMap().entries.map((e) => _Bubble(
+                      key: ValueKey(e.value.id),
                       msg: e.value,
                       palette: palette,
                       accent: accent,
@@ -352,7 +357,7 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
                       onAction: (a) => _runChatAction(e.value, a),
                       onUndo: () => _undo(e.value),
                     )),
-                if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando seu resumo…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
+                if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [TypingDots(color: accent), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando seu resumo…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
               ],
             ),
           ),
@@ -502,7 +507,7 @@ class _Bubble extends StatelessWidget {
   final String? runningAction;
   final void Function(CopilotAction)? onAction;
   final VoidCallback? onUndo;
-  const _Bubble({required this.msg, required this.palette, required this.accent, this.animate = false, this.runningAction, this.onAction, this.onUndo});
+  const _Bubble({super.key, required this.msg, required this.palette, required this.accent, this.animate = false, this.runningAction, this.onAction, this.onUndo});
 
   @override
   Widget build(BuildContext context) {

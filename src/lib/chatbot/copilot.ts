@@ -6,6 +6,7 @@ import { assistantEnabled } from "./assistant";
 import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, shopNow, OCCUPYING_STATUSES } from "@/lib/scheduling";
 import { appointmentLimitError } from "@/lib/planLimits";
 import { notifyClient, notifyClientMarketing } from "@/lib/gestorNotifications";
+import { sendWhatsAppText, isWhatsAppConfigured } from "@/lib/whatsapp";
 import { onSlotOpened } from "@/lib/copilot/autopilot";
 import { recordAiUsage } from "@/lib/ai/usage";
 import { advanceLead } from "@/lib/attribution";
@@ -145,8 +146,13 @@ function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
     },
     {
       name: "warn_day_clients",
-      description: "Avisa os clientes que tinham horário num dia que a agenda fechou ou mudou, pedindo pra remarcar. Use quando o gestor fechou/vai fechar a agenda de um dia que já tinha cliente. Quem tem conta no app recebe o aviso na hora (notificação e push); os sem conta ficam listados pra você chamar no WhatsApp. Confirme com o gestor antes de disparar.",
+      description: "Avisa os clientes que tinham horário num dia que a agenda fechou ou mudou, pedindo pra remarcar. Use quando o gestor fechou/vai fechar a agenda de um dia que já tinha cliente. Quem tem conta recebe no app (notificação e push) e no WhatsApp; quem só tem telefone recebe direto no WhatsApp (se a barbearia tiver o WhatsApp conectado). Confirme com o gestor antes de disparar.",
       input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" }, reason: { type: "string", description: "Motivo curto, ex.: fechamento, imprevisto" } }, required: ["dateKey"] },
+    },
+    {
+      name: "message_client",
+      description: "Manda uma mensagem escrita para UM cliente específico, pelo nome. Chega no app dele (notificação + push) e no WhatsApp. Use quando o gestor pedir 'avisa o João que...', 'manda mensagem pra Maria dizendo...', 'fala pro cliente X que...'. Confirme o texto com o gestor antes de enviar.",
+      input_schema: { type: "object", properties: { clientName: { type: "string" }, message: { type: "string", description: "O texto exato a enviar" } }, required: ["clientName", "message"] },
     },
     {
       name: "remember",
@@ -452,6 +458,18 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       }
       return aviso;
     }
+    case "message_client": {
+      const client = await resolveClient(barbershopId, String(input.clientName ?? ""));
+      if (!client) return "Não achei esse cliente na barbearia (ele precisa ter histórico ou conta aqui).";
+      const message = String(input.message ?? "").trim();
+      if (!message) return "Preciso do texto da mensagem.";
+      const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
+      // notifyClient já leva app + push + WhatsApp (pelo telefone do cadastro).
+      await notifyClient(barbershopId, client.id, "APPOINTMENT_CONFIRMED", `Recado da ${shop?.name ?? "barbearia"}`, message, "/appointments");
+      await rememberFact(barbershopId, `Mandei recado pra ${client.name}: "${message.slice(0, 80)}".`, "action");
+      const wppOn = await isWhatsAppConfigured(barbershopId);
+      return `Recado enviado pra ${client.name}: chega no app e no push${wppOn ? " e no WhatsApp" : " (WhatsApp da barbearia ainda não conectado, então por ora só no app)"}.`;
+    }
     case "get_day_appointments": {
       const dateKey = String(input.dateKey ?? "");
       if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return "Data inválida (use AAAA-MM-DD).";
@@ -482,32 +500,38 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
       const appts = await prisma.appointment.findMany({
         where: { barbershopId, date: new Date(dateKey), status: { notIn: ["CANCELLED", "NO_SHOW", "COMPLETED"] } },
-        select: { clientId: true, clientName: true, startTime: true },
+        select: { clientId: true, clientName: true, clientPhone: true, startTime: true },
       });
       if (appts.length === 0) return `Ninguém pra avisar em ${dateKey} (sem agendamento ativo).`;
-      let avisados = 0;
-      const semConta: string[] = [];
-      for (const a of appts as { clientId: string | null; clientName: string; startTime: string }[]) {
+      const wppOn = await isWhatsAppConfigured(barbershopId);
+      const corpo = (nome: string, hora: string) =>
+        `Oi${nome ? `, ${nome.split(" ")[0]}` : ""}! Houve uma mudança na agenda da ${shop?.name ?? "barbearia"}${reason ? ` (${reason})` : ""} e seu horário de ${dateKey}${hora ? ` às ${hora}` : ""} precisa ser remarcado. Toque no app para escolher outro horário.`;
+      let noApp = 0;
+      let noWpp = 0;
+      const semContato: string[] = [];
+      for (const a of appts as { clientId: string | null; clientName: string; clientPhone: string | null; startTime: string }[]) {
         if (a.clientId) {
-          // Transacional (o horário DELE mudou), então notifyClient e não o de
-          // marketing: independe de consentimento e o tipo é o do fechamento.
-          await notifyClient(
-            barbershopId,
-            a.clientId,
-            "APPOINTMENT_CANCELLED_BY_SHOP",
-            "Precisamos remarcar seu horário",
-            `Oi! Houve uma mudança na agenda da ${shop?.name ?? "barbearia"}${reason ? ` (${reason})` : ""} e seu horário de ${dateKey}${a.startTime ? ` às ${a.startTime}` : ""} precisa ser remarcado. Toque para escolher outro horário.`,
-            "/appointments",
-          );
-          avisados++;
+          // Tem conta: notifyClient cobre app + push + WhatsApp (pelo telefone
+          // do cadastro). Transacional (o horário DELE mudou), sem consentimento.
+          await notifyClient(barbershopId, a.clientId, "APPOINTMENT_CANCELLED_BY_SHOP", "Precisamos remarcar seu horário", corpo(a.clientName, a.startTime), "/appointments");
+          noApp++;
+        } else if (a.clientPhone && wppOn) {
+          // Sem conta, mas com telefone: WhatsApp direto no número do agendamento.
+          await sendWhatsAppText(barbershopId, a.clientPhone, `*Precisamos remarcar seu horário*\n\n${corpo(a.clientName, a.startTime)}`);
+          noWpp++;
         } else {
-          semConta.push(`${a.clientName}${a.startTime ? ` (${a.startTime})` : ""}`);
+          semContato.push(`${a.clientName}${a.startTime ? ` (${a.startTime})` : ""}`);
         }
       }
-      await rememberFact(barbershopId, `Avisei ${avisados} cliente(s) sobre mudança na agenda de ${dateKey}.`, "action");
-      let msg = `Avisei ${avisados} ${avisados === 1 ? "cliente" : "clientes"} que tinham horário em ${dateKey} (chegou no app e no push deles).`;
-      if (semConta.length) msg += ` ${semConta.length} sem conta no app, chame no WhatsApp: ${semConta.join(", ")}.`;
-      return msg;
+      await rememberFact(barbershopId, `Avisei sobre mudança na agenda de ${dateKey}: ${noApp} no app, ${noWpp} por WhatsApp.`, "action");
+      const partes: string[] = [];
+      if (noApp) partes.push(`${noApp} pelo app (notificação, push e WhatsApp de quem tem conta)`);
+      if (noWpp) partes.push(`${noWpp} por WhatsApp direto`);
+      let msg = partes.length ? `Avisei ${partes.join(" e ")}.` : "";
+      if (semContato.length) {
+        msg += `${msg ? " " : ""}${semContato.length} não deu pra avisar automático${wppOn ? "" : " (WhatsApp da barbearia não está conectado)"}, chame na mão: ${semContato.join(", ")}.`;
+      }
+      return msg || "Não consegui avisar ninguém.";
     }
     case "remember": {
       const note = String(input.note ?? "").trim();
@@ -825,6 +849,7 @@ export async function runCopilot(
 - Agenda: AGENDAR (book_appointment, cheque antes com check_availability), CANCELAR (find_appointments → cancel_appointment), REMARCAR (find_appointments → reschedule_appointment), FECHAR a agenda de um dia (close_agenda, um barbeiro ou a equipe toda).
 - Cadastro: criar serviço (create_service), mudar preço (update_service_price), marcar folga de dia inteiro (set_day_off), bloquear uma faixa como almoço/intervalo (block_time, com staffName vazio bloqueia todos os barbeiros de uma vez).
 - Agenda de um dia: ver quem tinha marcado num dia (get_day_appointments) e avisar esses clientes pra remarcar quando o dia fecha (warn_day_clients). Ao fechar/bloquear um dia que já tinha cliente, sempre ofereça avisar.
+- Falar com cliente: mandar recado escrito pra um cliente pelo nome (message_client). Chega no app e no WhatsApp dele. Use quando pedirem "avisa o fulano que...". Você CONSEGUE contatar clientes por WhatsApp; nunca diga que não consegue.
 - Financeiro: lançar receita ou despesa (add_transaction).
 - Estoque: repor/ajustar produto (restock_product).
 - Marketing: enviar promoção pros clientes (send_promo, todos ou os sumidos). Escreva um texto curto e chamativo você mesmo e confirme antes de disparar.

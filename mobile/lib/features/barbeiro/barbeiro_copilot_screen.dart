@@ -3,6 +3,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../core/brand/rukz_symbol.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/typewriter_text.dart';
+import '../../core/widgets/typing_dots.dart';
 import '../../core/widgets/voice_input_button.dart';
 import '../gestor/gestor_repository.dart';
 
@@ -18,6 +19,9 @@ class BarbeiroCopilotScreen extends StatefulWidget {
 }
 
 class _Msg {
+  static int _seq = 0;
+  // Id único e estável da mensagem, usado como chave da bolha.
+  final int id = _seq++;
   final String role;
   final String text;
   _Msg(this.role, this.text);
@@ -188,8 +192,8 @@ class _BarbeiroCopilotScreenState extends State<BarbeiroCopilotScreen> {
                   const SizedBox(height: 6),
                   Text('Peça o briefing do seu próximo cliente (avaliação, preferências, receita do último corte, aniversário e dica de venda), veja seus ganhos ou quem sumiu. Ative a voz pra ouvir o briefing antes de atender.', style: TextStyle(color: palette.textFaint, fontSize: 13, height: 1.4)),
                 ],
-                ..._messages.asMap().entries.map((e) => _Bubble(msg: e.value, palette: palette, accent: accent, animate: e.value.role == 'assistant' && e.key == _messages.length - 1)),
-                if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent)), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando seu resumo…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
+                ..._messages.asMap().entries.map((e) => _Bubble(key: ValueKey(e.value.id), msg: e.value, palette: palette, accent: accent, animate: e.value.role == 'assistant' && e.key == _messages.length - 1)),
+                if (_sending || _greetingLoading) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [TypingDots(color: accent), const SizedBox(width: 8), Text(_greetingLoading && _messages.isEmpty ? 'preparando seu resumo…' : 'pensando…', style: TextStyle(color: palette.textFaint, fontSize: 12))])),
               ],
             ),
           ),
@@ -265,7 +269,7 @@ class _Bubble extends StatelessWidget {
   final AppPalette palette;
   final Color accent;
   final bool animate;
-  const _Bubble({required this.msg, required this.palette, required this.accent, this.animate = false});
+  const _Bubble({super.key, required this.msg, required this.palette, required this.accent, this.animate = false});
 
   @override
   Widget build(BuildContext context) {
