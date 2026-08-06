@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <!-- Dominio canonico do app: qualquer host antigo (rukz-app.vercel.app, os
+       cortix-*, a URL crua de um deploy) manda pro app.rukz.com.br com o mesmo
+       caminho. Vem ANTES de tudo pra o Flutter nem carregar no host errado. -->
+  <script>
+    (function () {
+      var h = location.hostname;
+      if (h !== 'app.rukz.com.br' && h !== 'localhost' && h !== '127.0.0.1') {
+        location.replace('https://app.rukz.com.br' + location.pathname + location.search + location.hash);
+      }
+    })();
+  </script>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
