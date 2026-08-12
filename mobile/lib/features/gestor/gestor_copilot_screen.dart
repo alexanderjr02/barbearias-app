@@ -361,8 +361,8 @@ class _GestorCopilotScreenState extends State<GestorCopilotScreen> {
               ],
             ),
           ),
-          // ---- Suggestions ----
-          if (!_sending)
+          // ---- Sugestões: só na conversa vazia (ponto de partida), somem no chat. ----
+          if (_messages.isEmpty && !_sending)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: SingleChildScrollView(

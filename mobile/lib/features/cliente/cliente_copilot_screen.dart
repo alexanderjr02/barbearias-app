@@ -310,7 +310,7 @@ class _ClienteCopilotScreenState extends State<ClienteCopilotScreen> {
               ],
             ),
           ),
-          if (!_sending)
+          if (_messages.isEmpty && !_sending)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: SingleChildScrollView(
