@@ -146,8 +146,17 @@ function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
     },
     {
       name: "warn_day_clients",
-      description: "Avisa os clientes que tinham horário num dia que a agenda fechou ou mudou, pedindo pra remarcar. Use quando o gestor fechou/vai fechar a agenda de um dia que já tinha cliente. Quem tem conta recebe no app (notificação e push) e no WhatsApp; quem só tem telefone recebe direto no WhatsApp (se a barbearia tiver o WhatsApp conectado). Confirme com o gestor antes de disparar.",
-      input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" }, reason: { type: "string", description: "Motivo curto, ex.: fechamento, imprevisto" } }, required: ["dateKey"] },
+      description: "Avisa os clientes que tinham horário num dia que a agenda fechou ou mudou, pedindo pra remarcar. Use quando o gestor fechou/vai fechar a agenda de um dia que já tinha cliente. Se o fechamento for só de um pedaço do dia, passe fromTime/toTime para avisar SÓ quem cai na faixa: sem isso o aviso vai para o dia inteiro e assusta quem continua com horário. Quem tem conta recebe no app (notificação e push) e no WhatsApp; quem só tem telefone recebe direto no WhatsApp (se a barbearia tiver o WhatsApp conectado). Confirme com o gestor antes de disparar.",
+      input_schema: {
+        type: "object",
+        properties: {
+          dateKey: { type: "string", description: "AAAA-MM-DD" },
+          reason: { type: "string", description: "Motivo curto, ex.: fechamento, imprevisto" },
+          fromTime: { type: "string", description: "HH:MM. Avisa só quem começa a partir deste horário. Use quando fechou só parte do dia." },
+          toTime: { type: "string", description: "HH:MM. Avisa só quem começa antes deste horário." },
+        },
+        required: ["dateKey"],
+      },
     },
     {
       name: "message_client",
@@ -560,12 +569,24 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const dateKey = String(input.dateKey ?? "");
       if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return "Data inválida (use AAAA-MM-DD).";
       const reason = input.reason ? String(input.reason).trim() : "";
+      // Fechar a tarde não é fechar o dia. Sem a faixa, o aviso de remarcação
+      // caía também em quem tinha horário de manhã e continuava com ele, o que
+      // é pior do que não avisar: o cliente acha que perdeu o horário e liga.
+      const hora = /^\d{2}:\d{2}$/;
+      const de = hora.test(String(input.fromTime ?? "")) ? String(input.fromTime) : null;
+      const ate = hora.test(String(input.toTime ?? "")) ? String(input.toTime) : null;
       const shop = await prisma.barbershop.findUnique({ where: { id: barbershopId }, select: { name: true } });
       const appts = await prisma.appointment.findMany({
-        where: { barbershopId, date: new Date(dateKey), status: { notIn: ["CANCELLED", "NO_SHOW", "COMPLETED"] } },
+        where: {
+          barbershopId,
+          date: new Date(dateKey),
+          status: { notIn: ["CANCELLED", "NO_SHOW", "COMPLETED"] },
+          ...(de || ate ? { startTime: { ...(de && { gte: de }), ...(ate && { lt: ate }) } } : {}),
+        },
         select: { clientId: true, clientName: true, clientPhone: true, startTime: true },
       });
-      if (appts.length === 0) return `Ninguém pra avisar em ${dateKey} (sem agendamento ativo).`;
+      const faixa = de || ate ? ` entre ${de ?? "o início"} e ${ate ?? "o fim do dia"}` : "";
+      if (appts.length === 0) return `Ninguém pra avisar em ${dateKey}${faixa} (sem agendamento ativo).`;
       const wppOn = await isWhatsAppConfigured(barbershopId);
       const corpo = (nome: string, hora: string) =>
         `Oi${nome ? `, ${nome.split(" ")[0]}` : ""}! Houve uma mudança na agenda da ${shop?.name ?? "barbearia"}${reason ? ` (${reason})` : ""} e seu horário de ${dateKey}${hora ? ` às ${hora}` : ""} precisa ser remarcado. Toque no app para escolher outro horário.`;
@@ -586,7 +607,7 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
           semContato.push(`${a.clientName}${a.startTime ? ` (${a.startTime})` : ""}`);
         }
       }
-      await rememberFact(barbershopId, `Avisei sobre mudança na agenda de ${dateKey}: ${noApp} no app, ${noWpp} por WhatsApp.`, "action");
+      await rememberFact(barbershopId, `Avisei sobre mudança na agenda de ${dateKey}${faixa}: ${noApp} no app, ${noWpp} por WhatsApp.`, "action");
       const partes: string[] = [];
       if (noApp) partes.push(`${noApp} pelo app (notificação, push e WhatsApp de quem tem conta)`);
       if (noWpp) partes.push(`${noWpp} por WhatsApp direto`);

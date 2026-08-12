@@ -32,6 +32,34 @@ Color appointmentStatusColor(String status, AppPalette palette) {
   }
 }
 
+/// Rótulo em português de cada status de atendimento.
+///
+/// Mora ao lado da cor porque as duas traduzem o mesmo estado, e é justamente
+/// por estarem separadas que a tela inicial do barbeiro mostrava "SCHEDULED"
+/// cru enquanto a agenda, um toque ao lado, mostrava "Agendado". Status
+/// desconhecido volta como veio: inventar tradução esconderia um estado novo
+/// que ninguém tratou.
+String appointmentStatusLabel(String status) {
+  switch (status) {
+    case 'SCHEDULED':
+      return 'Agendado';
+    case 'CONFIRMED':
+      return 'Confirmado';
+    case 'ARRIVED':
+      return 'Chegou';
+    case 'IN_PROGRESS':
+      return 'Em andamento';
+    case 'COMPLETED':
+      return 'Concluído';
+    case 'CANCELLED':
+      return 'Cancelado';
+    case 'NO_SHOW':
+      return 'Não compareceu';
+    default:
+      return status;
+  }
+}
+
 /// Semantic colors every screen should pull from instead of hardcoding hex
 /// values, this is what makes the light/dark toggle actually work, rather
 /// than just swapping the Scaffold background and leaving white-on-white

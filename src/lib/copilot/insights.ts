@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { startOfUtcDay, addUtcDays, startOfUtcMonth } from "@/lib/dateRange";
 import { buildDaySlots, shopNow } from "@/lib/scheduling";
+import { formatCurrency } from "@/lib/utils";
 
 // The deterministic business-intelligence layer behind the Copiloto. Every
 // function here works with ZERO AI, it's plain queries over the shop's own
@@ -12,7 +13,11 @@ function dateKeyOf(d: Date): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
-const money = (n: number) => `R$ ${n.toFixed(2)}`;
+// O resumo do copiloto é lido por dono de barbearia, não por programador.
+// `toFixed(2)` escrevia "R$ 10935.00", com ponto decimal e sem separador de
+// milhar, que em português lê errado na hora. Aqui vale a mesma formatação do
+// resto do painel, uma definição só do que é dinheiro na tela.
+const money = (n: number) => formatCurrency(n);
 
 export async function revenueSummary(barbershopId: string) {
   const now = new Date();

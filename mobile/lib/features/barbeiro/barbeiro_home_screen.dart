@@ -207,7 +207,7 @@ class _BarbeiroHomeScreenState extends State<BarbeiroHomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text('${reais(v.totalPrice)}', style: TextStyle(color: palette.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
-                            Text(v.status, style: TextStyle(color: _statusColor(v.status), fontSize: 10, fontWeight: FontWeight.w600)),
+                            Text(appointmentStatusLabel(v.status), style: TextStyle(color: _statusColor(v.status), fontSize: 10, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ],
@@ -591,7 +591,7 @@ class _AgendaCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
-                            child: Text(apt.status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                            child: Text(appointmentStatusLabel(apt.status), style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
                           ),
                         ],
                       ),
