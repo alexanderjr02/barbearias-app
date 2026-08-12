@@ -320,6 +320,55 @@ export default function Home() {
             </div>
           </Reveal>
         </div>
+
+        {/* As duas superfícies do sistema, na primeira tela. O telefone fica na
+            frente e pendurado abaixo da linha da janela: encostados na mesma
+            base, os dois viravam um par de mock-ups de catálogo, e o degrau é
+            o que faz um estar na frente do outro. Sem inclinação e sem
+            reflexo, que é onde esse tipo de composição costuma envelhecer. */}
+        <Reveal delay={320}>
+          <div className="mt-14 flex items-end sm:mt-16">
+            <div className="relative z-10 w-[40%] max-w-[15rem] shrink-0 translate-y-6 sm:w-[27%] sm:translate-y-10">
+              <div className="rounded-[1.8rem] border border-traco-forte bg-grafite p-1.5 shadow-2xl shadow-black/70 sm:rounded-[2.5rem] sm:p-2">
+                <div className="mx-auto mb-1.5 h-1 w-10 rounded-full bg-traco-forte sm:mb-2 sm:w-14" aria-hidden="true" />
+                <Image
+                  src="/landing/produto/app-login.webp"
+                  alt="Tela de entrada do aplicativo rukz no celular"
+                  width={560}
+                  height={1212}
+                  className="w-full rounded-[1.4rem] sm:rounded-[2rem]"
+                  priority
+                  unoptimized
+                />
+              </div>
+            </div>
+
+            <div className="-ml-[9%] min-w-0 flex-1 overflow-hidden rounded-xl border border-traco bg-carvao shadow-2xl shadow-black/50 sm:rounded-2xl">
+              <div className="flex items-center gap-2 border-b border-traco px-3 py-2 sm:px-4 sm:py-2.5">
+                <span className="flex gap-1.5" aria-hidden="true">
+                  <span className="h-1.5 w-1.5 rounded-full bg-traco-forte sm:h-2 sm:w-2" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-traco-forte sm:h-2 sm:w-2" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-traco-forte sm:h-2 sm:w-2" />
+                </span>
+                <span className="tipo-dado mx-auto truncate rounded-md bg-grafite px-2 py-0.5 text-[10px] text-cinza-fraco sm:px-3 sm:py-1 sm:text-[11px]">
+                  rukz.com.br/dashboard
+                </span>
+              </div>
+              <Image
+                src="/landing/produto/web-painel.webp"
+                alt="Painel do gestor no navegador, com o que já entrou hoje, o faturamento do mês e a meta"
+                width={1600}
+                height={1000}
+                className="w-full"
+                priority
+                unoptimized
+              />
+            </div>
+          </div>
+          <p className="mt-10 text-[13px] leading-relaxed text-cinza-fraco sm:mt-12">
+            O painel no computador e o aplicativo no bolso, na mesma assinatura. Capturas do sistema rodando.
+          </p>
+        </Reveal>
       </section>
 
       {/* O painel por dentro ------------------------------------------------ */}
