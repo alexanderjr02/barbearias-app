@@ -41,12 +41,15 @@ const FALAS_COMPUTADOR: Fala[] = [
 // chega depois da cena é pior do que legenda nenhuma: a pessoa lê uma coisa e
 // vê outra, e desconfia das duas.
 const FALAS_APP: Fala[] = [
-  { em: 0, texto: "O copiloto abre com o resumo do dia e o botão que resolve cada coisa" },
-  { em: 6, texto: "O dono pede a escala da semana" },
-  { em: 9, texto: "Ele lê noventa dias de atendimento e conta a demanda de cada dia" },
-  { em: 13, texto: "Sexta 493, sábado 473, terça 316: a folga vai para o meio da semana" },
-  { em: 18, texto: "Agora o dono simula subir o corte em 10%" },
-  { em: 23, texto: "R$ 437 a mais por mês, R$ 5.244 no ano, sem atender ninguém a mais" },
+  { em: 0, texto: "O caixa do dia no bolso do dono, e o copiloto a um toque" },
+  { em: 4, texto: "Ele abre com o resumo do dia e o botão que resolve cada coisa" },
+  { em: 7, texto: "O dono avisa que vai fechar amanhã depois das 15h" },
+  { em: 11, texto: "O copiloto acha os nove clientes daquela faixa, um por um" },
+  { em: 16, texto: "Nome, hora, serviço e barbeiro, antes de mexer em nada" },
+  { em: 19, texto: "Autorizado, ele bloqueia e avisa os nove pelo app e pelo WhatsApp" },
+  { em: 23, texto: "Quem tinha horário de manhã não recebe nada, porque não foi afetado" },
+  { em: 26, texto: "Agora a escala: ele lê noventa dias e conta a demanda de cada dia" },
+  { em: 29, texto: "Sexta 493, sábado 473, terça 316: a folga vai para o meio da semana" },
 ];
 
 export function VideoCopiloto() {
@@ -78,8 +81,8 @@ export function VideoCopiloto() {
       falas={FALAS_APP}
       telefone
       tocaSozinho={false}
-      descricao="Gravação do aplicativo: o dono pede a escala da semana, o copiloto responde com a distribuição da equipe por dia calculada pela demanda de noventa dias, e depois simula o efeito de subir o preço do corte em 10%"
-      legenda="No aplicativo, duas perguntas seguidas: a escala da semana, que ele monta lendo noventa dias de atendimento, e a simulação de subir o corte em 10%, que ele responde com o ganho no mês e no ano. Gravação da tela, acelerada. Os números são de uma barbearia de demonstração."
+      descricao="Gravação do aplicativo: o dono avisa que vai fechar amanhã depois das 15h, o copiloto lista os nove clientes afetados, bloqueia e avisa cada um, e em seguida monta a escala da semana pela demanda dos últimos noventa dias"
+      legenda="No aplicativo, da mesma conversa saem duas coisas: fechar a agenda de amanhã avisando os nove clientes afetados, e a escala da semana montada com noventa dias de atendimento na mão. Gravação da tela, acelerada. O bloqueio e os avisos saíram de verdade."
     />
   );
 }
@@ -174,11 +177,12 @@ function Quadro({
         aria-label={descricao}
       />
 
-      {/* A legenda mora sobre o vídeo, no rodapé, como legenda de filme. Fundo
-          escuro atrás do texto porque a tela do produto também é escura e o
-          branco puro sumiria em cima dela. */}
+      {/* A legenda mora no alto, e não no rodapé de legenda de filme: aqui
+          embaixo é onde a resposta do copiloto chega e onde fica o campo de
+          digitar, ou seja, exatamente o que a pessoa precisa ver. No topo ela
+          cobre só o cabeçalho, que é enfeite. */}
       {(tocando || começou) && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 sm:p-4">
+        <div className="pointer-events-none absolute inset-x-0 top-0 p-3 sm:p-4">
           <p className="mx-auto max-w-[44ch] rounded-lg bg-preto/85 px-3 py-2 text-center text-[13px] font-medium leading-snug text-neve backdrop-blur sm:text-[15px]">
             {falaAtual}
           </p>
