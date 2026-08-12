@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
+import { useTelaGrande } from "./telaGrande";
 
 /**
  * A gravação do copiloto trabalhando, dentro do painel de verdade.
@@ -23,48 +24,49 @@ import { Play } from "lucide-react";
  * o toque abre em tela cheia.
  */
 
-const NO_COMPUTADOR = "(min-width: 640px)";
-
 export function VideoCopiloto() {
-  const [ehComputador, setEhComputador] = useState<boolean | null>(null);
-
-  // A escolha do arquivo depende do tamanho da tela, e no servidor não existe
-  // tela. Enquanto não souber, não monta vídeo nenhum: melhor um espaço
-  // reservado por um instante do que baixar um megabyte do arquivo errado.
-  useEffect(() => {
-    const consulta = window.matchMedia(NO_COMPUTADOR);
-    const ler = () => setEhComputador(consulta.matches);
-    ler();
-    consulta.addEventListener("change", ler);
-    return () => consulta.removeEventListener("change", ler);
-  }, []);
+  // Enquanto não souber o tamanho da tela, não monta vídeo nenhum: melhor um
+  // espaço reservado por um instante do que baixar um megabyte do arquivo
+  // errado.
+  const ehComputador = useTelaGrande();
 
   return (
     <figure>
       {ehComputador === null ? (
         <div className="aspect-[1280/800] w-full rounded-xl border border-traco bg-carvao sm:aspect-[1280/800]" />
       ) : ehComputador ? (
-        <Quadro
-          src="/landing/video/copiloto.webm"
-          capa="/landing/video/copiloto-capa.webp"
-          largura={1280}
-          altura={800}
-          tocaSozinho
-        />
+        <>
+          <Quadro
+            src="/landing/video/copiloto.webm"
+            capa="/landing/video/copiloto-capa.webp"
+            largura={1280}
+            altura={800}
+            tocaSozinho
+            descricao="Gravação do painel no navegador: o dono pede para fechar a agenda de amanhã depois das 15h, e o copiloto lista os nove clientes afetados, bloqueia o horário e dispara o pedido de remarcação"
+          />
+          <figcaption className="mt-4 max-w-2xl text-sm leading-relaxed text-cinza">
+            No computador: o dono avisa que vai fechar amanhã depois das 15h. O copiloto lista os nove
+            clientes daquela faixa, bloqueia o horário e manda o pedido de remarcação. Gravação da tela,
+            acelerada. O bloqueio entrou na agenda e os nove avisos saíram de verdade.
+          </figcaption>
+        </>
       ) : (
-        <Quadro
-          src="/landing/video/copiloto-celular.webm"
-          capa="/landing/video/copiloto-celular-capa.webp"
-          largura={640}
-          altura={1386}
-          tocaSozinho={false}
-        />
+        <>
+          <Quadro
+            src="/landing/video/copiloto-celular.webm"
+            capa="/landing/video/copiloto-celular-capa.webp"
+            largura={640}
+            altura={1386}
+            tocaSozinho={false}
+            descricao="Gravação do aplicativo: o dono pede a escala da semana e o copiloto responde com a distribuição da equipe por dia, calculada pela demanda dos últimos noventa dias"
+          />
+          <figcaption className="mt-4 max-w-2xl text-sm leading-relaxed text-cinza">
+            No aplicativo: o dono pede a escala da semana e o copiloto lê noventa dias de atendimento para
+            dizer quantos barbeiros deixar em cada dia, com o número de cada um. Gravação da tela, acelerada.
+            Os números são de uma barbearia de demonstração.
+          </figcaption>
+        </>
       )}
-
-      <figcaption className="mt-4 max-w-2xl text-sm leading-relaxed text-cinza">
-        Gravação da tela, acelerada para caber em meio minuto. Nada foi montado: o bloqueio entrou na agenda
-        e os nove avisos saíram de verdade. Os números são de uma barbearia de demonstração.
-      </figcaption>
     </figure>
   );
 }
@@ -75,12 +77,14 @@ function Quadro({
   largura,
   altura,
   tocaSozinho,
+  descricao,
 }: {
   src: string;
   capa: string;
   largura: number;
   altura: number;
   tocaSozinho: boolean;
+  descricao: string;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [começou, setComeçou] = useState(false);
@@ -147,7 +151,7 @@ function Quadro({
         preload="none"
         className="block w-full bg-carvao"
         style={{ aspectRatio: `${largura} / ${altura}` }}
-        aria-label="Gravação do painel: o dono pede para fechar a agenda de amanhã depois das 15h, e o copiloto lista os clientes afetados, bloqueia o horário e dispara o pedido de remarcação para eles"
+        aria-label={descricao}
       />
 
       {/* Cobre o vídeo inteiro enquanto ninguém tocou, para o alvo do dedo ser

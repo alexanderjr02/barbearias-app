@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { formatCurrency } from "@/lib/utils";
 import { getAnthropic } from "./anthropicClient";
 import { prisma } from "@/lib/db";
 import { startOfUtcMonth, startOfUtcDay, addUtcDays } from "@/lib/dateRange";
@@ -35,7 +36,10 @@ const MODEL = process.env.CHATBOT_MODEL || "claude-opus-4-8";
 export type CopilotRole = "GESTOR" | "BARBER";
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
-const money = (n: number) => `R$ ${n.toFixed(2)}`;
+// Mesma formatação do resto do painel. `toFixed(2)` escrevia "R$ 10935.00",
+// com ponto decimal e sem separador de milhar, que em português lê errado na
+// hora e aparecia na saudação do copiloto.
+const money = (n: number) => formatCurrency(n);
 
 // ---- Barber-personal helpers (scoped to one staff member) ----
 
@@ -398,8 +402,8 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       // Literal em vez de `name`: aqui `name` é o nome do SERVIÇO (a variável
       // local sombreia o nome da ferramenta).
       if (userId) await recordUndoable(barbershopId, userId, "create_service", `Serviço criado: ${created.name}`, { kind: "service_created", serviceId: created.id });
-      await rememberFact(barbershopId, `Serviço criado: ${created.name} (${created.duration}min, R$ ${created.price.toFixed(2)}).`, "action");
-      return `Serviço criado: ${created.name}, ${created.duration}min, R$ ${created.price.toFixed(2)}.`;
+      await rememberFact(barbershopId, `Serviço criado: ${created.name} (${created.duration}min, ${formatCurrency(created.price)}).`, "action");
+      return `Serviço criado: ${created.name}, ${created.duration}min, ${formatCurrency(created.price)}.`;
     }
     case "update_service_price": {
       const svc = await resolveShopService(barbershopId, String(input.serviceName ?? ""));
@@ -408,9 +412,9 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       if (!Number.isFinite(price) || price < 0) return "Preço inválido.";
       const before = await prisma.service.findUnique({ where: { id: svc.id }, select: { price: true } });
       await prisma.service.update({ where: { id: svc.id }, data: { price } });
-      if (userId && before) await recordUndoable(barbershopId, userId, name, `Preço de ${svc.name} para R$ ${price.toFixed(2)}`, { kind: "service_price", serviceId: svc.id, previousPrice: before.price });
-      await rememberFact(barbershopId, `Preço de ${svc.name} alterado para R$ ${price.toFixed(2)}.`, "action");
-      return `Preço de ${svc.name} atualizado para R$ ${price.toFixed(2)}.`;
+      if (userId && before) await recordUndoable(barbershopId, userId, name, `Preço de ${svc.name} para ${formatCurrency(price)}`, { kind: "service_price", serviceId: svc.id, previousPrice: before.price });
+      await rememberFact(barbershopId, `Preço de ${svc.name} alterado para ${formatCurrency(price)}.`, "action");
+      return `Preço de ${svc.name} atualizado para ${formatCurrency(price)}.`;
     }
     case "set_day_off": {
       const st = await resolveShopStaff(barbershopId, String(input.staffName ?? ""));
@@ -772,9 +776,9 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const dk = String(input.dateKey ?? "");
       const date = /^\d{4}-\d{2}-\d{2}$/.test(dk) ? new Date(dk) : new Date(shopNow().dateKey);
       const tx = await prisma.financialTransaction.create({ data: { barbershopId, type, category, description, amount, date } });
-      if (userId) await recordUndoable(barbershopId, userId, name, `${type === "INCOME" ? "Receita" : "Despesa"}: ${description} R$ ${amount.toFixed(2)}`, { kind: "transaction_created", transactionId: tx.id });
-      await rememberFact(barbershopId, `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description} R$ ${amount.toFixed(2)}.`, "action");
-      return `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description}. R$ ${amount.toFixed(2)}.`;
+      if (userId) await recordUndoable(barbershopId, userId, name, `${type === "INCOME" ? "Receita" : "Despesa"}: ${description} ${formatCurrency(amount)}`, { kind: "transaction_created", transactionId: tx.id });
+      await rememberFact(barbershopId, `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description} ${formatCurrency(amount)}.`, "action");
+      return `${type === "INCOME" ? "Receita" : "Despesa"} lançada: ${description}. ${formatCurrency(amount)}.`;
     }
     case "restock_product": {
       const products: { id: string; name: string; quantity: number }[] = await prisma.product.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true, quantity: true } });
@@ -833,8 +837,8 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       const amount = Number(input.amount);
       if (!Number.isFinite(amount) || amount < 0) return "Valor de meta inválido.";
       await prisma.barbershop.update({ where: { id: barbershopId }, data: { monthlyGoal: amount } });
-      await rememberFact(barbershopId, `Meta de faturamento do mês: R$ ${amount.toFixed(2)}.`, "chat");
-      return `Meta do mês definida em R$ ${amount.toFixed(2)}.`;
+      await rememberFact(barbershopId, `Meta de faturamento do mês: ${formatCurrency(amount)}.`, "chat");
+      return `Meta do mês definida em ${formatCurrency(amount)}.`;
     }
     case "set_automation": {
       const rule = String(input.rule ?? "");

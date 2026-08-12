@@ -41,6 +41,7 @@ export const metadata = {
 const TELAS: Tela[] = [
   {
     src: "/landing/produto/web-painel.webp",
+    app: "/landing/produto/app-painel.webp",
     alt: "Painel do gestor com receita do dia, agendamentos, clientes ativos e ranking de barbeiros",
     aba: "Painel",
     caminho: "/dashboard",
@@ -49,6 +50,7 @@ const TELAS: Tela[] = [
   },
   {
     src: "/landing/produto/web-agenda.webp",
+    app: "/landing/produto/app-agenda.webp",
     alt: "Agenda mensal com os agendamentos de cada barbeiro em cores diferentes",
     aba: "Agenda",
     caminho: "/dashboard/appointments",
@@ -57,6 +59,7 @@ const TELAS: Tela[] = [
   },
   {
     src: "/landing/produto/web-financeiro.webp",
+    app: "/landing/produto/app-financeiro.webp",
     alt: "Tela de financeiro com entradas, saídas e resultado do período",
     aba: "Financeiro",
     caminho: "/dashboard/finance",
@@ -65,6 +68,7 @@ const TELAS: Tela[] = [
   },
   {
     src: "/landing/produto/web-clientes.webp",
+    app: "/landing/produto/app-clientes.webp",
     alt: "Lista de clientes da barbearia com histórico e informações de contato",
     aba: "Clientes",
     caminho: "/dashboard/clients",
@@ -319,15 +323,16 @@ export default function Home() {
       {/* O painel por dentro ------------------------------------------------ */}
       <section id="painel" className="scroll-mt-16 border-t border-traco">
         <div className="mx-auto grid max-w-[76rem] gap-10 px-5 py-24 sm:px-8 sm:py-32 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16">
-          <Trilho rotulo="O painel" medida="4 telas" />
+          <Trilho rotulo="Por dentro" medida="web e celular" />
           <div>
             <Reveal>
               <h2 className="tipo-titulo max-w-2xl text-[clamp(2rem,5vw,3.2rem)] text-neve">
-                O painel é este. Sem montagem.
+                A mesma barbearia, no computador e no bolso.
               </h2>
               <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed text-cinza">
-                Cada imagem é uma captura do sistema rodando, com o endereço real da tela na barra de cima. É
-                o que abre depois de você criar a conta, e não uma arte feita para a propaganda.
+                Toda tela existe nos dois lugares, e nenhuma é versão reduzida da outra. No balcão você abre
+                no computador; no meio da rua, o app dá a mesma informação em tela de celular. As imagens são
+                captura do sistema rodando, não arte feita para a propaganda.
               </p>
             </Reveal>
             <Reveal delay={100}>

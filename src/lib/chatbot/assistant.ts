@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { formatCurrency } from "@/lib/utils";
 import { getAnthropic } from "./anthropicClient";
 import { prisma } from "@/lib/db";
 import { buildDaySlots, validateRequestedSlot, timeToMinutes, minutesToTime, shopNow, OCCUPYING_STATUSES } from "@/lib/scheduling";
@@ -256,7 +257,7 @@ export async function runAssistant(barbershopId: string, history: ChatTurn[], cl
   const staff: StaffRow[] = await prisma.staff.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true } });
   const now = shopNow();
 
-  const serviceList = services.map((s) => `- ${s.name}: R$ ${s.price.toFixed(2)} (${s.duration}min)`).join("\n") || "- (nenhum serviço cadastrado)";
+  const serviceList = services.map((s) => `- ${s.name}: ${formatCurrency(s.price)} (${s.duration}min)`).join("\n") || "- (nenhum serviço cadastrado)";
   const staffList = staff.map((s) => `- ${s.name}`).join("\n") || "- (nenhum barbeiro cadastrado)";
 
   const botName = shop?.chatbotName?.trim();
