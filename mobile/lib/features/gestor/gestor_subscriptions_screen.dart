@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/moeda.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
@@ -358,7 +359,7 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
                               ],
                             ),
                           ),
-                          Text('R\$${v.price.toStringAsFixed(2)}', style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text(reais(v.price), style: TextStyle(color: palette.textSecondary, fontWeight: FontWeight.bold, fontSize: 13)),
                         ],
                       ),
                     )),
@@ -370,7 +371,7 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
                   children: [
                     _KeyValueRow(label: 'Assinante desde', value: _formatDate(sub.startedAt), palette: palette),
                     _KeyValueRow(label: 'Próxima cobrança', value: _formatDate(sub.nextBillingAt), palette: palette),
-                    _KeyValueRow(label: 'Mensalidade', value: 'R\$${plan.price.toStringAsFixed(2)}', palette: palette),
+                    _KeyValueRow(label: 'Mensalidade', value: reais(plan.price), palette: palette),
                   ],
                 ),
               ),
@@ -487,9 +488,9 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
                     crossAxisSpacing: 10,
                     childAspectRatio: 1.6,
                     children: [
-                      _StatCard(icon: Icons.account_balance_wallet_outlined, iconColor: const Color(0xFFFBBF24), label: 'Receita recorrente', value: 'R\$${mrr.toStringAsFixed(2)}', palette: palette),
+                      _StatCard(icon: Icons.account_balance_wallet_outlined, iconColor: const Color(0xFFFBBF24), label: 'Receita recorrente', value: reais(mrr), palette: palette),
                       _StatCard(icon: Icons.people_outline_rounded, iconColor: const Color(0xFF60A5FA), label: 'Assinantes ativos', value: '${activeSubs.length}', palette: palette),
-                      _StatCard(icon: Icons.trending_up_rounded, iconColor: const Color(0xFF34D399), label: 'Ticket médio', value: 'R\$${avgTicket.toStringAsFixed(2)}', palette: palette),
+                      _StatCard(icon: Icons.trending_up_rounded, iconColor: const Color(0xFF34D399), label: 'Ticket médio', value: reais(avgTicket), palette: palette),
                       _StatCard(icon: Icons.repeat_rounded, iconColor: const Color(0xFFA78BFA), label: 'Planos ativos', value: '$activePlanCount', palette: palette),
                     ],
                   ),
@@ -533,7 +534,7 @@ class _GestorSubscriptionsScreenState extends State<GestorSubscriptionsScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.baseline,
                                     textBaseline: TextBaseline.alphabetic,
                                     children: [
-                                      Text('R\$${plan.price.toStringAsFixed(2)}', style: TextStyle(color: palette.textPrimary, fontSize: 22, fontWeight: FontWeight.w900)),
+                                      Text(reais(plan.price), style: TextStyle(color: palette.textPrimary, fontSize: 22, fontWeight: FontWeight.w900)),
                                       Text(' /${_cycleLabels[plan.billingCycle]}', style: TextStyle(color: palette.textFaint, fontSize: 12)),
                                     ],
                                   ),

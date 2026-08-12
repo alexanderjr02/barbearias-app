@@ -4,6 +4,8 @@ import { ArrowRight } from "lucide-react";
 import { RukzLogo } from "@/components/brand/RukzLogo";
 import { Reveal } from "@/components/landing/Reveal";
 import { TelasDoSistema, type Tela } from "@/components/landing/TelasDoSistema";
+import { Modulos, type Grupo } from "@/components/landing/Modulos";
+import { TelaDupla } from "@/components/landing/TelaDupla";
 import { VideoCopiloto } from "@/components/landing/VideoCopiloto";
 import { Planos } from "@/components/landing/Planos";
 import { BotaoPreferenciasCookies } from "@/components/landing/CookieConsent";
@@ -80,7 +82,7 @@ const TELAS: Tela[] = [
 // Os dezenove módulos que a barbearia encontra no menu do painel. A lista é a
 // do produto, na ordem em que ela faz sentido para quem compra, e não na ordem
 // em que foi construída.
-const MODULOS = [
+const MODULOS: Grupo[] = [
   {
     grupo: "Agenda e atendimento",
     itens: [
@@ -359,23 +361,11 @@ export default function Home() {
               </p>
             </Reveal>
 
-            <div className="mt-14 grid gap-x-14 gap-y-12 sm:grid-cols-2">
-              {MODULOS.map((bloco, i) => (
-                <Reveal key={bloco.grupo} delay={i * 70}>
-                  <h3 className="tipo-etiqueta border-b border-traco pb-3 text-[0.6rem] text-cinza">
-                    {bloco.grupo}
-                  </h3>
-                  <ul className="divide-y divide-traco">
-                    {bloco.itens.map((item) => (
-                      <li key={item.nome} className="py-4">
-                        <p className="font-semibold text-neve">{item.nome}</p>
-                        <p className="mt-1 text-[14px] leading-relaxed text-cinza">{item.texto}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </Reveal>
-              ))}
-            </div>
+            <Reveal delay={100}>
+              <div className="mt-12">
+                <Modulos grupos={MODULOS} />
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -514,27 +504,12 @@ export default function Home() {
 
           <Reveal delay={100}>
             <figure className="mt-10">
-              <div className="overflow-hidden rounded-xl border border-traco bg-carvao">
-                <div className="flex items-center gap-3 border-b border-traco px-4 py-2.5">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ouro" aria-hidden="true" />
-                  <span className="tipo-dado truncate text-[11px] text-cinza-fraco">
-                    rukz.com.br/dashboard/subscriptions
-                  </span>
-                </div>
-                {/* No celular o recorte sobe para a fileira dos números, que é
-                    o que esta seção tem a dizer. No computador a tela aparece
-                    inteira. */}
-                <div className="aspect-[4/3] overflow-hidden sm:aspect-auto">
-                  <Image
-                    src="/landing/produto/web-assinaturas.webp"
-                    alt="Tela de assinaturas do painel, com a receita recorrente do mês, o número de assinantes ativos, o ticket médio e o plano vendido pela barbearia"
-                    width={1600}
-                    height={1000}
-                    className="w-[215%] max-w-none -translate-x-[14%] sm:w-full sm:translate-x-0"
-                    unoptimized
-                  />
-                </div>
-              </div>
+              <TelaDupla
+                web="/landing/produto/web-assinaturas.webp"
+                app="/landing/produto/app-assinaturas.webp"
+                alt="Tela de assinaturas com a receita recorrente do mês, o número de assinantes ativos, o ticket médio e o plano vendido pela barbearia"
+                caminho="/dashboard/subscriptions"
+              />
               <figcaption className="mt-4 text-sm leading-relaxed text-cinza">
                 A tela de uma barbearia de demonstração com o clube em pé: 59 assinantes pagando R$ 89, e o
                 mês já começa com <span className="tipo-dado text-ouro">R$ 4.895</span> garantidos.

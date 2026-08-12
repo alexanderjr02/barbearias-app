@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../core/utils/moeda.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -262,7 +263,7 @@ class _BarbershopPlansBodyState extends State<_BarbershopPlansBody> {
                                   crossAxisAlignment: CrossAxisAlignment.baseline,
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
-                                    Text('R\$${plan.price.toStringAsFixed(2)}', style: TextStyle(color: palette.textPrimary, fontSize: 22, fontWeight: FontWeight.w900)),
+                                    Text(reais(plan.price), style: TextStyle(color: palette.textPrimary, fontSize: 22, fontWeight: FontWeight.w900)),
                                     Text(' /${_cycleLabels[plan.billingCycle]}', style: TextStyle(color: palette.textFaint, fontSize: 12)),
                                   ],
                                 ),
@@ -416,7 +417,7 @@ class _SubscribeSheetState extends State<_SubscribeSheet> {
             const SizedBox(height: 16),
             if (_step != 'success') ...[
               Text('Assinar ${widget.plan.name}', style: TextStyle(color: palette.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
-              Text('R\$${widget.plan.price.toStringAsFixed(2)}/${_cycleLabels[widget.plan.billingCycle]}', style: TextStyle(color: palette.textFaint, fontSize: 12)),
+              Text('${reais(widget.plan.price)}/${_cycleLabels[widget.plan.billingCycle]}', style: TextStyle(color: palette.textFaint, fontSize: 12)),
               const SizedBox(height: 18),
             ],
             if (_step == 'method') ...[
@@ -604,7 +605,7 @@ class _MembershipCard extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(sub.planName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 2),
-                Text('R\$${sub.price.toStringAsFixed(2)}/${_cycleLabels[sub.billingCycle]}', style: const TextStyle(color: Colors.white70, fontSize: 12.5)),
+                Text('${reais(sub.price)}/${_cycleLabels[sub.billingCycle]}', style: const TextStyle(color: Colors.white70, fontSize: 12.5)),
                 const SizedBox(height: 22),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
