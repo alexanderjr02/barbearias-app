@@ -437,16 +437,20 @@ export default function Home() {
 
             <div className="mt-14">
               <Reveal>
-                <div className="grid grid-cols-3 gap-3 sm:gap-6">
+                {/* No celular, três telas lado a lado dariam 110px cada, onde
+                    nada se lê. Vira carrossel de arrastar, com o próximo
+                    espiando na borda para avisar que tem mais; a partir de `sm`
+                    volta a ser grade, que é quando as três cabem inteiras. */}
+                <div className="arrasta -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-0">
                   {TELAS_APP.map((t) => (
-                    <figure key={t.src}>
-                      <div className="overflow-hidden rounded-[1.1rem] border-[5px] border-grafite bg-carvao shadow-2xl shadow-black/70 sm:rounded-[2rem] sm:border-[9px]">
+                    <figure key={t.src} className="w-[72%] shrink-0 snap-center sm:w-auto">
+                      <div className="overflow-hidden rounded-[1.6rem] border-[7px] border-grafite bg-carvao shadow-2xl shadow-black/70 sm:rounded-[2rem] sm:border-[9px]">
                         <Image
                           src={t.src}
                           alt={t.alt}
                           width={520}
                           height={1125}
-                          className="w-full rounded-[0.75rem] sm:rounded-[1.4rem]"
+                          className="w-full rounded-[1.1rem] sm:rounded-[1.4rem]"
                           unoptimized
                         />
                       </div>
@@ -459,6 +463,9 @@ export default function Home() {
                     </figure>
                   ))}
                 </div>
+                <p className="tipo-etiqueta mt-3 text-[0.55rem] text-cinza-fraco sm:hidden">
+                  arraste para ver as três
+                </p>
               </Reveal>
 
               <Reveal delay={120}>

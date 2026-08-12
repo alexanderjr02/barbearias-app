@@ -160,6 +160,12 @@ body {
 .sobe { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .35s ease, background-color .35s ease; }
 .sobe:hover { transform: translateY(-4px); }
 
+/* Fileira que arrasta no celular sem a barra de rolagem por baixo. O controle
+   ali é o dedo e o cartão seguinte espiando na borda, então a barra só rouba
+   altura e suja o desenho. */
+.arrasta { scrollbar-width: none; -ms-overflow-style: none; }
+.arrasta::-webkit-scrollbar { display: none; }
+
 /* Régua de conta: liga rótulo e valor com pontinhos, do jeito que a barbearia
    fecha o dia no papel. É `flex:1` no meio de uma linha `flex`, então o traço
    ocupa exatamente o vão que sobrar entre os dois textos. */

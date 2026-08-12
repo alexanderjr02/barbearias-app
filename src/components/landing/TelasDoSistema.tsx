@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { X, Maximize2 } from "lucide-react";
 
 /**
  * As telas do painel, trocadas por aba.
@@ -15,6 +17,11 @@ import { useRef, useState } from "react";
  * até achar; a aba mostra as quatro telas de uma vez e deixa a pessoa ir direto
  * na que interessa. As quatro imagens ficam montadas e só trocam de opacidade,
  * então a segunda visita a uma aba é instantânea.
+ *
+ * A captura de um painel inteiro tem 1600px de largura. Espremida na coluna de
+ * um celular ela vira um borrão cinza, e é onde a maior parte das pessoas vai
+ * abrir esta página. Por isso um toque abre a tela em cima de tudo, no tamanho
+ * de verdade, para arrastar e ler número por número.
  */
 
 export type Tela = {
@@ -27,6 +34,7 @@ export type Tela = {
 
 export function TelasDoSistema({ telas }: { telas: Tela[] }) {
   const [ativa, setAtiva] = useState(0);
+  const [ampliada, setAmpliada] = useState<Tela | null>(null);
   const abasRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Padrão de aba do teclado: seta anda entre as abas e já leva o foco junto,
@@ -42,7 +50,12 @@ export function TelasDoSistema({ telas }: { telas: Tela[] }) {
 
   return (
     <div>
-      <div role="tablist" aria-label="Telas do painel" onKeyDown={pelaSeta} className="flex flex-wrap gap-x-6 gap-y-1 border-b border-traco">
+      <div
+        role="tablist"
+        aria-label="Telas do painel"
+        onKeyDown={pelaSeta}
+        className="flex flex-wrap gap-x-6 gap-y-1 border-b border-traco"
+      >
         {telas.map((t, i) => (
           <button
             key={t.src}
@@ -71,6 +84,14 @@ export function TelasDoSistema({ telas }: { telas: Tela[] }) {
           <span className="tipo-dado truncate text-[11px] text-cinza-fraco">
             rukz.com.br{telas[ativa].caminho}
           </span>
+          <button
+            type="button"
+            onClick={() => setAmpliada(telas[ativa])}
+            className="ml-auto flex shrink-0 items-center gap-1.5 rounded-md border border-traco px-2 py-1 text-[11px] font-semibold text-cinza transition-colors hover:border-ouro hover:text-ouro"
+          >
+            <Maximize2 className="h-3 w-3" aria-hidden="true" />
+            Ampliar
+          </button>
         </div>
         <div className="grid">
           {telas.map((t, i) => (
@@ -88,22 +109,94 @@ export function TelasDoSistema({ telas }: { telas: Tela[] }) {
                 i === ativa ? "opacity-100" : "invisible opacity-0"
               }`}
             >
-              <Image
-                src={t.src}
-                alt={t.alt}
-                width={1600}
-                height={1000}
-                className="w-full"
-                // As capturas já são webp leves e prontas no tamanho servido.
-                // O otimizador do Next só faria uma segunda passada por cima.
-                unoptimized
-              />
+              <button
+                type="button"
+                onClick={() => setAmpliada(t)}
+                aria-label={`Ampliar a tela ${t.aba}`}
+                className="block w-full cursor-zoom-in"
+              >
+                <Image
+                  src={t.src}
+                  alt={t.alt}
+                  width={1600}
+                  height={1000}
+                  className="w-full"
+                  // As capturas já são webp leves e prontas no tamanho servido.
+                  // O otimizador do Next só faria uma segunda passada por cima.
+                  unoptimized
+                />
+              </button>
             </div>
           ))}
         </div>
       </div>
 
       <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-cinza">{telas[ativa].legenda}</p>
+      <p className="tipo-etiqueta mt-3 text-[0.55rem] text-cinza-fraco sm:hidden">
+        toque na tela para ampliar e ler os números
+      </p>
+
+      {ampliada && <Ampliada tela={ampliada} aoFechar={() => setAmpliada(null)} />}
     </div>
+  );
+}
+
+/**
+ * A captura em cima de tudo, no tamanho original, para arrastar e ler.
+ *
+ * A largura fixa de 1100px é o ponto em que o texto do painel volta a ser
+ * legível num celular: menos que isso continua borrão, mais que isso obriga a
+ * arrastar demais para achar o começo da linha.
+ *
+ * Vai por portal, direto no `body`, e não é preciosismo: o `<Reveal>` que
+ * embrulha a seção declara `will-change: transform`, e isso cria um bloco de
+ * contenção que faz `position: fixed` medir a partir dele em vez da janela. Sem
+ * o portal a lupa abria no meio da página, cobrindo parte do que devia cobrir.
+ */
+function Ampliada({ tela, aoFechar }: { tela: Tela; aoFechar: () => void }) {
+  useEffect(() => {
+    const porTecla = (e: KeyboardEvent) => {
+      if (e.key === "Escape") aoFechar();
+    };
+    window.addEventListener("keydown", porTecla);
+    // Trava a rolagem de trás: sem isso o dedo arrasta a página por baixo da
+    // imagem e a pessoa perde o lugar onde estava lendo.
+    const antes = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", porTecla);
+      document.body.style.overflow = antes;
+    };
+  }, [aoFechar]);
+
+  // Sem guarda de montagem: este componente só nasce a partir de um toque, ou
+  // seja, sempre no cliente e sempre com `document` disponível.
+  return createPortal(
+    <div role="dialog" aria-modal="true" aria-label={`Tela ${tela.aba} ampliada`} className="fixed inset-0 z-[70] bg-preto/95 backdrop-blur">
+      <div className="flex h-14 items-center gap-3 border-b border-traco px-4">
+        <span className="tipo-dado truncate text-[11px] text-cinza-fraco">rukz.com.br{tela.caminho}</span>
+        <button
+          type="button"
+          onClick={aoFechar}
+          className="ml-auto flex h-10 w-10 items-center justify-center rounded-lg border border-traco-forte text-neve transition-colors hover:border-ouro hover:text-ouro"
+          aria-label="Fechar"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="h-[calc(100%-3.5rem)] overflow-auto overscroll-contain p-4">
+        <Image
+          src={tela.src}
+          alt={tela.alt}
+          width={1600}
+          height={1000}
+          className="max-w-none rounded-lg border border-traco"
+          style={{ width: "1100px" }}
+          unoptimized
+        />
+        <p className="tipo-etiqueta mt-4 pb-4 text-[0.55rem] text-cinza-fraco">arraste para explorar a tela</p>
+      </div>
+    </div>,
+    document.body
   );
 }

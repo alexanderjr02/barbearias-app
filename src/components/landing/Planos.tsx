@@ -169,24 +169,37 @@ function Tabela({ escolhido, aoEscolher }: { escolhido: number; aoEscolher: (i: 
   return (
     <div className="mt-16">
       <h3 className="tipo-titulo text-[clamp(1.5rem,3vw,2rem)]">O que muda entre eles</h3>
+      <p className="mt-3 text-[15px] leading-relaxed text-preto/75 sm:hidden">
+        No celular a tabela mostra um plano por vez, para o texto caber inteiro. Toque em{" "}
+        <span className="font-semibold text-preto">{PLANOS[escolhido].nome}</span>, ou em outro plano acima,
+        para trocar a coluna comparada.
+      </p>
 
-      {/* A tabela é larga por natureza. No celular ela rola de lado com a coluna
-          do recurso presa à esquerda, senão a pessoa perde de vista o que está
-          comparando na terceira coluna. */}
+      {/* Três colunas de recurso não cabem em tela de celular sem virar letra
+          miúda ou rolagem lateral, e as duas coisas afastam quem está decidindo.
+          Aqui o celular mostra só a coluna do plano escolhido, e a comparação
+          acontece trocando de plano; a partir de `sm` as três voltam lado a
+          lado, que é onde a comparação simultânea cabe. */}
       <div className="mt-6 overflow-x-auto">
         {/* `border-separate` e não `border-collapse`: com as bordas juntadas, o
             canto arredondado do pé da coluna escolhida some em boa parte dos
             navegadores. Aqui o filete de cada linha é a borda de cima das
             próprias células. */}
-        <table className="w-full min-w-[44rem] border-separate border-spacing-0 text-left">
+        <table className="w-full border-separate border-spacing-0 text-left sm:min-w-[44rem]">
           <caption className="sr-only">Comparação dos recursos entre os planos Essencial, Pro e White Label</caption>
           <thead>
             <tr>
-              <th scope="col" className="w-[38%] pb-3 align-bottom">
+              <th scope="col" className="w-[62%] pb-3 align-bottom sm:w-[38%]">
                 <span className="tipo-etiqueta text-[0.6rem] text-preto/60">Recurso</span>
               </th>
               {PLANOS.map((p, i) => (
-                <th key={p.valor} scope="col" className="w-[20.6%] px-3 pb-3 align-bottom sm:px-4">
+                <th
+                  key={p.valor}
+                  scope="col"
+                  className={`px-2 pb-3 align-bottom sm:w-[20.6%] sm:px-4 ${
+                    i === escolhido ? "w-[38%]" : "hidden sm:table-cell"
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={() => aoEscolher(i)}
@@ -217,7 +230,10 @@ function Tabela({ escolhido, aoEscolher }: { escolhido: number; aoEscolher: (i: 
                     <span className="tipo-etiqueta text-[0.6rem] text-preto/60">{grupo.titulo}</span>
                   </th>
                   {PLANOS.map((p, i) => (
-                    <td key={p.valor} className={i === escolhido ? "bg-preto" : ""} />
+                    <td
+                      key={p.valor}
+                      className={i === escolhido ? "bg-preto" : "hidden sm:table-cell"}
+                    />
                   ))}
                 </tr>
 
@@ -231,8 +247,8 @@ function Tabela({ escolhido, aoEscolher }: { escolhido: number; aoEscolher: (i: 
                       {linha.valores.map((v, i) => (
                         <td
                           key={PLANOS[i].valor}
-                          className={`border-t border-preto/15 px-3 py-3.5 text-center align-middle sm:px-4 ${
-                            i === escolhido ? "bg-preto" : ""
+                          className={`border-t border-preto/15 px-2 py-3.5 text-center align-middle sm:px-4 ${
+                            i === escolhido ? "bg-preto" : "hidden sm:table-cell"
                           } ${ultimaLinha && i === escolhido ? "rounded-b-lg" : ""}`}
                         >
                           <span className="flex items-center justify-center">
