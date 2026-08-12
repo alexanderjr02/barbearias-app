@@ -64,6 +64,20 @@
     // notificação), então não tem o problema do cache — e removê-lo a cada
     // carregamento desligaria o push que a pessoa acabou de ativar.
     if ('serviceWorker' in navigator) {
+      // RAIZ do "conserto no ar mas o app mostra a versão velha": o service
+      // worker de CACHE do Flutter guardava o app inteiro e o servia offline,
+      // então correção nenhuma aparecia até o cache expirar sozinho. Aqui a
+      // gente IMPEDE o Flutter de registrar esse SW de cache. Sem ele, todo
+      // abrir do app busca a versão atual do servidor. O push (push-sw.js) é
+      // outro SW e continua registrando normal.
+      var _registerOriginal = navigator.serviceWorker.register.bind(navigator.serviceWorker);
+      navigator.serviceWorker.register = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('flutter_service_worker') !== -1) {
+          return Promise.reject(new Error('SW de cache do Flutter desligado de propósito (evita app preso em versão velha)'));
+        }
+        return _registerOriginal(url, opts);
+      };
+
       // Se ESTA página já veio servida por um service worker (o controller),
       // e ele não é o de push, então é o SW de cache antigo de uma versão
       // anterior do app — foi ele que entregou o HTML velho que estamos vendo
