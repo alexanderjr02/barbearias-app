@@ -208,6 +208,21 @@ function toolsFor(role: CopilotRole, hasNetwork = false): Anthropic.Tool[] {
       input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" }, staffName: { type: "string", description: "opcional; se omitido, fecha pra todos" } }, required: ["dateKey"] },
     },
     {
+      name: "reopen_agenda",
+      description: "REABRE a agenda de um dia: desfaz folga, bloqueio de faixa ou fechamento que estava naquela data, voltando a aceitar agendamento. Use para 'reabre a agenda de tal dia', 'tira a folga', 'desbloqueia o almoço', 'volta a atender nesse dia'.",
+      input_schema: { type: "object", properties: { dateKey: { type: "string", description: "AAAA-MM-DD" }, staffName: { type: "string", description: "opcional; vazio = reabre pra todos os barbeiros" } }, required: ["dateKey"] },
+    },
+    {
+      name: "mark_no_show",
+      description: "Marca que um cliente FALTOU (no-show) no horário dele. Use para 'o João não veio', 'marca falta da Maria'. Acha o agendamento pelo nome no dia (padrão hoje).",
+      input_schema: { type: "object", properties: { clientName: { type: "string" }, dateKey: { type: "string", description: "AAAA-MM-DD (padrão hoje)" } }, required: ["clientName"] },
+    },
+    {
+      name: "complete_appointment",
+      description: "CONCLUI um atendimento (marca como feito, entra no faturamento). Use para 'terminei o corte do João', 'conclui o atendimento da Maria', 'finaliza'. Acha o agendamento pelo nome no dia (padrão hoje).",
+      input_schema: { type: "object", properties: { clientName: { type: "string" }, dateKey: { type: "string", description: "AAAA-MM-DD (padrão hoje)" } }, required: ["clientName"] },
+    },
+    {
       name: "add_transaction",
       description: "Lança uma receita ou despesa no financeiro. Confirme antes.",
       input_schema: { type: "object", properties: { type: { type: "string", enum: ["INCOME", "EXPENSE"], description: "INCOME=receita, EXPENSE=despesa" }, amount: { type: "number" }, description: { type: "string" }, category: { type: "string" }, dateKey: { type: "string", description: "AAAA-MM-DD (opcional, padrão hoje)" } }, required: ["type", "amount"] },
@@ -469,6 +484,54 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
       await rememberFact(barbershopId, `Mandei recado pra ${client.name}: "${message.slice(0, 80)}".`, "action");
       const wppOn = await isWhatsAppConfigured(barbershopId);
       return `Recado enviado pra ${client.name}: chega no app e no push${wppOn ? " e no WhatsApp" : " (WhatsApp da barbearia ainda não conectado, então por ora só no app)"}.`;
+    }
+    case "reopen_agenda": {
+      const dateKey = String(input.dateKey ?? "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return "Data inválida (use AAAA-MM-DD).";
+      // Reabrir = apagar as folgas/bloqueios (staffTimeOff) daquele dia. Barbeiro
+      // só reabre a própria agenda; gestor reabre de quem quiser.
+      let staffFilter: string[] | undefined;
+      if (role === "BARBER") {
+        if (!staffId) return "Não achei seu perfil de barbeiro.";
+        staffFilter = [staffId];
+      } else if (input.staffName && String(input.staffName).trim()) {
+        const st = await resolveShopStaff(barbershopId, String(input.staffName));
+        if (!st) return "Não achei esse barbeiro.";
+        staffFilter = [st.id];
+      }
+      const del = await prisma.staffTimeOff.deleteMany({
+        where: { date: new Date(dateKey), staff: { barbershopId }, ...(staffFilter ? { staffId: { in: staffFilter } } : {}) },
+      });
+      if (del.count === 0) return `Não havia folga nem bloqueio em ${dateKey} pra reabrir. A agenda já estava aberta.`;
+      await rememberFact(barbershopId, `Reabri a agenda de ${dateKey}${staffFilter ? "" : " (todos)"}.`, "action");
+      return `Pronto: agenda de ${dateKey} reaberta. Voltou a aceitar agendamento.`;
+    }
+    case "mark_no_show":
+    case "complete_appointment": {
+      const clientName = String(input.clientName ?? "").trim();
+      if (!clientName) return "Preciso do nome do cliente.";
+      const dateKey = /^\d{4}-\d{2}-\d{2}$/.test(String(input.dateKey ?? "")) ? String(input.dateKey) : new Date().toISOString().slice(0, 10);
+      const novoStatus = name === "mark_no_show" ? "NO_SHOW" : "COMPLETED";
+      // Barbeiro mexe só nos próprios atendimentos.
+      const appt = await prisma.appointment.findFirst({
+        where: {
+          barbershopId,
+          date: new Date(dateKey),
+          status: { in: ["SCHEDULED", "CONFIRMED", "ARRIVED", "IN_PROGRESS"] },
+          clientName: { contains: clientName },
+          ...(role === "BARBER" && staffId ? { staffId } : {}),
+        },
+        orderBy: { startTime: "asc" },
+        select: { id: true, clientName: true, startTime: true, totalPrice: true },
+      });
+      if (!appt) return `Não achei um atendimento ativo de "${clientName}" em ${dateKey}.`;
+      await prisma.appointment.update({ where: { id: appt.id }, data: { status: novoStatus } });
+      if (novoStatus === "NO_SHOW") {
+        await rememberFact(barbershopId, `${appt.clientName} faltou em ${dateKey} ${appt.startTime}.`, "action");
+        return `Marquei falta de ${appt.clientName} (${appt.startTime}). Fica no histórico de no-show dele.`;
+      }
+      await rememberFact(barbershopId, `Atendimento de ${appt.clientName} concluído em ${dateKey}.`, "action");
+      return `Atendimento de ${appt.clientName} concluído (${money(appt.totalPrice)} no faturamento).`;
     }
     case "get_day_appointments": {
       const dateKey = String(input.dateKey ?? "");
@@ -840,13 +903,14 @@ export async function runCopilot(
   const shopName = shop?.name ?? "a barbearia";
   const persona =
     role === "BARBER"
-      ? `Você é o Copiloto pessoal do barbeiro na ${shopName}. Ajuda ele a ganhar mais e atender melhor: acompanha ganhos e comissão, prepara o próximo cliente e aponta clientes que sumiram pra ele reconquistar. Quando ele pedir o BRIEFING do próximo cliente (get_next_client), entregue um resumo curto e falado (2 a 3 frases, como um sussurro no ouvido antes de o cliente sentar): nome e horário, avaliação/quantas visitas, o corte de sempre + a "receita" do último, e feche com 1 dica de atendimento (ex: aniversário próximo → parabenize; nunca faltou → elogie a presença; sugestão de upsell). Se tiver faltas, sugira confirmar.`
+      ? `Você é o Copiloto pessoal do barbeiro na ${shopName}. Ajuda ele a ganhar mais e atender melhor: acompanha ganhos e comissão, prepara o próximo cliente e aponta clientes que sumiram pra ele reconquistar. Quando ele pedir o BRIEFING do próximo cliente (get_next_client), entregue um resumo curto e falado (2 a 3 frases, como um sussurro no ouvido antes de o cliente sentar): nome e horário, avaliação/quantas visitas, o corte de sempre + a "receita" do último, e feche com 1 dica de atendimento (ex: aniversário próximo → parabenize; nunca faltou → elogie a presença; sugestão de upsell). Se tiver faltas, sugira confirmar. Você também OPERA a agenda dele por conversa: marcar que um cliente faltou (mark_no_show), concluir um atendimento feito (complete_appointment), reabrir a agenda de um dia (reopen_agenda), agendar/cancelar/remarcar. Faça na hora, sem enrolar.`
       : `Você é o Copiloto de gestão do dono da ${shopName}, dentro do sistema rukz. Você raciocina como um consultor sênior de negócios e CRM de barbearias: pensa em retenção, recorrência, ticket médio, ocupação da agenda, no-show, LTV do cliente, fidelização e fluxo de caixa.`;
 
   const adminNote =
     role === "GESTOR"
       ? `\n\nVOCÊ OPERA O SISTEMA POR CONVERSA (execute quando o gestor pedir, confirmando os dados numa frase curta antes de agir):
-- Agenda: AGENDAR (book_appointment, cheque antes com check_availability), CANCELAR (find_appointments → cancel_appointment), REMARCAR (find_appointments → reschedule_appointment), FECHAR a agenda de um dia (close_agenda, um barbeiro ou a equipe toda).
+- Agenda: AGENDAR (book_appointment, cheque antes com check_availability), CANCELAR (find_appointments → cancel_appointment), REMARCAR (find_appointments → reschedule_appointment), FECHAR a agenda de um dia (close_agenda), REABRIR a agenda de um dia desfazendo folga/bloqueio/fechamento (reopen_agenda).
+- Atendimento do dia: marcar que um cliente FALTOU (mark_no_show) e CONCLUIR um atendimento feito (complete_appointment), achando pelo nome do cliente.
 - Cadastro: criar serviço (create_service), mudar preço (update_service_price), marcar folga de dia inteiro (set_day_off), bloquear uma faixa como almoço/intervalo (block_time, com staffName vazio bloqueia todos os barbeiros de uma vez).
 - Agenda de um dia: ver quem tinha marcado num dia (get_day_appointments) e avisar esses clientes pra remarcar quando o dia fecha (warn_day_clients). Ao fechar/bloquear um dia que já tinha cliente, sempre ofereça avisar.
 - Falar com cliente: mandar recado escrito pra um cliente pelo nome (message_client). Chega no app e no WhatsApp dele. Use quando pedirem "avisa o fulano que...". Você CONSEGUE contatar clientes por WhatsApp; nunca diga que não consegue.
@@ -892,7 +956,14 @@ FORMATO (importante, a resposta aparece num balão de chat)
 
 DADOS E AÇÕES
 - Use as ferramentas para números reais, nunca invente. Se faltar dado, diga o que precisa.
-- Para avisos em massa (confirmar amanhã, chamar sumidos, avisar fila), NÃO execute no chat: oriente a tocar no botão da ação no painel.${adminNote}`;
+- Para avisos em massa (confirmar amanhã, chamar sumidos, avisar fila), NÃO execute no chat: oriente a tocar no botão da ação no painel.
+
+COMO VOCÊ AGE (seja resolutivo, o barbeiro tá ocupado)
+- Resolva de primeira. Se dá pra fazer com o que já foi dito, FAÇA na hora, não fique pedindo detalhe nem confirmando o óbvio.
+- Assuma o razoável em vez de perguntar: sem data → hoje ou amanhã pelo contexto; sem barbeiro → o do próprio cliente, ou o único da loja; "meu próximo", "o de agora" → o próximo da agenda. Só pergunte quando for genuinamente ambíguo (dois clientes com o mesmo nome) ou uma ação destrutiva.
+- No MÁXIMO uma pergunta, e só se travar de verdade. Nada de questionário.
+- Encadeie os passos sozinho: se o pedido exige achar o agendamento e depois mexer nele, faça os dois de uma vez, sem parar no meio pra perguntar.
+- Entenda a intenção, não a palavra exata. "não vou abrir quinta", "tira quinta", "fecha quinta" são a mesma coisa. Faça o que a pessoa quis dizer.${adminNote}`;
 
   // MARGEM: o prompt + as ferramentas somam ~14 mil tokens IGUAIS em toda
   // pergunta. Um cache_control no bloco estável faz a API cobrar ~10% deles
