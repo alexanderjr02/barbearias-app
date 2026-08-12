@@ -296,7 +296,27 @@ ${loggedClient
 - Se algo não for possível (horário ocupado, fora do expediente), explique com gentileza e ofereça alternativas.${askOrigin ? "\n- Você ainda não sabe como este cliente chegou até a barbearia. Se for natural na conversa (ex.: logo após ajudar ou agendar), pergunte UMA única vez, de forma leve, como ele conheceu a gente (Instagram, Google, indicação de um amigo, passou na frente...). Não insista se ele não responder." : ""}
 - Respostas curtas, no máximo alguns parágrafos.`;
 
-  const messages: Anthropic.MessageParam[] = history.slice(-20).map((m) => ({ role: m.role, content: m.content }));
+  // Histórico SANEADO pro formato que a API exige. Um histórico torto (mensagem
+  // de conteúdo vazio, começando pelo assistente, ou dois turnos seguidos do
+  // mesmo papel) fazia o modelo devolver vazio e a tela repetir "Desculpe, pode
+  // reformular?" a TUDO, até "obrigado". Aqui: descarta vazio, começa sempre por
+  // uma mensagem do usuário e funde turnos repetidos do mesmo papel.
+  const turns: ChatTurn[] = [];
+  for (const m of history.slice(-20)) {
+    if (typeof m.content !== "string" || m.content.trim().length === 0) continue;
+    if (turns.length === 0 && m.role !== "user") continue;
+    const ultimo = turns[turns.length - 1];
+    if (ultimo && ultimo.role === m.role) {
+      turns[turns.length - 1] = { role: m.role, content: `${ultimo.content}\n${m.content}` };
+    } else {
+      turns.push({ role: m.role, content: m.content });
+    }
+  }
+  const lastUserText = [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
+  const messages: Anthropic.MessageParam[] = turns.map((m) => ({ role: m.role, content: m.content }));
+  if (messages.length === 0) {
+    return "Oi! Posso agendar seu horário, ver os disponíveis ou tirar uma dúvida. O que você precisa?";
+  }
   let usedIn = 0;
   let usedOut = 0;
 
@@ -312,8 +332,22 @@ ${loggedClient
     usedOut += response.usage?.output_tokens ?? 0;
 
     if (response.stop_reason !== "tool_use") {
-      await recordAiUsage(barbershopId, "assistant", MODEL, usedIn, usedOut);
-      return textFrom(response.content) || "Desculpe, pode reformular?";
+      const texto = textFrom(response.content);
+      if (texto) {
+        await recordAiUsage(barbershopId, "assistant", MODEL, usedIn, usedOut);
+        return texto;
+      }
+      // Voltou vazio mesmo com o histórico saneado: rede de segurança. Tenta UMA
+      // vez só com a última fala do cliente, sem histórico, pra destravar.
+      if (i === 0 && lastUserText && messages.length > 1) {
+        const retry = await client.messages.create({ model: MODEL, max_tokens: 1024, system, messages: [{ role: "user", content: lastUserText }] });
+        await recordAiUsage(barbershopId, "assistant", MODEL, usedIn + (retry.usage?.input_tokens ?? 0), usedOut + (retry.usage?.output_tokens ?? 0));
+        const t2 = textFrom(retry.content);
+        if (t2) return t2;
+      } else {
+        await recordAiUsage(barbershopId, "assistant", MODEL, usedIn, usedOut);
+      }
+      return "Tô aqui! Me diz o que você quer: agendar, ver seus horários ou remarcar.";
     }
 
     messages.push({ role: "assistant", content: response.content });
