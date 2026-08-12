@@ -109,18 +109,23 @@ export function TelasDoSistema({ telas }: { telas: Tela[] }) {
                 i === ativa ? "opacity-100" : "invisible opacity-0"
               }`}
             >
+              {/* No celular a captura inteira caberia em 350px de largura e
+                  viraria borrão. Em vez de encolher tudo, a moldura corta:
+                  mostra o miolo do painel em tamanho legível, sem a barra
+                  lateral, e quem quiser ver a tela toda toca para ampliar. No
+                  computador a largura sobra e a captura aparece inteira. */}
               <button
                 type="button"
                 onClick={() => setAmpliada(t)}
                 aria-label={`Ampliar a tela ${t.aba}`}
-                className="block w-full cursor-zoom-in"
+                className="block aspect-[4/3] w-full cursor-zoom-in overflow-hidden sm:aspect-auto"
               >
                 <Image
                   src={t.src}
                   alt={t.alt}
                   width={1600}
                   height={1000}
-                  className="w-full"
+                  className="w-[215%] max-w-none -translate-x-[14%] sm:w-full sm:translate-x-0"
                   // As capturas já são webp leves e prontas no tamanho servido.
                   // O otimizador do Next só faria uma segunda passada por cima.
                   unoptimized

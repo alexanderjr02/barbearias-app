@@ -150,12 +150,6 @@ body {
 }
 .is-visible .linha-sobe { transform: none; }
 
-/* Um horário que acabou de ser vendido, na tira do dia. Cresce do pé para o
-   topo, como o valor entrando na coluna, e não desliza de lado: a agenda enche
-   por cima do horário, não ao lado dele. */
-@keyframes sobe-slot { from { opacity: 0; transform: scaleY(.35); } to { opacity: 1; transform: none; } }
-.slot-entra { transform-origin: bottom; animation: sobe-slot .5s cubic-bezier(.16,1,.3,1) both; }
-
 /* Superfície que responde ao mouse sem saltar. */
 .sobe { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .35s ease, background-color .35s ease; }
 .sobe:hover { transform: translateY(-4px); }
@@ -178,7 +172,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .slot-entra { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .linha-sobe { transform: none; transition: none; }
   .sobe:hover { transform: none; }

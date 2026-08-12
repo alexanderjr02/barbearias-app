@@ -3,7 +3,6 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { RukzLogo } from "@/components/brand/RukzLogo";
 import { Reveal } from "@/components/landing/Reveal";
-import { DiaNaCadeira } from "@/components/landing/DiaNaCadeira";
 import { TelasDoSistema, type Tela } from "@/components/landing/TelasDoSistema";
 import { VideoCopiloto } from "@/components/landing/VideoCopiloto";
 import { Planos } from "@/components/landing/Planos";
@@ -315,10 +314,6 @@ export default function Home() {
             </div>
           </Reveal>
         </div>
-
-        <Reveal delay={320}>
-          <DiaNaCadeira />
-        </Reveal>
       </section>
 
       {/* O painel por dentro ------------------------------------------------ */}
@@ -494,44 +489,52 @@ export default function Home() {
 
       {/* Recorrência -------------------------------------------------------- */}
       <section className="border-t border-traco">
-        <div className="mx-auto grid max-w-[76rem] items-center gap-12 px-5 py-20 sm:px-8 sm:py-24 lg:grid-cols-[1.1fr_.9fr] lg:gap-20">
+        <div className="mx-auto max-w-[76rem] px-5 py-20 sm:px-8 sm:py-24">
           <Reveal>
-            <p className="tipo-etiqueta text-[0.6rem] text-ouro">Assinatura de clientes</p>
-            <h2 className="tipo-titulo mt-4 max-w-lg text-[clamp(1.8rem,4vw,2.6rem)] text-neve">
-              Comece o mês com dinheiro já dentro.
-            </h2>
-            <p className="mt-5 max-w-lg leading-relaxed text-cinza">
-              Você monta um plano mensal de cortes, define o preço e quantos atendimentos ele dá. O sistema
-              cobra, controla o uso de cada assinante e avisa quando um deles para de aparecer. O cliente vem
-              mais justamente porque já pagou, e o seu mês deixa de depender do movimento da semana.
-            </p>
-            <p className="tipo-dado mt-6 text-[13px] text-cinza-fraco">Disponível no plano White Label</p>
+            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-16">
+              <div>
+                <p className="tipo-etiqueta text-[0.6rem] text-ouro">Assinatura de clientes</p>
+                <h2 className="tipo-titulo mt-4 max-w-xl text-[clamp(1.9rem,4.4vw,2.8rem)] text-neve">
+                  Dinheiro que entra antes de alguém sentar na cadeira.
+                </h2>
+                <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed text-cinza">
+                  Você monta um plano mensal de cortes, define o preço e quantos atendimentos ele dá. O
+                  sistema cobra pelo Pix ou pelo cartão, na conta da barbearia, controla quantos cortes cada
+                  assinante já usou e avisa quando um deles some.
+                </p>
+              </div>
+              <p className="tipo-dado shrink-0 text-[13px] text-cinza-fraco">No plano White Label</p>
+            </div>
           </Reveal>
 
-          <Reveal delay={120}>
-            <div className="rounded-xl border border-traco bg-carvao p-6 sm:p-8">
-              <p className="tipo-etiqueta text-[0.6rem] text-cinza">O que cai todo dia 1º</p>
-              <dl className="mt-6 space-y-4">
-                <div className="flex items-baseline gap-3 text-cinza">
-                  <dt className="text-sm">Assinantes</dt>
-                  <span aria-hidden="true" className="guia" />
-                  <dd className="tipo-dado text-xl font-semibold text-neve">40</dd>
+          <Reveal delay={100}>
+            <figure className="mt-10">
+              <div className="overflow-hidden rounded-xl border border-traco bg-carvao">
+                <div className="flex items-center gap-3 border-b border-traco px-4 py-2.5">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ouro" aria-hidden="true" />
+                  <span className="tipo-dado truncate text-[11px] text-cinza-fraco">
+                    rukz.com.br/dashboard/subscriptions
+                  </span>
                 </div>
-                <div className="flex items-baseline gap-3 text-cinza">
-                  <dt className="text-sm">Mensalidade do plano</dt>
-                  <span aria-hidden="true" className="guia" />
-                  <dd className="tipo-dado text-xl font-semibold text-neve">R$ 89</dd>
+                {/* No celular o recorte sobe para a fileira dos números, que é
+                    o que esta seção tem a dizer. No computador a tela aparece
+                    inteira. */}
+                <div className="aspect-[4/3] overflow-hidden sm:aspect-auto">
+                  <Image
+                    src="/landing/produto/web-assinaturas.webp"
+                    alt="Tela de assinaturas do painel, com a receita recorrente do mês, o número de assinantes ativos, o ticket médio e o plano vendido pela barbearia"
+                    width={1600}
+                    height={1000}
+                    className="w-[215%] max-w-none -translate-x-[14%] sm:w-full sm:translate-x-0"
+                    unoptimized
+                  />
                 </div>
-                <div className="flex items-baseline gap-3 border-t border-traco pt-4 text-ouro">
-                  <dt className="text-sm font-semibold text-neve">Entra sem ninguém sentar</dt>
-                  <span aria-hidden="true" className="guia" />
-                  <dd className="tipo-dado text-3xl font-bold text-ouro">R$ 3.560</dd>
-                </div>
-              </dl>
-              <p className="mt-6 border-t border-traco pt-4 text-xs leading-relaxed text-cinza-fraco">
-                Números de exemplo. Quem define o preço e o tamanho do plano é você.
-              </p>
-            </div>
+              </div>
+              <figcaption className="mt-4 text-sm leading-relaxed text-cinza">
+                A tela de uma barbearia de demonstração com o clube em pé: 59 assinantes pagando R$ 89, e o
+                mês já começa com <span className="tipo-dado text-ouro">R$ 4.895</span> garantidos.
+              </figcaption>
+            </figure>
           </Reveal>
         </div>
       </section>
