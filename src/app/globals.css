@@ -101,6 +101,19 @@ body {
 .tipo-titulo-xl { font-weight: 800; letter-spacing: -0.045em; line-height: 0.92; }
 .tipo-etiqueta { font-weight: 700; text-transform: uppercase; letter-spacing: 0.22em; }
 
+/* O terceiro papel: o número.
+ *
+ * Letra é Outfit, número é fonte de dado. Hora, preço, valor, limite e
+ * contagem saem daqui, com dígito de largura fixa, para a coluna não dançar
+ * enquanto o valor sobe e para a tabela de planos ler como tabela de preço, e
+ * não como parágrafo. É a mesma distinção que a barbearia já faz no papel:
+ * o nome do serviço à mão, o valor na régua. */
+.tipo-dado {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
 /* Herdado das telas que ainda chamam o título pelo nome antigo. Aponta para o
    mesmo tratamento, então não existe uma segunda tipografia escondida. */
 .font-display { font-weight: 800; letter-spacing: -0.035em; }
@@ -137,50 +150,29 @@ body {
 }
 .is-visible .linha-sobe { transform: none; }
 
-/* Faixa corrida do rodapé de seção. */
-@keyframes corre { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.faixa-corre { animation: corre 42s linear infinite; }
+/* Um horário que acabou de ser vendido, na tira do dia. Cresce do pé para o
+   topo, como o valor entrando na coluna, e não desliza de lado: a agenda enche
+   por cima do horário, não ao lado dele. */
+@keyframes sobe-slot { from { opacity: 0; transform: scaleY(.35); } to { opacity: 1; transform: none; } }
+.slot-entra { transform-origin: bottom; animation: sobe-slot .5s cubic-bezier(.16,1,.3,1) both; }
 
-/* Cartões respondem ao mouse sem saltar. */
+/* Superfície que responde ao mouse sem saltar. */
 .sobe { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .35s ease, background-color .35s ease; }
 .sobe:hover { transform: translateY(-4px); }
 
-/* Um horário que acabou de ser preenchido na agenda. */
-@keyframes entra-lado { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
-.entra-lado { animation: entra-lado .45s cubic-bezier(.2,.7,.2,1) both; }
-
-/* Carrossel ---------------------------------------------------------------- */
-
-/* Rolagem com encaixe, como no Instagram. A barra nativa some porque o
-   controle é o arrasto e os pontos embaixo.
-
-   O encaixe é pela esquerda, não pelo centro: numa tela larga cabem três ou
-   quatro cartazes de uma vez, e centralizar faria o cartaz "atual" ser um do
-   meio que ninguém escolheu. Alinhado à esquerda, apertar a seta traz o
-   próximo entrando pela direita, que é o que o gesto promete.
-
-   A margem do lado esquerdo acompanha a coluna de texto da página, então o
-   primeiro cartaz nasce na mesma linha do título. Para a direita a fileira
-   sangra até a borda, e é esse corte que avisa que há mais coisa ao lado. */
-.carrossel {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  overscroll-behavior-x: contain;
-  /* O `calc()` explícito dentro do `max()` não é enfeite: sem ele o
-     compilador de CSS derruba a declaração inteira em silêncio, e a fileira
-     volta a nascer colada na borda da tela. */
-  padding-inline: max(1rem, calc((100vw - 72rem) / 2 + 1rem));
-  scroll-padding-inline-start: max(1rem, calc((100vw - 72rem) / 2 + 1rem));
+/* Régua de conta: liga rótulo e valor com pontinhos, do jeito que a barbearia
+   fecha o dia no papel. É `flex:1` no meio de uma linha `flex`, então o traço
+   ocupa exatamente o vão que sobrar entre os dois textos. */
+.guia {
+  flex: 1;
+  min-width: 1.5rem;
+  translate: 0 -0.28em;
+  border-bottom: 1px dotted currentColor;
+  opacity: .35;
 }
-.carrossel::-webkit-scrollbar { display: none; }
-.carrossel > * { scroll-snap-align: start; flex: 0 0 auto; }
-.carrossel-arrastando { cursor: grabbing; scroll-snap-type: none; user-select: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .faixa-corre, .entra-lado { animation: none; }
+  .slot-entra { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .linha-sobe { transform: none; transition: none; }
   .sobe:hover { transform: none; }
