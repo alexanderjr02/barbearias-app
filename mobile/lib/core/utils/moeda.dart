@@ -22,3 +22,20 @@ String reais(num valor) {
 
   return 'R\$ ${negativo ? '-' : ''}$buffer,${centavosFinal.toString().padLeft(2, '0')}';
 }
+
+/// Dinheiro sem centavos, para numero grande onde o centavo e ruido.
+///
+/// A meta do mes e a projecao aparecem como "R$ 45.000", nao "R$ 45.000,00":
+/// ali o centavo nao ajuda ninguem a decidir nada. O que faltava era o ponto
+/// no milhar, sem o qual "R$ 16479" vira um numero que a pessoa tem que
+/// soletrar.
+String reaisSemCentavos(num valor) {
+  final inteiro = valor.round().abs();
+  final digitos = inteiro.toString();
+  final buffer = StringBuffer();
+  for (var i = 0; i < digitos.length; i++) {
+    if (i > 0 && (digitos.length - i) % 3 == 0) buffer.write('.');
+    buffer.write(digitos[i]);
+  }
+  return 'R\$ ${valor < 0 ? '-' : ''}$buffer';
+}

@@ -5,8 +5,8 @@ import '../../../core/widgets/form_sheet.dart';
 import '../gestor_repository.dart';
 import '../../../core/utils/moeda.dart';
 
-String _brl(double v) => '${reais(v)}';
-String _brl0(double v) => 'R\$ ${v.toStringAsFixed(0)}';
+String _brl(double v) => reais(v);
+String _brl0(double v) => reaisSemCentavos(v);
 
 Color _methodColor(String m) {
   switch (m) {
