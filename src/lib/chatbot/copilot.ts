@@ -461,6 +461,18 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
         alvo = await prisma.staff.findMany({ where: { barbershopId, isActive: true }, select: { id: true, name: true } });
       }
       if (alvo.length === 0) return "Nenhum barbeiro ativo pra bloquear.";
+      // O que já existia, antes de sobrescrever. É isso que torna o bloqueio
+      // reversível: parte da equipe pode ter almoço marcado naquela data, e o
+      // desfazer precisa devolver o almoço em vez de apagar tudo.
+      const antesDoBloqueio = await prisma.staffTimeOff.findMany({
+        where: { staffId: { in: alvo.map((s) => s.id) }, date: new Date(dateKey) },
+        select: { staffId: true, startTime: true, endTime: true, reason: true },
+      });
+      type BloqueioAnterior = { staffId: string; startTime: string; endTime: string; reason: string | null };
+      const jaTinha = new Map<string, BloqueioAnterior>(
+        (antesDoBloqueio as BloqueioAnterior[]).map((t) => [t.staffId, t]),
+      );
+
       // O @@unique(staffId,date) permite um bloqueio por barbeiro por dia, que
       // cobre o almoço. upsert deixa o comando idempotente (repetir não duplica).
       for (const st of alvo) {
@@ -469,6 +481,27 @@ async function runCopilotTool(role: CopilotRole, barbershopId: string, staffId: 
           update: { startTime, endTime, reason },
           create: { staffId: st.id, date: new Date(dateKey), startTime, endTime, reason },
         });
+      }
+      if (userId) {
+        await recordUndoable(
+          barbershopId,
+          userId,
+          name,
+          `Bloqueio de ${startTime} às ${endTime} em ${dateKey}`,
+          {
+            kind: "timeoffs_upserted",
+            entradas: alvo.map((st) => {
+              const anterior = jaTinha.get(st.id);
+              return {
+                staffId: st.id,
+                dateKey,
+                antes: anterior
+                  ? { startTime: anterior.startTime, endTime: anterior.endTime, reason: anterior.reason }
+                  : null,
+              };
+            }),
+          },
+        );
       }
       const quem = input.staffName && String(input.staffName).trim() ? alvo[0].name : `todos os ${alvo.length} barbeiros`;
       await rememberFact(barbershopId, `Bloqueio ${startTime}-${endTime} (${reason}) em ${dateKey} para ${quem}.`, "action");

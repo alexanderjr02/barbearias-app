@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Play, Pause } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Gauge } from "lucide-react";
 import { useTelaGrande } from "./telaGrande";
 
 /**
@@ -14,21 +14,22 @@ import { useTelaGrande } from "./telaGrande";
  *
  * São duas gravações, e não uma redimensionada, porque são dois produtos: no
  * computador o painel no navegador, no celular o aplicativo. Cada tela carrega
- * só o arquivo que vai mostrar; o outro nunca é montado.
+ * só o arquivo que vai mostrar. A moldura acompanha a origem: telefone para o
+ * app, janela com endereço para o navegador.
  *
- * A moldura acompanha a origem. A gravação do app aparece dentro de um
- * telefone; a do navegador, dentro de uma janela com o endereço. Emoldurar
- * gravação de celular com barra de navegador seria mentir sobre onde aquilo
- * roda.
+ * Quem manda no vídeo é quem assiste. Tem barra de tempo arrastável, pausa,
+ * recomeço e um controle de velocidade, porque a gravação é acelerada e nem
+ * todo mundo lê no mesmo ritmo. E tem narração opcional, desligada por padrão:
+ * som que começa sozinho é motivo para fechar a aba.
  *
- * A legenda corre por cima, sincronizada com o tempo. Vídeo de produto não tem
- * som, e sem alguém dizendo o que está acontecendo o dono vê texto subindo numa
- * tela e desiste antes do trecho que importa.
+ * A narração é falada pelo próprio aparelho, com a voz de português que ele
+ * tiver instalada, dando preferência a uma voz feminina. Não é áudio embutido
+ * no arquivo: assim ela acompanha a legenda mesmo se alguém arrastar a barra,
+ * e não pesa um byte no download.
  */
 
 type Fala = { em: number; texto: string };
 
-// Tempos conferidos contra o arquivo, quadro a quadro.
 const FALAS_COMPUTADOR: Fala[] = [
   { em: 0, texto: "O dono precisa fechar a agenda de amanhã depois das 15h" },
   { em: 7, texto: "Ele escreve o pedido em português, como falaria com a recepção" },
@@ -37,9 +38,6 @@ const FALAS_COMPUTADOR: Fala[] = [
   { em: 19, texto: "Confirmado, ele bloqueia e avisa os nove pelo app e pelo WhatsApp" },
 ];
 
-// Os tempos foram conferidos contra o arquivo, quadro a quadro. Legenda que
-// chega depois da cena é pior do que legenda nenhuma: a pessoa lê uma coisa e
-// vê outra, e desconfia das duas.
 const FALAS_APP: Fala[] = [
   { em: 0, texto: "O caixa do dia no bolso do dono, e o copiloto a um toque" },
   { em: 4, texto: "Ele abre com o resumo do dia e o botão que resolve cada coisa" },
@@ -53,8 +51,6 @@ const FALAS_APP: Fala[] = [
 ];
 
 export function VideoCopiloto() {
-  // Enquanto não souber o tamanho da tela, não monta vídeo nenhum: melhor um
-  // espaço reservado por um instante do que baixar o arquivo errado.
   const ehComputador = useTelaGrande();
 
   if (ehComputador === null) {
@@ -87,6 +83,18 @@ export function VideoCopiloto() {
   );
 }
 
+/** Nomes de voz feminina de português que os sistemas costumam instalar. */
+const VOZES_FEMININAS = ["luciana", "francisca", "maria", "fernanda", "helo", "vitoria", "vitória", "female", "mulher"];
+
+/** Escolhe a melhor voz de português disponível no aparelho. */
+function escolherVoz(vozes: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  const emPortugues = vozes.filter((v) => v.lang?.toLowerCase().startsWith("pt"));
+  if (emPortugues.length === 0) return null;
+  const brasileiras = emPortugues.filter((v) => v.lang.toLowerCase().includes("br"));
+  const candidatas = brasileiras.length ? brasileiras : emPortugues;
+  return candidatas.find((v) => VOZES_FEMININAS.some((n) => v.name.toLowerCase().includes(n))) ?? candidatas[0];
+}
+
 function Quadro({
   src,
   capa,
@@ -112,6 +120,26 @@ function Quadro({
   const [tocando, setTocando] = useState(false);
   const [começou, setComeçou] = useState(false);
   const [segundo, setSegundo] = useState(0);
+  const [duracao, setDuracao] = useState(0);
+  const [devagar, setDevagar] = useState(false);
+  const [narrando, setNarrando] = useState(false);
+  const [temVoz, setTemVoz] = useState(false);
+  const vozRef = useRef<SpeechSynthesisVoice | null>(null);
+  const ultimaFalaRef = useRef<string>("");
+
+  // Vozes chegam de forma assíncrona em boa parte dos navegadores, então o
+  // botão de narração só aparece depois que existe uma voz de português.
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const ler = () => {
+      const voz = escolherVoz(window.speechSynthesis.getVoices());
+      vozRef.current = voz;
+      setTemVoz(Boolean(voz));
+    };
+    ler();
+    window.speechSynthesis.addEventListener("voiceschanged", ler);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", ler);
+  }, []);
 
   useEffect(() => {
     const video = ref.current;
@@ -134,14 +162,37 @@ function Quadro({
     return () => observador.disconnect();
   }, [tocaSozinho]);
 
-  const abrir = () => {
-    const video = ref.current;
-    if (!video) return;
-    setComeçou(true);
-    video.play().catch(() => {});
-  };
+  const falaAtual = [...falas].reverse().find((f) => segundo >= f.em)?.texto ?? falas[0]?.texto ?? "";
 
-  const alternar = () => {
+  // Fala a legenda quando ela muda. `cancel` antes de cada fala evita fila:
+  // quem arrasta a barra quer ouvir o trecho novo, não a fila do anterior.
+  useEffect(() => {
+    if (!narrando || !falaAtual || falaAtual === ultimaFalaRef.current) return;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    ultimaFalaRef.current = falaAtual;
+    window.speechSynthesis.cancel();
+    const fala = new SpeechSynthesisUtterance(falaAtual);
+    if (vozRef.current) fala.voice = vozRef.current;
+    fala.lang = vozRef.current?.lang ?? "pt-BR";
+    fala.rate = 1;
+    fala.pitch = 1.05;
+    window.speechSynthesis.speak(fala);
+  }, [falaAtual, narrando]);
+
+  // Silêncio ao sair da tela, ao pausar e ao desmontar. Voz que continua
+  // falando depois que a pessoa saiu do vídeo é assombração.
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (!narrando || !tocando) window.speechSynthesis.cancel();
+  }, [narrando, tocando]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const alternar = useCallback(() => {
     const video = ref.current;
     if (!video) return;
     if (video.paused) {
@@ -150,9 +201,53 @@ function Quadro({
     } else {
       video.pause();
     }
+  }, []);
+
+  const recomeçar = () => {
+    const video = ref.current;
+    if (!video) return;
+    video.currentTime = 0;
+    ultimaFalaRef.current = "";
+    setComeçou(true);
+    video.play().catch(() => {});
   };
 
-  const falaAtual = [...falas].reverse().find((f) => segundo >= f.em)?.texto ?? falas[0]?.texto;
+  const trocarVelocidade = () => {
+    const video = ref.current;
+    if (!video) return;
+    const novo = !devagar;
+    setDevagar(novo);
+    video.playbackRate = novo ? 0.6 : 1;
+  };
+
+  const trocarNarracao = () => {
+    const video = ref.current;
+    const ligando = !narrando;
+    setNarrando(ligando);
+    ultimaFalaRef.current = "";
+    if (ligando && video) {
+      // Com voz, o vídeo desacelera sozinho: a legenda precisa durar o tempo
+      // de ser falada, senão a narração fica sempre um passo atrás da imagem.
+      setDevagar(true);
+      video.playbackRate = 0.6;
+      if (video.paused) {
+        setComeçou(true);
+        video.play().catch(() => {});
+      }
+    } else if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  const irPara = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const video = ref.current;
+    if (!video) return;
+    video.currentTime = Number(e.target.value);
+    ultimaFalaRef.current = "";
+    setSegundo(Math.floor(Number(e.target.value)));
+  };
+
+  const relogio = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
   const tela = (
     <>
@@ -172,15 +267,15 @@ function Quadro({
         onPlay={() => setTocando(true)}
         onPause={() => setTocando(false)}
         onTimeUpdate={(e) => setSegundo(Math.floor(e.currentTarget.currentTime))}
-        className="block w-full bg-carvao"
+        onLoadedMetadata={(e) => setDuracao(e.currentTarget.duration || 0)}
+        onClick={alternar}
+        className="block w-full cursor-pointer bg-carvao"
         style={{ aspectRatio: `${largura} / ${altura}` }}
         aria-label={descricao}
       />
 
-      {/* A legenda mora no alto, e não no rodapé de legenda de filme: aqui
-          embaixo é onde a resposta do copiloto chega e onde fica o campo de
-          digitar, ou seja, exatamente o que a pessoa precisa ver. No topo ela
-          cobre só o cabeçalho, que é enfeite. */}
+      {/* A legenda mora no alto: embaixo é onde a resposta do copiloto chega e
+          onde fica o campo de digitar, ou seja, o que a pessoa precisa ver. */}
       {(tocando || começou) && (
         <div className="pointer-events-none absolute inset-x-0 top-0 p-3 sm:p-4">
           <p className="mx-auto max-w-[44ch] rounded-lg bg-preto/85 px-3 py-2 text-center text-[13px] font-medium leading-snug text-neve backdrop-blur sm:text-[15px]">
@@ -189,10 +284,10 @@ function Quadro({
         </div>
       )}
 
-      {!tocaSozinho && !começou && (
+      {!começou && !tocando && (
         <button
           type="button"
-          onClick={abrir}
+          onClick={alternar}
           aria-label="Assistir ao copiloto trabalhando"
           className="absolute inset-0 flex items-center justify-center bg-preto/30 transition-colors active:bg-preto/10"
         >
@@ -204,38 +299,97 @@ function Quadro({
     </>
   );
 
+  const controles = (
+    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <button
+        type="button"
+        onClick={alternar}
+        aria-label={tocando ? "Pausar" : "Tocar"}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ouro text-preto transition-colors hover:bg-ouro-claro"
+      >
+        {tocando ? <Pause className="h-4 w-4 fill-preto" /> : <Play className="h-4 w-4 translate-x-px fill-preto" />}
+      </button>
+
+      <button
+        type="button"
+        onClick={recomeçar}
+        aria-label="Ver de novo desde o começo"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-traco-forte text-cinza transition-colors hover:border-ouro hover:text-ouro"
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+      </button>
+
+      <label className="flex min-w-[8rem] flex-1 items-center gap-2">
+        <span className="sr-only">Posição do vídeo</span>
+        <input
+          type="range"
+          min={0}
+          max={duracao || 1}
+          step={0.1}
+          value={Math.min(segundo, duracao || 1)}
+          onChange={irPara}
+          className="h-1 w-full cursor-pointer appearance-none rounded-full bg-traco-forte accent-ouro"
+        />
+      </label>
+
+      <span className="tipo-dado shrink-0 text-[11px] text-cinza-fraco">
+        {relogio(segundo)} / {relogio(duracao)}
+      </span>
+
+      <button
+        type="button"
+        onClick={trocarVelocidade}
+        aria-pressed={devagar}
+        className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors ${
+          devagar ? "border-ouro text-ouro" : "border-traco-forte text-cinza hover:border-cinza hover:text-neve"
+        }`}
+      >
+        <Gauge className="h-3 w-3" aria-hidden="true" />
+        {devagar ? "devagar" : "normal"}
+      </button>
+
+      {temVoz && (
+        <button
+          type="button"
+          onClick={trocarNarracao}
+          aria-pressed={narrando}
+          className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors ${
+            narrando ? "border-ouro text-ouro" : "border-traco-forte text-cinza hover:border-cinza hover:text-neve"
+          }`}
+        >
+          {narrando ? <Volume2 className="h-3 w-3" aria-hidden="true" /> : <VolumeX className="h-3 w-3" aria-hidden="true" />}
+          narração
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <figure>
       {telefone ? (
-        // Telefone: bezel escuro, cantos fundos e o risco do alto-falante em
-        // cima. A gravação nasceu num celular, e a moldura diz isso sozinha.
         <div className="mx-auto w-full max-w-[19rem]">
           <div className="rounded-[2.5rem] border border-traco-forte bg-grafite p-2 shadow-2xl shadow-black/70">
             <div className="mx-auto mb-2 h-1 w-14 rounded-full bg-traco-forte" aria-hidden="true" />
             <div className="relative overflow-hidden rounded-[2rem]">{tela}</div>
           </div>
+          {controles}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-traco bg-carvao shadow-2xl shadow-black/40">
-          <div className="flex items-center gap-2 border-b border-traco px-4 py-2.5">
-            <span className="flex gap-1.5" aria-hidden="true">
-              <span className="h-2 w-2 rounded-full bg-traco-forte" />
-              <span className="h-2 w-2 rounded-full bg-traco-forte" />
-              <span className="h-2 w-2 rounded-full bg-traco-forte" />
-            </span>
-            <span className="tipo-dado mx-auto truncate rounded-md bg-grafite px-3 py-1 text-[11px] text-cinza-fraco">
-              rukz.com.br/dashboard
-            </span>
-            <button
-              type="button"
-              onClick={alternar}
-              aria-label={tocando ? "Pausar o vídeo" : "Tocar o vídeo"}
-              className="text-cinza transition-colors hover:text-ouro"
-            >
-              {tocando ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-            </button>
+        <div>
+          <div className="overflow-hidden rounded-2xl border border-traco bg-carvao shadow-2xl shadow-black/40">
+            <div className="flex items-center gap-2 border-b border-traco px-4 py-2.5">
+              <span className="flex gap-1.5" aria-hidden="true">
+                <span className="h-2 w-2 rounded-full bg-traco-forte" />
+                <span className="h-2 w-2 rounded-full bg-traco-forte" />
+                <span className="h-2 w-2 rounded-full bg-traco-forte" />
+              </span>
+              <span className="tipo-dado mx-auto truncate rounded-md bg-grafite px-3 py-1 text-[11px] text-cinza-fraco">
+                rukz.com.br/dashboard
+              </span>
+            </div>
+            <div className="relative">{tela}</div>
           </div>
-          <div className="relative">{tela}</div>
+          {controles}
         </div>
       )}
 

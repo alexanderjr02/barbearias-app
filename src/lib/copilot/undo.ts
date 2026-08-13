@@ -16,6 +16,15 @@ export type UndoData =
   | { kind: "appointment_status"; appointmentId: string; previousStatus: string }
   | { kind: "appointment_moved"; appointmentId: string; previousDate: string; previousStart: string; previousEnd: string }
   | { kind: "timeoffs_created"; ids: string[] }
+  // Bloqueio de faixa de horário. Diferente do fechamento do dia, aqui a
+  // gravação é por `upsert`: parte da equipe podia já ter bloqueio naquela
+  // data, e apagar tudo no desfazer levaria junto o almoço que já existia
+  // antes. Por isso cada barbeiro guarda o que tinha, ou `null` se não tinha
+  // nada, e o desfazer devolve exatamente esse estado.
+  | {
+      kind: "timeoffs_upserted";
+      entradas: { staffId: string; dateKey: string; antes: { startTime: string; endTime: string; reason: string | null } | null }[];
+    }
   | { kind: "service_price"; serviceId: string; previousPrice: number }
   | { kind: "service_created"; serviceId: string }
   | { kind: "transaction_created"; transactionId: string }
@@ -103,6 +112,29 @@ export async function undoAction(actionId: string, barbershopId: string, userId:
     case "timeoffs_created": {
       const { count } = await prisma.staffTimeOff.deleteMany({ where: { id: { in: data.ids } } });
       message = count > 0 ? "Agenda reaberta." : "As folgas já não existiam.";
+      break;
+    }
+    case "timeoffs_upserted": {
+      let apagados = 0;
+      let devolvidos = 0;
+      for (const e of data.entradas) {
+        const data_ = new Date(e.dateKey);
+        if (e.antes) {
+          // Tinha bloqueio antes: devolve o que era, sem apagar.
+          await prisma.staffTimeOff.updateMany({
+            where: { staffId: e.staffId, date: data_ },
+            data: { startTime: e.antes.startTime, endTime: e.antes.endTime, reason: e.antes.reason },
+          });
+          devolvidos++;
+        } else {
+          await prisma.staffTimeOff.deleteMany({ where: { staffId: e.staffId, date: data_ } });
+          apagados++;
+        }
+      }
+      const partes: string[] = [];
+      if (apagados) partes.push(`${apagados} ${apagados === 1 ? "barbeiro liberado" : "barbeiros liberados"}`);
+      if (devolvidos) partes.push(`${devolvidos} com o bloqueio anterior de volta`);
+      message = partes.length ? `Horário desbloqueado: ${partes.join(", ")}.` : "Não havia bloqueio para desfazer.";
       break;
     }
     case "service_price": {
