@@ -38,16 +38,20 @@ const FALAS_COMPUTADOR: Fala[] = [
   { em: 19, texto: "Confirmado, ele bloqueia e avisa os nove pelo app e pelo WhatsApp" },
 ];
 
+// Os tempos foram conferidos contra o arquivo, quadro a quadro. Legenda que
+// chega depois da cena é pior do que legenda nenhuma: a pessoa lê uma coisa e
+// vê outra, e desconfia das duas.
 const FALAS_APP: Fala[] = [
-  { em: 0, texto: "O caixa do dia no bolso do dono, e o copiloto a um toque" },
-  { em: 4, texto: "Ele abre com o resumo do dia e o botão que resolve cada coisa" },
+  { em: 0, texto: "O copiloto abre com o resumo do dia e o botão que resolve cada coisa" },
   { em: 7, texto: "O dono avisa que vai fechar amanhã depois das 15h" },
-  { em: 11, texto: "O copiloto acha os nove clientes daquela faixa, um por um" },
-  { em: 16, texto: "Nome, hora, serviço e barbeiro, antes de mexer em nada" },
-  { em: 19, texto: "Autorizado, ele bloqueia e avisa os nove pelo app e pelo WhatsApp" },
-  { em: 23, texto: "Quem tinha horário de manhã não recebe nada, porque não foi afetado" },
-  { em: 26, texto: "Agora a escala: ele lê noventa dias e conta a demanda de cada dia" },
-  { em: 29, texto: "Sexta 493, sábado 473, terça 316: a folga vai para o meio da semana" },
+  { em: 13, texto: "Ele acha os doze clientes daquela faixa: nome, hora, serviço e barbeiro" },
+  { em: 22, texto: "Autorizado, bloqueia a agenda e avisa os doze pelo app e pelo WhatsApp" },
+  { em: 33, texto: "E se o dono se arrepender? Um toque em desfazer" },
+  { em: 39, texto: "A agenda volta ao que era, e os seis barbeiros são liberados" },
+  { em: 44, texto: "Agora as perguntas que nenhum outro sistema responde" },
+  { em: 48, texto: "Qual serviço rende mais por hora de cadeira, e não por preço de tabela" },
+  { em: 55, texto: "Quem tem histórico de furar e está marcado para amanhã" },
+  { em: 63, texto: "E se vale a pena contratar mais um barbeiro, com o número da casa" },
 ];
 
 export function VideoCopiloto() {
@@ -72,13 +76,13 @@ export function VideoCopiloto() {
     <Quadro
       src="/landing/video/copiloto-celular.webm"
       capa="/landing/video/copiloto-celular-capa.webp"
-      largura={640}
-      altura={1386}
+      largura={390}
+      altura={844}
       falas={FALAS_APP}
       telefone
       tocaSozinho={false}
-      descricao="Gravação do aplicativo: o dono avisa que vai fechar amanhã depois das 15h, o copiloto lista os nove clientes afetados, bloqueia e avisa cada um, e em seguida monta a escala da semana pela demanda dos últimos noventa dias"
-      legenda="No aplicativo, da mesma conversa saem duas coisas: fechar a agenda de amanhã avisando os nove clientes afetados, e a escala da semana montada com noventa dias de atendimento na mão. Gravação da tela, acelerada. O bloqueio e os avisos saíram de verdade."
+      descricao="Gravação do aplicativo: o dono fecha a agenda de amanhã depois das 15h e o copiloto avisa os doze clientes afetados, o dono desfaz e a agenda volta, e depois ele responde qual serviço rende mais por hora de cadeira, quem tem risco de furar amanhã e se vale a pena contratar mais um barbeiro"
+      legenda="Uma conversa só, no aplicativo: fechar a agenda de amanhã avisando os doze clientes da faixa, desfazer tudo com um toque, e três perguntas que nenhum outro sistema responde. Gravação da tela, acelerada. O bloqueio, os avisos e o desfazer aconteceram de verdade."
     />
   );
 }
