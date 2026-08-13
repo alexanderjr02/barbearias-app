@@ -32,10 +32,11 @@ type Fala = { em: number; texto: string };
 
 const FALAS_COMPUTADOR: Fala[] = [
   { em: 0, texto: "O dono precisa fechar a agenda de amanhã depois das 15h" },
-  { em: 7, texto: "Ele escreve o pedido em português, como falaria com a recepção" },
-  { em: 12, texto: "O copiloto abre a agenda e procura quem tem horário naquela faixa" },
-  { em: 15, texto: "Nome, hora, serviço e barbeiro de cada um, antes de mexer em nada" },
-  { em: 19, texto: "Confirmado, ele bloqueia e avisa os nove pelo app e pelo WhatsApp" },
+  { em: 5, texto: "Ele escreve o pedido em português, como falaria com a recepção" },
+  { em: 8, texto: "O copiloto acha os doze da faixa: nome, hora, serviço e barbeiro" },
+  { em: 14, texto: "Autorizado, ele bloqueia e avisa os doze pelo app e pelo WhatsApp" },
+  { em: 20, texto: "E deixa o desfazer à mão, caso o dono mude de ideia" },
+  { em: 24, texto: "Na mesma conversa, ele ainda monta a escala da semana pela demanda real" },
 ];
 
 // Os tempos foram conferidos contra o arquivo, quadro a quadro. Legenda que
@@ -54,38 +55,87 @@ const FALAS_APP: Fala[] = [
   { em: 63, texto: "E se vale a pena contratar mais um barbeiro, com o número da casa" },
 ];
 
-export function VideoCopiloto() {
-  const ehComputador = useTelaGrande();
+type Onde = "web" | "app";
 
-  if (ehComputador === null) {
+const GRAVACOES: Record<Onde, Parametros> = {
+  web: {
+    src: "/landing/video/copiloto.webm",
+    capa: "/landing/video/copiloto-capa.webp",
+    largura: 1280,
+    altura: 800,
+    falas: FALAS_COMPUTADOR,
+    tocaSozinho: true,
+    descricao:
+      "Gravação do painel no navegador: o dono pede para fechar a agenda de amanhã depois das 15h, o copiloto lista os doze clientes afetados, bloqueia o horário, dispara o pedido de remarcação e depois monta a escala da semana",
+    legenda:
+      "No computador: o dono avisa que vai fechar amanhã depois das 15h. O copiloto lista os doze clientes daquela faixa, bloqueia, manda o pedido de remarcação, deixa o desfazer à mão e ainda monta a escala da semana. Gravação da tela, acelerada. O bloqueio e os avisos saíram de verdade.",
+  },
+  app: {
+    src: "/landing/video/copiloto-celular.webm",
+    capa: "/landing/video/copiloto-celular-capa.webp",
+    largura: 390,
+    altura: 844,
+    falas: FALAS_APP,
+    telefone: true,
+    tocaSozinho: false,
+    descricao:
+      "Gravação do aplicativo: o dono fecha a agenda de amanhã depois das 15h e o copiloto avisa os doze clientes afetados, o dono desfaz e a agenda volta, e depois ele responde qual serviço rende mais por hora de cadeira, quem tem risco de furar amanhã e se vale a pena contratar mais um barbeiro",
+    legenda:
+      "Uma conversa só, no aplicativo: fechar a agenda de amanhã avisando os doze clientes da faixa, desfazer tudo com um toque, e três perguntas que nenhum outro sistema responde. Gravação da tela, acelerada. O bloqueio, os avisos e o desfazer aconteceram de verdade.",
+  },
+};
+
+export function VideoCopiloto() {
+  const telaGrande = useTelaGrande();
+  const [escolhido, setEscolhido] = useState<Onde | null>(null);
+  // Abre na gravação que combina com a tela de quem chegou, mas a escolha de
+  // quem toca no seletor manda mais: quem está no computador também quer ver
+  // como o copiloto se comporta no celular antes de assinar.
+  const onde: Onde | null = escolhido ?? (telaGrande === null ? null : telaGrande ? "web" : "app");
+
+  if (onde === null) {
     return <div className="aspect-[1280/800] w-full rounded-2xl border border-traco bg-carvao" />;
   }
 
-  return ehComputador ? (
-    <Quadro
-      src="/landing/video/copiloto.webm"
-      capa="/landing/video/copiloto-capa.webp"
-      largura={1280}
-      altura={800}
-      falas={FALAS_COMPUTADOR}
-      tocaSozinho
-      descricao="Gravação do painel no navegador: o dono pede para fechar a agenda de amanhã depois das 15h, e o copiloto lista os nove clientes afetados, bloqueia o horário e dispara o pedido de remarcação"
-      legenda="No computador: o dono avisa que vai fechar amanhã depois das 15h. O copiloto lista os nove clientes daquela faixa, bloqueia o horário e manda o pedido de remarcação. Gravação da tela, acelerada. O bloqueio entrou na agenda e os nove avisos saíram de verdade."
-    />
-  ) : (
-    <Quadro
-      src="/landing/video/copiloto-celular.webm"
-      capa="/landing/video/copiloto-celular-capa.webp"
-      largura={390}
-      altura={844}
-      falas={FALAS_APP}
-      telefone
-      tocaSozinho={false}
-      descricao="Gravação do aplicativo: o dono fecha a agenda de amanhã depois das 15h e o copiloto avisa os doze clientes afetados, o dono desfaz e a agenda volta, e depois ele responde qual serviço rende mais por hora de cadeira, quem tem risco de furar amanhã e se vale a pena contratar mais um barbeiro"
-      legenda="Uma conversa só, no aplicativo: fechar a agenda de amanhã avisando os doze clientes da faixa, desfazer tudo com um toque, e três perguntas que nenhum outro sistema responde. Gravação da tela, acelerada. O bloqueio, os avisos e o desfazer aconteceram de verdade."
-    />
+  return (
+    <div>
+      <div className="mb-5 flex items-center gap-2">
+        {(["web", "app"] as const).map((op) => (
+          <button
+            key={op}
+            type="button"
+            onClick={() => setEscolhido(op)}
+            aria-pressed={onde === op}
+            className={`rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors ${
+              onde === op
+                ? "border-ouro bg-ouro text-preto"
+                : "border-traco-forte text-cinza hover:border-cinza hover:text-neve"
+            }`}
+          >
+            {op === "web" ? "No computador" : "No celular"}
+          </button>
+        ))}
+      </div>
+
+      {/* A chave troca o componente inteiro: cada gravação tem duração, legenda
+          e controles próprios, e reaproveitar o estado da outra deixaria a
+          barra de tempo apontando para um lugar que não existe mais. */}
+      <Quadro key={onde} {...GRAVACOES[onde]} />
+    </div>
   );
 }
+
+type Parametros = {
+  src: string;
+  capa: string;
+  largura: number;
+  altura: number;
+  falas: Fala[];
+  legenda: string;
+  descricao: string;
+  tocaSozinho: boolean;
+  telefone?: boolean;
+};
 
 /** Nomes de voz feminina de português que os sistemas costumam instalar. */
 const VOZES_FEMININAS = ["luciana", "francisca", "maria", "fernanda", "helo", "vitoria", "vitória", "female", "mulher"];
@@ -109,17 +159,7 @@ function Quadro({
   descricao,
   tocaSozinho,
   telefone = false,
-}: {
-  src: string;
-  capa: string;
-  largura: number;
-  altura: number;
-  falas: Fala[];
-  legenda: string;
-  descricao: string;
-  tocaSozinho: boolean;
-  telefone?: boolean;
-}) {
+}: Parametros) {
   const ref = useRef<HTMLVideoElement>(null);
   const [tocando, setTocando] = useState(false);
   const [começou, setComeçou] = useState(false);
