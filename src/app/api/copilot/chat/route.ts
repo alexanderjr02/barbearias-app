@@ -68,7 +68,13 @@ export async function POST(request: NextRequest) {
       reply = res.reply;
       actions = res.actions;
       undo = res.undo;
-    } catch {
+    } catch (e) {
+      // Cair no modo simulado é o comportamento certo: o gestor recebe uma
+      // resposta em vez de um erro. Mas cair em silêncio esconde uma queda da
+      // IA atrás de uma resposta que parece normal, e foi assim que uma
+      // indisponibilidade passou despercebida por horas aqui. O motivo fica no
+      // log do servidor, sem nunca chegar à tela de quem perguntou.
+      console.error("[copiloto] IA indisponível, respondendo em modo simulado:", e);
       reply = await simulatedReply(role, session.barbershopId, staffId, lastUser.content);
     }
   } else {
